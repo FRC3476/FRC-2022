@@ -3,23 +3,23 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpiutil.math.MatBuilder;
 import edu.wpi.first.wpiutil.math.Nat;
 
 public class RobotTracker extends AbstractSubsystem {
 
-    private static final RobotTracker trackingInstance = new RobotTracker();
-    double startTime;
+    private static final RobotTracker instance = new RobotTracker();
 
     Drive drive = Drive.getInstance();
 
     public static RobotTracker getInstance() {
-        return RobotTracker.trackingInstance;
+        return RobotTracker.instance;
     }
 
-    Pose2d lastEstimatedPose = new Pose2d();
+    private Pose2d lastEstimatedPose = new Pose2d();
 
-    private SwerveDrivePoseEstimator swerveDriveOdometry;
+    private final SwerveDrivePoseEstimator swerveDriveOdometry;
 
     private RobotTracker() {
         super(5);
@@ -96,6 +96,8 @@ public class RobotTracker extends AbstractSubsystem {
 
     @Override
     public void logData() {
-
+        SmartDashboard.putNumber("Robot Pose X", getPoseMeters().getX());
+        SmartDashboard.putNumber("Robot Pose Y", getPoseMeters().getX());
+        SmartDashboard.putNumber("Robot Pose Angle", getPoseMeters().getRotation().getDegrees());
     }
 }
