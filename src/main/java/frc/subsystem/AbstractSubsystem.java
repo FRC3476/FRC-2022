@@ -72,13 +72,17 @@ public abstract class AbstractSubsystem implements Runnable {
     public void run() {
         while(signal != ThreadSignal.DEAD) {
             double startTime = Timer.getFPGATimestamp();
-            if(signal == ThreadSignal.ALIVE) update();
-
+            if(signal == ThreadSignal.ALIVE) {
+                update();
+                logData();
+            }
             double executionTimeMS = (Timer.getFPGATimestamp()-startTime)*1000;
             try { 
-                Thread.sleep((long) (period-executionTimeMS));
+                if(period-executionTimeMS > 0){
+                    Thread.sleep((long) (period-executionTimeMS));
+                }
             } catch(Exception e) {
-                System.out.println("Thread sleep failing "  + this.getClass().getName());
+                System.out.println("Thread sleep failing "  + this.getClass().getName() + " message: " + e.getMessage());
             }
             
         }
