@@ -64,7 +64,7 @@ public class ControllerDriveInputs {
      * @return {@link ControllerDriveInputs} 
      */
     public ControllerDriveInputs squareInputs(){
-        x = Math.copySign(x*x, y);
+        x = Math.copySign(x*x, x);
         y = Math.copySign(y*y, y);
         rotation = Math.copySign(rotation*rotation, rotation);
         return this;
