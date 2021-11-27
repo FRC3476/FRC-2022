@@ -174,10 +174,10 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
         if(xbox.getRawButton(3)){
             //Increase the deadzone so that we drive straight
-            drive.swerveDrive(new ControllerDriveInputs(xbox.getRawAxis(0), -xbox.getRawAxis(1),  -xbox.getRawAxis(4))
+            drive.swerveDriveFieldRelative(new ControllerDriveInputs(xbox.getRawAxis(0), -xbox.getRawAxis(1),  -xbox.getRawAxis(4))
                     .applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
         } else {
-            drive.swerveDrive(new ControllerDriveInputs(xbox.getRawAxis(0), -xbox.getRawAxis(1),  -xbox.getRawAxis(4))
+            drive.swerveDriveFieldRelative(new ControllerDriveInputs(xbox.getRawAxis(0), -xbox.getRawAxis(1),  -xbox.getRawAxis(4))
                     .applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
         }
 
