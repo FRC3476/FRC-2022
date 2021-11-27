@@ -102,7 +102,7 @@ public class Robot extends TimedRobot {
         if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
             lastAutoPath = autoPath.getString(null);
             deserializerExecutor.execute(() -> { //Start deserializing on another thread
-                System.out.println("start parsing autonoumous");
+                System.out.println("start parsing autonomous");
                 //Set networktable entries for the gui notifications
                 pathProcessingStatusEntry.setDouble(1);
                 pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);

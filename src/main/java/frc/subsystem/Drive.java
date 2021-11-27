@@ -95,7 +95,7 @@ public class Drive extends AbstractSubsystem {
     private final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
 
     /**
-     * PID Controllers for the swere Drive
+     * PID Controllers for the swerve Drive
      */
     CANPIDController[] swervePID = new CANPIDController[4];
 
@@ -182,7 +182,7 @@ public class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 100; j++) {
                 if (swerveEncoders[i].setPosition(getAbsolutePosition(i)) == CANError.kOk) {
-                    System.out.println("Suceeded in setting offset for motor " + i);
+                    System.out.println("Succeeded in setting offset for motor " + i);
                     break;
                 }
                 System.out.println("Failed to set offset for motor " + i + ". Attempt " + j);
@@ -276,7 +276,6 @@ public class Drive extends AbstractSubsystem {
         return (x - Math.floor(x/y) * y);
     }	
 
-    int testi = 0;
     private void swerveDrive(ChassisSpeeds chassisSpeeds){
         synchronized (this) {
             driveState = DriveState.TELEOP;
@@ -293,22 +292,22 @@ public class Drive extends AbstractSubsystem {
         SwerveDriveKinematics.normalizeWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
 
         for (int i = 0; i < 4; i++){
-            SwerveModuleState tragetState = SwerveModuleState.optimize(moduleStates[i], Rotation2d.fromDegrees(swerveEncoders[i].getPosition()));
-            //SwerveModuleState tragetState = moduleStates[i];
-            double targetAngle = tragetState.angle.getDegrees();
+            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i], Rotation2d.fromDegrees(swerveEncoders[i].getPosition()));
+            //SwerveModuleState targetState = moduleStates[i];
+            double targetAngle = targetState.angle.getDegrees();
             double currentAngle = swerveEncoders[i].getPosition();
 
-            double anglediff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
+            double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
 
-            if(Math.abs(anglediff) < 5 || !rotate){
+            if(Math.abs(angleDiff) < 5 || !rotate){
                 swerveMotors[i].set(0);
             }else{
-                swervePID[i].setReference(swerveEncoders[i].getPosition() + anglediff, ControlType.kPosition);
+                swervePID[i].setReference(swerveEncoders[i].getPosition() + angleDiff, ControlType.kPosition);
             }
-            swerveDriveMotors[i].set(tragetState.speedMetersPerSecond/Constants.DRIVE_HIGH_SPEED_M);
+            swerveDriveMotors[i].set(targetState.speedMetersPerSecond/Constants.DRIVE_HIGH_SPEED_M);
 
-            SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", swerveEncoders[i].getPosition() + anglediff);
-            SmartDashboard.putNumber("Swerve Motor " + i + " Error", anglediff);           
+            SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", swerveEncoders[i].getPosition() + angleDiff);
+            SmartDashboard.putNumber("Swerve Motor " + i + " Error", angleDiff);           
         }
     }
     
