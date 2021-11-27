@@ -257,15 +257,13 @@ public class Drive extends AbstractSubsystem {
     }
 
     public void swerveDrive(ControllerDriveInputs inputs){
-        inputs.applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M*inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M*inputs.getY(), 
                 inputs.getRotation()*2);
         swerveDrive(chassisSpeeds);    
     }
 
-    public void swerveDriveFieldRelitive(ControllerDriveInputs inputs){
-        inputs.applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+    public void swerveDriveFieldRelative(ControllerDriveInputs inputs){
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M*inputs.getX(), 
                 Constants.DRIVE_HIGH_SPEED_M*inputs.getY(), 
                 inputs.getRotation()*2, 
