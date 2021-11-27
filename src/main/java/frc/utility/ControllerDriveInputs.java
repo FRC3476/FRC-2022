@@ -24,10 +24,10 @@ public class ControllerDriveInputs {
 
     /**
      * Apply a circular deadzone on the controller and then scale the joystick values
-     * @param snapingDeadZoneX An X value smaller than this value will get set to 0 
-     * (This help you with driving stright forwards and backwards) 
-     * @param snapingDeadZoneY An Y value smaller than this value will get set to 0 
-     * (This help you with driving stright sideways)
+     * @param snappingDeadZoneX An X value smaller than this value will get set to 0 
+     * (This help you with driving straight forwards and backwards) 
+     * @param snappingDeadZoneY An Y value smaller than this value will get set to 0 
+     * (This help you with driving straight sideways)
      * @param rotationDeadZone A rotation value smaller than this value will get set to 0. 
      * Larger rotation values will be scaled so that the edge of the deadzone will be 0
      * @param circularDeadZone If the controller input is inside the circle with a radius of 
@@ -35,9 +35,9 @@ public class ControllerDriveInputs {
      * the edge of the deadzone have a value of 0
      * @return {@link ControllerDriveInputs} 
      */
-    public ControllerDriveInputs applyDeadZone(double snapingDeadZoneX, double snapingDeadZoneY, double rotationDeadZone, double circularDeadZone){
-        if(Math.abs(x)<snapingDeadZoneX) x = 0;
-        if(Math.abs(y)<snapingDeadZoneY) y = 0;
+    public ControllerDriveInputs applyDeadZone(double snappingDeadZoneX, double snappingDeadZoneY, double rotationDeadZone, double circularDeadZone){
+        if(Math.abs(x)<snappingDeadZoneX) x = 0;
+        if(Math.abs(y)<snappingDeadZoneY) y = 0;
         if(Math.abs(rotation)<rotationDeadZone) rotation = 0;
 
 		double amplitudeSquared = x*x + y*y;
