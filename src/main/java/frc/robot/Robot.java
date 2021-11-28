@@ -79,7 +79,6 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
 
-        drive.calculateOffsets(); 
         startSubsystems(); 
     }
 
@@ -163,7 +162,7 @@ public class Robot extends TimedRobot {
         killAuto();
         enabled.setBoolean(true);
         startSubsystems();
-        drive.calculateOffsets();
+        drive.resetGyro();
     }
 
     /** This function is called periodically during operator control. */
@@ -179,6 +178,10 @@ public class Robot extends TimedRobot {
         } else {
             drive.swerveDriveFieldRelative(new ControllerDriveInputs(xbox.getRawAxis(0), -xbox.getRawAxis(1),  -xbox.getRawAxis(4))
                     .applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+        }
+
+        if(xbox.getRisingEdge(1)){
+            drive.resetGyro();
         }
 
     }
@@ -198,7 +201,6 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
         startSubsystems();
-        drive.calculateOffsets();
     }
 
     /** This function is called periodically during test mode. */

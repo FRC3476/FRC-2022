@@ -56,7 +56,7 @@ public class Drive extends AbstractSubsystem {
     private AHRS gyroSensor;
     private final PIDController turnPID;
     private DriveState driveState;
-    private Rotation2d wantedHeading;
+    private Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
     double prevPositionL = 0;
@@ -66,11 +66,14 @@ public class Drive extends AbstractSubsystem {
 
     double prevTime;
 
+    private double turnTarget = 0;
+
     private final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
 
     private final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve,
             rightBackSparkSwerve;
-    private final SwerveDriveKinematics swerveKinematics;
+    private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION, Constants.SWERVE_LEFT_BACK_LOCATION, 
+    Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
     /**
      * Motors that turn the wheels around
      */
@@ -98,6 +101,8 @@ public class Drive extends AbstractSubsystem {
      * PID Controllers for the swerve Drive
      */
     CANPIDController[] swervePID = new CANPIDController[4];
+
+
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
@@ -156,40 +161,25 @@ public class Drive extends AbstractSubsystem {
             swerveMotors[i].setPeriodicFramePeriod(PeriodicFrame.kStatus2, 15);
             swerveDriveMotors[i].setPeriodicFramePeriod(PeriodicFrame.kStatus2, 5);
 
-            swerveMotors[i].setSmartCurrentLimit(30);
-            swerveDriveMotors[i].setSmartCurrentLimit(15);
+            swerveMotors[i].setSmartCurrentLimit(15);
+            swerveDriveMotors[i].setSmartCurrentLimit(30);
 
             swerveDriveMotors[i].setIdleMode(IdleMode.kBrake);
             swerveMotors[i].setIdleMode(IdleMode.kBrake);
+
+            swerveDriveMotors[i].burnFlash();
+            swerveMotors[i].burnFlash();
         }
-
-        calculateOffsets();
-
-        swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION, Constants.SWERVE_LEFT_BACK_LOCATION, 
-            Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
     
         configMotors();
 
         drivePercentVbus = true;
         driveState = DriveState.TELEOP;
 
-        turnPID = new PIDController(3.5, 0, 0.0, 0.005); //P=1.0 OR 0.8
+        turnPID = new PIDController(0.02, 0, 0.00, 0.02); //P=1.0 OR 0.8
+        turnPID.disableContinuousInput();
         turnPID.setSetpoint(0);
         configBrake();
-    }
-
-    public void calculateOffsets(){
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 100; j++) {
-                if (swerveEncoders[i].setPosition(getAbsolutePosition(i)) == CANError.kOk) {
-                    System.out.println("Succeeded in setting offset for motor " + i);
-                    break;
-                }
-                System.out.println("Failed to set offset for motor " + i + ". Attempt " + j);
-                OrangeUtility.sleep(50);
-            }
-            swervePID[i].setReference(0d, ControlType.kDutyCycle);
-        }    
     }
 
     public SwerveDriveKinematics getSwerveDriveKinematics(){
@@ -264,10 +254,28 @@ public class Drive extends AbstractSubsystem {
     }
 
     public void swerveDriveFieldRelative(ControllerDriveInputs inputs){
+        double turnSpeed = 0;
+        if(Math.abs(inputs.getRotation()) < 0.01){
+            double error = turnTarget - getAngle();
+            turnPID.setSetpoint(0);
+            if(Math.abs(error) > 2) turnSpeed = turnPID.calculate(error);
+
+            SmartDashboard.putNumber("gyro pid in", getGyroAngle().getDegrees() % 360);
+            SmartDashboard.putNumber("pid Delta Speed", turnSpeed);
+            SmartDashboard.putNumber("wanted heading", wantedHeading.getDegrees());
+            SmartDashboard.putNumber("turn pid error", error);
+        } else {
+            turnSpeed = inputs.getRotation()*2;
+            turnTarget = getAngle();
+        }
+        
+
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M*inputs.getX(), 
                 Constants.DRIVE_HIGH_SPEED_M*inputs.getY(), 
-                inputs.getRotation()*2, 
-                getGyroAngle());
+                turnSpeed, 
+                Rotation2d.fromDegrees(-getAngle()));
+
+        
         swerveDrive(chassisSpeeds);
     }
 
@@ -295,7 +303,7 @@ public class Drive extends AbstractSubsystem {
             SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i], Rotation2d.fromDegrees(swerveEncoders[i].getPosition()));
             //SwerveModuleState targetState = moduleStates[i];
             double targetAngle = targetState.angle.getDegrees();
-            double currentAngle = swerveEncoders[i].getPosition();
+            double currentAngle = getAbsolutePosition(i); //swerveEncoders[i].getPosition();
 
             double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
 
@@ -453,6 +461,12 @@ public class Drive extends AbstractSubsystem {
     public synchronized boolean getTurningDone(){
         //TODO redo
         return false;
+    }
+
+    public synchronized void resetGyro(){
+        gyroSensor.zeroYaw();
+        wantedHeading = Rotation2d.fromDegrees(0);
+        turnTarget = 0;
     }
 
     double turnMinSpeed = 0;

@@ -11,7 +11,7 @@ public class Constants {
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
     //Drive Constants
-    public static final int DRIVE_PERIOD = 5;
+    public static final int DRIVE_PERIOD = 10;
 
     public static final int DRIVE_LEFT_FRONT_ID = 10;
     public static final int DRIVE_LEFT_BACK_ID =  11;
