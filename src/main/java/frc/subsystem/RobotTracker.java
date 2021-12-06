@@ -3,6 +3,7 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpiutil.math.MatBuilder;
 import edu.wpi.first.wpiutil.math.Nat;
@@ -19,23 +20,24 @@ public class RobotTracker extends AbstractSubsystem {
 
     private Pose2d lastEstimatedPose = new Pose2d();
 
-    private final SwerveDrivePoseEstimator swerveDriveOdometry;
+    private final SwerveDriveOdometry swerveDriveOdometry;
 
     private RobotTracker() {
-        super(5);
-        swerveDriveOdometry = new SwerveDrivePoseEstimator(
-            drive.getGyroAngle(),
-            new Pose2d(),
-            drive.getSwerveDriveKinematics(),
-            new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02),
-            new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.02, 0.02, 0.001),
-            new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 0.1),
-            5/1000);
+        super(20);
+        // swerveDriveOdometry = new SwerveDrivePoseEstimator(
+        //     drive.getGyroAngle(),
+        //     new Pose2d(),
+        //     drive.getSwerveDriveKinematics(),
+        //     new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02),
+        //     new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.02),
+        //     new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 0.1),
+        //     20d/1000d);
+        swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), drive.getGyroAngle());
     }
 
 
     /**
-     * @return current rotaion
+     * @return current rotation
      */
     public Rotation2d getGyroAngle() {
         return lastEstimatedPose.getRotation();
@@ -43,7 +45,7 @@ public class RobotTracker extends AbstractSubsystem {
     }
 
     /**
-     * Resets the position on the field to 0,0 with a rotaion of 0 degrees
+     * Resets the position on the field to 0,0 with a rotation of 0 degrees
      */
     synchronized public void resetOdometry() {
         swerveDriveOdometry.resetPosition(new Pose2d(), Rotation2d.fromDegrees(drive.getAngle()));
@@ -65,7 +67,7 @@ public class RobotTracker extends AbstractSubsystem {
     public void update() {
         swerveDriveOdometry.update(Rotation2d.fromDegrees(drive.getAngle()), drive.getSwerveModuleStates());
         synchronized (this) {
-            lastEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
+            lastEstimatedPose = swerveDriveOdometry.getPoseMeters();
         }
     }
 

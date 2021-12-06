@@ -11,9 +11,11 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.auton.TemplateAuto;
+import frc.auton.TestAuto;
 import frc.auton.guiauto.NetworkAuto;
 import frc.subsystem.BlinkinLED;
 import frc.subsystem.Drive;
@@ -21,6 +23,7 @@ import frc.subsystem.RobotTracker;
 import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
+import frc.utility.OrangeUtility;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -68,7 +71,7 @@ public class Robot extends TimedRobot {
     
     //Control loop states
     boolean limelightTakeSnapshots;
-    
+    TestAuto testAuto;
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -80,6 +83,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", m_chooser);
 
         startSubsystems(); 
+        drive.resetGyro();
+        testAuto = new TestAuto();
+        OrangeUtility.sleep(50);
+        robotTracker.resetPosition(new Pose2d());
     }
 
     /**
@@ -139,6 +146,7 @@ public class Robot extends TimedRobot {
 
         if(networkAuto == null){
             System.out.println("Using normal autos");
+            selectedAuto = testAuto;
             //TODO put autos here
         } else {
             System.out.println("Using autos from network tables");
@@ -190,7 +198,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         killAuto();
-        enabled.setBoolean(true);
+        enabled.setBoolean(false);
     }
 
     /** This function is called periodically when disabled. */

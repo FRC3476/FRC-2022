@@ -33,8 +33,4 @@ public class LazyCANSparkMax extends CANSparkMax {
 	public double getSetpoint() {
 		return prevValue;
 	}
-
-	public String getVelocity() {
-		return null;
-	}
 }

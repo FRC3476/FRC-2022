@@ -27,6 +27,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.controller.HolonomicDriveController;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
@@ -100,9 +102,11 @@ public class Drive extends AbstractSubsystem {
     /**
      * PID Controllers for the swerve Drive
      */
-    CANPIDController[] swervePID = new CANPIDController[4];
+    private final CANPIDController[] swervePID = new CANPIDController[4];
 
 
+    // private final PIDController drivePidController = new PIDController(kp, ki, kd, Constants.DRIVE_PERIOD/1000d);
+    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0.1, 1.6);
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
@@ -147,6 +151,8 @@ public class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             swerveEncoders[i] = swerveMotors[i].getEncoder();
             swerveEncoders[i].setPositionConversionFactor(8.1503);// 8.1466);
+            swerveDriveMotors[i].getEncoder().setPositionConversionFactor(1);
+            swerveDriveMotors[i].getEncoder().setVelocityConversionFactor(1);
             
             swerveMotors[i].getAnalog(AnalogMode.kAbsolute).setPositionConversionFactor(360/3.3);//105.88);
 
@@ -158,8 +164,8 @@ public class Drive extends AbstractSubsystem {
             
 
             //Get data faster from the sparks
-            swerveMotors[i].setPeriodicFramePeriod(PeriodicFrame.kStatus2, 15);
-            swerveDriveMotors[i].setPeriodicFramePeriod(PeriodicFrame.kStatus2, 5);
+            swerveMotors[i].setPeriodicFramePeriod(PeriodicFrame.kStatus2, 20);
+            swerveDriveMotors[i].setPeriodicFramePeriod(PeriodicFrame.kStatus2, 20);
 
             swerveMotors[i].setSmartCurrentLimit(15);
             swerveDriveMotors[i].setSmartCurrentLimit(30);
@@ -209,7 +215,7 @@ public class Drive extends AbstractSubsystem {
     synchronized public SwerveModuleState[] getSwerveModuleStates(){
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for(int i = 0; i<4; i++){
-            SwerveModuleState moduleState = new SwerveModuleState(swerveDriveMotors[i].getEncoder().getVelocity()*Constants.SWERVE_METER_PER_ROTATION,
+            SwerveModuleState moduleState = new SwerveModuleState((swerveDriveMotors[i].getEncoder().getVelocity()/60d)*Constants.SWERVE_METER_PER_ROTATION,
                     Rotation2d.fromDegrees(getAbsolutePosition(i)));
             swerveModuleState[i] = moduleState;
         }
@@ -247,6 +253,10 @@ public class Drive extends AbstractSubsystem {
     }
 
     public void swerveDrive(ControllerDriveInputs inputs){
+        synchronized (this){
+            driveState = DriveState.TELEOP;
+        }
+
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M*inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M*inputs.getY(), 
                 inputs.getRotation()*2);
@@ -254,9 +264,12 @@ public class Drive extends AbstractSubsystem {
     }
 
     public void swerveDriveFieldRelative(ControllerDriveInputs inputs){
+        synchronized (this){
+            driveState = DriveState.TELEOP;
+        }
         double turnSpeed = 0;
         if(Math.abs(inputs.getRotation()) < 0.01){
-            double error = turnTarget - getAngle();
+            double error = turnTarget + getAngle();
             turnPID.setSetpoint(0);
             if(Math.abs(error) > 2) turnSpeed = turnPID.calculate(error);
 
@@ -264,6 +277,7 @@ public class Drive extends AbstractSubsystem {
             SmartDashboard.putNumber("pid Delta Speed", turnSpeed);
             SmartDashboard.putNumber("wanted heading", wantedHeading.getDegrees());
             SmartDashboard.putNumber("turn pid error", error);
+            turnSpeed = 0;
         } else {
             turnSpeed = inputs.getRotation()*2;
             turnTarget = getAngle();
@@ -273,9 +287,8 @@ public class Drive extends AbstractSubsystem {
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M*inputs.getX(), 
                 Constants.DRIVE_HIGH_SPEED_M*inputs.getY(), 
                 turnSpeed, 
-                Rotation2d.fromDegrees(-getAngle()));
+                Rotation2d.fromDegrees(getAngle()));
 
-        
         swerveDrive(chassisSpeeds);
     }
 
@@ -286,7 +299,7 @@ public class Drive extends AbstractSubsystem {
 
     private void swerveDrive(ChassisSpeeds chassisSpeeds){
         synchronized (this) {
-            driveState = DriveState.TELEOP;
+            //driveState = DriveState.TELEOP;
         }
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);  
@@ -312,11 +325,19 @@ public class Drive extends AbstractSubsystem {
             }else{
                 swervePID[i].setReference(swerveEncoders[i].getPosition() + angleDiff, ControlType.kPosition);
             }
-            swerveDriveMotors[i].set(targetState.speedMetersPerSecond/Constants.DRIVE_HIGH_SPEED_M);
+            setMotorSpeed(i, targetState.speedMetersPerSecond);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", swerveEncoders[i].getPosition() + angleDiff);
             SmartDashboard.putNumber("Swerve Motor " + i + " Error", angleDiff);           
         }
+    }
+
+
+    public void setMotorSpeed(int module, double velocity){
+        double ffv = driveFeedforward.calculate(velocity);
+        swerveDriveMotors[module].setVoltage(ffv);
+        SmartDashboard.putNumber("Out Volts " + module, ffv);
+        //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
     
     private void configMotors() {
@@ -329,7 +350,7 @@ public class Drive extends AbstractSubsystem {
      * @return
      */
     public double getAngle() {
-        return gyroSensor.getAngle();
+        return -gyroSensor.getAngle();
     }
 
     /**
@@ -338,7 +359,7 @@ public class Drive extends AbstractSubsystem {
      */
     public Rotation2d getGyroAngle() {
         // -180 through 180
-        return Rotation2d.fromDegrees(gyroSensor.getAngle());
+        return Rotation2d.fromDegrees(-getAngle());
     }
 
     /**
@@ -360,9 +381,12 @@ public class Drive extends AbstractSubsystem {
 
     double autoStartTime;
     HolonomicDriveController controller = new HolonomicDriveController(
-          new PIDController(1, 0, 0), new PIDController(1, 0, 0),
-          new ProfiledPIDController(1, 0, 0,
-        new TrapezoidProfile.Constraints(6.28, 3.14)));
+          new PIDController(0.5, 0, 0), new PIDController(0.5, 0, 0),
+          new ProfiledPIDController(0.05, 0, 0,
+        new TrapezoidProfile.Constraints(0.2, 0.2)));
+    {
+        controller.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(360)));
+    }
     Trajectory currentAutoTrajectory;
 
     public synchronized void setAutoPath(Trajectory trajectory) {
@@ -414,6 +438,7 @@ public class Drive extends AbstractSubsystem {
         synchronized (this) {
             snapDriveState = driveState;
         }
+
         switch (snapDriveState) {
             case TELEOP:				
                 break;
@@ -527,9 +552,10 @@ public class Drive extends AbstractSubsystem {
             if(relPos < 0) relPos += 360;
             SmartDashboard.putNumber("Swerve Motor " + i + " Relative Position", relPos);
             SmartDashboard.putNumber("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
-            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity());
+            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity()/60d);
             SmartDashboard.putNumber("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             SmartDashboard.putNumber("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
+
         }
 
         ChassisSpeeds chassisSpeeds = getRobotState();
