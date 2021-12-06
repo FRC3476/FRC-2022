@@ -2,12 +2,16 @@ package frc.auton;
 
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
+import frc.subsystem.Drive;
 import frc.subsystem.RobotTracker;
 
 public abstract class TemplateAuto implements Runnable {
     boolean killSwitch = false;
     protected boolean done = false; 
-    //Translation 2D is in inches.
+    Drive drive = Drive.getInstance();
+
+    RobotTracker robotTracker = RobotTracker.getInstance();
+    
 
     public TemplateAuto() {
     }
