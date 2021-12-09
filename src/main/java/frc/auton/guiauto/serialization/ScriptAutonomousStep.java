@@ -3,9 +3,7 @@ package frc.auton.guiauto.serialization;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import frc.auton.TemplateAuto;
-import frc.auton.guiauto.serialization.Parser;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -31,8 +29,8 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
     @Override
     //If you've removed this method argument elsewhere you will need to remove it here too
     public void execute(TemplateAuto templateAuto) {
-        if(!templateAuto.isDead()){ //Check that our auto is still running
-            if(!Parser.execute(this.getScript(), templateAuto)){
+        if (!templateAuto.isDead()) { //Check that our auto is still running
+            if (!Parser.execute(this.getScript(), templateAuto)) {
                 //The script failed to execute; kill the auto
                 templateAuto.killSwitch();
             }

@@ -1,6 +1,5 @@
 package frc.subsystem;
 
-import frc.robot.Constants;
 import edu.wpi.first.wpilibj.Spark;
 
 public class BlinkinLED extends AbstractSubsystem {
@@ -19,29 +18,29 @@ public class BlinkinLED extends AbstractSubsystem {
 
     private BlinkinLED() {
         super(-1);
-        
+
     }
-    
-    public void setColor(double color){
+
+    public void setColor(double color) {
         spark.set(color);
-        
+
     }
 
     @Override
     public void selfTest() {
-        
+
 
     }
 
     @Override
     public void logData() {
-        
+
 
     }
 
     @Override
     public void update() {
-        
+
 
     }
 

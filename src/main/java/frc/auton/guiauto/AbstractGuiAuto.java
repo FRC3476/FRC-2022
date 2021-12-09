@@ -1,8 +1,5 @@
 package frc.auton.guiauto;
 
-import java.io.File;
-import java.io.IOException;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -14,14 +11,19 @@ import frc.auton.guiauto.serialization.TrajectoryAutonomousStep;
 import frc.subsystem.RobotTracker;
 import frc.utility.Serializer;
 
+import java.io.File;
+import java.io.IOException;
+
 //If your autos don't have a superclass that they extend you can replace TemplateAuto with Runnable
 public abstract class AbstractGuiAuto extends TemplateAuto {
 
-    private  Autonomous autonmous;
+    private Autonomous autonmous;
     Pose2d initalPose;
 
     /**
-     * Ensure you are creating the objects for your auto on robot init. The roborio will take multiple seconds to initalize the auto.
+     * Ensure you are creating the objects for your auto on robot init. The roborio will take multiple seconds to initalize the
+     * auto.
+     *
      * @param autonmousFile File location of the auto
      */
     public AbstractGuiAuto(File autonmousFile) {
@@ -32,9 +34,11 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         }
         init();
     }
-    
+
     /**
-     * Ensure you are creating the objects for your auto before you run them. The roborio will take multiple seconds to initalize the auto.
+     * Ensure you are creating the objects for your auto before you run them. The roborio will take multiple seconds to initalize
+     * the auto.
+     *
      * @param autonomousJson String of the autonomous
      */
     public AbstractGuiAuto(String autonomousJson) {
@@ -46,10 +50,10 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         init();
     }
 
-    private void init(){
+    private void init() {
         //Find and save the inital pose
-        for(AbstractAutonomousStep autonomousStep : autonmous.getAutonomousSteps()){
-            if(autonomousStep instanceof TrajectoryAutonomousStep){
+        for (AbstractAutonomousStep autonomousStep : autonmous.getAutonomousSteps()) {
+            if (autonomousStep instanceof TrajectoryAutonomousStep) {
                 TrajectoryAutonomousStep trajectoryAutonomousStep = (TrajectoryAutonomousStep) autonomousStep;
                 Trajectory.State intialState = trajectoryAutonomousStep.getStates().get(0);
                 initalPose = intialState.poseMeters;
@@ -65,7 +69,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         RobotTracker.getInstance().resetPosition(initalPose);
 
         //Loop though all the steps and execute them
-        for(AbstractAutonomousStep autonomousStep : autonmous.getAutonomousSteps()){
+        for (AbstractAutonomousStep autonomousStep : autonmous.getAutonomousSteps()) {
             System.out.println("doing a step: " + Timer.getFPGATimestamp());
             autonomousStep.execute(this);
         }
@@ -73,9 +77,9 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         System.out.println("finished: " + Timer.getFPGATimestamp());
 
         synchronized (this) {
-        done = true; 
-    }
+            done = true;
+        }
 
     }
-    
+
 }

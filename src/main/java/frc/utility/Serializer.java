@@ -2,7 +2,6 @@ package frc.utility;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import frc.auton.guiauto.serialization.Autonomous;
 
 import java.io.File;

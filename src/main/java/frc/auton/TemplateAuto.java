@@ -7,11 +7,11 @@ import frc.subsystem.RobotTracker;
 
 public abstract class TemplateAuto implements Runnable {
     boolean killSwitch = false;
-    protected boolean done = false; 
+    protected boolean done = false;
     Drive drive = Drive.getInstance();
 
     RobotTracker robotTracker = RobotTracker.getInstance();
-    
+
 
     public TemplateAuto() {
     }
@@ -19,7 +19,7 @@ public abstract class TemplateAuto implements Runnable {
     public Translation2d here() {
         return RobotTracker.getInstance().getPoseMeters().getTranslation();
     }
-    
+
     public Rotation2d dir() {
         return RobotTracker.getInstance().getPoseMeters().getRotation();
     }
@@ -33,11 +33,11 @@ public abstract class TemplateAuto implements Runnable {
     }
 
     synchronized public boolean isFinished() {
-        return done; 
+        return done;
     }
 
     public void reset() {
         this.killSwitch = false;
-        this.done = false; 
+        this.done = false;
     }
 }

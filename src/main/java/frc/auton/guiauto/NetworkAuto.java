@@ -13,5 +13,5 @@ public class NetworkAuto extends AbstractGuiAuto {
     public NetworkAuto() {
         super(autoPath.getString(null));
     }
-    
+
 }
