@@ -363,7 +363,7 @@ public class Drive extends AbstractSubsystem {
     }
 
     /**
-     * {@link Drive#getSpeed()} is faster if you don't need the square root
+     * {@link Drive#getSpeedSquared()} is faster if you don't need the square root
      * @return The robot speed
      */
     public double getSpeed() {
