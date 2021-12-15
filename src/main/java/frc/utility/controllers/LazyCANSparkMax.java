@@ -14,8 +14,7 @@ public class LazyCANSparkMax extends CANSparkMax {
 
     public LazyCANSparkMax(int deviceNumber, MotorType type) {
         super(deviceNumber, type);
-        //enableVoltageCompensation(true);
-        //configVoltageCompSaturation(12, 10);
+        enableVoltageCompensation(10);
 
     }
 

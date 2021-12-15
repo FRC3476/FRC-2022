@@ -11,23 +11,23 @@ import edu.wpi.first.wpilibj.Joystick;
 public class Controller extends Joystick {
 
     public static class Xbox {
-        public static int A = 1;
-        public static int B = 2;
-        public static int X = 3;
-        public static int Y = 4;
-        public static int LeftBumper = 5;
-        public static int RightBumper = 6;
-        public static int Back = 7;
-        public static int Start = 8;
-        public static int LeftClick = 9;
-        public static int RightClick = 10;
+        public static final int A = 1;
+        public static final int B = 2;
+        public static final int X = 3;
+        public static final int Y = 4;
+        public static final int LEFT_BUMPER = 5;
+        public static final int RIGHT_BUMPER = 6;
+        public static final int BACK = 7;
+        public static final int START = 8;
+        public static final int LEFT_CLICK = 9;
+        public static final int RIGHT_CLICK = 10;
 
-        public static int LeftX = 0;
-        public static int LeftY = 1;
-        public static int LeftTrigger = 2;
-        public static int RightTrigger = 3;
-        public static int RightX = 4;
-        public static int RightY = 5;
+        public static final int LEFT_X = 0;
+        public static final int LEFT_Y = 1;
+        public static final int LEFT_TRIGGER = 2;
+        public static final int RIGHT_TRIGGER = 3;
+        public static final int RIGHT_X = 4;
+        public static final int RIGHT_Y = 5;
     }
 
     /*
@@ -60,7 +60,7 @@ public class Controller extends Joystick {
     public boolean getFallingEdge(int button) {
         boolean oldVal = getButtonState(button, oldButtons);
         boolean currentVal = getButtonState(button, currentButtons);
-		return oldVal == true && currentVal == false;
+		return oldVal && !currentVal;
     }
 
     /**
@@ -72,14 +72,14 @@ public class Controller extends Joystick {
     public boolean getRisingEdge(int button) {
         boolean oldVal = getButtonState(button, oldButtons);
         boolean currentVal = getButtonState(button, currentButtons);
-		return oldVal == false && currentVal == true;
+		return !oldVal && currentVal;
     }
 
     public boolean getRisingEdge(int axis, double threshold) {
         if (axis <= axisCount) {
             boolean oldVal = oldAxis[axis] > threshold;
             boolean currentVal = currentAxis[axis] > threshold;
-			return oldVal == false && currentVal == true;
+			return !oldVal && currentVal;
         }
         return false;
     }
@@ -88,7 +88,7 @@ public class Controller extends Joystick {
         if (axis <= axisCount) {
             boolean oldVal = oldAxis[axis] > threshold;
             boolean currentVal = currentAxis[axis] > threshold;
-			return oldVal == true && currentVal == false;
+			return oldVal && !currentVal;
         }
         return false;
     }
@@ -130,7 +130,7 @@ public class Controller extends Joystick {
                 return currentAxis[axis];
             }
         } catch (ArrayIndexOutOfBoundsException e) {
-            //	System.out.println("Axis out of bounds " + axis + "/" + axisCount);
+            System.out.println("Axis out of bounds " + axis + "/" + axisCount);
         }
         return 0;
     }

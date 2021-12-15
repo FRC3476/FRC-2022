@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.auton.TemplateAuto;
 import frc.auton.TestAuto;
 import frc.auton.guiauto.NetworkAuto;
+import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.BlinkinLED;
 import frc.subsystem.Drive;
 import frc.subsystem.RobotTracker;
@@ -86,6 +87,7 @@ public class Robot extends TimedRobot {
         testAuto = new TestAuto();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
+        ClassInformationSender.updateReflectionInformation();
     }
 
     /**
