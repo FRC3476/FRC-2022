@@ -1,6 +1,7 @@
 package frc.auton.guiauto.serialization.reflection;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public final class ReflectionClassData {
@@ -11,7 +12,7 @@ public final class ReflectionClassData {
     public final int modifiers;
 
 
-    public ReflectionClassData(Class<?> clazz) {
+    public ReflectionClassData(Class clazz) {
         this.fullName = clazz.getName();
         Method[] methods = clazz.getMethods();
         this.methods = new ReflectionMethodData[methods.length];

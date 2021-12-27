@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Launch Shuffleboard" type="JarApplication" activateToolWindowBeforeRun="false">
+    <option name="JAR_PATH" value="$PROJECT_DIR$/../../../../Public/wpilib/2021/tools/shuffleboard.jar" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <module name="FRC-2022.main" />
+    <method v="2" />
+  </configuration>
+</component>
