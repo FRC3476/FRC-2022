@@ -15,7 +15,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
     private final List<State> states;
 
     @JsonCreator
-    public TrajectoryAutonomousStep(@JsonProperty(required = true, value = "states") List<Trajectory.State> m_states) {
+    public TrajectoryAutonomousStep(@JsonProperty(required = true, value = "states") List<State> m_states) {
         this.states = m_states;
     }
 
@@ -46,7 +46,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
     }
 
     @JsonProperty("states")
-    public List<Trajectory.State> getStates() {
+    public List<State> getStates() {
         return states;
     }
 }

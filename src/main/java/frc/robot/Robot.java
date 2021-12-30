@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.auton.TemplateAuto;
 import frc.auton.TestAuto;
 import frc.auton.guiauto.NetworkAuto;
+import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.BlinkinLED;
 import frc.subsystem.Drive;
@@ -23,6 +24,7 @@ import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
 
+import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -87,7 +89,6 @@ public class Robot extends TimedRobot {
         testAuto = new TestAuto();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
-        ClassInformationSender.updateReflectionInformation();
     }
 
     /**
@@ -250,5 +251,11 @@ public class Robot extends TimedRobot {
             drive.stopMovement();
             drive.setTeleop();
         }
+    }
+
+    @Override
+    public void simulationInit() {
+        ClassInformationSender.updateReflectionInformation(
+                new File(OsUtil.getUserConfigDirectory("AutoBuilder") + "/robotCodeData.json"));
     }
 }

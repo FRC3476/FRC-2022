@@ -1,7 +1,6 @@
 package frc.auton.guiauto.serialization.reflection;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public final class ReflectionClassData {
@@ -10,6 +9,7 @@ public final class ReflectionClassData {
     public final String[] fieldTypes;
     public final ReflectionMethodData[] methods;
     public final int modifiers;
+    public final boolean isEnum;
 
 
     public ReflectionClassData(Class clazz) {
@@ -26,6 +26,8 @@ public final class ReflectionClassData {
             this.fieldNames[i] = clazz.getDeclaredFields()[i].getName();
             this.fieldTypes[i] = clazz.getDeclaredFields()[i].getType().getName();
         }
+
+        this.isEnum = clazz.isEnum();
 
         modifiers = clazz.getModifiers();
     }
