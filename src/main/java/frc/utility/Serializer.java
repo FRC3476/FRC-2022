@@ -16,7 +16,7 @@ public class Serializer {
     }
 
     public static void serializeToFile(Object obj, File file) throws IOException {
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, false);
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         objectMapper.writeValue(file, obj);
     }
 

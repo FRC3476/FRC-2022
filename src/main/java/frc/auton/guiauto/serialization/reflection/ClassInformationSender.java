@@ -17,7 +17,7 @@ public final class ClassInformationSender {
 
     public static void updateReflectionInformation(@Nullable File file) {
         try {
-            List<Class<?>> classes = findClasses(new File(Filesystem.getLaunchDirectory() + "/bin/main"), "");
+            List<Class<?>> classes = findClasses(new File(Filesystem.getLaunchDirectory() + "/build/classes/java/main"), "");
             ArrayList<ReflectionClassData> reflectionClassData = new ArrayList<>();
             for (Class<?> aClass : classes) {
                 reflectionClassData.add(new ReflectionClassData(aClass));

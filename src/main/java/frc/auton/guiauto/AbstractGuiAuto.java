@@ -10,8 +10,6 @@ import frc.auton.guiauto.serialization.Autonomous;
 import frc.auton.guiauto.serialization.TrajectoryAutonomousStep;
 import frc.subsystem.RobotTracker;
 import frc.utility.Serializer;
-import frc.utility.math.Rotation2D;
-import frc.utility.math.Translation2D;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,8 +66,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
     public void run() {
         System.out.println("Started Running: " + Timer.getFPGATimestamp());
         //Set our initial pose in our robot tracker
-        RobotTracker.getInstance().setInitialRotation(Rotation2D.fromWPIRotation2d(initialPose.getRotation()));
-        RobotTracker.getInstance().setInitialTranslation(Translation2D.fromWPITranslation2d(initialPose.getTranslation()));
+        RobotTracker.getInstance().resetPosition(initialPose);
 
         //Loop though all the steps and execute them
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
