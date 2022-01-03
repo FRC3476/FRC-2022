@@ -1,9 +1,10 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.util.Units;
 
-public class Constants {
+public final class Constants {
 
     //Limelight 
     //Calibrate using https://www.desmos.com/calculator/n2dsvzsyhk
@@ -39,6 +40,23 @@ public class Constants {
     public static final double SWERVE_DRIVE_D = 0.00;
     public static final double SWERVE_DRIVE_I = 0.00;
     public static final double SWERVE_DRIVE_F = 0.00;
+
+    /**
+     * Feed forward constants for the drivetrain.
+     * <p>
+     * 0 -> Left Front
+     * <p>
+     * 1 -> Left Back
+     * <p>
+     * 2 -> Right Front
+     * <p>
+     * 3 -> Right Back
+     */
+    public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
+            new SimpleMotorFeedforward(0.153, 1.6, 0.18),
+            new SimpleMotorFeedforward(0.153, 1.6, 0.18),
+            new SimpleMotorFeedforward(0.153, 1.6, 0.18),
+            new SimpleMotorFeedforward(0.153, 1.6, 0.18)};
 
     //    public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(-0.381, 0.381);
     //    public static final Translation2d SWERVE_LEFT_BACK_LOCATION = new Translation2d(-0.381, -0.381);

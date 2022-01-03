@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.controller.HolonomicDriveController;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
-import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
@@ -50,12 +49,7 @@ public class Drive extends AbstractSubsystem {
     private Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
-    double prevPositionL = 0;
-    double prevPositionR = 0;
-
     private boolean isAiming = false;
-
-    double prevTime;
 
     private double turnTarget = 0;
 
@@ -93,9 +87,6 @@ public class Drive extends AbstractSubsystem {
      */
     private final CANPIDController[] swervePID = new CANPIDController[4];
 
-
-    // private final PIDController drivePidController = new PIDController(kp, ki, kd, Constants.DRIVE_PERIOD/1000d);
-    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0.153, 1.6, 0.18);
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
@@ -326,9 +317,9 @@ public class Drive extends AbstractSubsystem {
 
 
     public void setMotorSpeed(int module, double velocity) {
-        double acceleration = Timer.getFPGATimestamp() - lastMotorSpeeds[module] > 0.1 ? 0 :
-                (velocity - lastMotorSpeeds[module]) / (Timer.getFPGATimestamp() - lastMotorSpeeds[module]);
-        double ffv = driveFeedforward.calculate(velocity, acceleration);
+        double acceleration = Timer.getFPGATimestamp() - lastMotorSetTimes[module] > 0.1 ? 0 :
+                (velocity - lastMotorSpeeds[module]) / (Timer.getFPGATimestamp() - lastMotorSetTimes[module]);
+        double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         swerveDriveMotors[module].setVoltage(ffv);
         SmartDashboard.putNumber("Out Volts " + module, ffv);
         lastMotorSpeeds[module] = velocity;
