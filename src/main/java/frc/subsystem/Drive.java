@@ -29,6 +29,7 @@ import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
 
+
 public final class Drive extends AbstractSubsystem {
 
     public enum DriveState {
@@ -40,8 +41,6 @@ public final class Drive extends AbstractSubsystem {
     public static Drive getInstance() {
         return instance;
     }
-
-    private boolean drivePercentVbus;
 
     private final AHRS gyroSensor;
     private final PIDController turnPID;
@@ -153,8 +152,6 @@ public final class Drive extends AbstractSubsystem {
         }
 
         configMotors();
-
-        drivePercentVbus = true;
         driveState = DriveState.TELEOP;
 
         turnPID = new PIDController(0.02, 0.01, 0.00, 0.02); //P=1.0 OR 0.8
@@ -412,22 +409,6 @@ public final class Drive extends AbstractSubsystem {
 
     public double getAutoElapsedTime() {
         return Timer.getFPGATimestamp() - autoStartTime;
-    }
-
-    public double getVoltage() {
-        return 0;
-        //return (leftTalon.getMotorOutputVoltage() + rightTalon.getMotorOutputVoltage()
-        //		+ .getMotorOutputVoltage() + rightSlaveTalon.getMotorOutputVoltage()
-        //		+ rightSlave2Talon.getMotorOutputVoltage() + leftSlave2Talon.getMotorOutputVoltage()) / 6;
-    }
-
-    public synchronized void setSimpleDrive(boolean setting) {
-        if (drivePercentVbus != setting) System.out.println("Simple drive: " + setting);
-        drivePercentVbus = setting;
-    }
-
-    public synchronized boolean getSimpleDrive() {
-        return drivePercentVbus;
     }
 
     @Override
