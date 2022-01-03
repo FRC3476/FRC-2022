@@ -44,6 +44,7 @@ def includeDesktopSupport = true
 // Also defines JUnit 4.
 dependencies {
     implementation wpi.deps.wpilib()
+    implementation 'org.jetbrains:annotations:22.0.0'
     nativeZip wpi.deps.wpilibJni(wpi.platforms.roborio)
     nativeDesktopZip wpi.deps.wpilibJni(wpi.platforms.desktop)
 
@@ -76,4 +77,8 @@ sim {
 jar {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
+}
+
+repositories {
+    mavenCentral()
 }
