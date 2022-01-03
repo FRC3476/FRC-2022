@@ -70,7 +70,7 @@ public final class Constants {
 
 
     public static final double DRIVE_HIGH_SPEED_M = 7.26;
-    public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
+    @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
 
     public static final double MAX_TURN_ERROR = 0.85;
     public static final double MAX_PID_STOP_SPEED = 5.2;

@@ -2,53 +2,37 @@ package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
+@SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable {
-    int period = 50;
-
-    FileWriter logWriter;
-    FileReader logReader;
-    ThreadSignal signal = ThreadSignal.PAUSED;
+    private final int period;
+    private final int loggingInterval;
+    private int logInterval;
+    private ThreadSignal signal = ThreadSignal.PAUSED;
     public String subsystemName;
 
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
     }
 
-    protected static AbstractSubsystem instance;
-
     /**
      * @param period The period when calling update
      */
-    public AbstractSubsystem(int period) {
+    public AbstractSubsystem(int period, int loggingInterval) {
         this.period = period;
+        this.subsystemName = this.getClass().getSimpleName();
+        this.loggingInterval = loggingInterval;
         if (period != -1) {
             new Thread(this).start();
         }
-        try {
-            String fileTime = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-            subsystemName = this.getClass().getSimpleName();
-            String fileName = subsystemName + "" + fileTime;
-            logWriter = new FileWriter(fileName);
-            logReader = new FileReader(fileName);
+    }
 
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
+    public AbstractSubsystem(int period) {
+        this(period, 2);
     }
 
     public abstract void selfTest();
 
     public abstract void logData();
-
-    public static AbstractSubsystem getInstance() {
-        return instance;
-    }
 
     public void pause() {
         signal = ThreadSignal.PAUSED;
@@ -63,19 +47,25 @@ public abstract class AbstractSubsystem implements Runnable {
     }
 
     /**
-     * This fuction will be called repeartedly when the thread is alive The period will be whatever you defined when creating the
+     * This function will be called repeatedly when the thread is alive. The period will be whatever you defined when creating the
      * object
      */
-    public abstract void update();
+    public void update() {
 
+    }
 
     @Override
+    @SuppressWarnings("BusyWait")
     public void run() {
         while (signal != ThreadSignal.DEAD) {
             double startTime = Timer.getFPGATimestamp();
             if (signal == ThreadSignal.ALIVE) {
                 update();
-                logData();
+                logInterval++;
+                if (logInterval >= loggingInterval) {
+                    logData();
+                    logInterval = 1;
+                }
             }
             double executionTimeMS = (Timer.getFPGATimestamp() - startTime) * 1000;
             try {
@@ -83,7 +73,7 @@ public abstract class AbstractSubsystem implements Runnable {
                     Thread.sleep((long) (period - executionTimeMS));
                 }
             } catch (Exception e) {
-                System.out.println("Thread sleep failing " + this.getClass().getName() + " message: " + e.getMessage());
+                System.out.println("Thread sleep failing " + subsystemName + " message: " + e.getMessage());
             }
 
         }

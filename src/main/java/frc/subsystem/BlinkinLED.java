@@ -2,7 +2,7 @@ package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Spark;
 
-public class BlinkinLED extends AbstractSubsystem {
+public final class BlinkinLED extends AbstractSubsystem {
     private static final BlinkinLED instance = new BlinkinLED();
 
     public static BlinkinLED getInstance() {
@@ -14,12 +14,10 @@ public class BlinkinLED extends AbstractSubsystem {
 
     private BlinkinLED() {
         super(-1);
-
     }
 
     public void setColor(double color) {
         spark.set(color);
-
     }
 
     @Override
@@ -30,12 +28,6 @@ public class BlinkinLED extends AbstractSubsystem {
 
     @Override
     public void logData() {
-
-
-    }
-
-    @Override
-    public void update() {
 
 
     }

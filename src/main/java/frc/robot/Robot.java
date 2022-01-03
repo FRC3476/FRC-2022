@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
  * TimedRobot documentation. If you change the name of this class or the package after creating this project, you must also update
  * the build.gradle file in the project.
  */
+@SuppressWarnings("ClassNamePrefixedWithPackageName")
 public class Robot extends TimedRobot {
     //GUI
     NetworkTableInstance instance = NetworkTableInstance.getDefault();
@@ -55,7 +56,6 @@ public class Robot extends TimedRobot {
     Thread autoThread;
     private static final String kDefaultAuto = "Default";
     private static final String kCustomAuto = "My Auto";
-    private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
     //Subsystems
@@ -144,7 +144,7 @@ public class Robot extends TimedRobot {
 
         if (networkAuto == null) {
             System.out.println("Using normal autos");
-            selectedAuto = null;
+            selectedAuto = null; //TODO put an actual auto here
             //TODO put autos here
         } else {
             System.out.println("Using autos from network tables");

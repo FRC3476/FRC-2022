@@ -29,7 +29,7 @@ import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
 
-public class Drive extends AbstractSubsystem {
+public final class Drive extends AbstractSubsystem {
 
     public enum DriveState {
         TELEOP, TURN, HOLD, DONE, RAMSETE
@@ -53,10 +53,6 @@ public class Drive extends AbstractSubsystem {
 
     private double turnTarget = 0;
 
-    private final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
-
-    private final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve,
-            rightBackSparkSwerve;
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
     /**
@@ -74,9 +70,6 @@ public class Drive extends AbstractSubsystem {
      */
     private final CANEncoder[] swerveEncoders = new CANEncoder[4];
 
-    private final DutyCycle leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder,
-            rightBackSparkPwmEncoder;
-
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
@@ -92,6 +85,9 @@ public class Drive extends AbstractSubsystem {
         super(Constants.DRIVE_PERIOD);
         gyroSensor = new AHRS(SPI.Port.kMXP);
 
+        final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
+        final DutyCycle leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder, rightBackSparkPwmEncoder;
+        final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve, rightBackSparkSwerve;
         // Swerve Drive Motors
         leftFrontSpark = new LazyCANSparkMax(Constants.DRIVE_LEFT_FRONT_ID, MotorType.kBrushless);
         leftBackSpark = new LazyCANSparkMax(Constants.DRIVE_LEFT_BACK_ID, MotorType.kBrushless);
@@ -335,7 +331,7 @@ public class Drive extends AbstractSubsystem {
     /**
      * You probably want to get the angle from {@link RobotTracker#getPoseMeters()}
      *
-     * @return
+     * @return the current angle of the robot in degrees
      */
     public double getAngle() {
         return -gyroSensor.getAngle();
