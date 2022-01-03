@@ -36,7 +36,7 @@ public abstract class TemplateAuto implements Runnable {
         return done;
     }
 
-    public void reset() {
+    public synchronized void reset() {
         this.killSwitch = false;
         this.done = false;
     }

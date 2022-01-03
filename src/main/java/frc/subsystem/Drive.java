@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
-import frc.utility.OrangeUtility;
 import frc.utility.controllers.LazyCANSparkMax;
 
 public class Drive extends AbstractSubsystem {
@@ -383,30 +382,32 @@ public class Drive extends AbstractSubsystem {
 
     double autoStartTime;
     HolonomicDriveController controller = new HolonomicDriveController(
-            new PIDController(1.5, 0, 0), new PIDController(1.5, 0, 0),
-            new ProfiledPIDController(0.2, 0, 0,
-                    new TrapezoidProfile.Constraints(0.2, 0.2)));
+            new PIDController(1.5, 0, 0),
+            new PIDController(1.5, 0, 0),
+            new ProfiledPIDController(0.2, 0, 0, new TrapezoidProfile.Constraints(0.2, 0.2)));
 
     {
-        controller.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(360)));
+        controller.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(360))); //TODO: Tune
     }
 
-    Trajectory currentAutoTrajectory;
 
-    public synchronized void setAutoPath(Trajectory trajectory) {
+    public synchronized void setAutoPath(Trajectory trajectory, Rotation2d autoTargetHeading) {
         driveState = DriveState.RAMSETE;
         this.currentAutoTrajectory = trajectory;
         autoStartTime = Timer.getFPGATimestamp();
         configAuto();
         configCoast();
-        updateRamsete();
+        this.autoTargetHeading = autoTargetHeading;
     }
+
+    Trajectory currentAutoTrajectory;
+    Rotation2d autoTargetHeading;
 
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
         System.out.println(goal);
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
-                Rotation2d.fromDegrees(0));
+                autoTargetHeading);
         swerveDrive(adjustedSpeeds);
         //System.out.println(ramseteController.atReference());
         //System.out.println("target speed" + Units.metersToInches(wheelspeeds.leftMetersPerSecond) + " " + Units
@@ -416,6 +417,14 @@ public class Drive extends AbstractSubsystem {
             driveState = DriveState.DONE;
             stopMovement();
         }
+    }
+
+    public synchronized void setAutoRotation(Rotation2d rotation) {
+        autoTargetHeading = rotation;
+    }
+
+    public double getAutoElapsedTime() {
+        return Timer.getFPGATimestamp() - autoStartTime;
     }
 
     public double getVoltage() {
@@ -481,16 +490,6 @@ public class Drive extends AbstractSubsystem {
         }
     }
 
-    public void setRotationTeleop(Rotation2d angle) {
-        synchronized (this) {
-            wantedHeading = angle;
-            driveState = DriveState.TURN;
-            rotateAuto = false;
-            isAiming = !getTurningDone();
-            configBrake();
-
-        }
-    }
 
     public synchronized boolean getTurningDone() {
         //TODO redo

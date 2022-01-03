@@ -3,10 +3,6 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.Spark;
 
 public class BlinkinLED extends AbstractSubsystem {
-    public enum ActivityCheck {
-        ControlPanelActive, VisionActive, Idle
-    }
-
     private static final BlinkinLED instance = new BlinkinLED();
 
     public static BlinkinLED getInstance() {

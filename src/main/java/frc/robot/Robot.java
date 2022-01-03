@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.auton.TemplateAuto;
-import frc.auton.TestAuto;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
@@ -73,7 +72,6 @@ public class Robot extends TimedRobot {
 
     //Control loop states
     boolean limelightTakeSnapshots;
-    TestAuto testAuto;
 
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
@@ -86,7 +84,6 @@ public class Robot extends TimedRobot {
 
         startSubsystems();
         drive.resetGyro();
-        testAuto = new TestAuto();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
     }
@@ -147,7 +144,7 @@ public class Robot extends TimedRobot {
 
         if (networkAuto == null) {
             System.out.println("Using normal autos");
-            selectedAuto = testAuto;
+            selectedAuto = null;
             //TODO put autos here
         } else {
             System.out.println("Using autos from network tables");
