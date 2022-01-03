@@ -493,15 +493,12 @@ public final class Drive extends AbstractSubsystem {
 
     private void updateTurn() {
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        double curSpeed = Math.abs(Math.toDegrees(getRobotState().omegaRadiansPerSecond));
-        double deltaSpeed;
-        double pidDeltaSpeed;
-
-        pidDeltaSpeed = turnPID.calculate(error);
-        deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
+        double pidDeltaSpeed = turnPID.calculate(error);
+        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
-        if ((Math.abs(error) < Constants.MAX_TURN_ERROR) || curSpeed < Constants.MAX_PID_STOP_SPEED) {
+        if ((Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED) {
             swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(0)));
             isAiming = false;
 
@@ -524,6 +521,13 @@ public final class Drive extends AbstractSubsystem {
             } else {
                 turnMinSpeed = 2;
             }
+            SmartDashboard.putNumber("Turn Error", error);
+            SmartDashboard.putNumber("Turn Actual Speed", curSpeed);
+            SmartDashboard.putNumber("Turn PID Command", pidDeltaSpeed);
+            SmartDashboard.putNumber("Turn Speed Command", deltaSpeed);
+            SmartDashboard.putNumber("Turn Min Speed", turnMinSpeed);
+
+
         }
     }
 
