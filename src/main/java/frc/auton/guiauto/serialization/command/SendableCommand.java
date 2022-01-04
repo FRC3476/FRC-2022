@@ -134,11 +134,16 @@ public class SendableCommand {
                 switch (methodName) {
                     case "print":
                         System.out.println(objArgs[0]);
+                        break;
                     case "sleep":
                         Thread.sleep((long) objArgs[0]);
+                        break;
                 }
             } catch (InterruptedException e) {
                 DriverStation.reportError("Thread interrupted while sleeping", e.getStackTrace());
+                return false;
+            } catch (Exception e) {
+                DriverStation.reportError("Could not invoke method " + methodName, e.getStackTrace());
                 return false;
             }
         }
