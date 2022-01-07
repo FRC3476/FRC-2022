@@ -7,7 +7,7 @@ import frc.auton.guiauto.serialization.Autonomous;
 import java.io.File;
 import java.io.IOException;
 
-public class Serializer {
+public final class Serializer {
     static ObjectMapper objectMapper = new ObjectMapper();
 
     public static String serializeToString(Object obj) throws IOException {

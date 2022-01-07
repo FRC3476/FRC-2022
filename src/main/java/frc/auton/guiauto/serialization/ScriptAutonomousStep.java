@@ -10,29 +10,29 @@ import frc.auton.guiauto.serialization.command.SendableScript;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ScriptAutonomousStep extends AbstractAutonomousStep {
 
-    private final SendableScript script;
+    private final SendableScript sendableScript;
 
     @JsonCreator
-    public ScriptAutonomousStep(@JsonProperty(required = true, value = "sendableScript") SendableScript script) {
-        this.script = script;
+    public ScriptAutonomousStep(@JsonProperty(required = true, value = "sendableScript") SendableScript sendableScript) {
+        this.sendableScript = sendableScript;
     }
 
     @Override
     public String toString() {
-        return "ScriptAutonomousStep{" + "script='" + script + '\'' + '}';
+        return "ScriptAutonomousStep{" + "sendableScript='" + sendableScript + '\'' + '}';
     }
 
     @JsonProperty
-    public SendableScript getScript() {
-        return script;
+    public SendableScript getSendableScript() {
+        return sendableScript;
     }
 
     @Override
     //If you've removed this method argument elsewhere you will need to remove it here too
     public void execute(TemplateAuto templateAuto) {
         if (!templateAuto.isDead()) { //Check that our auto is still running
-            if (!script.execute()) {
-                //The script failed to execute; kill the auto
+            if (!sendableScript.execute()) {
+                //The sendableScript failed to execute; kill the auto
                 templateAuto.killSwitch();
             }
         }

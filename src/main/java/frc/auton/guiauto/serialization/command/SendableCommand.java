@@ -110,8 +110,13 @@ public class SendableCommand {
         this.instance = instance;
     }
 
+    @JsonIgnoreProperties
     private final Object instance;
+
+    @JsonIgnoreProperties
     private final Method methodToCall;
+    
+    @JsonIgnoreProperties
     private final Object[] objArgs;
 
 

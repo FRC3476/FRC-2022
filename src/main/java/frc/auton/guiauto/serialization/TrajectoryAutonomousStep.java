@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.Trajectory.State;
 import frc.auton.TemplateAuto;
 import frc.subsystem.Drive;
-import org.jetbrains.annotations.Contract;
 
 import java.util.List;
 
@@ -40,8 +39,8 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
         //If this is not how your autonomous code work you can change the implementation to fit your needs.
         //You just need to ensure that this thread will be blocked until the path is finished being driven.
         if (!templateAuto.isDead()) { //Check that the auto is not dead
-            Drive.getInstance().setAutoPath(getTrajectory(),
-                    rotations.get(0).rotation); //Send the auto to our drive class to be executed
+            Drive.getInstance().setAutoPath(getTrajectory()); //Send the auto to our drive class to be executed
+            Drive.getInstance().setAutoRotation(rotations.get(0).rotation);
             int rotationIndex = 1; //Start at the second rotation (the first is the starting rotation)
             while (!Drive.getInstance().isFinished()) {
                 if (templateAuto.isDead()) {
@@ -55,6 +54,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
                     Thread.yield(); //Wait for the auto to finish
                 }
             }
+            Drive.getInstance().stopMovement();
         }
     }
 

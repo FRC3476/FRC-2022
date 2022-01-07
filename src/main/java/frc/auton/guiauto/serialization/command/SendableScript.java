@@ -1,10 +1,13 @@
 package frc.auton.guiauto.serialization.command;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
+import java.util.List;
 
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SendableScript {
 
     /**
@@ -28,20 +31,16 @@ public class SendableScript {
     private DelayType delayType;
     private double delay;
 
-    private final ArrayList<SendableCommand> commands;
+    private final List<SendableCommand> commands;
 
 
     @JsonCreator
     public SendableScript(@JsonProperty("delayType") DelayType delayType,
                           @JsonProperty("delay") double delay,
-                          @JsonProperty("commands") ArrayList<SendableCommand> commands) {
+                          @JsonProperty("commands") List<SendableCommand> commands) {
         this.delayType = delayType;
         this.delay = delay;
         this.commands = commands;
-    }
-
-    public SendableScript() {
-        this(DelayType.NONE, 0, new ArrayList<>());
     }
 
     @JsonProperty("delayType")
@@ -55,7 +54,7 @@ public class SendableScript {
     }
 
     @JsonProperty("commands")
-    public ArrayList<SendableCommand> getCommands() {
+    public List<SendableCommand> getCommands() {
         return commands;
     }
 

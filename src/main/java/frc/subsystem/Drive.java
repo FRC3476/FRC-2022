@@ -368,20 +368,19 @@ public final class Drive extends AbstractSubsystem {
     HolonomicDriveController controller = new HolonomicDriveController(
             new PIDController(1.5, 0, 0),
             new PIDController(1.5, 0, 0),
-            new ProfiledPIDController(0.2, 0, 0, new TrapezoidProfile.Constraints(0.2, 0.2)));
+            new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)));
 
     {
-        controller.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(360))); //TODO: Tune
+        controller.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
     }
 
 
-    public synchronized void setAutoPath(Trajectory trajectory, Rotation2d autoTargetHeading) {
+    public synchronized void setAutoPath(Trajectory trajectory) {
         driveState = DriveState.RAMSETE;
         this.currentAutoTrajectory = trajectory;
         autoStartTime = Timer.getFPGATimestamp();
         configAuto();
         configCoast();
-        this.autoTargetHeading = autoTargetHeading;
     }
 
     Trajectory currentAutoTrajectory;
@@ -405,6 +404,7 @@ public final class Drive extends AbstractSubsystem {
 
     public synchronized void setAutoRotation(Rotation2d rotation) {
         autoTargetHeading = rotation;
+        System.out.println("new rotation" + rotation.getDegrees());
     }
 
     public double getAutoElapsedTime() {
@@ -547,6 +547,7 @@ public final class Drive extends AbstractSubsystem {
 
     public double getAbsolutePosition(int moduleNumber) {
         double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
+        if (moduleNumber == 3) angle -= 72;
         return angle < 0 ? angle + 360 : angle;
     }
 }

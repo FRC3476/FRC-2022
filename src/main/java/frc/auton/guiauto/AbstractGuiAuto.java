@@ -66,7 +66,9 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
     public void run() {
         System.out.println("Started Running: " + Timer.getFPGATimestamp());
         //Set our initial pose in our robot tracker
-        RobotTracker.getInstance().resetPosition(initialPose);
+        if (initialPose != null) {
+            RobotTracker.getInstance().resetPosition(initialPose);
+        }
 
         //Loop though all the steps and execute them
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
