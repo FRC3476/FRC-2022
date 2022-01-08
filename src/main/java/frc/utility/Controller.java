@@ -44,8 +44,8 @@ public class Controller extends Joystick {
 
     public Controller(int port) {
         super(port);
-        axisCount = DriverStation.getInstance().getStickAxisCount(port);
-        povCount = DriverStation.getInstance().getStickPOVCount(port);
+        axisCount = DriverStation.getStickAxisCount(port);
+        povCount = DriverStation.getStickPOVCount(port);
         oldAxis = new double[axisCount];
         currentAxis = new double[axisCount];
         currentPOV = new int[povCount];
@@ -98,23 +98,23 @@ public class Controller extends Joystick {
      */
     public void update() {
         oldButtons = currentButtons;
-        currentButtons = DriverStation.getInstance().getStickButtons(getPort());
-        if (axisCount != DriverStation.getInstance().getStickAxisCount(getPort())) {
-            axisCount = DriverStation.getInstance().getStickAxisCount(getPort());
+        currentButtons = DriverStation.getStickButtons(getPort());
+        if (axisCount != DriverStation.getStickAxisCount(getPort())) {
+            axisCount = DriverStation.getStickAxisCount(getPort());
             oldAxis = new double[axisCount];
             currentAxis = new double[axisCount];
         }
-        if (povCount != DriverStation.getInstance().getStickPOVCount(getPort())) {
-            povCount = DriverStation.getInstance().getStickPOVCount(getPort());
+        if (povCount != DriverStation.getStickPOVCount(getPort())) {
+            povCount = DriverStation.getStickPOVCount(getPort());
             currentPOV = new int[povCount];
         }
         oldAxis = currentAxis;
         for (int i = 0; i < axisCount; i++) {
-            currentAxis[i] = DriverStation.getInstance().getStickAxis(getPort(), i);
+            currentAxis[i] = DriverStation.getStickAxis(getPort(), i);
         }
 
         for (int i = 0; i < povCount; i++) {
-            currentPOV[i] = DriverStation.getInstance().getStickPOV(getPort(), i);
+            currentPOV[i] = DriverStation.getStickPOV(getPort(), i);
         }
     }
 

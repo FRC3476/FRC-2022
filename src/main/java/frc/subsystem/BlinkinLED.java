@@ -1,6 +1,6 @@
 package frc.subsystem;
 
-import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
 public final class BlinkinLED extends AbstractSubsystem {
     private static final BlinkinLED instance = new BlinkinLED();

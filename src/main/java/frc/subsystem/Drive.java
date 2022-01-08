@@ -3,28 +3,28 @@
 package frc.subsystem;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.revrobotics.CANAnalog.AnalogMode;
-import com.revrobotics.CANEncoder;
-import com.revrobotics.CANPIDController;
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
-import com.revrobotics.ControlType;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxAnalogSensor;
+import com.revrobotics.SparkMaxPIDController;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycle;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.controller.HolonomicDriveController;
-import edu.wpi.first.wpilibj.controller.PIDController;
-import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
-import edu.wpi.first.wpilibj.geometry.Pose2d;
-import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
@@ -67,7 +67,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Encoders for the motors that turn the wheel (NOT ABSOLUTE)
      */
-    private final CANEncoder[] swerveEncoders = new CANEncoder[4];
+    private final RelativeEncoder[] swerveEncoders = new RelativeEncoder[4];
 
     /**
      * Absolute Encoders for the motors that turn the wheel
@@ -77,7 +77,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * PID Controllers for the swerve Drive
      */
-    private final CANPIDController[] swervePID = new CANPIDController[4];
+    private final SparkMaxPIDController[] swervePID = new SparkMaxPIDController[4];
 
 
     private Drive() {
@@ -129,7 +129,7 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].getEncoder().setPositionConversionFactor(1);
             swerveDriveMotors[i].getEncoder().setVelocityConversionFactor(1);
 
-            swerveMotors[i].getAnalog(AnalogMode.kAbsolute).setPositionConversionFactor(360 / 3.3);//105.88);
+            swerveMotors[i].getAnalog(SparkMaxAnalogSensor.Mode.kAbsolute).setPositionConversionFactor(360 / 3.3);//105.88);
 
             swervePID[i] = swerveMotors[i].getPIDController();
             swervePID[i].setP(Constants.SWERVE_DRIVE_P);
@@ -277,7 +277,7 @@ public final class Drive extends AbstractSubsystem {
         SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
         boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
 
-        SwerveDriveKinematics.normalizeWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
 
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
@@ -291,7 +291,7 @@ public final class Drive extends AbstractSubsystem {
             if (Math.abs(angleDiff) < 5 || !rotate) {
                 swerveMotors[i].set(0);
             } else {
-                swervePID[i].setReference(swerveEncoders[i].getPosition() + angleDiff, ControlType.kPosition);
+                swervePID[i].setReference(swerveEncoders[i].getPosition() + angleDiff, CANSparkMax.ControlType.kPosition);
             }
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);

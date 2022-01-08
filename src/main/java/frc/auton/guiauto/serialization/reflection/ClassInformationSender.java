@@ -3,11 +3,12 @@ package frc.auton.guiauto.serialization.reflection;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.utility.Serializer;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
 
 import static frc.auton.guiauto.serialization.reflection.ReflectionUtils.findClasses;
 public final class ClassInformationSender {
