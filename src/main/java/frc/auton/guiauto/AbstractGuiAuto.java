@@ -74,7 +74,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         //Loop though all the steps and execute them
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
             System.out.println("doing a step: " + Timer.getFPGATimestamp());
-            autonomousStep.execute(this);
+            autonomousStep.execute(this, , );
         }
 
         System.out.println("finished: " + Timer.getFPGATimestamp());

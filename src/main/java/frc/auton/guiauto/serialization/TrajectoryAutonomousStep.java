@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.Trajectory.State;
 import frc.auton.TemplateAuto;
+import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.Drive;
 
 import java.util.List;
@@ -32,7 +33,9 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
     }
 
     @Override
-    public void execute(TemplateAuto templateAuto) {
+    public void execute(TemplateAuto templateAuto,
+                        List<SendableScript> scriptsToExecuteByTime,
+                        List<SendableScript> scriptsToExecuteByPercent) {
         //This part of the code will likely need to be customized. This takes the trajectory (output TrajectoryGenerator
         // .generateTrajectory())
         //and sends it to our drive class to be executed.

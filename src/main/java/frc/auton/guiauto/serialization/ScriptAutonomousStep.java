@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.SendableScript;
 
+import java.util.List;
+
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ScriptAutonomousStep extends AbstractAutonomousStep {
@@ -27,10 +29,24 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
         return sendableScript;
     }
 
+    /**
+     * Runs the script
+     */
     @Override
-    //If you've removed this method argument elsewhere you will need to remove it here too
-    public void execute(TemplateAuto templateAuto) {
+    public void execute(TemplateAuto templateAuto,
+                        List<SendableScript> scriptsToExecuteByTime,
+                        List<SendableScript> scriptsToExecuteByPercent) {
         if (!templateAuto.isDead()) { //Check that our auto is still running
+            if (sendableScript.getDelayType() == SendableScript.DelayType.TIME) {
+                scriptsToExecuteByTime.add(sendableScript);
+                return;
+            }
+
+            if (sendableScript.getDelayType() == SendableScript.DelayType.PERCENT) {
+                scriptsToExecuteByPercent.add(sendableScript);
+                return;
+            }
+
             if (!sendableScript.execute()) {
                 //The sendableScript failed to execute; kill the auto
                 templateAuto.killSwitch();
