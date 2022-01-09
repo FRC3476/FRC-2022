@@ -8,11 +8,14 @@ import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.AbstractAutonomousStep;
 import frc.auton.guiauto.serialization.Autonomous;
 import frc.auton.guiauto.serialization.TrajectoryAutonomousStep;
+import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.RobotTracker;
 import frc.utility.Serializer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 //If your autos don't have a superclass that they extend you can replace TemplateAuto with Runnable
 public abstract class AbstractGuiAuto extends TemplateAuto {
@@ -72,9 +75,12 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         }
 
         //Loop though all the steps and execute them
+        List<SendableScript> scriptsToExecuteByTime = new ArrayList<>();
+        List<SendableScript> scriptsToExecuteByPercent = new ArrayList<>();
+
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
             System.out.println("doing a step: " + Timer.getFPGATimestamp());
-            autonomousStep.execute(this, , );
+            autonomousStep.execute(this, scriptsToExecuteByTime, scriptsToExecuteByPercent);
         }
 
         System.out.println("finished: " + Timer.getFPGATimestamp());

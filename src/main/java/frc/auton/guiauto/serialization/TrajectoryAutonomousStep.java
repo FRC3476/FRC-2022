@@ -44,20 +44,47 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
         if (!templateAuto.isDead()) { //Check that the auto is not dead
             Drive.getInstance().setAutoPath(getTrajectory()); //Send the auto to our drive class to be executed
             Drive.getInstance().setAutoRotation(rotations.get(0).rotation);
-            int rotationIndex = 1; //Start at the second rotation (the first is the starting rotation)
-            while (!Drive.getInstance().isFinished()) {
+            int rotationIndex = 1; // Start at the second rotation (the first is the starting rotation)
+            while (!Drive.getInstance().isFinished()) {// Wait till the auto is done
                 if (templateAuto.isDead()) {
-                    return; //Wait till the auto is done (or exit early if it is killed)
+                    return;  // exit early if it is killed
                 } else {
                     if (rotationIndex < rotations.size() &&
                             Drive.getInstance().getAutoElapsedTime() > rotations.get(rotationIndex).time) {
                         // We've passed the time for the next rotation
                         Drive.getInstance().setAutoRotation(rotations.get(rotationIndex).rotation); //Set the rotation
                     }
-                    Thread.yield(); //Wait for the auto to finish
+
+                    if (!scriptsToExecuteByTime.isEmpty() && scriptsToExecuteByTime.get(
+                            0).getDelay() > Drive.getInstance().getAutoElapsedTime()) {
+                        scriptsToExecuteByTime.get(0).execute();
+                        scriptsToExecuteByTime.remove(0);
+                    }
+
+                    if (!scriptsToExecuteByPercent.isEmpty() && scriptsToExecuteByPercent.get(0).getDelay() >
+                            (Drive.getInstance().getAutoElapsedTime() / getTrajectory().getTotalTimeSeconds())) {
+                        scriptsToExecuteByPercent.get(0).execute();
+                        scriptsToExecuteByPercent.remove(0);
+                    }
+
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(1);
+                    } catch (InterruptedException ignored) {
+                    }
                 }
             }
             Drive.getInstance().stopMovement();
+
+            //Execute any remain scripts
+            for (SendableScript sendableScript : scriptsToExecuteByTime) {
+                sendableScript.execute();
+            }
+            for (SendableScript sendableScript : scriptsToExecuteByPercent) {
+                sendableScript.execute();
+            }
+            scriptsToExecuteByTime.clear();
+            scriptsToExecuteByPercent.clear();
         }
     }
 
