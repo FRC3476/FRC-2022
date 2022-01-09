@@ -1,9 +1,9 @@
 package frc.auton.guiauto;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.AbstractAutonomousStep;
 import frc.auton.guiauto.serialization.Autonomous;
@@ -56,7 +56,8 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
             if (autonomousStep instanceof TrajectoryAutonomousStep) {
                 TrajectoryAutonomousStep trajectoryAutonomousStep = (TrajectoryAutonomousStep) autonomousStep;
                 Trajectory.State initialState = trajectoryAutonomousStep.getStates().get(0);
-                initialPose = initialState.poseMeters;
+                initialPose = new Pose2d(initialState.poseMeters.getTranslation(),
+                        trajectoryAutonomousStep.getRotations().get(0).rotation);
                 break;
             }
         }
