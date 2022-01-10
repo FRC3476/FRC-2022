@@ -4,11 +4,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.auton.TemplateAuto;
@@ -54,9 +54,9 @@ public class Robot extends TimedRobot {
     //Auto
     TemplateAuto selectedAuto;
     Thread autoThread;
-    private static final String kDefaultAuto = "Default";
-    private static final String kCustomAuto = "My Auto";
-    private final SendableChooser<String> m_chooser = new SendableChooser<>();
+    private static final String DEFAULT_AUTO = "Default";
+    private static final String CUSTOM_AUTO = "My Auto";
+    private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
     //Subsystems
     private final RobotTracker robotTracker = RobotTracker.getInstance();
@@ -78,9 +78,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-        m_chooser.addOption("My Auto", kCustomAuto);
-        SmartDashboard.putData("Auto choices", m_chooser);
+        autoChooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
+        autoChooser.addOption("My Auto", CUSTOM_AUTO);
+        SmartDashboard.putData("Auto choices", autoChooser);
 
         startSubsystems();
         drive.resetGyro();
