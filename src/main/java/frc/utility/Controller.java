@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.Joystick;
  */
 public class Controller extends Joystick {
 
-    public static class Xbox {
+    public static final class XboxButtons {
         public static final int A = 1;
         public static final int B = 2;
         public static final int X = 3;
@@ -21,7 +21,9 @@ public class Controller extends Joystick {
         public static final int START = 8;
         public static final int LEFT_CLICK = 9;
         public static final int RIGHT_CLICK = 10;
+    }
 
+    public static final class XboxAxes {
         public static final int LEFT_X = 0;
         public static final int LEFT_Y = 1;
         public static final int LEFT_TRIGGER = 2;
