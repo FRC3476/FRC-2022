@@ -3,12 +3,16 @@ package frc.auton.guiauto.serialization.command;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 
+/**
+ * Note: this class has a natural ordering that is inconsistent with equals.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SendableScript {
+public class SendableScript implements Comparable<SendableScript> {
 
     /**
      * @return false if the script fails to execute
@@ -64,5 +68,10 @@ public class SendableScript {
 
     public void setDelayType(DelayType delayType) {
         this.delayType = delayType;
+    }
+
+    @Override
+    public int compareTo(@NotNull SendableScript o) {
+        return Double.compare(delay, o.delay);
     }
 }

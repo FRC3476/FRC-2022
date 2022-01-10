@@ -9,6 +9,7 @@ import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.Drive;
 
+import java.util.Collections;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -36,9 +37,11 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
     public void execute(TemplateAuto templateAuto,
                         List<SendableScript> scriptsToExecuteByTime,
                         List<SendableScript> scriptsToExecuteByPercent) {
+        //Sort the lists to make sure they are sorted by time
+        Collections.sort(scriptsToExecuteByTime);
+        Collections.sort(scriptsToExecuteByPercent);
         //This part of the code will likely need to be customized. This takes the trajectory (output TrajectoryGenerator
-        // .generateTrajectory())
-        //and sends it to our drive class to be executed.
+        // .generateTrajectory()) and sends it to our drive class to be executed.
         //If this is not how your autonomous code work you can change the implementation to fit your needs.
         //You just need to ensure that this thread will be blocked until the path is finished being driven.
         if (!templateAuto.isDead()) { //Check that the auto is not dead
@@ -55,14 +58,16 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
                         Drive.getInstance().setAutoRotation(rotations.get(rotationIndex).rotation); //Set the rotation
                     }
 
-                    if (!scriptsToExecuteByTime.isEmpty() && scriptsToExecuteByTime.get(
-                            0).getDelay() > Drive.getInstance().getAutoElapsedTime()) {
+                    if (!scriptsToExecuteByTime.isEmpty() &&
+                            scriptsToExecuteByTime.get(0).getDelay() > Drive.getInstance().getAutoElapsedTime()) {
+                        // We have a script to execute, and it is time to execute it
                         scriptsToExecuteByTime.get(0).execute();
                         scriptsToExecuteByTime.remove(0);
                     }
 
                     if (!scriptsToExecuteByPercent.isEmpty() && scriptsToExecuteByPercent.get(0).getDelay() >
                             (Drive.getInstance().getAutoElapsedTime() / getTrajectory().getTotalTimeSeconds())) {
+                        // We have a script to execute, and it is time to execute it
                         scriptsToExecuteByPercent.get(0).execute();
                         scriptsToExecuteByPercent.remove(0);
                     }
