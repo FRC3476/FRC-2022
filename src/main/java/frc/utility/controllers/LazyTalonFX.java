@@ -20,11 +20,11 @@ public class LazyTalonFX extends TalonFX {
     }
 
     @Override
-    public void set(ControlMode controlMode, double outputValue) {
+    public void set(ControlMode mode, double outputValue) {
         //return;
 
-        if (outputValue != prevValue || controlMode != prevControlMode) {
-            super.set(controlMode, outputValue);
+        if (outputValue != prevValue || mode != prevControlMode) {
+            super.set(mode, outputValue);
             prevValue = outputValue;
         }
     }

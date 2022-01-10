@@ -12,19 +12,19 @@ public class LazyCANSparkMax extends CANSparkMax {
     private double prevValue = 0;
 
 
-    public LazyCANSparkMax(int deviceNumber, MotorType type) {
-        super(deviceNumber, type);
+    public LazyCANSparkMax(int deviceId, MotorType type) {
+        super(deviceId, type);
         enableVoltageCompensation(10);
 
     }
 
     @Override
-    public void set(double outputValue) {
+    public void set(double speed) {
         //return;
 
-        if (outputValue != prevValue) {
-            super.set(outputValue);
-            prevValue = outputValue;
+        if (speed != prevValue) {
+            super.set(speed);
+            prevValue = speed;
 
         }
 
