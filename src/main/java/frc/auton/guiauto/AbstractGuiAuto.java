@@ -58,7 +58,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
             if (autonomousStep instanceof TrajectoryAutonomousStep) {
                 TrajectoryAutonomousStep trajectoryAutonomousStep = (TrajectoryAutonomousStep) autonomousStep;
-                Trajectory.State initialState = trajectoryAutonomousStep.getStates().get(0);
+                Trajectory.State initialState = trajectoryAutonomousStep.getTrajectory().getStates().get(0);
                 initialPose = new Pose2d(initialState.poseMeters.getTranslation(),
                         trajectoryAutonomousStep.getRotations().get(0).rotation);
                 break;

@@ -14,19 +14,18 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
-    private final List<State> states;
-
+    private final Trajectory trajectory;
     private final List<TimedRotation> rotations;
 
     @JsonCreator
     public TrajectoryAutonomousStep(@JsonProperty(required = true, value = "states") List<State> states,
                                     @JsonProperty(required = true, value = "rotations") List<TimedRotation> rotations) {
-        this.states = states;
+        this.trajectory = new Trajectory(states);
         this.rotations = rotations;
     }
 
     public Trajectory getTrajectory() {
-        return new Trajectory(states);
+        return trajectory;
     }
 
     public List<TimedRotation> getRotations() {
@@ -45,7 +44,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
         //If this is not how your autonomous code work you can change the implementation to fit your needs.
         //You just need to ensure that this thread will be blocked until the path is finished being driven.
         if (!templateAuto.isDead()) { //Check that the auto is not dead
-            Drive.getInstance().setAutoPath(getTrajectory()); //Send the auto to our drive class to be executed
+            Drive.getInstance().setAutoPath(trajectory); //Send the auto to our drive class to be executed
             Drive.getInstance().setAutoRotation(rotations.get(0).rotation);
             int rotationIndex = 1; // Start at the second rotation (the first is the starting rotation)
             while (!Drive.getInstance().isFinished()) {// Wait till the auto is done
@@ -66,7 +65,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
                     }
 
                     if (!scriptsToExecuteByPercent.isEmpty() && scriptsToExecuteByPercent.get(0).getDelay() >
-                            (Drive.getInstance().getAutoElapsedTime() / getTrajectory().getTotalTimeSeconds())) {
+                            (Drive.getInstance().getAutoElapsedTime() / trajectory.getTotalTimeSeconds())) {
                         // We have a script to execute, and it is time to execute it
                         scriptsToExecuteByPercent.get(0).execute();
                         scriptsToExecuteByPercent.remove(0);
@@ -91,17 +90,5 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
             scriptsToExecuteByTime.clear();
             scriptsToExecuteByPercent.clear();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "TrajectoryAutonomousStep{" +
-                "m_states=" + states +
-                '}';
-    }
-
-    @JsonProperty("states")
-    public List<State> getStates() {
-        return states;
     }
 }
