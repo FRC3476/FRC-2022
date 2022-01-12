@@ -211,7 +211,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     public void startHold() {
-        //TODO
+        configBrake();
         driveState = DriveState.HOLD;
     }
 
@@ -221,7 +221,6 @@ public final class Drive extends AbstractSubsystem {
 
 
     public void hold() {
-        //TODO
 
     }
 
@@ -276,10 +275,19 @@ public final class Drive extends AbstractSubsystem {
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
         SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
-        boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
+        boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 ||
+                chassisSpeeds.vyMetersPerSecond != 0 ||
+                chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
+        setSwerveModuleStates(moduleStates, rotate);
+    }
 
+    public void setSwerveModuleStates(SwerveModuleState[] states) {
+        setSwerveModuleStates(states, true);
+    }
+
+    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate) {
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
             //                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
