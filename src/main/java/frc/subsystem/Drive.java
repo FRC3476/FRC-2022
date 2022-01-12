@@ -219,9 +219,8 @@ public final class Drive extends AbstractSubsystem {
         driveState = DriveState.TELEOP;
     }
 
-
-    public void hold() {
-
+    public void doHold() {
+        setSwerveModuleStates(Constants.HOLD_MODULE_STATES);
     }
 
     public void swerveDrive(ControllerDriveInputs inputs) {
@@ -239,29 +238,18 @@ public final class Drive extends AbstractSubsystem {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
-        double turnSpeed = 0;
-        if (Math.abs(inputs.getRotation()) < 0.01) {
-            double error = turnTarget + getAngle();
-            turnPID.setSetpoint(0);
-            if (Math.abs(error) > 2) turnSpeed = turnPID.calculate(error);
-
-            SmartDashboard.putNumber("gyro pid in", getGyroAngle().getDegrees() % 360);
-            SmartDashboard.putNumber("pid Delta Speed", turnSpeed);
-            SmartDashboard.putNumber("wanted heading", wantedHeading.getDegrees());
-            SmartDashboard.putNumber("turn pid error", error);
-            turnSpeed = 0;
-        } else {
-            turnSpeed = inputs.getRotation() * 6;
-            turnTarget = getAngle();
-        }
-
 
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                turnSpeed,
+                inputs.getRotation() * 6,
                 Rotation2d.fromDegrees(getAngle()));
 
-        swerveDrive(chassisSpeeds);
+        if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
+            // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
+            doHold();
+        } else {
+            swerveDrive(chassisSpeeds);
+        }
     }
 
     double doubleMod(double x, double y) {
@@ -443,7 +431,7 @@ public final class Drive extends AbstractSubsystem {
                 updateTurn();
                 break;
             case HOLD:
-                hold();
+                doHold();
                 break;
             case DONE:
                 break;

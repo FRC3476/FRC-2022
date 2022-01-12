@@ -1,7 +1,9 @@
 package frc.robot;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 
 public final class Constants {
@@ -57,6 +59,24 @@ public final class Constants {
             new SimpleMotorFeedforward(0.153, 1.6, 0.18),
             new SimpleMotorFeedforward(0.153, 1.6, 0.18),
             new SimpleMotorFeedforward(0.153, 1.6, 0.18)};
+
+    /**
+     * What the module states should be in hold mode. The wheels will be put in an X pattern to prevent the robot from moving.
+     * <p>
+     * 0 -> Left Front
+     * <p>
+     * 1 -> Left Back
+     * <p>
+     * 2 -> Right Front
+     * <p>
+     * 3 -> Right Back
+     */
+    public static final SwerveModuleState[] HOLD_MODULE_STATES = {
+            new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
+    };
 
     //    public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(-0.381, 0.381);
     //    public static final Translation2d SWERVE_LEFT_BACK_LOCATION = new Translation2d(-0.381, -0.381);
