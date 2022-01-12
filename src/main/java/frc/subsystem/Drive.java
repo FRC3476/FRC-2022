@@ -15,6 +15,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -549,5 +550,11 @@ public final class Drive extends AbstractSubsystem {
         double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
         if (moduleNumber == 3) angle -= 72;
         return angle < 0 ? angle + 360 : angle;
+    }
+
+    public void fallbackAim(Translation2d currentPos) {
+        Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
+        Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
+        setRotation(rotation);
     }
 }

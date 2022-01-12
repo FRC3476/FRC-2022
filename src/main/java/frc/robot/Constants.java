@@ -74,4 +74,7 @@ public final class Constants {
 
     public static final double MAX_TURN_ERROR = 0.85;
     public static final double MAX_PID_STOP_SPEED = 5.2;
+
+    //field constants
+    public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 }
