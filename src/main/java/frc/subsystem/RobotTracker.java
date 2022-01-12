@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class RobotTracker extends AbstractSubsystem {
@@ -19,6 +20,8 @@ public final class RobotTracker extends AbstractSubsystem {
     private Pose2d lastEstimatedPose = new Pose2d();
 
     private final SwerveDriveOdometry swerveDriveOdometry;
+
+    double lastTime = 0;
 
     private RobotTracker() {
         super(20);
@@ -55,15 +58,25 @@ public final class RobotTracker extends AbstractSubsystem {
      * calculate the change in distance from a velocity. This also takes in an angle parameter which is used instead of the
      * angular rate that is calculated from forward kinematics.
      *
-     * @return The new pose of the robot.
      */
     @Override
     public void update() {
-        swerveDriveOdometry.update(drive.getGyroAngle(), drive.getSwerveModuleStates());
+        updateOdometry(WPIUtilJNI.now() * 1.0e-6, drive.getGyroAngle(), drive.getSwerveModuleStates());
     }
 
-    public void updateOdometry(Rotation2d gyroAngle, SwerveModuleState[] swerveModuleStates) {
-        swerveDriveOdometry.update(gyroAngle, swerveModuleStates);
+    /**
+     * /** Updates the robot's position on the field using forward kinematics and integration of the pose over time. This method
+     * takes in the current time as a parameter to calculate period (difference between two timestamps). The period is used to
+     * calculate the change in distance from a velocity. This also takes in an angle parameter which is used instead of the
+     * angular rate that is calculated from forward kinematics.
+     *
+     * @param currentTimeSeconds The current time in seconds.
+     * @param gyroAngle          The angle reported by the gyroscope.
+     * @param moduleStates       The current state of all swerve modules. Please provide the states in the same order in which you
+     *                           instantiated your SwerveDriveKinematics.
+     */
+    public void updateOdometry(double currentTimeSeconds, Rotation2d gyroAngle, SwerveModuleState[] moduleStates) {
+        swerveDriveOdometry.updateWithTime(currentTimeSeconds, gyroAngle, moduleStates);
         synchronized (this) {
             lastEstimatedPose = swerveDriveOdometry.getPoseMeters();
         }

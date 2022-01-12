@@ -3,12 +3,13 @@ package frc.subsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import frc.utility.OrangeUtility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
 
 public class RobotTrackerTest {
     Drive drive;
@@ -22,7 +23,6 @@ public class RobotTrackerTest {
         drive.kill();
         robotTracker = RobotTracker.getInstance();
         robotTracker.kill();
-        robotTracker.resetPosition(new Pose2d(0, 0, new Rotation2d(90)), new Rotation2d(0));
     }
 
     @After
@@ -32,29 +32,43 @@ public class RobotTrackerTest {
     }
 
     @Test
-    public void robotTrackerTest() {
+    public void robotTrackerTest() { //TODO: Figure out why messing with rotation breaks things
+        double time = 0;
+        for (int j = 0; j < 1000; j++) {
+            double x = random.nextDouble() * 5 - 2.5;
+            double y = random.nextDouble() * 5 - 2.5;
+            double theta = 0; //random.nextDouble() * 2 * Math.PI;
+            double period = 0.002;
 
-        double x = 0;
-        double y = 0;
-        double theta = 0;
-        double period = 0.005;
-        for (int i = 0; i < 1000; i++) {
-            double randomX = 1;
-            double randomY = 0;
-            double randomRotation = 0;
+            robotTracker.resetPosition(new Pose2d(x, y, new Rotation2d(theta)), new Rotation2d(0));
 
-            ChassisSpeeds chassisSpeeds = new ChassisSpeeds(randomX, randomY, randomRotation);
-            drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds);
-            x += randomX * period;
-            y += randomY * period;
-            theta += randomRotation * period;
-            RobotTracker.getInstance().updateOdometry(new Rotation2d(theta),
-                    drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
-            OrangeUtility.sleep((long) (period * 1000));
+            double largeRandomX = random.nextDouble() * 10 - 5;
+            double largeRandomY = random.nextDouble() * 10 - 5;
+            for (int i = 0; i < 1000; i++) {
+                double randomX = largeRandomX + random.nextDouble() * 0.2;
+                double randomY = largeRandomY + random.nextDouble() * 0.4;
+                double randomRotation = 0;//+ random.nextDouble() * 0.02; //Seems to cause a bunch of variance
+
+                ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(randomX, randomY, randomRotation,
+                        Rotation2d.fromDegrees(0));
+                drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds);
+
+                double dt = period + random.nextDouble() * 0.008 - 0.004;
+                theta += randomRotation * dt;
+                double speed = Math.sqrt(randomX * randomX + randomY * randomY);
+                x += randomX * dt;
+                y += randomY * dt;
+
+                time += dt;
+
+                RobotTracker.getInstance().updateOdometry(time, new Rotation2d(theta),
+                        drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
+            }
+
+            assertEquals(x, robotTracker.getPoseMeters().getTranslation().getX(), 0.1);
+            assertEquals(y, robotTracker.getPoseMeters().getTranslation().getY(), 0.1);
+            assertEquals(theta, robotTracker.getPoseMeters().getRotation().getDegrees(), 0.1);
         }
-        System.out.println("x: " + x);
-        System.out.println("y: " + y);
-        System.out.println("theta: " + theta);
-        System.out.println("predicted " + robotTracker.getPoseMeters());
+
     }
 }
