@@ -3,7 +3,7 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
 public final class BlinkinLED extends AbstractSubsystem {
-    private static final BlinkinLED instance = new BlinkinLED();
+    private static BlinkinLED instance = new BlinkinLED();
 
     public static BlinkinLED getInstance() {
         return instance;
@@ -32,4 +32,9 @@ public final class BlinkinLED extends AbstractSubsystem {
 
     }
 
+    @Override
+    public void close() throws Exception {
+        spark.close();
+        instance = new BlinkinLED();
+    }
 }

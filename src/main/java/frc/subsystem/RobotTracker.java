@@ -3,11 +3,12 @@ package frc.subsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class RobotTracker extends AbstractSubsystem {
 
-    private static final RobotTracker instance = new RobotTracker();
+    private static RobotTracker instance = new RobotTracker();
 
     private final Drive drive = Drive.getInstance();
 
@@ -58,7 +59,11 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     @Override
     public void update() {
-        swerveDriveOdometry.update(Rotation2d.fromDegrees(drive.getAngle()), drive.getSwerveModuleStates());
+        swerveDriveOdometry.update(drive.getGyroAngle(), drive.getSwerveModuleStates());
+    }
+
+    public void updateOdometry(Rotation2d gyroAngle, SwerveModuleState[] swerveModuleStates) {
+        swerveDriveOdometry.update(gyroAngle, swerveModuleStates);
         synchronized (this) {
             lastEstimatedPose = swerveDriveOdometry.getPoseMeters();
         }
@@ -68,10 +73,14 @@ public final class RobotTracker extends AbstractSubsystem {
      * Resets the robot's position on the field. The gyroscope angle does not need to be reset here on the user's robot code. The
      * library automatically takes care of offsetting the gyro angle.
      *
-     * @param pose      The position on the field that your robot is at.
+     * @param pose The position on the field that your robot is at.
      */
     synchronized public void resetPosition(Pose2d pose) {
-        swerveDriveOdometry.resetPosition(pose, drive.getGyroAngle());
+        resetPosition(pose, drive.getGyroAngle());
+    }
+
+    synchronized public void resetPosition(Pose2d pose, Rotation2d gyroAngle) {
+        swerveDriveOdometry.resetPosition(pose, gyroAngle);
     }
 
     /**
@@ -93,5 +102,10 @@ public final class RobotTracker extends AbstractSubsystem {
         SmartDashboard.putNumber("Robot Pose X", getPoseMeters().getX());
         SmartDashboard.putNumber("Robot Pose Y", getPoseMeters().getX());
         SmartDashboard.putNumber("Robot Pose Angle", getPoseMeters().getRotation().getDegrees());
+    }
+
+    @Override
+    public void close() {
+        instance = new RobotTracker();
     }
 }

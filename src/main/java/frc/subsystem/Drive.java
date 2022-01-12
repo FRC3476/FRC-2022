@@ -21,14 +21,13 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DutyCycle;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
+
+import java.lang.reflect.Field;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -37,7 +36,7 @@ public final class Drive extends AbstractSubsystem {
         TELEOP, TURN, HOLD, DONE, RAMSETE
     }
 
-    private static final Drive instance = new Drive();
+    private static Drive instance = new Drive();
 
     public static Drive getInstance() {
         return instance;
@@ -58,28 +57,27 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Motors that turn the wheels around
      */
-    private final LazyCANSparkMax[] swerveMotors = new LazyCANSparkMax[4];
+    final LazyCANSparkMax[] swerveMotors = new LazyCANSparkMax[4];
 
     /**
      * Motors that are driving the robot around and causing it to move
      */
-    private final LazyCANSparkMax[] swerveDriveMotors = new LazyCANSparkMax[4];
+    final LazyCANSparkMax[] swerveDriveMotors = new LazyCANSparkMax[4];
 
     /**
      * Encoders for the motors that turn the wheel (NOT ABSOLUTE)
      */
-    private final RelativeEncoder[] swerveEncoders = new RelativeEncoder[4];
+    final RelativeEncoder[] swerveEncoders = new RelativeEncoder[4];
 
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    private final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
+    final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
 
     /**
      * PID Controllers for the swerve Drive
      */
-    private final SparkMaxPIDController[] swervePID = new SparkMaxPIDController[4];
-
+    final SparkMaxPIDController[] swervePID = new SparkMaxPIDController[4];
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
@@ -257,11 +255,11 @@ public final class Drive extends AbstractSubsystem {
         return (x - Math.floor(x / y) * y);
     }
 
-    private void swerveDrive(ChassisSpeeds chassisSpeeds) {
+    public void swerveDrive(ChassisSpeeds chassisSpeeds) {
         swerveDrive(chassisSpeeds, 0);
     }
 
-    private void swerveDrive(ChassisSpeeds chassisSpeeds, double acceleration) {
+    public void swerveDrive(ChassisSpeeds chassisSpeeds, double acceleration) {
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
@@ -555,5 +553,22 @@ public final class Drive extends AbstractSubsystem {
         Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
         Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
         setRotation(rotation);
+    }
+
+    @Override
+    public void close() throws Exception {
+        Field digitalSource = DutyCycle.class.getDeclaredField("m_source");
+        digitalSource.setAccessible(true);
+
+        for (int i = 0; i < 4; i++) {
+            swerveDriveMotors[i].close();
+            swerveMotors[i].close();
+
+            DigitalSource ds = (DigitalSource) digitalSource.get(swerveEncodersDIO[i]);
+            ds.close(); // Use reflection to close the DigitalSource because the DIO class doesn't do it properly.
+            swerveEncodersDIO[i].close();
+        }
+        gyroSensor.close();
+        instance = new Drive();
     }
 }
