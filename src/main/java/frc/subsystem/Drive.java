@@ -270,6 +270,10 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private void swerveDrive(ChassisSpeeds chassisSpeeds) {
+        swerveDrive(chassisSpeeds, 0);
+    }
+
+    private void swerveDrive(ChassisSpeeds chassisSpeeds, double acceleration) {
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
@@ -280,17 +284,18 @@ public final class Drive extends AbstractSubsystem {
                 chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
-        setSwerveModuleStates(moduleStates, rotate);
+        setSwerveModuleStates(moduleStates, rotate, acceleration);
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] states) {
-        setSwerveModuleStates(states, true);
+        setSwerveModuleStates(states, true, 0);
     }
 
-    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate) {
+    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, double acceleration) {
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
             //                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+            // TODO: flip the acceleration if we flip the module
             SwerveModuleState targetState = moduleStates[i];
             double targetAngle = targetState.angle.getDegrees();
             double currentAngle = getAbsolutePosition(i); //swerveEncoders[i].getPosition();
@@ -305,7 +310,7 @@ public final class Drive extends AbstractSubsystem {
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, acceleration);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", swerveEncoders[i].getPosition() + angleDiff);
@@ -313,19 +318,17 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
-
-    double[] lastMotorSpeeds = {0, 0, 0, 0};
-    double[] lastMotorSetTimes = {0, 0, 0, 0};
-
-
-    public void setMotorSpeed(int module, double velocity) {
-        double acceleration = Timer.getFPGATimestamp() - lastMotorSetTimes[module] > 0.1 ? 0 :
-                (velocity - lastMotorSpeeds[module]) / (Timer.getFPGATimestamp() - lastMotorSetTimes[module]);
+    /**
+     * Sets the motor voltage
+     *
+     * @param module       The module to set the voltage on
+     * @param velocity     The target velocity
+     * @param acceleration The acceleration to use
+     */
+    public void setMotorSpeed(int module, double velocity, double acceleration) {
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         swerveDriveMotors[module].setVoltage(ffv);
         SmartDashboard.putNumber("Out Volts " + module, ffv);
-        lastMotorSpeeds[module] = velocity;
-        lastMotorSetTimes[module] = Timer.getFPGATimestamp();
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
 
@@ -374,7 +377,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     double autoStartTime;
-    HolonomicDriveController controller = new HolonomicDriveController(
+    private final HolonomicDriveController controller = new HolonomicDriveController(
             new PIDController(1.5, 0, 0),
             new PIDController(1.5, 0, 0),
             new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)));
@@ -400,7 +403,7 @@ public final class Drive extends AbstractSubsystem {
         System.out.println(goal);
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
                 autoTargetHeading);
-        swerveDrive(adjustedSpeeds);
+        swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
         //System.out.println(ramseteController.atReference());
         //System.out.println("target speed" + Units.metersToInches(wheelspeeds.leftMetersPerSecond) + " " + Units
         // .metersToInches(wheelspeeds.rightMetersPerSecond) + "time: " +(Timer.getFPGATimestamp()-autoStartTime) );
