@@ -24,27 +24,27 @@ public class SendableCommand {
 
     @JsonProperty("reflection") public final boolean reflection;
 
-    public static Map<String, Function<String, Object>> inferableTypesParser;
+    private static final Map<String, Function<String, Object>> INFERABLE_TYPES_PARSER;
 
     static {
-        inferableTypesParser = new HashMap<>();
-        inferableTypesParser.put(int.class.getName(), Integer::parseInt);
-        inferableTypesParser.put(double.class.getName(), Double::parseDouble);
-        inferableTypesParser.put(float.class.getName(), Float::parseFloat);
-        inferableTypesParser.put(long.class.getName(), Long::parseLong);
-        inferableTypesParser.put(short.class.getName(), Short::parseShort);
-        inferableTypesParser.put(byte.class.getName(), Byte::parseByte);
-        inferableTypesParser.put(char.class.getName(), s -> s.charAt(0));
-        inferableTypesParser.put(boolean.class.getName(), Boolean::parseBoolean);
-        inferableTypesParser.put(String.class.getName(), s -> s);
-        inferableTypesParser.put(Integer.class.getName(), Integer::valueOf);
-        inferableTypesParser.put(Double.class.getName(), Double::valueOf);
-        inferableTypesParser.put(Float.class.getName(), Float::valueOf);
-        inferableTypesParser.put(Long.class.getName(), Long::valueOf);
-        inferableTypesParser.put(Short.class.getName(), Short::valueOf);
-        inferableTypesParser.put(Byte.class.getName(), Byte::valueOf);
-        inferableTypesParser.put(Character.class.getName(), s -> Character.valueOf(s.charAt(0)));
-        inferableTypesParser.put(Boolean.class.getName(), Boolean::valueOf);
+        INFERABLE_TYPES_PARSER = new HashMap<>();
+        INFERABLE_TYPES_PARSER.put(int.class.getName(), Integer::parseInt);
+        INFERABLE_TYPES_PARSER.put(double.class.getName(), Double::parseDouble);
+        INFERABLE_TYPES_PARSER.put(float.class.getName(), Float::parseFloat);
+        INFERABLE_TYPES_PARSER.put(long.class.getName(), Long::parseLong);
+        INFERABLE_TYPES_PARSER.put(short.class.getName(), Short::parseShort);
+        INFERABLE_TYPES_PARSER.put(byte.class.getName(), Byte::parseByte);
+        INFERABLE_TYPES_PARSER.put(char.class.getName(), s -> s.charAt(0));
+        INFERABLE_TYPES_PARSER.put(boolean.class.getName(), Boolean::parseBoolean);
+        INFERABLE_TYPES_PARSER.put(String.class.getName(), s -> s);
+        INFERABLE_TYPES_PARSER.put(Integer.class.getName(), Integer::valueOf);
+        INFERABLE_TYPES_PARSER.put(Double.class.getName(), Double::valueOf);
+        INFERABLE_TYPES_PARSER.put(Float.class.getName(), Float::valueOf);
+        INFERABLE_TYPES_PARSER.put(Long.class.getName(), Long::valueOf);
+        INFERABLE_TYPES_PARSER.put(Short.class.getName(), Short::valueOf);
+        INFERABLE_TYPES_PARSER.put(Byte.class.getName(), Byte::valueOf);
+        INFERABLE_TYPES_PARSER.put(Character.class.getName(), s -> Character.valueOf(s.charAt(0)));
+        INFERABLE_TYPES_PARSER.put(Boolean.class.getName(), Boolean::valueOf);
     }
 
 
@@ -65,8 +65,8 @@ public class SendableCommand {
 
         for (int i = 0; i < args.length; i++) {
             try {
-                if (inferableTypesParser.containsKey(argTypes[i])) {
-                    objArgs[i] = inferableTypesParser.get(argTypes[i]).apply(args[i]);
+                if (INFERABLE_TYPES_PARSER.containsKey(argTypes[i])) {
+                    objArgs[i] = INFERABLE_TYPES_PARSER.get(argTypes[i]).apply(args[i]);
                 } else {
                     objArgs[i] = Enum.valueOf(Class.forName(argTypes[i]).asSubclass(Enum.class), args[i]);
                 }
