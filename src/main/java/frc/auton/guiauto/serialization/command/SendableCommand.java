@@ -84,13 +84,13 @@ public class SendableCommand {
 
         if (reflection) {
             String[] splitMethod = methodName.split("\\.");
-            StringBuilder className = new StringBuilder();
-            for (int i = 0; i < splitMethod.length - 1; i++) {
-                className.append(splitMethod[i]);
-            }
+
+            String[] classNameArray = new String[splitMethod.length - 1];
+            System.arraycopy(splitMethod, 0, classNameArray, 0, classNameArray.length);
+            String className = String.join(".", classNameArray);
 
             try {
-                Class<?> cls = Class.forName(className.toString());
+                Class<?> cls = Class.forName(className);
                 methodToCall = cls.getMethod(splitMethod[splitMethod.length - 1],
                         Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new));
                 if (!Modifier.isStatic(methodToCall.getModifiers())) {
@@ -110,14 +110,11 @@ public class SendableCommand {
         this.instance = instance;
     }
 
-    @JsonIgnoreProperties
-    private final Object instance;
+    @JsonIgnoreProperties final Object instance;
 
-    @JsonIgnoreProperties
-    private final Method methodToCall;
-    
-    @JsonIgnoreProperties
-    private final Object[] objArgs;
+    @JsonIgnoreProperties final Method methodToCall;
+
+    @JsonIgnoreProperties final Object[] objArgs;
 
 
     /**
