@@ -2,6 +2,7 @@
 
 package frc.subsystem;
 
+import com.ctre.phoenix.sensors.CANCoder;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -21,8 +22,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DutyCycle;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -73,7 +72,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    private final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
+    private final CANCoder[] swerveEncodersCAN = new CANCoder[4];
 
     /**
      * PID Controllers for the swerve Drive
@@ -86,7 +85,7 @@ public final class Drive extends AbstractSubsystem {
         gyroSensor = new AHRS(SPI.Port.kMXP);
 
         final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
-        final DutyCycle leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder, rightBackSparkPwmEncoder;
+        final CANCoder leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder, rightBackSparkPwmEncoder;
         final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve, rightBackSparkSwerve;
         // Swerve Drive Motors
         leftFrontSpark = new LazyCANSparkMax(Constants.DRIVE_LEFT_FRONT_ID, MotorType.kBrushless);
@@ -104,10 +103,10 @@ public final class Drive extends AbstractSubsystem {
         rightFrontSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_FRONT_SWERVE_ID, MotorType.kBrushless);
         rightBackSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_BACK_SWERVE_ID, MotorType.kBrushless);
 
-        leftFrontSparkPwmEncoder = new DutyCycle(new DigitalInput(1));
-        leftBackSparkPwmEncoder = new DutyCycle(new DigitalInput(3));
-        rightFrontSparkPwmEncoder = new DutyCycle(new DigitalInput(0));
-        rightBackSparkPwmEncoder = new DutyCycle(new DigitalInput(2));
+        leftFrontSparkPwmEncoder = new CANCoder(Constants.CAN_LEFT_FRONT_ID);
+        leftBackSparkPwmEncoder = new CANCoder(Constants.CAN_LEFT_BACK_ID);
+        rightFrontSparkPwmEncoder = new CANCoder(Constants.CAN_RIGHT_FRONT_ID);
+        rightBackSparkPwmEncoder = new CANCoder(Constants.CAN_RIGHT_BACK_ID);
 
         swerveMotors[0] = leftFrontSparkSwerve;
         swerveMotors[1] = leftBackSparkSwerve;
@@ -119,10 +118,10 @@ public final class Drive extends AbstractSubsystem {
         swerveDriveMotors[2] = rightFrontSpark;
         swerveDriveMotors[3] = rightBackSpark;
 
-        swerveEncodersDIO[0] = leftFrontSparkPwmEncoder;
-        swerveEncodersDIO[1] = leftBackSparkPwmEncoder;
-        swerveEncodersDIO[2] = rightFrontSparkPwmEncoder;
-        swerveEncodersDIO[3] = rightBackSparkPwmEncoder;
+        swerveEncodersCAN[0] = leftFrontSparkPwmEncoder;
+        swerveEncodersCAN[1] = leftBackSparkPwmEncoder;
+        swerveEncodersCAN[2] = rightFrontSparkPwmEncoder;
+        swerveEncodersCAN[3] = rightBackSparkPwmEncoder;
 
         for (int i = 0; i < 4; i++) {
             swerveEncoders[i] = swerveMotors[i].getEncoder();
@@ -545,9 +544,14 @@ public final class Drive extends AbstractSubsystem {
         SmartDashboard.putNumber("Computed Robot Rotation", chassisSpeeds.omegaRadiansPerSecond);
     }
 
-
-    public double getAbsolutePosition(int moduleNumber) {
-        double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
+    /**
+     * Returns the angle/position of the requested encoder module
+     *
+     * @param moduleNumber
+     * @return angle
+     */
+    public double getAbsolutePosition(final int moduleNumber) {
+        double angle = swerveEncodersCAN[moduleNumber].getPosition();
         if (moduleNumber == 3) angle -= 72;
         return angle < 0 ? angle + 360 : angle;
     }

@@ -29,6 +29,11 @@ public final class Constants {
     public static final int DRIVE_RIGHT_FRONT_ID = 10;
     public static final int DRIVE_RIGHT_BACK_ID = 12;
 
+    public static final int CAN_LEFT_FRONT_ID = 1;
+    public static final int CAN_LEFT_BACK_ID = 3;
+    public static final int CAN_RIGHT_FRONT_ID = 0;
+    public static final int CAN_RIGHT_BACK_ID = 2;
+
     public static final int DRIVE_LEFT_FRONT_SWERVE_ID = 15;
     public static final int DRIVE_LEFT_BACK_SWERVE_ID = 17;
     public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 14;
