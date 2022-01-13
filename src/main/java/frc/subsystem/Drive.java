@@ -72,7 +72,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    private final CANCoder[] swerveCanCoder = new CANCoder[4];
+    private final CANCoder[] swerveCanCoders = new CANCoder[4];
 
     /**
      * PID Controllers for the swerve Drive
@@ -118,10 +118,10 @@ public final class Drive extends AbstractSubsystem {
         swerveDriveMotors[2] = rightFrontSpark;
         swerveDriveMotors[3] = rightBackSpark;
 
-        swerveCanCoder[0] = leftFrontCanCoder;
-        swerveCanCoder[1] = leftBackCanCoder;
-        swerveCanCoder[2] = rightFrontCanCoder;
-        swerveCanCoder[3] = rightBackCanCoder;
+        swerveCanCoders[0] = leftFrontCanCoder;
+        swerveCanCoders[1] = leftBackCanCoder;
+        swerveCanCoders[2] = rightFrontCanCoder;
+        swerveCanCoders[3] = rightBackCanCoder;
 
         for (int i = 0; i < 4; i++) {
             swerveEncoders[i] = swerveMotors[i].getEncoder();
@@ -551,7 +551,7 @@ public final class Drive extends AbstractSubsystem {
      * @return angle
      */
     public double getAbsolutePosition(final int moduleNumber) {
-        return swerveCanCoder[moduleNumber].getPosition();
+        return swerveCanCoders[moduleNumber].getPosition();
     }
 
     public void fallbackAim(Translation2d currentPos) {
