@@ -3,13 +3,14 @@ package frc.subsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class RobotTrackerTest {
     Drive drive;
@@ -17,24 +18,24 @@ public class RobotTrackerTest {
 
     Random random = new Random();
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         drive = Drive.getInstance();
         drive.kill();
         robotTracker = RobotTracker.getInstance();
         robotTracker.kill();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         drive.close();
         robotTracker.close();
     }
 
     @Test
-    public void robotTrackerTest() { //TODO: Figure out why messing with rotation breaks things
+    void robotTrackerTest() { //TODO: Figure out why messing with rotation breaks things
         double time = 0;
-        for (int j = 0; j < 1000; j++) {
+        for (int j = 0; j < 100; j++) {
             double x = random.nextDouble() * 5 - 2.5;
             double y = random.nextDouble() * 5 - 2.5;
             double theta = 0; //random.nextDouble() * 2 * Math.PI;
@@ -55,7 +56,6 @@ public class RobotTrackerTest {
 
                 double dt = period + random.nextDouble() * 0.008 - 0.004;
                 theta += randomRotation * dt;
-                double speed = Math.sqrt(randomX * randomX + randomY * randomY);
                 x += randomX * dt;
                 y += randomY * dt;
 

@@ -45,7 +45,7 @@ public final class Drive extends AbstractSubsystem {
     private final AHRS gyroSensor;
     private final PIDController turnPID;
     private DriveState driveState;
-    private Rotation2d wantedHeading = new Rotation2d();
+    Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
     private boolean isAiming = false;
