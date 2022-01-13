@@ -72,7 +72,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    private final CANCoder[] swerveEncodersCAN = new CANCoder[4];
+    private final CANCoder[] swerveCanCoder = new CANCoder[4];
 
     /**
      * PID Controllers for the swerve Drive
@@ -85,7 +85,7 @@ public final class Drive extends AbstractSubsystem {
         gyroSensor = new AHRS(SPI.Port.kMXP);
 
         final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
-        final CANCoder leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder, rightBackSparkPwmEncoder;
+        final CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;
         final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve, rightBackSparkSwerve;
         // Swerve Drive Motors
         leftFrontSpark = new LazyCANSparkMax(Constants.DRIVE_LEFT_FRONT_ID, MotorType.kBrushless);
@@ -103,10 +103,10 @@ public final class Drive extends AbstractSubsystem {
         rightFrontSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_FRONT_SWERVE_ID, MotorType.kBrushless);
         rightBackSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_BACK_SWERVE_ID, MotorType.kBrushless);
 
-        leftFrontSparkPwmEncoder = new CANCoder(Constants.CAN_LEFT_FRONT_ID);
-        leftBackSparkPwmEncoder = new CANCoder(Constants.CAN_LEFT_BACK_ID);
-        rightFrontSparkPwmEncoder = new CANCoder(Constants.CAN_RIGHT_FRONT_ID);
-        rightBackSparkPwmEncoder = new CANCoder(Constants.CAN_RIGHT_BACK_ID);
+        leftFrontCanCoder = new CANCoder(Constants.CAN_LEFT_FRONT_ID);
+        leftBackCanCoder = new CANCoder(Constants.CAN_LEFT_BACK_ID);
+        rightFrontCanCoder = new CANCoder(Constants.CAN_RIGHT_FRONT_ID);
+        rightBackCanCoder = new CANCoder(Constants.CAN_RIGHT_BACK_ID);
 
         swerveMotors[0] = leftFrontSparkSwerve;
         swerveMotors[1] = leftBackSparkSwerve;
@@ -118,10 +118,10 @@ public final class Drive extends AbstractSubsystem {
         swerveDriveMotors[2] = rightFrontSpark;
         swerveDriveMotors[3] = rightBackSpark;
 
-        swerveEncodersCAN[0] = leftFrontSparkPwmEncoder;
-        swerveEncodersCAN[1] = leftBackSparkPwmEncoder;
-        swerveEncodersCAN[2] = rightFrontSparkPwmEncoder;
-        swerveEncodersCAN[3] = rightBackSparkPwmEncoder;
+        swerveCanCoder[0] = leftFrontCanCoder;
+        swerveCanCoder[1] = leftBackCanCoder;
+        swerveCanCoder[2] = rightFrontCanCoder;
+        swerveCanCoder[3] = rightBackCanCoder;
 
         for (int i = 0; i < 4; i++) {
             swerveEncoders[i] = swerveMotors[i].getEncoder();
@@ -551,9 +551,7 @@ public final class Drive extends AbstractSubsystem {
      * @return angle
      */
     public double getAbsolutePosition(final int moduleNumber) {
-        double angle = swerveEncodersCAN[moduleNumber].getPosition();
-        if (moduleNumber == 3) angle -= 72;
-        return angle < 0 ? angle + 360 : angle;
+        return swerveCanCoder[moduleNumber].getPosition();
     }
 
     public void fallbackAim(Translation2d currentPos) {
