@@ -41,7 +41,16 @@ class SendableCommandTest {
                     new String[]{"DONE"},
                     new String[]{Drive.DriveState.class.getName()}, true);
 
+            assertEquals(1, command.objArgs.length);
             assertEquals(Drive.DriveState.DONE, command.objArgs[0]);
+            assertEquals(Drive.getInstance(), command.instance);
+        }
+        {
+            SendableCommand command = new SendableCommand("frc.subsystem.Drive.configBrake",
+                    new String[]{},
+                    new String[]{}, true);
+
+            assertEquals(0, command.objArgs.length);
             assertEquals(Drive.getInstance(), command.instance);
         }
     }
