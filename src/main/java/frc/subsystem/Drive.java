@@ -271,12 +271,16 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private void swerveDrive(ChassisSpeeds chassisSpeeds) {
+
+        chassisSpeeds = limitAcceleration(chassisSpeeds);
+
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
         SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
-        boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
+        boolean rotate =
+                chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
 
@@ -305,6 +309,50 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
+    // limits jump in velocities to an acceptable acceleration
+    private ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
+        double maxVelocityDiffMagnitude = getVelocityMagnitudeFromAcceleration();
+
+        ChassisSpeeds currentVelocity = getRobotState();
+
+        // converts ChassisSpeeds to Translation2d
+        Translation2d currentVelocityVector = new Translation2d(currentVelocity.vxMetersPerSecond,
+                currentVelocity.vyMetersPerSecond);
+        Translation2d commandedVelocityVector = new Translation2d(commandedVelocity.vxMetersPerSecond,
+                commandedVelocity.vyMetersPerSecond);
+
+        Translation2d velocityVectorDiff = commandedVelocityVector.minus(currentVelocityVector);
+
+        // using pythagorean theorem to get magnitude of vector using the components
+        double velocityVectorDiffMagnitude =
+                Math.sqrt(
+                        (velocityVectorDiff.getX() * velocityVectorDiff.getX()) + (velocityVectorDiff.getY() * velocityVectorDiff.getY()));
+        double velocityVectorDiffAngle = Math.atan2(velocityVectorDiff.getY(), velocityVectorDiff.getX());
+
+        // if jump in velocity exceeds what can be safely accelerated to, sets to max velocity
+        if (velocityVectorDiffMagnitude > maxVelocityDiffMagnitude) {
+            double limitedVelocityVectorDiffMagnitude = maxVelocityDiffMagnitude;
+
+            Translation2d limitedVelocityVectorDiff =
+                    new Translation2d(Math.cos(velocityVectorDiffAngle) * limitedVelocityVectorDiffMagnitude,
+                            Math.sin(velocityVectorDiffAngle) * limitedVelocityVectorDiffMagnitude);
+
+            Translation2d limitedCommandedVelocityVector = limitedVelocityVectorDiff.plus(currentVelocityVector);
+
+            ChassisSpeeds limitedCommandedVelocity = new ChassisSpeeds(limitedCommandedVelocityVector.getX(),
+                    limitedCommandedVelocityVector.getY(), commandedVelocity.omegaRadiansPerSecond);
+
+            return limitedCommandedVelocity;
+        } else {
+            return commandedVelocity;
+        }
+
+    }
+
+    // converts MAX_ACCELERATION into velocity vector
+    private double getVelocityMagnitudeFromAcceleration() {
+        return Constants.MAX_ACCELERATION * /* update period */;
+    }
 
     double[] lastMotorSpeeds = {0, 0, 0, 0};
     double[] lastMotorSetTimes = {0, 0, 0, 0};
