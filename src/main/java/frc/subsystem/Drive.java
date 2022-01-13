@@ -351,7 +351,8 @@ public final class Drive extends AbstractSubsystem {
 
     // converts MAX_ACCELERATION into velocity vector
     private double getVelocityMagnitudeFromAcceleration() {
-        return Constants.MAX_ACCELERATION * /* update period */;
+        // drive period in MS
+        return Constants.MAX_ACCELERATION * (Constants.DRIVE_PERIOD / 1000);
     }
 
     double[] lastMotorSpeeds = {0, 0, 0, 0};
