@@ -51,8 +51,6 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-    private double turnTarget = 0;
-
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
     /**
@@ -466,8 +464,6 @@ public final class Drive extends AbstractSubsystem {
 
     public synchronized void resetGyro() {
         gyroSensor.zeroYaw();
-        wantedHeading = Rotation2d.fromDegrees(0);
-        turnTarget = 0;
     }
 
     double turnMinSpeed = 0;
