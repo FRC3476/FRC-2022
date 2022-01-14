@@ -486,6 +486,8 @@ public final class Drive extends AbstractSubsystem {
     /**
      * This method takes in x and y velocity as well as the target heading to calculate how much the robot needs to turn in order
      * to face a target
+     * <p>
+     * xVelocity and yVelocity are in m/s
      *
      * @param xVelocity
      * @param yVelocity
