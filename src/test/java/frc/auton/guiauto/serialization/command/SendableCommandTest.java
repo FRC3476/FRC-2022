@@ -9,11 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class SendableCommandTest {
 
     @Test
-    void execute() {
-
-    }
-
-    @Test
     void testDeserialize() {
         SendableCommand command = new SendableCommand("print",
                 new String[]{"5", "Hello World"},
