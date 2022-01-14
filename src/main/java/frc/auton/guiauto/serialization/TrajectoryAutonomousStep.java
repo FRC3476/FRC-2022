@@ -90,7 +90,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
             }
 
             if (rotationIndex < rotations.size()) {
-                Drive.getInstance().setAutoRotation(rotations.get(rotationIndex).rotation);
+                Drive.getInstance().setAutoRotation(rotations.get(rotations.size() - 1).rotation);
                 Drive.getInstance().setDriveState(Drive.DriveState.RAMSETE);
             }
             scriptsToExecuteByTime.clear();
