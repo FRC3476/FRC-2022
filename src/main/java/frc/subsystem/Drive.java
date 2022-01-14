@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
+import org.jetbrains.annotations.NotNull;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -276,7 +277,8 @@ public final class Drive extends AbstractSubsystem {
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
         SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
-        boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
+        boolean rotate =
+                chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
 
@@ -420,6 +422,7 @@ public final class Drive extends AbstractSubsystem {
         //	.translationMat.getY());
         //debugSpeed();
         //System.out.println(driveState);
+
         DriveState snapDriveState;
         synchronized (this) {
             snapDriveState = driveState;
@@ -473,15 +476,30 @@ public final class Drive extends AbstractSubsystem {
 
     double turnMinSpeed = 0;
 
+    /**
+     * Default method when the x and y velocity and the target heading are not passed
+     */
     private void updateTurn() {
-        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        updateTurn(0, 0, wantedHeading);
+    }
+
+    /**
+     * This method takes in x and y velocity as well as the target heading to calculate how much the robot needs to turn in order
+     * to face a target
+     *
+     * @param xVelocity
+     * @param yVelocity
+     * @param targetHeading
+     */
+    private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
+        double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
         if ((Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED) {
-            swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(0)));
+            swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(0)));
             isAiming = false;
 
             if (rotateAuto) {
@@ -492,13 +510,11 @@ public final class Drive extends AbstractSubsystem {
             }
 
         } else {
-            System.out.println("Error: " + error + " curSpeed: " + curSpeed + " command: " + deltaSpeed + " pidOut: "
-                    + pidDeltaSpeed + " minSpeed: " + turnMinSpeed);
             isAiming = true;
             swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
 
             if (curSpeed < 0.5) {
-                //Updates every 10ms
+                //Updates every 20ms
                 turnMinSpeed = Math.min(turnMinSpeed + 0.1, 6);
             } else {
                 turnMinSpeed = 2;
@@ -508,8 +524,6 @@ public final class Drive extends AbstractSubsystem {
             SmartDashboard.putNumber("Turn PID Command", pidDeltaSpeed);
             SmartDashboard.putNumber("Turn Speed Command", deltaSpeed);
             SmartDashboard.putNumber("Turn Min Speed", turnMinSpeed);
-
-
         }
     }
 
