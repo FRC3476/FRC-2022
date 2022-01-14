@@ -21,9 +21,6 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
         this.period = period;
         this.subsystemName = this.getClass().getSimpleName();
         this.loggingInterval = loggingInterval;
-        if (period != -1) {
-            new Thread(this).start();
-        }
     }
 
     public AbstractSubsystem(int period) {
