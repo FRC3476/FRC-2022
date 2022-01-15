@@ -38,6 +38,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public boolean useRelativePosition = false;
+    
 
     private static Drive instance = new Drive();
 
