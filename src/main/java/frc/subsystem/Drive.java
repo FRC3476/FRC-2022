@@ -21,14 +21,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DutyCycle;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Field;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -37,7 +37,7 @@ public final class Drive extends AbstractSubsystem {
         TELEOP, TURN, HOLD, DONE, RAMSETE
     }
 
-    private static final Drive instance = new Drive();
+    private static Drive instance = new Drive();
 
     public static Drive getInstance() {
         return instance;
@@ -46,12 +46,12 @@ public final class Drive extends AbstractSubsystem {
     private final AHRS gyroSensor;
     private final PIDController turnPID;
     private DriveState driveState;
-    private Rotation2d wantedHeading = new Rotation2d();
+    Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
     private boolean isAiming = false;
 
-    private double turnTarget = 0;
+
 
     private double maxVelocityChange = getMaxVelocityChange();
 
@@ -64,28 +64,27 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Motors that turn the wheels around
      */
-    private final LazyCANSparkMax[] swerveMotors = new LazyCANSparkMax[4];
+    final LazyCANSparkMax[] swerveMotors = new LazyCANSparkMax[4];
 
     /**
      * Motors that are driving the robot around and causing it to move
      */
-    private final LazyCANSparkMax[] swerveDriveMotors = new LazyCANSparkMax[4];
+    final LazyCANSparkMax[] swerveDriveMotors = new LazyCANSparkMax[4];
 
     /**
      * Encoders for the motors that turn the wheel (NOT ABSOLUTE)
      */
-    private final RelativeEncoder[] swerveEncoders = new RelativeEncoder[4];
+    final RelativeEncoder[] swerveEncoders = new RelativeEncoder[4];
 
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    private final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
+    final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
 
     /**
      * PID Controllers for the swerve Drive
      */
-    private final SparkMaxPIDController[] swervePID = new SparkMaxPIDController[4];
-
+    final SparkMaxPIDController[] swervePID = new SparkMaxPIDController[4];
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
@@ -217,7 +216,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     public void startHold() {
-        //TODO
+        configBrake();
         driveState = DriveState.HOLD;
     }
 
@@ -225,10 +224,8 @@ public final class Drive extends AbstractSubsystem {
         driveState = DriveState.TELEOP;
     }
 
-
-    public void hold() {
-        //TODO
-
+    public void doHold() {
+        setSwerveModuleStates(Constants.HOLD_MODULE_STATES);
     }
 
     public void swerveDrive(ControllerDriveInputs inputs) {
@@ -246,29 +243,18 @@ public final class Drive extends AbstractSubsystem {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
-        double turnSpeed = 0;
-        if (Math.abs(inputs.getRotation()) < 0.01) {
-            double error = turnTarget + getAngle();
-            turnPID.setSetpoint(0);
-            if (Math.abs(error) > 2) turnSpeed = turnPID.calculate(error);
-
-            SmartDashboard.putNumber("gyro pid in", getGyroAngle().getDegrees() % 360);
-            SmartDashboard.putNumber("pid Delta Speed", turnSpeed);
-            SmartDashboard.putNumber("wanted heading", wantedHeading.getDegrees());
-            SmartDashboard.putNumber("turn pid error", error);
-            turnSpeed = 0;
-        } else {
-            turnSpeed = inputs.getRotation() * 6;
-            turnTarget = getAngle();
-        }
-
 
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                turnSpeed,
+                inputs.getRotation() * 6,
                 Rotation2d.fromDegrees(getAngle()));
 
-        swerveDrive(chassisSpeeds);
+        if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
+            // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
+            doHold();
+        } else {
+            swerveDrive(chassisSpeeds);
+        }
     }
 
     double doubleMod(double x, double y) {
@@ -276,8 +262,13 @@ public final class Drive extends AbstractSubsystem {
         return (x - Math.floor(x / y) * y);
     }
 
-    private void swerveDrive(ChassisSpeeds chassisSpeeds) {
+    public void swerveDrive(ChassisSpeeds chassisSpeeds) {
+        swerveDrive(chassisSpeeds, 0);
+    }
 
+    public void swerveDrive(ChassisSpeeds chassisSpeeds, double acceleration) {
+
+        // Limits max velocity change
         chassisSpeeds = limitAcceleration(chassisSpeeds);
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
@@ -285,14 +276,24 @@ public final class Drive extends AbstractSubsystem {
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
         SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
-        boolean rotate =
-                chassisSpeeds.vxMetersPerSecond != 0 || chassisSpeeds.vyMetersPerSecond != 0 || chassisSpeeds.omegaRadiansPerSecond != 0;
+
+        boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 ||
+                chassisSpeeds.vyMetersPerSecond != 0 ||
+                chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
+        setSwerveModuleStates(moduleStates, rotate, acceleration);
+    }
 
+    public void setSwerveModuleStates(SwerveModuleState[] states) {
+        setSwerveModuleStates(states, true, 0);
+    }
+
+    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, double acceleration) {
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
             //                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+            // TODO: flip the acceleration if we flip the module
             SwerveModuleState targetState = moduleStates[i];
             double targetAngle = targetState.angle.getDegrees();
             double currentAngle = getAbsolutePosition(i); //swerveEncoders[i].getPosition();
@@ -307,7 +308,7 @@ public final class Drive extends AbstractSubsystem {
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, acceleration);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", swerveEncoders[i].getPosition() + angleDiff);
@@ -392,19 +393,17 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
-
-    double[] lastMotorSpeeds = {0, 0, 0, 0};
-    double[] lastMotorSetTimes = {0, 0, 0, 0};
-
-
-    public void setMotorSpeed(int module, double velocity) {
-        double acceleration = Timer.getFPGATimestamp() - lastMotorSetTimes[module] > 0.1 ? 0 :
-                (velocity - lastMotorSpeeds[module]) / (Timer.getFPGATimestamp() - lastMotorSetTimes[module]);
+    /**
+     * Sets the motor voltage
+     *
+     * @param module       The module to set the voltage on
+     * @param velocity     The target velocity
+     * @param acceleration The acceleration to use
+     */
+    public void setMotorSpeed(int module, double velocity, double acceleration) {
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         swerveDriveMotors[module].setVoltage(ffv);
         SmartDashboard.putNumber("Out Volts " + module, ffv);
-        lastMotorSpeeds[module] = velocity;
-        lastMotorSetTimes[module] = Timer.getFPGATimestamp();
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
 
@@ -453,7 +452,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     double autoStartTime;
-    HolonomicDriveController controller = new HolonomicDriveController(
+    private final HolonomicDriveController controller = new HolonomicDriveController(
             new PIDController(1.5, 0, 0),
             new PIDController(1.5, 0, 0),
             new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)));
@@ -479,7 +478,7 @@ public final class Drive extends AbstractSubsystem {
         System.out.println(goal);
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
                 autoTargetHeading);
-        swerveDrive(adjustedSpeeds);
+        swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
         //System.out.println(ramseteController.atReference());
         //System.out.println("target speed" + Units.metersToInches(wheelspeeds.leftMetersPerSecond) + " " + Units
         // .metersToInches(wheelspeeds.rightMetersPerSecond) + "time: " +(Timer.getFPGATimestamp()-autoStartTime) );
@@ -519,7 +518,7 @@ public final class Drive extends AbstractSubsystem {
                 updateTurn();
                 break;
             case HOLD:
-                hold();
+                doHold();
                 break;
             case DONE:
                 break;
@@ -554,21 +553,36 @@ public final class Drive extends AbstractSubsystem {
 
     public synchronized void resetGyro() {
         gyroSensor.zeroYaw();
-        wantedHeading = Rotation2d.fromDegrees(0);
-        turnTarget = 0;
     }
 
     double turnMinSpeed = 0;
 
+   /**
+     * Default method when the x and y velocity and the target heading are not passed
+     */
     private void updateTurn() {
-        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        updateTurn(0, 0, wantedHeading);
+    }
+
+    /**
+     * This method takes in x and y velocity as well as the target heading to calculate how much the robot needs to turn in order
+     * to face a target
+     * <p>
+     * xVelocity and yVelocity are in m/s
+     *
+     * @param xVelocity
+     * @param yVelocity
+     * @param targetHeading
+     */
+    private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
+        double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
         if ((Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED) {
-            swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(0)));
+            swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(0)));
             isAiming = false;
 
             if (rotateAuto) {
@@ -579,13 +593,11 @@ public final class Drive extends AbstractSubsystem {
             }
 
         } else {
-            System.out.println("Error: " + error + " curSpeed: " + curSpeed + " command: " + deltaSpeed + " pidOut: "
-                    + pidDeltaSpeed + " minSpeed: " + turnMinSpeed);
             isAiming = true;
             swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
 
             if (curSpeed < 0.5) {
-                //Updates every 10ms
+                //Updates every 20ms
                 turnMinSpeed = Math.min(turnMinSpeed + 0.1, 6);
             } else {
                 turnMinSpeed = 2;
@@ -643,5 +655,22 @@ public final class Drive extends AbstractSubsystem {
         Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
         Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
         setRotation(rotation);
+    }
+
+    @Override
+    public void close() throws Exception {
+        Field digitalSource = DutyCycle.class.getDeclaredField("m_source");
+        digitalSource.setAccessible(true);
+
+        for (int i = 0; i < 4; i++) {
+            swerveDriveMotors[i].close();
+            swerveMotors[i].close();
+
+            DigitalSource ds = (DigitalSource) digitalSource.get(swerveEncodersDIO[i]);
+            ds.close(); // Use reflection to close the DigitalSource because the DIO class doesn't do it properly.
+            swerveEncodersDIO[i].close();
+        }
+        gyroSensor.close();
+        instance = new Drive();
     }
 }
