@@ -315,7 +315,6 @@ public final class Drive extends AbstractSubsystem {
 
 
     /**
-     {@link Drive#limitAcceleration(ChassisSpeeds)}
         Puts limit on desired velocity so it can be achieved with a reasonable acceleration
         <p>
         Converts ChassisSpeeds to Translation2d
