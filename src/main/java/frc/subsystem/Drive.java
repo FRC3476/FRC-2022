@@ -55,13 +55,12 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-
-
-    private double maxVelocityChange = getMaxVelocityChange();
+    private double maxVelocityChange = getMaxAllowedVelocityChange();
 
     private double lastLoopTime = 0;
 
     private double accelLimitPeriod = 0;
+    private ChassisSpeeds currentRobotState;
 
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
@@ -211,7 +210,7 @@ public final class Drive extends AbstractSubsystem {
      * @return The current state of the robot as chassis speeds
      */
     public ChassisSpeeds getRobotState() {
-        return swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
+        return currentRobotState;
     }
 
     public void calibrateGyro() {
@@ -335,9 +334,9 @@ public final class Drive extends AbstractSubsystem {
         @param commandedVelocity Desired velocity
         @return Velocity that can be achieved within the iteration period
      */
-    private ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
+    ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
 
-        maxVelocityChange = getMaxVelocityChange();
+        maxVelocityChange = getMaxAllowedVelocityChange();
 
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
@@ -354,11 +353,11 @@ public final class Drive extends AbstractSubsystem {
         Translation2d velocityVectorChange = commandedVelocityVector.minus(actualVelocityVector);
 
         // Convert from cartesian to polar coordinate system
-        double velocityChangeMagnitudeSquared =
-                (velocityVectorChange.getX() * velocityVectorChange.getX()) + (velocityVectorChange.getY() * velocityVectorChange.getY());
+        double velocityChangeMagnitudeSquared = (velocityVectorChange.getX() * velocityVectorChange.getX()) +
+                (velocityVectorChange.getY() * velocityVectorChange.getY());
         double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX()); // remove
 
-        ChassisSpeeds limitedVelocity = actualVelocity;
+        ChassisSpeeds limitedVelocity = commandedVelocity;
 
         // Check if velocity change exceeds MAX limit
         if (velocityChangeMagnitudeSquared > maxVelocityChange * maxVelocityChange) {
@@ -384,7 +383,7 @@ public final class Drive extends AbstractSubsystem {
      Gets the MAX change in velocity that can occur over the iteration period
      @return Maximum value that the velocity can change within the iteration period
      */
-    private double getMaxVelocityChange() {
+    double getMaxAllowedVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
         // If iteration period is greater than allowed amount, iteration period = 50 ms
         if ((Timer.getFPGATimestamp() - lastLoopTime) > .150)
@@ -513,6 +512,7 @@ public final class Drive extends AbstractSubsystem {
         DriveState snapDriveState;
         synchronized (this) {
             snapDriveState = driveState;
+            currentRobotState = swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
         }
 
         switch (snapDriveState) {
