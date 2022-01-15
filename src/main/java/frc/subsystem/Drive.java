@@ -486,7 +486,7 @@ public final class Drive extends AbstractSubsystem {
      * @param targetHeading
      */
     private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
-        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
@@ -504,13 +504,11 @@ public final class Drive extends AbstractSubsystem {
             }
 
         } else {
-            System.out.println("Error: " + error + " curSpeed: " + curSpeed + " command: " + deltaSpeed + " pidOut: "
-                    + pidDeltaSpeed + " minSpeed: " + turnMinSpeed);
             isAiming = true;
             swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
 
             if (curSpeed < 0.5) {
-                //Updates every 10ms
+                //Updates every 20ms
                 turnMinSpeed = Math.min(turnMinSpeed + 0.1, 6);
             } else {
                 turnMinSpeed = 2;
