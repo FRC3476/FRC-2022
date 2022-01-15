@@ -21,10 +21,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DigitalSource;
+import edu.wpi.first.wpilibj.DutyCycle;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
+import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 
@@ -460,8 +464,9 @@ public final class Drive extends AbstractSubsystem {
 
 
     public synchronized boolean getTurningDone() {
-        //TODO redo
-        return false;
+        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
     }
 
     public synchronized void resetGyro() {
