@@ -37,6 +37,8 @@ public final class Drive extends AbstractSubsystem {
         TELEOP, TURN, HOLD, DONE, RAMSETE
     }
 
+    public boolean useRelativePosition = false;
+
     private static Drive instance = new Drive();
 
     public static Drive getInstance() {
@@ -556,9 +558,15 @@ public final class Drive extends AbstractSubsystem {
 
 
     public double getAbsolutePosition(int moduleNumber) {
-        double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
-        if (moduleNumber == 3) angle -= 72;
-        return angle < 0 ? angle + 360 : angle;
+        if (useRelativePosition) {
+            double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
+            if (relPos < 0) relPos += 360;
+            return relPos;
+        } else {
+            double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
+            if (moduleNumber == 3) angle -= 72;
+            return angle < 0 ? angle + 360 : angle;
+        }
     }
 
     public void fallbackAim(Translation2d currentPos) {
