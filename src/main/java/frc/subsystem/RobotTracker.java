@@ -3,11 +3,13 @@ package frc.subsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public final class RobotTracker extends AbstractSubsystem {
 
-    private static final RobotTracker instance = new RobotTracker();
+    private static RobotTracker instance = new RobotTracker();
 
     private final Drive drive = Drive.getInstance();
 
@@ -18,6 +20,8 @@ public final class RobotTracker extends AbstractSubsystem {
     private Pose2d lastEstimatedPose = new Pose2d();
 
     private final SwerveDriveOdometry swerveDriveOdometry;
+
+    double lastTime = 0;
 
     private RobotTracker() {
         super(20);
@@ -54,11 +58,25 @@ public final class RobotTracker extends AbstractSubsystem {
      * calculate the change in distance from a velocity. This also takes in an angle parameter which is used instead of the
      * angular rate that is calculated from forward kinematics.
      *
-     * @return The new pose of the robot.
      */
     @Override
     public void update() {
-        swerveDriveOdometry.update(Rotation2d.fromDegrees(drive.getAngle()), drive.getSwerveModuleStates());
+        updateOdometry(WPIUtilJNI.now() * 1.0e-6, drive.getGyroAngle(), drive.getSwerveModuleStates());
+    }
+
+    /**
+     * /** Updates the robot's position on the field using forward kinematics and integration of the pose over time. This method
+     * takes in the current time as a parameter to calculate period (difference between two timestamps). The period is used to
+     * calculate the change in distance from a velocity. This also takes in an angle parameter which is used instead of the
+     * angular rate that is calculated from forward kinematics.
+     *
+     * @param currentTimeSeconds The current time in seconds.
+     * @param gyroAngle          The angle reported by the gyroscope.
+     * @param moduleStates       The current state of all swerve modules. Please provide the states in the same order in which you
+     *                           instantiated your SwerveDriveKinematics.
+     */
+    public void updateOdometry(double currentTimeSeconds, Rotation2d gyroAngle, SwerveModuleState[] moduleStates) {
+        swerveDriveOdometry.updateWithTime(currentTimeSeconds, gyroAngle, moduleStates);
         synchronized (this) {
             lastEstimatedPose = swerveDriveOdometry.getPoseMeters();
         }
@@ -68,10 +86,14 @@ public final class RobotTracker extends AbstractSubsystem {
      * Resets the robot's position on the field. The gyroscope angle does not need to be reset here on the user's robot code. The
      * library automatically takes care of offsetting the gyro angle.
      *
-     * @param pose      The position on the field that your robot is at.
+     * @param pose The position on the field that your robot is at.
      */
     synchronized public void resetPosition(Pose2d pose) {
-        swerveDriveOdometry.resetPosition(pose, drive.getGyroAngle());
+        resetPosition(pose, drive.getGyroAngle());
+    }
+
+    synchronized public void resetPosition(Pose2d pose, Rotation2d gyroAngle) {
+        swerveDriveOdometry.resetPosition(pose, gyroAngle);
     }
 
     /**
@@ -93,5 +115,10 @@ public final class RobotTracker extends AbstractSubsystem {
         SmartDashboard.putNumber("Robot Pose X", getPoseMeters().getX());
         SmartDashboard.putNumber("Robot Pose Y", getPoseMeters().getX());
         SmartDashboard.putNumber("Robot Pose Angle", getPoseMeters().getRotation().getDegrees());
+    }
+
+    @Override
+    public void close() {
+        instance = new RobotTracker();
     }
 }
