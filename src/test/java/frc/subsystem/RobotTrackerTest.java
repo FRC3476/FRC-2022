@@ -39,7 +39,7 @@ public class RobotTrackerTest {
             double x = random.nextDouble() * 5 - 2.5;
             double y = random.nextDouble() * 5 - 2.5;
             double theta = 0; //random.nextDouble() * 2 * Math.PI;
-            double period = 0.002;
+            double period = 0.05;
 
             robotTracker.resetPosition(new Pose2d(x, y, new Rotation2d(theta)), new Rotation2d(0));
 
