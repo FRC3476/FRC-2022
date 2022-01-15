@@ -65,8 +65,8 @@ public class RobotTrackerTest {
                         drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
             }
 
-            assertEquals(x, robotTracker.getPoseMeters().getTranslation().getX(), 0.1);
-            assertEquals(y, robotTracker.getPoseMeters().getTranslation().getY(), 0.1);
+            assertEquals(x, robotTracker.getPoseMeters().getTranslation().getX(), 0.3);
+            assertEquals(y, robotTracker.getPoseMeters().getTranslation().getY(), 0.3);
             assertEquals(theta, robotTracker.getPoseMeters().getRotation().getDegrees(), 0.1);
         }
 
