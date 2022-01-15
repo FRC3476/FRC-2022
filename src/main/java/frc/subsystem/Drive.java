@@ -55,6 +55,8 @@ public final class Drive extends AbstractSubsystem {
 
     private double maxVelocityChange = getMaxVelocityChange();
 
+    private double lastAccelLimit = 0;
+
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
     /**
@@ -320,50 +322,52 @@ public final class Drive extends AbstractSubsystem {
         Computes difference between desired and actual velocities
         Converts from cartesian to polar coordinate system
         Checks if velocity change exceeds MAX limit
-        Checks if change in velocity is above limit
         Gets limited velocity vector difference in cartesian coordinate system
         Computes limited velocity
         Converts to format compatible with serveDrive
 
-        @param desiredVelocity Desired velocity
+        @param commandedVelocity Desired velocity
         @return Velocity that can be achieved within the iteration period
      */
-    private ChassisSpeeds limitAcceleration(ChassisSpeeds desiredVelocity) {
+    private ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
+
+        maxVelocityChange = getMaxVelocityChange();
+
+        // Sets the last call of the method to the current time
+        lastAccelLimit = Timer.getFPGATimestamp();
 
         ChassisSpeeds actualVelocity = getRobotState();
 
         // Converts ChassisSpeeds to Translation2d
         Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
                 actualVelocity.vyMetersPerSecond);
-        Translation2d desiredVelocityVector = new Translation2d(desiredVelocity.vxMetersPerSecond,
-                desiredVelocity.vyMetersPerSecond);
+        Translation2d commandedVelocityVector = new Translation2d(commandedVelocity.vxMetersPerSecond,
+                commandedVelocity.vyMetersPerSecond);
 
         // Computing difference between desired and actual velocities
-        Translation2d velocityVectorDiff = desiredVelocityVector.minus(actualVelocityVector);
+        Translation2d velocityVectorChange = commandedVelocityVector.minus(actualVelocityVector);
 
         // Convert from cartesian to polar coordinate system
-        double velocityDiffMagnitude =
-                Math.sqrt(
-                        (velocityVectorDiff.getX() * velocityVectorDiff.getX()) + (velocityVectorDiff.getY() * velocityVectorDiff.getY()));
-        double velocityDiffAngle = Math.atan2(velocityVectorDiff.getY(), velocityVectorDiff.getX());
+        double velocityChangeMagnitudeSquared =
+                (velocityVectorChange.getX() * velocityVectorChange.getX()) + (velocityVectorChange.getY() * velocityVectorChange.getY());
+        double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX()); // remove
 
-        // Check if velocity change exceeds MAX limit
         ChassisSpeeds limitedVelocity = actualVelocity;
 
-        // Check if change in velocity is above limit
-        if (velocityDiffMagnitude > maxVelocityChange) {
+        // Check if velocity change exceeds MAX limit
+        if (velocityChangeMagnitudeSquared > maxVelocityChange * maxVelocityChange) {
 
             // Get limited velocity vector difference in cartesian coordinate system
             Translation2d limitedVelocityVectorChange =
                     new Translation2d(Math.cos(velocityDiffAngle) * maxVelocityChange,
-                            Math.sin(velocityDiffAngle) * maxVelocityChange);
+                            Math.sin(velocityDiffAngle) * maxVelocityChange); // remove
 
             // Compute limited velocity
-            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector);
+            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector); // remove
 
             // Convert to format compatible with serveDrive
             limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(),
-                    limitedVelocityVector.getY(), desiredVelocity.omegaRadiansPerSecond);
+                    limitedVelocityVector.getY(), commandedVelocity.omegaRadiansPerSecond); // remove
 
         }
 
@@ -375,8 +379,13 @@ public final class Drive extends AbstractSubsystem {
      @return Maximum value that the velocity can change within the iteration period
      */
     private double getMaxVelocityChange() {
-        return Constants.MAX_ACCELERATION * (Constants.DRIVE_PERIOD / 1000); // TODO: Substitute in proper iteration period
+        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
+        // Converts iteration period to milliseconds
+        // Multiplies by MAX_ACCELERATION to find the velocity over that period
+        return Constants.MAX_ACCELERATION * (Timer.getFPGATimestamp() - lastAccelLimit / 1000);
     }
+
+
 
     double[] lastMotorSpeeds = {0, 0, 0, 0};
     double[] lastMotorSetTimes = {0, 0, 0, 0};
