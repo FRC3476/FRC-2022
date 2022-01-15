@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.controllers.LazyCANSparkMax;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 
@@ -49,8 +50,6 @@ public final class Drive extends AbstractSubsystem {
     boolean rotateAuto = false;
 
     private boolean isAiming = false;
-
-    private double turnTarget = 0;
 
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
@@ -464,21 +463,36 @@ public final class Drive extends AbstractSubsystem {
 
     public synchronized void resetGyro() {
         gyroSensor.zeroYaw();
-        wantedHeading = Rotation2d.fromDegrees(0);
-        turnTarget = 0;
     }
 
     double turnMinSpeed = 0;
 
+   /**
+     * Default method when the x and y velocity and the target heading are not passed
+     */
     private void updateTurn() {
-        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        updateTurn(0, 0, wantedHeading);
+    }
+
+    /**
+     * This method takes in x and y velocity as well as the target heading to calculate how much the robot needs to turn in order
+     * to face a target
+     * <p>
+     * xVelocity and yVelocity are in m/s
+     *
+     * @param xVelocity
+     * @param yVelocity
+     * @param targetHeading
+     */
+    private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
+        double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
         if ((Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED) {
-            swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(0)));
+            swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(0)));
             isAiming = false;
 
             if (rotateAuto) {
@@ -489,13 +503,11 @@ public final class Drive extends AbstractSubsystem {
             }
 
         } else {
-            System.out.println("Error: " + error + " curSpeed: " + curSpeed + " command: " + deltaSpeed + " pidOut: "
-                    + pidDeltaSpeed + " minSpeed: " + turnMinSpeed);
             isAiming = true;
             swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
 
             if (curSpeed < 0.5) {
-                //Updates every 10ms
+                //Updates every 20ms
                 turnMinSpeed = Math.min(turnMinSpeed + 0.1, 6);
             } else {
                 turnMinSpeed = 2;
