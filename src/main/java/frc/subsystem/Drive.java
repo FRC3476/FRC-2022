@@ -57,6 +57,8 @@ public final class Drive extends AbstractSubsystem {
 
     private double lastAccelLimit = 0;
 
+    private double accelLimitPeriod = 0;
+
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
     /**
@@ -379,9 +381,14 @@ public final class Drive extends AbstractSubsystem {
      */
     private double getMaxVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
-        // Converts iteration period to milliseconds
+        // If iteration period is greater than allowed amount, iteration period = 50 ms
+        if ((Timer.getFPGATimestamp() - lastAccelLimit) > .150)
+            accelLimitPeriod = .050;
+        else
+            accelLimitPeriod = Timer.getFPGATimestamp() - lastAccelLimit / 1000;
+
         // Multiplies by MAX_ACCELERATION to find the velocity over that period
-        return Constants.MAX_ACCELERATION * (Timer.getFPGATimestamp() - lastAccelLimit / 1000);
+        return Constants.MAX_ACCELERATION * (accelLimitPeriod);
     }
 
 
