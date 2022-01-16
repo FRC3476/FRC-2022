@@ -45,7 +45,7 @@ public class DriveTest {
         drive.close();
     }
 
-    @Disabled
+    @Disabled("Test fails due to the new acceleration limitation")
     void testFeedforward() throws NoSuchFieldException, IllegalAccessException {
         for (int i = 0; i < 100; i++) {
             double randomX = random.nextDouble() * 4 - 2;
