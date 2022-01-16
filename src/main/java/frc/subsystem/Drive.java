@@ -41,7 +41,7 @@ public final class Drive extends AbstractSubsystem {
         TELEOP, TURN, HOLD, DONE, RAMSETE
     }
 
-    public boolean useRelativePosition = false;
+    public boolean useRelativeEncoderPosition = false;
 
     private static Drive instance = new Drive();
 
@@ -563,7 +563,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     public double getAbsolutePosition(int moduleNumber) {
-        if (useRelativePosition) {
+        if (useRelativeEncoderPosition) {
             double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
             if (relPos < 0) relPos += 360;
             return relPos;

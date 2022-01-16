@@ -198,7 +198,7 @@ public class Robot extends TimedRobot {
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
-            drive.useRelativePosition = !drive.useRelativePosition;
+            drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
