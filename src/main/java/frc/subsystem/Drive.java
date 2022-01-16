@@ -551,8 +551,9 @@ public final class Drive extends AbstractSubsystem {
 
 
     public synchronized boolean getTurningDone() {
-        //TODO redo
-        return false;
+        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
     }
 
     public synchronized void resetGyro() {
