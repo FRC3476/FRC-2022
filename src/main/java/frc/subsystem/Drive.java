@@ -21,10 +21,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DutyCycle;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
@@ -49,6 +46,9 @@ public final class Drive extends AbstractSubsystem {
     private DriveState driveState;
     private Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
+
+    //using swerveDriveFieldRelative?
+    private boolean useRelativeDrive = true;
 
     private boolean isAiming = false;
 
@@ -568,9 +568,20 @@ public final class Drive extends AbstractSubsystem {
         return angle < 0 ? angle + 360 : angle;
     }
 
+    //rotates robot to face center of field
     public void fallbackAim(Translation2d currentPos) {
         Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
         Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
         setRotation(rotation);
+    }
+
+    //checks gyro. if disconnected, switches to non field relative for the rest of the match
+    public void checkGyro() {
+        if (!gyroSensor.isConnected()) {
+            if (useRelativeDrive) {
+                useRelativeDrive = false;
+                DriverStation.reportError("Gyro disconnected, switching to non field relative drive for rest of match", false);
+            }
+        }
     }
 }
