@@ -31,6 +31,7 @@ import frc.utility.ControllerDriveInputs;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 
@@ -60,7 +61,7 @@ public final class Drive extends AbstractSubsystem {
     private double lastLoopTime = 0;
 
     private double accelLimitPeriod = 0;
-    private ChassisSpeeds currentRobotState;
+    private @Nullable ChassisSpeeds currentRobotState;
 
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
@@ -209,7 +210,7 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return The current state of the robot as chassis speeds
      */
-    public ChassisSpeeds getRobotState() {
+    public @Nullable ChassisSpeeds getRobotState() {
         return currentRobotState;
     }
 
@@ -551,6 +552,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     public synchronized boolean getTurningDone() {
+        if (getRobotState() == null) return false;
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
