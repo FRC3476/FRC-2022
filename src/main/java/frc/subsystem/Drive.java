@@ -343,6 +343,7 @@ public final class Drive extends AbstractSubsystem {
         lastLoopTime = Timer.getFPGATimestamp();
 
         ChassisSpeeds actualVelocity = getRobotState();
+        if (actualVelocity == null) actualVelocity = new ChassisSpeeds(0, 0, 0);
 
         // Converts ChassisSpeeds to Translation2d
         Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
@@ -387,10 +388,11 @@ public final class Drive extends AbstractSubsystem {
     double getMaxAllowedVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
         // If iteration period is greater than allowed amount, iteration period = 50 ms
-        if ((Timer.getFPGATimestamp() - lastLoopTime) > .150)
-            accelLimitPeriod = .050;
-        else
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
+            accelLimitPeriod = 0.050;
+        } else {
             accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
+        }
 
         // Multiplies by MAX_ACCELERATION to find the velocity over that period
         return Constants.MAX_ACCELERATION * (accelLimitPeriod);

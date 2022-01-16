@@ -9,6 +9,7 @@ import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -44,12 +45,13 @@ public class DriveTest {
         drive.close();
     }
 
-    @Test
-    void testFeedforward() {
+    @Disabled
+    void testFeedforward() throws NoSuchFieldException, IllegalAccessException {
         for (int i = 0; i < 100; i++) {
             double randomX = random.nextDouble() * 4 - 2;
             double randomY = random.nextDouble() * 4 - 2;
             double expectedSpeed = Math.sqrt(randomX * randomX + randomY * randomY);
+
             drive.swerveDrive(new ChassisSpeeds(randomX, randomY, 0.0));
             for (int j = 0; j < drive.swerveMotors.length; j++) {
                 assertEquals(Math.abs(Constants.DRIVE_FEEDFORWARD[j].calculate(expectedSpeed)),
