@@ -31,6 +31,7 @@ import frc.utility.ControllerDriveInputs;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 
@@ -54,6 +55,13 @@ public final class Drive extends AbstractSubsystem {
     boolean rotateAuto = false;
 
     private boolean isAiming = false;
+
+    private double maxVelocityChange = getMaxAllowedVelocityChange();
+
+    private double lastLoopTime = 0;
+
+    private double accelLimitPeriod = 0;
+    private @Nullable ChassisSpeeds currentRobotState;
 
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
@@ -202,8 +210,8 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return The current state of the robot as chassis speeds
      */
-    public ChassisSpeeds getRobotState() {
-        return swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
+    public @Nullable ChassisSpeeds getRobotState() {
+        return currentRobotState;
     }
 
     public void calibrateGyro() {
@@ -263,11 +271,16 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void swerveDrive(ChassisSpeeds chassisSpeeds, double acceleration) {
+
+        // Limits max velocity change
+        chassisSpeeds = limitAcceleration(chassisSpeeds);
+
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
         SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+
         boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 ||
                 chassisSpeeds.vyMetersPerSecond != 0 ||
                 chassisSpeeds.omegaRadiansPerSecond != 0;
@@ -306,6 +319,85 @@ public final class Drive extends AbstractSubsystem {
             SmartDashboard.putNumber("Swerve Motor " + i + " Error", angleDiff);
         }
     }
+
+
+    /**
+        Puts limit on desired velocity so it can be achieved with a reasonable acceleration
+        <p>
+        Converts ChassisSpeeds to Translation2d
+        Computes difference between desired and actual velocities
+        Converts from cartesian to polar coordinate system
+        Checks if velocity change exceeds MAX limit
+        Gets limited velocity vector difference in cartesian coordinate system
+        Computes limited velocity
+        Converts to format compatible with serveDrive
+
+        @param commandedVelocity Desired velocity
+        @return Velocity that can be achieved within the iteration period
+     */
+    ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
+
+        maxVelocityChange = getMaxAllowedVelocityChange();
+
+        // Sets the last call of the method to the current time
+        lastLoopTime = Timer.getFPGATimestamp();
+
+        ChassisSpeeds actualVelocity = getRobotState();
+        if (actualVelocity == null) actualVelocity = new ChassisSpeeds(0, 0, 0);
+
+        // Converts ChassisSpeeds to Translation2d
+        Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
+                actualVelocity.vyMetersPerSecond);
+        Translation2d commandedVelocityVector = new Translation2d(commandedVelocity.vxMetersPerSecond,
+                commandedVelocity.vyMetersPerSecond);
+
+        // Computing difference between desired and actual velocities
+        Translation2d velocityVectorChange = commandedVelocityVector.minus(actualVelocityVector);
+
+        // Convert from cartesian to polar coordinate system
+        double velocityChangeMagnitudeSquared = (velocityVectorChange.getX() * velocityVectorChange.getX()) +
+                (velocityVectorChange.getY() * velocityVectorChange.getY());
+        double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX()); // remove
+
+        ChassisSpeeds limitedVelocity = commandedVelocity;
+
+        // Check if velocity change exceeds MAX limit
+        if (velocityChangeMagnitudeSquared > maxVelocityChange * maxVelocityChange) {
+
+            // Get limited velocity vector difference in cartesian coordinate system
+            Translation2d limitedVelocityVectorChange =
+                    new Translation2d(Math.cos(velocityDiffAngle) * maxVelocityChange,
+                            Math.sin(velocityDiffAngle) * maxVelocityChange); // remove
+
+            // Compute limited velocity
+            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector); // remove
+
+            // Convert to format compatible with serveDrive
+            limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(),
+                    limitedVelocityVector.getY(), commandedVelocity.omegaRadiansPerSecond); // remove
+
+        }
+
+        return limitedVelocity;
+    }
+
+    /**
+     Gets the MAX change in velocity that can occur over the iteration period
+     @return Maximum value that the velocity can change within the iteration period
+     */
+    double getMaxAllowedVelocityChange() {
+        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
+        // If iteration period is greater than allowed amount, iteration period = 50 ms
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
+            accelLimitPeriod = 0.050;
+        } else {
+            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
+        }
+
+        // Multiplies by MAX_ACCELERATION to find the velocity over that period
+        return Constants.MAX_ACCELERATION * (accelLimitPeriod);
+    }
+
 
     /**
      * Sets the motor voltage
@@ -423,6 +515,7 @@ public final class Drive extends AbstractSubsystem {
         DriveState snapDriveState;
         synchronized (this) {
             snapDriveState = driveState;
+            currentRobotState = swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
         }
 
         switch (snapDriveState) {
@@ -461,6 +554,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     public synchronized boolean getTurningDone() {
+        if (getRobotState() == null) return false;
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
