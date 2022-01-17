@@ -200,7 +200,7 @@ public final class Drive extends AbstractSubsystem {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
-                    (swerveDriveMotors[i].getEncoder().getVelocity() / 60d) * Constants.SWERVE_METER_PER_ROTATION,
+                    (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
                     Rotation2d.fromDegrees(getAbsolutePosition(i)));
             swerveModuleState[i] = moduleState;
         }
@@ -212,7 +212,8 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return The current state of the robot as chassis speeds
      */
-    public @Nullable ChassisSpeeds getRobotState() {
+    public @NotNull ChassisSpeeds getRobotState() {
+        if (currentRobotState == null) return new ChassisSpeeds();
         return currentRobotState;
     }
 
@@ -635,7 +636,7 @@ public final class Drive extends AbstractSubsystem {
             if (relPos < 0) relPos += 360;
             SmartDashboard.putNumber("Swerve Motor " + i + " Relative Position", relPos);
             SmartDashboard.putNumber("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
-            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60d);
+            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
             SmartDashboard.putNumber("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             SmartDashboard.putNumber("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
 

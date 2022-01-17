@@ -99,9 +99,10 @@ public class OrangeUtility {
         return toDonut - threshold;
     }
 
+    public static final double EPSILON = 1.0E-14;
+
     public static boolean doubleEqual(double a, double b) {
-        double epsilon = 1E-14;
-        return Math.abs(a - b) < epsilon;
+        return Math.abs(a - b) < EPSILON;
     }
 
     public static boolean doubleEqual(double a, double b, double epsilon) {
