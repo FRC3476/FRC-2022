@@ -254,7 +254,7 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
                 inputs.getRotation() * 6,
-                Rotation2d.fromDegrees(getAngle()));
+                RobotTracker.getInstance().getPoseMeters().getRotation());
 
         if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
             // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
@@ -541,18 +541,19 @@ public final class Drive extends AbstractSubsystem {
             rotateAuto = true;
             isAiming = !getTurningDone();
             configBrake();
-
         }
     }
 
 
     public synchronized boolean getTurningDone() {
-        if (getRobotState() == null) return false;
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
     }
 
+    /**
+     * Do not zero the gyro unless it is on robot init. Set the pose instead {@link RobotTracker#resetPosition(Pose2d)}
+     */
     public synchronized void resetGyro() {
         gyroSensor.zeroYaw();
     }

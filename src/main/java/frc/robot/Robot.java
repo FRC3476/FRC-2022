@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -170,7 +171,6 @@ public class Robot extends TimedRobot {
         killAuto();
         enabled.setBoolean(true);
         startSubsystems();
-        drive.resetGyro();
     }
 
     /**
@@ -203,7 +203,7 @@ public class Robot extends TimedRobot {
 
 
         if (xbox.getRisingEdge(1)) {
-            drive.resetGyro();
+            robotTracker.resetPosition(new Pose2d(robotTracker.getPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
