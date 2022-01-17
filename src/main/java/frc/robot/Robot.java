@@ -187,7 +187,7 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
-        if (useFieldRelative) {
+        if (useFieldRelative && drive.useFieldRelative) {
             if (xbox.getRawButton(3)) {
                 //Increase the deadzone so that we drive straight
                 drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),

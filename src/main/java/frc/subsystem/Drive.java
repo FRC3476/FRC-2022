@@ -21,10 +21,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalSource;
-import edu.wpi.first.wpilibj.DutyCycle;
-import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
@@ -55,6 +52,8 @@ public final class Drive extends AbstractSubsystem {
     private DriveState driveState;
     Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
+
+    public boolean useFieldRelative = true;
 
     private boolean isAiming = false;
 
@@ -324,18 +323,14 @@ public final class Drive extends AbstractSubsystem {
 
 
     /**
-        Puts limit on desired velocity so it can be achieved with a reasonable acceleration
-        <p>
-        Converts ChassisSpeeds to Translation2d
-        Computes difference between desired and actual velocities
-        Converts from cartesian to polar coordinate system
-        Checks if velocity change exceeds MAX limit
-        Gets limited velocity vector difference in cartesian coordinate system
-        Computes limited velocity
-        Converts to format compatible with serveDrive
-
-        @param commandedVelocity Desired velocity
-        @return Velocity that can be achieved within the iteration period
+     * Puts limit on desired velocity so it can be achieved with a reasonable acceleration
+     * <p>
+     * Converts ChassisSpeeds to Translation2d Computes difference between desired and actual velocities Converts from cartesian
+     * to polar coordinate system Checks if velocity change exceeds MAX limit Gets limited velocity vector difference in cartesian
+     * coordinate system Computes limited velocity Converts to format compatible with serveDrive
+     *
+     * @param commandedVelocity Desired velocity
+     * @return Velocity that can be achieved within the iteration period
      */
     ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
 
@@ -384,8 +379,9 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     Gets the MAX change in velocity that can occur over the iteration period
-     @return Maximum value that the velocity can change within the iteration period
+     * Gets the MAX change in velocity that can occur over the iteration period
+     *
+     * @return Maximum value that the velocity can change within the iteration period
      */
     double getMaxAllowedVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
@@ -520,6 +516,8 @@ public final class Drive extends AbstractSubsystem {
             currentRobotState = swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
         }
 
+        checkGyro();
+
         switch (snapDriveState) {
             case TELEOP:
                 break;
@@ -568,7 +566,7 @@ public final class Drive extends AbstractSubsystem {
 
     double turnMinSpeed = 0;
 
-   /**
+    /**
      * Default method when the x and y velocity and the target heading are not passed
      */
     private void updateTurn() {
@@ -618,8 +616,6 @@ public final class Drive extends AbstractSubsystem {
             SmartDashboard.putNumber("Turn PID Command", pidDeltaSpeed);
             SmartDashboard.putNumber("Turn Speed Command", deltaSpeed);
             SmartDashboard.putNumber("Turn Min Speed", turnMinSpeed);
-
-
         }
     }
 
@@ -668,10 +664,28 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
+    /**
+     * Takes in the robot's current position, and uses that to turn the robot towards the goal.
+     *
+     * @param currentPos the current position of the robot in meters.
+     */
     public void fallbackAim(Translation2d currentPos) {
         Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
         Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
         setRotation(rotation);
+    }
+
+    /**
+     * Checks if gyro is connected. If disconnected, switches to robot-centric drive for the rest of the match. Reports error to
+     * driver station when this happens.
+     */
+    public void checkGyro() {
+        if (!gyroSensor.isConnected()) {
+            if (useFieldRelative) {
+                useFieldRelative = false;
+                DriverStation.reportError("Gyro disconnected, switching to non field relative drive for rest of match", false);
+            }
+        }
     }
 
     @Override
