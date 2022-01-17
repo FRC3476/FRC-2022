@@ -583,7 +583,7 @@ public final class Drive extends AbstractSubsystem {
      * @param yVelocity
      * @param targetHeading
      */
-    private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
+    public void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
         double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);

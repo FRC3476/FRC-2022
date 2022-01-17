@@ -13,6 +13,9 @@ public final class Constants {
     public static final double CAMERA_TARGET_HEIGHT_OFFSET = 0; //TODO: CHANGE
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
+    // Vision Manager
+    public static final int VISION_MANAGER_PERIOD = 50;
+
     //Drive Constants
     public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
 
