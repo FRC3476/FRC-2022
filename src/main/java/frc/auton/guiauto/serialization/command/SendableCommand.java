@@ -84,17 +84,25 @@ public class SendableCommand {
 
         if (reflection) {
             String[] splitMethod = methodName.split("\\.");
-            StringBuilder className = new StringBuilder();
-            for (int i = 0; i < splitMethod.length - 1; i++) {
-                className.append(splitMethod[i]);
-            }
+
+            String[] classNameArray = new String[splitMethod.length - 1];
+            System.arraycopy(splitMethod, 0, classNameArray, 0, classNameArray.length);
+            String className = String.join(".", classNameArray);
 
             try {
-                Class<?> cls = Class.forName(className.toString());
-                methodToCall = cls.getMethod(splitMethod[splitMethod.length - 1],
-                        Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new));
+                Class<?> cls = Class.forName(className);
+                Class[] typeArray = Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new);
+                if (typeArray.length == 0) {
+                    methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1]);
+                } else {
+                    methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1],
+                            Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new));
+                }
+                methodToCall.setAccessible(true);
                 if (!Modifier.isStatic(methodToCall.getModifiers())) {
-                    instance = cls.getMethod("getInstance").invoke(null);
+                    Method getInstance = cls.getDeclaredMethod("getInstance");
+                    getInstance.setAccessible(true);
+                    instance = getInstance.invoke(null);
                 }
             } catch (ClassNotFoundException e) {
                 DriverStation.reportError("Class not found: " + className, e.getStackTrace());
@@ -110,20 +118,21 @@ public class SendableCommand {
         this.instance = instance;
     }
 
-    @JsonIgnoreProperties
-    private final Object instance;
+    @JsonIgnoreProperties final Object instance;
 
-    @JsonIgnoreProperties
-    private final Method methodToCall;
-    
-    @JsonIgnoreProperties
-    private final Object[] objArgs;
+    @JsonIgnoreProperties final Method methodToCall;
+
+    @JsonIgnoreProperties final Object[] objArgs;
 
 
     /**
      * @return false if the command fails to execute
      */
     public boolean execute() {
+        if (methodToCall == null) {
+            DriverStation.reportError("Method to call is null", Thread.currentThread().getStackTrace());
+            return false;
+        }
         if (reflection) {
             try {
                 methodToCall.invoke(instance, objArgs);

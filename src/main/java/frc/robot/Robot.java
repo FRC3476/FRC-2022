@@ -34,6 +34,9 @@ import java.util.concurrent.Executors;
  */
 @SuppressWarnings("ClassNamePrefixedWithPackageName")
 public class Robot extends TimedRobot {
+
+    public boolean useFieldRelative = false;
+
     //GUI
     NetworkTableInstance instance = NetworkTableInstance.getDefault();
     NetworkTable autoDataTable = instance.getTable("autodata");
@@ -184,8 +187,7 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
-        drive.checkGyro();
-        if (drive.useRelativeDrive) {
+        if (useFieldRelative && drive.useFieldRelative) {
             if (xbox.getRawButton(3)) {
                 //Increase the deadzone so that we drive straight
                 drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
@@ -193,10 +195,6 @@ public class Robot extends TimedRobot {
             } else {
                 drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
                         -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
-            }
-
-            if (xbox.getRisingEdge(1)) {
-                drive.resetGyro();
             }
         } else {
             if (xbox.getRawButton(3)) {
@@ -208,6 +206,20 @@ public class Robot extends TimedRobot {
                         -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
             }
         }
+
+
+        if (xbox.getRisingEdge(1)) {
+            drive.resetGyro();
+        }
+
+        if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
+            drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
+        }
+
+        if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
+            useFieldRelative = !useFieldRelative;
+        }
+
     }
 
     /**
