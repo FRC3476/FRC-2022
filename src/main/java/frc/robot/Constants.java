@@ -14,7 +14,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
     //Drive Constants
-    public static final int DRIVE_PERIOD = 20;
+    public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
 
     //    public static final int DRIVE_LEFT_FRONT_ID = 10;
     //    public static final int DRIVE_LEFT_BACK_ID = 11;
@@ -94,6 +94,9 @@ public final class Constants {
 
     public static final double MAX_TURN_ERROR = 0.85;
     public static final double MAX_PID_STOP_SPEED = 5.2;
+
+    /** Units are in Meters Per Second Squared*/
+    public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
 
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
