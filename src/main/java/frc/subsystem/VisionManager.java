@@ -7,7 +7,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
-import org.jetbrains.annotations.Nullable;
 
 public class VisionManager extends AbstractSubsystem {
     private static VisionManager instance = new VisionManager();
@@ -35,8 +34,7 @@ public class VisionManager extends AbstractSubsystem {
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs) {
-        @Nullable ChassisSpeeds currentRobotState = drive.getRobotState();
-        if (currentRobotState == null) return;
+        ChassisSpeeds currentRobotState = drive.getRobotState();
         Translation2d currentRobotVelocity = new Translation2d(currentRobotState.vxMetersPerSecond,
                 currentRobotState.vyMetersPerSecond);
 
