@@ -26,30 +26,42 @@ public class Limelight {
         /**
          * use mode set in the current pipeline.
          */
-        DEFAULT,
+        DEFAULT(0),
         /**
          * Force off
          */
-        OFF,
+        OFF(1),
         /**
          * Force blinking
          */
-        BLINK,
+        BLINK(2),
         /**
          * Force on
          */
-        ON
+        ON(3);
+
+        LedMode(int i) {
+            this.i = i;
+        }
+
+        private final int i;
     }
 
     /**
      * limelight’s operation modes
      */
     public enum CamMode {
-        VISION_PROCESSOR,
+        VISION_PROCESSOR(0),
         /**
          * Increases exposure, disables vision processing
          */
-        DRIVER_CAMERA
+        DRIVER_CAMERA(1);
+
+        private final int i;
+
+        CamMode(int i) {
+            this.i = i;
+        }
     }
 
     /**
@@ -59,15 +71,21 @@ public class Limelight {
         /**
          * Side-by-side streams if a webcam is attached to Limelight
          */
-        STANDARD,
+        STANDARD(0),
         /**
          * The secondary camera stream is placed in the lower-right corner of the primary camera stream
          */
-        PIP_MAIN,
+        PIP_MAIN(1),
         /**
          * The primary camera stream is placed in the lower-right corner of the secondary camera stream
          */
-        PIP_SECONDARY
+        PIP_SECONDARY(2);
+
+        private final int i;
+
+        StreamingMode(int i) {
+            this.i = i;
+        }
     }
 
     private Limelight() {
@@ -91,8 +109,8 @@ public class Limelight {
     /**
      * @return Whether the limelight has any valid targets
      */
-    public boolean isTargetVisiable() {
-		return limelightTable.getEntry("tv").getDouble(0) == 1;
+    public boolean isTargetVisible() {
+        return limelightTable.getEntry("tv").getDouble(0) == 1;
     }
 
     double lastUpdate = 0;
@@ -119,14 +137,14 @@ public class Limelight {
     /**
      * @return Target Area (0% of image to 100% of image)
      */
-    public double getTagetArea() {
+    public double getTargetArea() {
         return limelightTable.getEntry("ta").getDouble(0);
     }
 
     /**
      * @return Skew or rotation (-90 degrees to 0 degrees)
      */
-    public double getTagetSkew() {
+    public double getTargetSkew() {
         return limelightTable.getEntry("ts").getDouble(0);
     }
 
@@ -135,50 +153,24 @@ public class Limelight {
      */
     public double getLatency() {
         return limelightTable.getEntry("ts").getDouble(0);
-
     }
 
     /**
      * Sets limelight’s LED state
-     *
-     * @param ledMode
      */
     public void setLedMode(LedMode ledMode) {
-        if (!limelightGuiTable.getEntry("forceledon").getBoolean(false)) {
-            switch (ledMode) {
-                case DEFAULT:
-                    limelightTable.getEntry("ledMode").setNumber(0);
-                    break;
-                case OFF:
-                    limelightTable.getEntry("ledMode").setNumber(1);
-                    break;
-                case BLINK:
-                    limelightTable.getEntry("ledMode").setNumber(2);
-                    break;
-                case ON:
-                    limelightTable.getEntry("ledMode").setNumber(3);
-                    break;
-            }
-        } else {
+        if (limelightGuiTable.getEntry("forceledon").getBoolean(false)) {
             limelightTable.getEntry("ledMode").setNumber(3);
+        } else {
+            limelightTable.getEntry("ledMode").setNumber(ledMode.i);
         }
-
     }
 
     /**
      * Sets limelight’s operation mode
-     *
-     * @param camMode
      */
     public void setCamMode(CamMode camMode) {
-        switch (camMode) {
-            case VISION_PROCESSOR:
-                limelightTable.getEntry("camMode").setNumber(0);
-                break;
-            case DRIVER_CAMERA:
-                limelightTable.getEntry("camMode").setNumber(1);
-                break;
-        }
+        limelightTable.getEntry("camMode").setNumber(camMode.i);
     }
 
     /**
@@ -192,21 +184,9 @@ public class Limelight {
 
     /**
      * Sets limelight’s streaming mode
-     *
-     * @param streamingMode
      */
-    public void setSreamingMode(StreamingMode streamingMode) {
-        switch (streamingMode) {
-            case STANDARD:
-                limelightTable.getEntry("stream").setNumber(0);
-                break;
-            case PIP_MAIN:
-                limelightTable.getEntry("stream").setNumber(1);
-                break;
-            case PIP_SECONDARY:
-                limelightTable.getEntry("stream").setNumber(2);
-                break;
-        }
+    public void setStreamingMode(StreamingMode streamingMode) {
+        limelightTable.getEntry("stream").setNumber(streamingMode.i);
     }
 
     /**
@@ -215,25 +195,24 @@ public class Limelight {
      * @param takeSnapshots Take two snapshots per second
      */
     public void takeSnapshots(boolean takeSnapshots) {
-		if (takeSnapshots) {
-			limelightTable.getEntry("snapshot").setNumber(1);
-		} else {
-			limelightTable.getEntry("snapshot").setNumber(0);
-		}
+        if (takeSnapshots) {
+            limelightTable.getEntry("snapshot").setNumber(1);
+        } else {
+            limelightTable.getEntry("snapshot").setNumber(0);
+        }
     }
 
     /**
      * @return Distance from the limelight to the target in cm
-     * @see https://docs.limelightvision.io/en/latest/cs_estimating_distance.html
+     * @see <a href="https://docs.limelightvision.io/en/latest/cs_estimating_distance.html">Limelight Docs: Estimating
+     * Distance</a>
      */
     public double getDistance() {
-        if (isTargetVisiable()) {
+        if (isTargetVisible()) {
             return (Constants.CAMERA_TARGET_HEIGHT_OFFSET) / Math.tan(
                     Math.toRadians(Constants.CAMERA_Y_ANGLE + getVerticalOffset()));
         } else {
             return 0;
         }
     }
-
-
 }
