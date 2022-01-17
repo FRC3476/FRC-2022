@@ -48,7 +48,7 @@ public final class Drive extends AbstractSubsystem {
     boolean rotateAuto = false;
 
     //using swerveDriveFieldRelative?
-    private boolean useRelativeDrive = true;
+    public boolean useRelativeDrive = true;
 
     private boolean isAiming = false;
 
