@@ -24,7 +24,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
     Pose2d initialPose;
 
     /**
-     * Ensure you are creating the objects for your auto on robot init. The roborio will take multiple seconds to initalize the
+     * Ensure you are creating the objects for your auto on robot init. The roborio will take multiple seconds to initialize the
      * auto.
      *
      * @param autonomousFile File location of the auto
@@ -39,7 +39,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
     }
 
     /**
-     * Ensure you are creating the objects for your auto before you run them. The roborio will take multiple seconds to initalize
+     * Ensure you are creating the objects for your auto before you run them. The roborio will take multiple seconds to initialize
      * the auto.
      *
      * @param autonomousJson String of the autonomous

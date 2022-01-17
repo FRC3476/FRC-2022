@@ -325,7 +325,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     /**
-     * Puts limit on desired velocity so it can be achieved with a reasonable acceleration
+     * Puts limit on desired velocity, so it can be achieved with a reasonable acceleration
      * <p>
      * Converts ChassisSpeeds to Translation2d Computes difference between desired and actual velocities Converts from cartesian
      * to polar coordinate system Checks if velocity change exceeds MAX limit Gets limited velocity vector difference in cartesian
@@ -485,10 +485,6 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
                 autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
-        //System.out.println(ramseteController.atReference());
-        //System.out.println("target speed" + Units.metersToInches(wheelspeeds.leftMetersPerSecond) + " " + Units
-        // .metersToInches(wheelspeeds.rightMetersPerSecond) + "time: " +(Timer.getFPGATimestamp()-autoStartTime) );
-        //TODO: not working
         if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;
             stopMovement();

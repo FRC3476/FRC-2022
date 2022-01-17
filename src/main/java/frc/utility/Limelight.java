@@ -88,6 +88,7 @@ public class Limelight {
         }
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private Limelight() {
         limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
         limelightGuiTable = NetworkTableInstance.getDefault().getTable("limelightgui");
