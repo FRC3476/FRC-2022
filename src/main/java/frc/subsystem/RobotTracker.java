@@ -1,14 +1,18 @@
 package frc.subsystem;
 
+import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.jetbrains.annotations.NotNull;
 
 public final class RobotTracker extends AbstractSubsystem {
+
+    private final @NotNull AHRS gyroSensor;
 
     private static @NotNull RobotTracker instance = new RobotTracker();
 
@@ -26,6 +30,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private RobotTracker() {
         super(20);
+        gyroSensor = new AHRS(SPI.Port.kMXP);
         // swerveDriveOdometry = new SwerveDrivePoseEstimator(
         //     drive.getGyroAngle(),
         //     new Pose2d(),
@@ -34,23 +39,30 @@ public final class RobotTracker extends AbstractSubsystem {
         //     new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.02),
         //     new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 0.1),
         //     20d/1000d);
-        swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), drive.getGyroAngle());
+        swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), gyroSensor.getRotation2d());
+    }
+
+    public void calibrateGyro() {
+        gyroSensor.calibrate();
+    }
+
+    public AHRS getGyro() {
+        return gyroSensor;
     }
 
 
     /**
      * @return current rotation
      */
-    public synchronized Rotation2d getGyroAngle() {
+    public synchronized Rotation2d getAngle() {
         return lastEstimatedPose.getRotation();
-
     }
 
     /**
      * Resets the position on the field to 0,0 with a rotation of 0 degrees
      */
     synchronized public void resetOdometry() {
-        swerveDriveOdometry.resetPosition(new Pose2d(), Rotation2d.fromDegrees(drive.getAngle()));
+        swerveDriveOdometry.resetPosition(new Pose2d(), gyroSensor.getRotation2d());
     }
 
     /**
@@ -62,7 +74,7 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     @Override
     public void update() {
-        updateOdometry(WPIUtilJNI.now() * 1.0e-6, drive.getGyroAngle(), drive.getSwerveModuleStates());
+        updateOdometry(WPIUtilJNI.now() * 1.0e-6, gyroSensor.getRotation2d(), drive.getSwerveModuleStates());
     }
 
     /**
@@ -90,7 +102,7 @@ public final class RobotTracker extends AbstractSubsystem {
      * @param pose The position on the field that your robot is at.
      */
     synchronized public void resetPosition(Pose2d pose) {
-        resetPosition(pose, drive.getGyroAngle());
+        resetPosition(pose, gyroSensor.getRotation2d());
     }
 
     synchronized public void resetPosition(Pose2d pose, Rotation2d gyroAngle) {
@@ -120,6 +132,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     @Override
     public void close() {
+        gyroSensor.close();
         instance = new RobotTracker();
     }
 }
