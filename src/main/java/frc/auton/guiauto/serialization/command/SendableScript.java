@@ -23,7 +23,7 @@ public class SendableScript implements Comparable<SendableScript> {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
     public enum DelayType {

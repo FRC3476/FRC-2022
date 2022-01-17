@@ -3,7 +3,7 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.Timer;
 
 @SuppressWarnings("unused")
-public abstract class AbstractSubsystem implements Runnable {
+public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final int period;
     private final int loggingInterval;
     private int logInterval;
@@ -21,9 +21,6 @@ public abstract class AbstractSubsystem implements Runnable {
         this.period = period;
         this.subsystemName = this.getClass().getSimpleName();
         this.loggingInterval = loggingInterval;
-        if (period != -1) {
-            new Thread(this).start();
-        }
     }
 
     public AbstractSubsystem(int period) {
