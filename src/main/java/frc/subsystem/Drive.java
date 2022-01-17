@@ -342,7 +342,6 @@ public final class Drive extends AbstractSubsystem {
         lastLoopTime = Timer.getFPGATimestamp();
 
         ChassisSpeeds actualVelocity = getRobotState();
-        if (actualVelocity == null) actualVelocity = new ChassisSpeeds(0, 0, 0);
 
         // Converts ChassisSpeeds to Translation2d
         Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
