@@ -3,6 +3,7 @@
 package frc.utility.controllers;
 
 import com.revrobotics.CANSparkMax;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Sends only new commands to the Talon to reduce CAN usage.
@@ -14,10 +15,9 @@ public class LazyCANSparkMax extends CANSparkMax {
     private double prevVoltage = 100;
 
 
-    public LazyCANSparkMax(int deviceId, MotorType type) {
+    public LazyCANSparkMax(int deviceId, @NotNull MotorType type) {
         super(deviceId, type);
         enableVoltageCompensation(10);
-
     }
 
     @Override

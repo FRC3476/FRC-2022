@@ -2,6 +2,8 @@
 
 package frc.utility;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -73,7 +75,7 @@ public class OrangeUtility {
         return toCoerce;
     }
 
-    public static String ControlData(double error, double process, double output) {
+    public static @NotNull String ControlData(double error, double process, double output) {
         String ret = "==============";
         ret += "\nError: " + error;
         ret += ",\nProcess: " + process;
@@ -109,7 +111,7 @@ public class OrangeUtility {
         return Math.abs(a - b) < epsilon;
     }
 
-    public static double getArrayMax(double[] array) {
+    public static double getArrayMax(double @NotNull [] array) {
         double result = array[0];
         for (double e : array) {
             if (e > result) {
@@ -119,7 +121,7 @@ public class OrangeUtility {
         return result;
     }
 
-    public static double getArrayMin(double[] array) {
+    public static double getArrayMin(double @NotNull [] array) {
         double result = array[0];
         for (double e : array) {
             if (e < result) {
@@ -133,7 +135,7 @@ public class OrangeUtility {
         return OrangeUtility.inRange(test, new double[]{a, b});
     }
 
-    public static boolean inRange(double test, double[] range) {
+    public static boolean inRange(double test, double @NotNull [] range) {
         return test > OrangeUtility.getArrayMin(range) && test < OrangeUtility.getArrayMax(range);
     }
 
@@ -143,11 +145,11 @@ public class OrangeUtility {
      * @param testing the Thread to test
      * @return if the Thread can be started
      */
-    public static boolean isStartLegal(Thread testing) {
+    public static boolean isStartLegal(@NotNull Thread testing) {
         return testing.getState() == Thread.State.NEW;
     }
 
-    public static String joinStrings(String delim, List<?> strings) {
+    public static @NotNull String joinStrings(String delim, @NotNull List<?> strings) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < strings.size(); ++i) {
             sb.append(strings.get(i).toString());
@@ -184,7 +186,7 @@ public class OrangeUtility {
      * @param replaceRegex the regex to remove extra instances of
      * @return the resulting string
      */
-    public static String removeExtraInstances(String input, String replaceRegex) {
+    public static @NotNull String removeExtraInstances(@NotNull String input, @NotNull String replaceRegex) {
         Matcher match = Pattern.compile(replaceRegex).matcher(input);
         if (match.find()) {
             return OrangeUtility.replaceAllPastIndex(input, replaceRegex, "", match.start());
@@ -200,7 +202,7 @@ public class OrangeUtility {
      * @param commentDelimiter the String that denotes a comment
      * @return the modified String
      */
-    public static String removeSLComments(String input, String commentDelimiter) {
+    public static @NotNull String removeSLComments(@NotNull String input, @NotNull String commentDelimiter) {
         int comdex = input.indexOf(commentDelimiter);
         int comend = input.indexOf("\n", comdex);
         while (comdex != -1) {
@@ -226,7 +228,8 @@ public class OrangeUtility {
      * @param index       the index to start at (non-inclusive)
      * @return the resulting string
      */
-    public static String replaceAllPastIndex(String input, String regex, String replacement, int index) {
+    public static @NotNull String replaceAllPastIndex(@NotNull String input, @NotNull String regex, @NotNull String replacement,
+                                                      int index) {
         return input.substring(0, index + 1) + input.substring(index + 1).replaceAll(regex, replacement);
     }
 

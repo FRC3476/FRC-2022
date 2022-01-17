@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This class is used to get data from the limelight network tables
@@ -15,7 +16,7 @@ public class Limelight {
 
     private static final Limelight limelight = new Limelight();
 
-    public static Limelight getInstance() {
+    public static @NotNull Limelight getInstance() {
         return limelight;
     }
 
@@ -159,7 +160,7 @@ public class Limelight {
     /**
      * Sets limelight’s LED state
      */
-    public void setLedMode(LedMode ledMode) {
+    public void setLedMode(@NotNull LedMode ledMode) {
         if (limelightGuiTable.getEntry("forceledon").getBoolean(false)) {
             limelightTable.getEntry("ledMode").setNumber(3);
         } else {
@@ -170,7 +171,7 @@ public class Limelight {
     /**
      * Sets limelight’s operation mode
      */
-    public void setCamMode(CamMode camMode) {
+    public void setCamMode(@NotNull CamMode camMode) {
         limelightTable.getEntry("camMode").setNumber(camMode.i);
     }
 
@@ -186,7 +187,7 @@ public class Limelight {
     /**
      * Sets limelight’s streaming mode
      */
-    public void setStreamingMode(StreamingMode streamingMode) {
+    public void setStreamingMode(@NotNull StreamingMode streamingMode) {
         limelightTable.getEntry("stream").setNumber(streamingMode.i);
     }
 

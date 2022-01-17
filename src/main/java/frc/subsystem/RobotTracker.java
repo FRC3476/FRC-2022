@@ -6,20 +6,21 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.jetbrains.annotations.NotNull;
 
 public final class RobotTracker extends AbstractSubsystem {
 
-    private static RobotTracker instance = new RobotTracker();
+    private static @NotNull RobotTracker instance = new RobotTracker();
 
     private final Drive drive = Drive.getInstance();
 
-    public static RobotTracker getInstance() {
+    public static @NotNull RobotTracker getInstance() {
         return RobotTracker.instance;
     }
 
     private Pose2d lastEstimatedPose = new Pose2d();
 
-    private final SwerveDriveOdometry swerveDriveOdometry;
+    private final @NotNull SwerveDriveOdometry swerveDriveOdometry;
 
     double lastTime = 0;
 

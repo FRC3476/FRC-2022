@@ -3,12 +3,13 @@ package frc.utility;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import frc.auton.guiauto.serialization.Autonomous;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 
 public final class Serializer {
-    static ObjectMapper objectMapper = new ObjectMapper();
+    static @NotNull ObjectMapper objectMapper = new ObjectMapper();
 
     public static String serializeToString(Object obj) throws IOException {
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);

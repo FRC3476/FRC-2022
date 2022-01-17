@@ -2,11 +2,13 @@
 
 package frc.utility;
 
+import org.jetbrains.annotations.NotNull;
+
 public class RunningAverageQueue {
 
     private int end;
     private final int size;
-    private final double[] data;
+    private final double @NotNull [] data;
     private double total;
 
     public RunningAverageQueue(int size) {

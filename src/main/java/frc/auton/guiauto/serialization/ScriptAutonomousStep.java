@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.SendableScript;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "ScriptAutonomousStep{" + "sendableScript='" + sendableScript + '\'' + '}';
     }
 
@@ -33,9 +34,9 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
      * Runs the script
      */
     @Override
-    public void execute(TemplateAuto templateAuto,
-                        List<SendableScript> scriptsToExecuteByTime,
-                        List<SendableScript> scriptsToExecuteByPercent) {
+    public void execute(@NotNull TemplateAuto templateAuto,
+                        @NotNull List<SendableScript> scriptsToExecuteByTime,
+                        @NotNull List<SendableScript> scriptsToExecuteByPercent) {
         if (!templateAuto.isDead()) { //Check that our auto is still running
             if (sendableScript.getDelayType() == SendableScript.DelayType.TIME) {
                 scriptsToExecuteByTime.add(sendableScript);

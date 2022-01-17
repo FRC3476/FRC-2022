@@ -41,14 +41,14 @@ public final class Drive extends AbstractSubsystem {
 
     public boolean useRelativeEncoderPosition = false;
 
-    private static Drive instance = new Drive();
+    private static @NotNull Drive instance = new Drive();
 
-    public static Drive getInstance() {
+    public static @NotNull Drive getInstance() {
         return instance;
     }
 
-    private final AHRS gyroSensor;
-    private final PIDController turnPID;
+    private final @NotNull AHRS gyroSensor;
+    private final @NotNull PIDController turnPID;
     private DriveState driveState;
     Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
@@ -172,7 +172,7 @@ public final class Drive extends AbstractSubsystem {
         configBrake();
     }
 
-    public SwerveDriveKinematics getSwerveDriveKinematics() {
+    public @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
         return swerveKinematics;
     }
 
@@ -196,7 +196,7 @@ public final class Drive extends AbstractSubsystem {
         driveState = DriveState.TELEOP;
     }
 
-    synchronized public SwerveModuleState[] getSwerveModuleStates() {
+    synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
@@ -235,7 +235,7 @@ public final class Drive extends AbstractSubsystem {
         setSwerveModuleStates(Constants.HOLD_MODULE_STATES);
     }
 
-    public void swerveDrive(ControllerDriveInputs inputs) {
+    public void swerveDrive(@NotNull ControllerDriveInputs inputs) {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
@@ -246,7 +246,7 @@ public final class Drive extends AbstractSubsystem {
         swerveDrive(chassisSpeeds);
     }
 
-    public void swerveDriveFieldRelative(ControllerDriveInputs inputs) {
+    public void swerveDriveFieldRelative(@NotNull ControllerDriveInputs inputs) {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
@@ -334,7 +334,7 @@ public final class Drive extends AbstractSubsystem {
      * @param commandedVelocity Desired velocity
      * @return Velocity that can be achieved within the iteration period
      */
-    ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
+    @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
 
         maxVelocityChange = getMaxAllowedVelocityChange();
 
@@ -432,7 +432,7 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return the rotation reported from the gyro
      */
-    public Rotation2d getGyroAngle() {
+    public @NotNull Rotation2d getGyroAngle() {
         // -180 through 180
         return Rotation2d.fromDegrees(-getAngle());
     }
@@ -491,7 +491,7 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
-    public synchronized void setAutoRotation(Rotation2d rotation) {
+    public synchronized void setAutoRotation(@NotNull Rotation2d rotation) {
         autoTargetHeading = rotation;
         System.out.println("new rotation" + rotation.getDegrees());
     }

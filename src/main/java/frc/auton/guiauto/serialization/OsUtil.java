@@ -1,7 +1,8 @@
 package frc.auton.guiauto.serialization;
 
-public class OsUtil
-{
+import org.jetbrains.annotations.Nullable;
+
+public class OsUtil {
     private static final String OS = System.getProperty("os.name").toLowerCase();
 
     static public boolean isAndroid = System.getProperty("java.runtime.name").contains("Android");
@@ -33,22 +34,17 @@ public class OsUtil
         }
    }
 
-    public static String getUserConfigDirectory()
-    {
+    public static @Nullable String getUserConfigDirectory() {
         return getUserConfigDirectory(null);
     }
 
-    public static String getUserConfigDirectory(String applicationName)
-    {
+    public static @Nullable String getUserConfigDirectory(@Nullable String applicationName) {
         String CONFIG_HOME = null;
 
-        if((CONFIG_HOME = System.getenv("XDG_CONFIG_HOME"))==null)
-        {
-            if(isLinux || isAndroid)
-            {
-                CONFIG_HOME = System.getProperty("user.home")+"/.config";
-            }
-            else if(isMac)
+        if ((CONFIG_HOME = System.getenv("XDG_CONFIG_HOME")) == null) {
+            if (isLinux || isAndroid) {
+                CONFIG_HOME = System.getProperty("user.home") + "/.config";
+            } else if (isMac)
             {
                 CONFIG_HOME = System.getProperty("user.home")+"/Library/Preferences";
             }
@@ -70,22 +66,17 @@ public class OsUtil
         return CONFIG_HOME+"/"+applicationName;
     }
 
-    public static String getUserDataDirectory()
-    {
+    public static @Nullable String getUserDataDirectory() {
         return getUserDataDirectory(null);
     }
 
-    public static String getUserDataDirectory(String applicationName)
-    {
+    public static @Nullable String getUserDataDirectory(@Nullable String applicationName) {
         String DATA_HOME = null;
 
-        if((DATA_HOME = System.getenv("XDG_DATA_HOME"))==null)
-        {
-            if(isLinux || isAndroid)
-            {
-                DATA_HOME = System.getProperty("user.home")+"/.local/share";
-            }
-            else if(isMac)
+        if ((DATA_HOME = System.getenv("XDG_DATA_HOME")) == null) {
+            if (isLinux || isAndroid) {
+                DATA_HOME = System.getProperty("user.home") + "/.local/share";
+            } else if (isMac)
             {
                 DATA_HOME = System.getProperty("user.home")+"/Library/Application Support";
             }

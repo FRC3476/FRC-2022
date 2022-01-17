@@ -22,6 +22,8 @@ import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +44,7 @@ public class Robot extends TimedRobot {
     NetworkTable autoDataTable = instance.getTable("autodata");
     NetworkTableEntry autoPath = autoDataTable.getEntry("autoPath");
 
-    NetworkTable position = autoDataTable.getSubTable("position");
+    @NotNull NetworkTable position = autoDataTable.getSubTable("position");
     NetworkTableEntry xPos = position.getEntry("x");
     NetworkTableEntry yPos = position.getEntry("y");
     NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
@@ -50,13 +52,13 @@ public class Robot extends TimedRobot {
     NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
 
     NetworkAuto networkAuto;
-    String lastAutoPath = null;
+    @Nullable String lastAutoPath = null;
 
-    ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
+    @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
 
     //Auto
-    TemplateAuto selectedAuto;
-    Thread autoThread;
+    @Nullable TemplateAuto selectedAuto;
+    @Nullable Thread autoThread;
     private static final String DEFAULT_AUTO = "Default";
     private static final String CUSTOM_AUTO = "My Auto";
     private final SendableChooser<String> autoChooser = new SendableChooser<>();

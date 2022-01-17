@@ -8,13 +8,14 @@ import edu.wpi.first.math.trajectory.Trajectory.State;
 import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.Drive;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
-    private final Trajectory trajectory;
+    private final @NotNull Trajectory trajectory;
     private final List<TimedRotation> rotations;
 
     @JsonCreator
@@ -24,7 +25,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
         this.rotations = rotations;
     }
 
-    public Trajectory getTrajectory() {
+    public @NotNull Trajectory getTrajectory() {
         return trajectory;
     }
 
@@ -33,9 +34,9 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
     }
 
     @Override
-    public void execute(TemplateAuto templateAuto,
-                        List<SendableScript> scriptsToExecuteByTime,
-                        List<SendableScript> scriptsToExecuteByPercent) {
+    public void execute(@NotNull TemplateAuto templateAuto,
+                        @NotNull List<SendableScript> scriptsToExecuteByTime,
+                        @NotNull List<SendableScript> scriptsToExecuteByPercent) {
         //Sort the lists to make sure they are sorted by time
         Collections.sort(scriptsToExecuteByTime);
         Collections.sort(scriptsToExecuteByPercent);

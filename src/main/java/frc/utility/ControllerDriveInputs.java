@@ -1,5 +1,7 @@
 package frc.utility;
 
+import org.jetbrains.annotations.NotNull;
+
 public class ControllerDriveInputs {
 
     private double x, y, rotation;
@@ -36,8 +38,8 @@ public class ControllerDriveInputs {
      *                          value of 0
      * @return {@link ControllerDriveInputs}
      */
-    public ControllerDriveInputs applyDeadZone(double snappingDeadZoneX, double snappingDeadZoneY, double rotationDeadZone,
-                                               double circularDeadZone) {
+    public @NotNull ControllerDriveInputs applyDeadZone(double snappingDeadZoneX, double snappingDeadZoneY,
+                                                        double rotationDeadZone, double circularDeadZone) {
         double amplitudeSquared = x * x + y * y;
         if (amplitudeSquared < circularDeadZone * circularDeadZone) {
             x = 0;
@@ -71,7 +73,7 @@ public class ControllerDriveInputs {
      *
      * @return {@link ControllerDriveInputs}
      */
-    public ControllerDriveInputs squareInputs() {
+    public @NotNull ControllerDriveInputs squareInputs() {
         x = Math.copySign(x * x, x);
         y = Math.copySign(y * y, y);
         rotation = Math.copySign(rotation * rotation, rotation);
@@ -83,7 +85,7 @@ public class ControllerDriveInputs {
      *
      * @return {@link ControllerDriveInputs}
      */
-    public ControllerDriveInputs cubeInputs() {
+    public @NotNull ControllerDriveInputs cubeInputs() {
         x = x * x * x;
         y = y * y * y;
         rotation = rotation * rotation * rotation;
