@@ -2,6 +2,7 @@
 
 package frc.subsystem;
 
+import com.ctre.phoenix.sensors.CANCoder;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -21,7 +22,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
@@ -29,8 +31,6 @@ import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.lang.reflect.Field;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -84,7 +84,8 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
+
+    final CANCoder[] swerveCanCoders = new CANCoder[4];
 
     /**
      * PID Controllers for the swerve Drive
@@ -96,7 +97,7 @@ public final class Drive extends AbstractSubsystem {
         gyroSensor = new AHRS(SPI.Port.kMXP);
 
         final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
-        final DutyCycle leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder, rightBackSparkPwmEncoder;
+        final CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;
         final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve, rightBackSparkSwerve;
         // Swerve Drive Motors
         leftFrontSpark = new LazyCANSparkMax(Constants.DRIVE_LEFT_FRONT_ID, MotorType.kBrushless);
@@ -114,10 +115,10 @@ public final class Drive extends AbstractSubsystem {
         rightFrontSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_FRONT_SWERVE_ID, MotorType.kBrushless);
         rightBackSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_BACK_SWERVE_ID, MotorType.kBrushless);
 
-        leftFrontSparkPwmEncoder = new DutyCycle(new DigitalInput(1));
-        leftBackSparkPwmEncoder = new DutyCycle(new DigitalInput(3));
-        rightFrontSparkPwmEncoder = new DutyCycle(new DigitalInput(0));
-        rightBackSparkPwmEncoder = new DutyCycle(new DigitalInput(2));
+        leftFrontCanCoder = new CANCoder(Constants.CAN_LEFT_FRONT_ID);
+        leftBackCanCoder = new CANCoder(Constants.CAN_LEFT_BACK_ID);
+        rightFrontCanCoder = new CANCoder(Constants.CAN_RIGHT_FRONT_ID);
+        rightBackCanCoder = new CANCoder(Constants.CAN_RIGHT_BACK_ID);
 
         swerveMotors[0] = leftFrontSparkSwerve;
         swerveMotors[1] = leftBackSparkSwerve;
@@ -129,10 +130,10 @@ public final class Drive extends AbstractSubsystem {
         swerveDriveMotors[2] = rightFrontSpark;
         swerveDriveMotors[3] = rightBackSpark;
 
-        swerveEncodersDIO[0] = leftFrontSparkPwmEncoder;
-        swerveEncodersDIO[1] = leftBackSparkPwmEncoder;
-        swerveEncodersDIO[2] = rightFrontSparkPwmEncoder;
-        swerveEncodersDIO[3] = rightBackSparkPwmEncoder;
+        swerveCanCoders[0] = leftFrontCanCoder;
+        swerveCanCoders[1] = leftBackCanCoder;
+        swerveCanCoders[2] = rightFrontCanCoder;
+        swerveCanCoders[3] = rightBackCanCoder;
 
         for (int i = 0; i < 4; i++) {
             swerveEncoders[i] = swerveMotors[i].getEncoder();
@@ -652,15 +653,19 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
+    /**
+     * Returns the angle/position of the requested encoder module
+     *
+     * @param moduleNumber the module to set
+     * @return angle in degrees of the module
+     */
     public double getAbsolutePosition(int moduleNumber) {
         if (useRelativeEncoderPosition) {
             double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
             if (relPos < 0) relPos += 360;
             return relPos;
         } else {
-            double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
-            if (moduleNumber == 3) angle -= 72;
-            return angle < 0 ? angle + 360 : angle;
+            return swerveCanCoders[moduleNumber].getPosition();
         }
     }
 
@@ -690,16 +695,10 @@ public final class Drive extends AbstractSubsystem {
 
     @Override
     public void close() throws Exception {
-        Field digitalSource = DutyCycle.class.getDeclaredField("m_source");
-        digitalSource.setAccessible(true);
 
         for (int i = 0; i < 4; i++) {
             swerveDriveMotors[i].close();
             swerveMotors[i].close();
-
-            DigitalSource ds = (DigitalSource) digitalSource.get(swerveEncodersDIO[i]);
-            ds.close(); // Use reflection to close the DigitalSource because the DIO class doesn't do it properly.
-            swerveEncodersDIO[i].close();
         }
         gyroSensor.close();
         instance = new Drive();
