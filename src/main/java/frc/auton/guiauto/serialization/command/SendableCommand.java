@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.wpi.first.wpilibj.DriverStation;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,15 +18,16 @@ import java.util.function.Function;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SendableCommand {
 
-    @JsonProperty("methodName") public final String methodName;
+    @JsonProperty("methodName")
+    public final @NotNull String methodName;
 
-    @JsonProperty("args") public final String[] args;
+    @JsonProperty("args") public final String @NotNull [] args;
 
     @JsonProperty("argTypes") public final String[] argTypes;
 
     @JsonProperty("reflection") public final boolean reflection;
 
-    private static final Map<String, Function<String, Object>> INFERABLE_TYPES_PARSER;
+    private static final @NotNull Map<String, Function<String, Object>> INFERABLE_TYPES_PARSER;
 
     static {
         INFERABLE_TYPES_PARSER = new HashMap<>();
@@ -47,10 +50,9 @@ public class SendableCommand {
         INFERABLE_TYPES_PARSER.put(Boolean.class.getName(), Boolean::valueOf);
     }
 
-
     @JsonCreator
-    public SendableCommand(@JsonProperty("methodName") String methodName,
-                           @JsonProperty("args") String[] args,
+    public SendableCommand(@JsonProperty("methodName") @NotNull String methodName,
+                           @JsonProperty("args") String @NotNull [] args,
                            @JsonProperty("argTypes") String[] argTypes,
                            @JsonProperty("reflection") boolean reflection) {
         Method methodToCall = null;
@@ -118,11 +120,13 @@ public class SendableCommand {
         this.instance = instance;
     }
 
-    @JsonIgnoreProperties final Object instance;
+    @JsonIgnoreProperties
+    final @Nullable Object instance;
 
-    @JsonIgnoreProperties final Method methodToCall;
+    @JsonIgnoreProperties
+    final @Nullable Method methodToCall;
 
-    @JsonIgnoreProperties final Object[] objArgs;
+    @JsonIgnoreProperties final Object @NotNull [] objArgs;
 
 
     /**

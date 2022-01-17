@@ -145,6 +145,7 @@ public class Controller extends Joystick {
         return -1;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public int getAxesAsPOV(int x, int y, boolean xinv, boolean yinv) {
         try {
             if (x <= axisCount && x >= 0 && y <= axisCount && y >= 0) {

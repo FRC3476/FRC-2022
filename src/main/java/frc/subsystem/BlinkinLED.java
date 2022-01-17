@@ -1,16 +1,17 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import org.jetbrains.annotations.NotNull;
 
 public final class BlinkinLED extends AbstractSubsystem {
-    private static BlinkinLED instance = new BlinkinLED();
+    private static @NotNull BlinkinLED instance = new BlinkinLED();
 
-    public static BlinkinLED getInstance() {
+    public static @NotNull BlinkinLED getInstance() {
         return instance;
     }
 
 
-    Spark spark = new Spark(0);
+    @NotNull Spark spark = new Spark(0);
 
     private BlinkinLED() {
         super(-1);

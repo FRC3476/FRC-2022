@@ -2,6 +2,7 @@
 
 package frc.subsystem;
 
+import com.ctre.phoenix.sensors.CANCoder;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -21,9 +22,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalSource;
-import edu.wpi.first.wpilibj.DutyCycle;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -33,8 +32,6 @@ import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-
 
 public final class Drive extends AbstractSubsystem {
 
@@ -42,17 +39,21 @@ public final class Drive extends AbstractSubsystem {
         TELEOP, TURN, HOLD, DONE, RAMSETE
     }
 
-    private static Drive instance = new Drive();
+    public boolean useRelativeEncoderPosition = false;
 
-    public static Drive getInstance() {
+    private static @NotNull Drive instance = new Drive();
+
+    public static @NotNull Drive getInstance() {
         return instance;
     }
 
-    private final AHRS gyroSensor;
-    private final PIDController turnPID;
+    private final @NotNull AHRS gyroSensor;
+    private final @NotNull PIDController turnPID;
     private DriveState driveState;
     Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
+
+    public boolean useFieldRelative = true;
 
     private boolean isAiming = false;
 
@@ -83,7 +84,8 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
-    final DutyCycle[] swerveEncodersDIO = new DutyCycle[4];
+
+    final CANCoder[] swerveCanCoders = new CANCoder[4];
 
     /**
      * PID Controllers for the swerve Drive
@@ -95,7 +97,7 @@ public final class Drive extends AbstractSubsystem {
         gyroSensor = new AHRS(SPI.Port.kMXP);
 
         final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
-        final DutyCycle leftFrontSparkPwmEncoder, leftBackSparkPwmEncoder, rightFrontSparkPwmEncoder, rightBackSparkPwmEncoder;
+        final CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;
         final LazyCANSparkMax leftFrontSparkSwerve, leftBackSparkSwerve, rightFrontSparkSwerve, rightBackSparkSwerve;
         // Swerve Drive Motors
         leftFrontSpark = new LazyCANSparkMax(Constants.DRIVE_LEFT_FRONT_ID, MotorType.kBrushless);
@@ -113,10 +115,10 @@ public final class Drive extends AbstractSubsystem {
         rightFrontSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_FRONT_SWERVE_ID, MotorType.kBrushless);
         rightBackSparkSwerve = new LazyCANSparkMax(Constants.DRIVE_RIGHT_BACK_SWERVE_ID, MotorType.kBrushless);
 
-        leftFrontSparkPwmEncoder = new DutyCycle(new DigitalInput(1));
-        leftBackSparkPwmEncoder = new DutyCycle(new DigitalInput(3));
-        rightFrontSparkPwmEncoder = new DutyCycle(new DigitalInput(0));
-        rightBackSparkPwmEncoder = new DutyCycle(new DigitalInput(2));
+        leftFrontCanCoder = new CANCoder(Constants.CAN_LEFT_FRONT_ID);
+        leftBackCanCoder = new CANCoder(Constants.CAN_LEFT_BACK_ID);
+        rightFrontCanCoder = new CANCoder(Constants.CAN_RIGHT_FRONT_ID);
+        rightBackCanCoder = new CANCoder(Constants.CAN_RIGHT_BACK_ID);
 
         swerveMotors[0] = leftFrontSparkSwerve;
         swerveMotors[1] = leftBackSparkSwerve;
@@ -128,10 +130,10 @@ public final class Drive extends AbstractSubsystem {
         swerveDriveMotors[2] = rightFrontSpark;
         swerveDriveMotors[3] = rightBackSpark;
 
-        swerveEncodersDIO[0] = leftFrontSparkPwmEncoder;
-        swerveEncodersDIO[1] = leftBackSparkPwmEncoder;
-        swerveEncodersDIO[2] = rightFrontSparkPwmEncoder;
-        swerveEncodersDIO[3] = rightBackSparkPwmEncoder;
+        swerveCanCoders[0] = leftFrontCanCoder;
+        swerveCanCoders[1] = leftBackCanCoder;
+        swerveCanCoders[2] = rightFrontCanCoder;
+        swerveCanCoders[3] = rightBackCanCoder;
 
         for (int i = 0; i < 4; i++) {
             swerveEncoders[i] = swerveMotors[i].getEncoder();
@@ -170,7 +172,7 @@ public final class Drive extends AbstractSubsystem {
         configBrake();
     }
 
-    public SwerveDriveKinematics getSwerveDriveKinematics() {
+    public @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
         return swerveKinematics;
     }
 
@@ -194,11 +196,11 @@ public final class Drive extends AbstractSubsystem {
         driveState = DriveState.TELEOP;
     }
 
-    synchronized public SwerveModuleState[] getSwerveModuleStates() {
+    synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
-                    (swerveDriveMotors[i].getEncoder().getVelocity() / 60d) * Constants.SWERVE_METER_PER_ROTATION,
+                    (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
                     Rotation2d.fromDegrees(getAbsolutePosition(i)));
             swerveModuleState[i] = moduleState;
         }
@@ -210,7 +212,8 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return The current state of the robot as chassis speeds
      */
-    public @Nullable ChassisSpeeds getRobotState() {
+    public @NotNull ChassisSpeeds getRobotState() {
+        if (currentRobotState == null) return new ChassisSpeeds();
         return currentRobotState;
     }
 
@@ -232,7 +235,7 @@ public final class Drive extends AbstractSubsystem {
         setSwerveModuleStates(Constants.HOLD_MODULE_STATES);
     }
 
-    public void swerveDrive(ControllerDriveInputs inputs) {
+    public void swerveDrive(@NotNull ControllerDriveInputs inputs) {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
@@ -243,7 +246,7 @@ public final class Drive extends AbstractSubsystem {
         swerveDrive(chassisSpeeds);
     }
 
-    public void swerveDriveFieldRelative(ControllerDriveInputs inputs) {
+    public void swerveDriveFieldRelative(@NotNull ControllerDriveInputs inputs) {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
@@ -322,20 +325,16 @@ public final class Drive extends AbstractSubsystem {
 
 
     /**
-        Puts limit on desired velocity so it can be achieved with a reasonable acceleration
-        <p>
-        Converts ChassisSpeeds to Translation2d
-        Computes difference between desired and actual velocities
-        Converts from cartesian to polar coordinate system
-        Checks if velocity change exceeds MAX limit
-        Gets limited velocity vector difference in cartesian coordinate system
-        Computes limited velocity
-        Converts to format compatible with serveDrive
-
-        @param commandedVelocity Desired velocity
-        @return Velocity that can be achieved within the iteration period
+     * Puts limit on desired velocity, so it can be achieved with a reasonable acceleration
+     * <p>
+     * Converts ChassisSpeeds to Translation2d Computes difference between desired and actual velocities Converts from cartesian
+     * to polar coordinate system Checks if velocity change exceeds MAX limit Gets limited velocity vector difference in cartesian
+     * coordinate system Computes limited velocity Converts to format compatible with serveDrive
+     *
+     * @param commandedVelocity Desired velocity
+     * @return Velocity that can be achieved within the iteration period
      */
-    ChassisSpeeds limitAcceleration(ChassisSpeeds commandedVelocity) {
+    @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
 
         maxVelocityChange = getMaxAllowedVelocityChange();
 
@@ -382,8 +381,9 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     Gets the MAX change in velocity that can occur over the iteration period
-     @return Maximum value that the velocity can change within the iteration period
+     * Gets the MAX change in velocity that can occur over the iteration period
+     *
+     * @return Maximum value that the velocity can change within the iteration period
      */
     double getMaxAllowedVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
@@ -432,7 +432,7 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return the rotation reported from the gyro
      */
-    public Rotation2d getGyroAngle() {
+    public @NotNull Rotation2d getGyroAngle() {
         // -180 through 180
         return Rotation2d.fromDegrees(-getAngle());
     }
@@ -485,17 +485,13 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
                 autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
-        //System.out.println(ramseteController.atReference());
-        //System.out.println("target speed" + Units.metersToInches(wheelspeeds.leftMetersPerSecond) + " " + Units
-        // .metersToInches(wheelspeeds.rightMetersPerSecond) + "time: " +(Timer.getFPGATimestamp()-autoStartTime) );
-        //TODO: not working
         if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;
             stopMovement();
         }
     }
 
-    public synchronized void setAutoRotation(Rotation2d rotation) {
+    public synchronized void setAutoRotation(@NotNull Rotation2d rotation) {
         autoTargetHeading = rotation;
         System.out.println("new rotation" + rotation.getDegrees());
     }
@@ -518,21 +514,18 @@ public final class Drive extends AbstractSubsystem {
             currentRobotState = swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
         }
 
+        checkGyro();
+
         switch (snapDriveState) {
-            case TELEOP:
-                break;
             case TURN:
                 updateTurn();
                 break;
             case HOLD:
                 doHold();
                 break;
-            case DONE:
-                break;
             case RAMSETE:
                 updateRamsete();
                 break;
-
         }
 
     }
@@ -566,7 +559,7 @@ public final class Drive extends AbstractSubsystem {
 
     double turnMinSpeed = 0;
 
-   /**
+    /**
      * Default method when the x and y velocity and the target heading are not passed
      */
     private void updateTurn() {
@@ -616,8 +609,6 @@ public final class Drive extends AbstractSubsystem {
             SmartDashboard.putNumber("Turn PID Command", pidDeltaSpeed);
             SmartDashboard.putNumber("Turn Speed Command", deltaSpeed);
             SmartDashboard.putNumber("Turn Min Speed", turnMinSpeed);
-
-
         }
     }
 
@@ -641,7 +632,7 @@ public final class Drive extends AbstractSubsystem {
             if (relPos < 0) relPos += 360;
             SmartDashboard.putNumber("Swerve Motor " + i + " Relative Position", relPos);
             SmartDashboard.putNumber("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
-            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60d);
+            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
             SmartDashboard.putNumber("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             SmartDashboard.putNumber("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
 
@@ -654,30 +645,52 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
+    /**
+     * Returns the angle/position of the requested encoder module
+     *
+     * @param moduleNumber the module to set
+     * @return angle in degrees of the module
+     */
     public double getAbsolutePosition(int moduleNumber) {
-        double angle = ((1 - swerveEncodersDIO[moduleNumber].getOutput()) * 360) - 90;
-        if (moduleNumber == 3) angle -= 72;
-        return angle < 0 ? angle + 360 : angle;
+        if (useRelativeEncoderPosition) {
+            double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
+            if (relPos < 0) relPos += 360;
+            return relPos;
+        } else {
+            return swerveCanCoders[moduleNumber].getPosition();
+        }
     }
 
+    /**
+     * Takes in the robot's current position, and uses that to turn the robot towards the goal.
+     *
+     * @param currentPos the current position of the robot in meters.
+     */
     public void fallbackAim(Translation2d currentPos) {
         Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
         Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
         setRotation(rotation);
     }
 
+    /**
+     * Checks if gyro is connected. If disconnected, switches to robot-centric drive for the rest of the match. Reports error to
+     * driver station when this happens.
+     */
+    public void checkGyro() {
+        if (!gyroSensor.isConnected()) {
+            if (useFieldRelative) {
+                useFieldRelative = false;
+                DriverStation.reportError("Gyro disconnected, switching to non field relative drive for rest of match", false);
+            }
+        }
+    }
+
     @Override
     public void close() throws Exception {
-        Field digitalSource = DutyCycle.class.getDeclaredField("m_source");
-        digitalSource.setAccessible(true);
 
         for (int i = 0; i < 4; i++) {
             swerveDriveMotors[i].close();
             swerveMotors[i].close();
-
-            DigitalSource ds = (DigitalSource) digitalSource.get(swerveEncodersDIO[i]);
-            ds.close(); // Use reflection to close the DigitalSource because the DIO class doesn't do it properly.
-            swerveEncodersDIO[i].close();
         }
         gyroSensor.close();
         instance = new Drive();

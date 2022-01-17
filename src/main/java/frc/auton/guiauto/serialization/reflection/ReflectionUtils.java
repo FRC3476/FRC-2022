@@ -1,5 +1,7 @@
 package frc.auton.guiauto.serialization.reflection;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -17,7 +19,7 @@ public class ReflectionUtils {
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    private static Class[] getClasses(String packageName) throws ClassNotFoundException, IOException {
+    private static Class @NotNull [] getClasses(@NotNull String packageName) throws ClassNotFoundException, IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         assert classLoader != null;
         String path = packageName.replace('.', '/');
@@ -42,7 +44,8 @@ public class ReflectionUtils {
      * @return The classes
      * @throws ClassNotFoundException
      */
-    public static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+    public static @NotNull List<Class<?>> findClasses(@NotNull File directory, @NotNull String packageName)
+            throws ClassNotFoundException {
         List<Class<?>> classes = new ArrayList<>();
         if (!directory.exists()) {
             return classes;
@@ -62,7 +65,7 @@ public class ReflectionUtils {
         return classes;
     }
 
-    public static String[] getParameterTypes(Method method) {
+    public static String @NotNull [] getParameterTypes(@NotNull Method method) {
         String[] parameterTypes = new String[method.getParameterCount()];
         for (int i = 0; i < method.getParameterCount(); i++) {
             parameterTypes[i] = method.getParameterTypes()[i].getName();

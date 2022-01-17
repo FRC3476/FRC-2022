@@ -22,6 +22,8 @@ import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -34,12 +36,15 @@ import java.util.concurrent.Executors;
  */
 @SuppressWarnings("ClassNamePrefixedWithPackageName")
 public class Robot extends TimedRobot {
+
+    public boolean useFieldRelative = false;
+
     //GUI
     NetworkTableInstance instance = NetworkTableInstance.getDefault();
     NetworkTable autoDataTable = instance.getTable("autodata");
     NetworkTableEntry autoPath = autoDataTable.getEntry("autoPath");
 
-    NetworkTable position = autoDataTable.getSubTable("position");
+    @NotNull NetworkTable position = autoDataTable.getSubTable("position");
     NetworkTableEntry xPos = position.getEntry("x");
     NetworkTableEntry yPos = position.getEntry("y");
     NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
@@ -47,13 +52,13 @@ public class Robot extends TimedRobot {
     NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
 
     NetworkAuto networkAuto;
-    String lastAutoPath = null;
+    @Nullable String lastAutoPath = null;
 
-    ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
+    @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
 
     //Auto
-    TemplateAuto selectedAuto;
-    Thread autoThread;
+    @Nullable TemplateAuto selectedAuto;
+    @Nullable Thread autoThread;
     private static final String DEFAULT_AUTO = "Default";
     private static final String CUSTOM_AUTO = "My Auto";
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
@@ -129,14 +134,6 @@ public class Robot extends TimedRobot {
         }
     }
 
-    /**
-     * This autonomous (along with the chooser code above) shows how to select between different autonomous modes using the
-     * dashboard. The sendable chooser code works with the Java SmartDashboard. If you prefer the LabVIEW Dashboard, remove all of
-     * the chooser code and uncomment the getString line to get the auto name from the text box below the Gyro
-     *
-     * <p>You can add additional auto modes by adding additional comparisons to the switch structure
-     * below with additional strings. If using the SendableChooser make sure to add them to the chooser code above as well.
-     */
     @Override
     public void autonomousInit() {
         enabled.setBoolean(true);
@@ -184,17 +181,37 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
-        if (xbox.getRawButton(3)) {
-            //Increase the deadzone so that we drive straight
-            drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                    -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+        if (useFieldRelative && drive.useFieldRelative) {
+            if (xbox.getRawButton(3)) {
+                //Increase the deadzone so that we drive straight
+                drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+            } else {
+                drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+            }
         } else {
-            drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                    -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+            if (xbox.getRawButton(3)) {
+                //Increase the deadzone so that we drive straight
+                drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+            } else {
+                drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+            }
         }
+
 
         if (xbox.getRisingEdge(1)) {
             drive.resetGyro();
+        }
+
+        if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
+            drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
+        }
+
+        if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
+            useFieldRelative = !useFieldRelative;
         }
 
     }

@@ -1,13 +1,14 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final int period;
     private final int loggingInterval;
     private int logInterval;
-    private ThreadSignal signal = ThreadSignal.PAUSED;
+    private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
     public String subsystemName;
 
     public enum ThreadSignal {

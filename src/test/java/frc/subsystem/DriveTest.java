@@ -98,7 +98,7 @@ public class DriveTest {
         currentRobotState.setAccessible(true);
         currentRobotState.set(drive, new ChassisSpeeds(0, 0, 0));
 
-        // Makes lastLoopTime accessable
+        // Makes lastLoopTime accessible
         Field lastLoopTime = Drive.class.getDeclaredField("lastLoopTime");
         lastLoopTime.setAccessible(true);
 

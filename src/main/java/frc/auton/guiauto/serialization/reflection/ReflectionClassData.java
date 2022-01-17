@@ -1,18 +1,20 @@
 package frc.auton.guiauto.serialization.reflection;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public final class ReflectionClassData {
-    public final String fullName;
-    public final String[] fieldNames;
-    public final String[] fieldTypes;
-    public final ReflectionMethodData[] methods;
+    public final @NotNull String fullName;
+    public final String @NotNull [] fieldNames;
+    public final String @NotNull [] fieldTypes;
+    public final ReflectionMethodData @NotNull [] methods;
     public final int modifiers;
     public final boolean isEnum;
 
 
-    public ReflectionClassData(Class clazz) {
+    public ReflectionClassData(@NotNull Class clazz) {
         this.fullName = clazz.getName();
         Method[] methods = clazz.getMethods();
         this.methods = new ReflectionMethodData[methods.length];
@@ -33,7 +35,7 @@ public final class ReflectionClassData {
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "ReflectionClassData{" +
                 "fullName='" + fullName + '\'' +
                 ", fieldNames=" + Arrays.toString(fieldNames) +
