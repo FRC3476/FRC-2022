@@ -22,7 +22,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
@@ -30,8 +31,6 @@ import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.lang.reflect.Field;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -696,16 +695,10 @@ public final class Drive extends AbstractSubsystem {
 
     @Override
     public void close() throws Exception {
-        Field digitalSource = DutyCycle.class.getDeclaredField("m_source");
-        digitalSource.setAccessible(true);
 
         for (int i = 0; i < 4; i++) {
             swerveDriveMotors[i].close();
             swerveMotors[i].close();
-
-            DigitalSource ds = (DigitalSource) digitalSource.get(swerveEncodersDIO[i]);
-            ds.close(); // Use reflection to close the DigitalSource because the DIO class doesn't do it properly.
-            swerveEncodersDIO[i].close();
         }
         gyroSensor.close();
         instance = new Drive();
