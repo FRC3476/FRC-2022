@@ -520,20 +520,15 @@ public final class Drive extends AbstractSubsystem {
         checkGyro();
 
         switch (snapDriveState) {
-            case TELEOP:
-                break;
             case TURN:
                 updateTurn();
                 break;
             case HOLD:
                 doHold();
                 break;
-            case DONE:
-                break;
             case RAMSETE:
                 updateRamsete();
                 break;
-
         }
 
     }
