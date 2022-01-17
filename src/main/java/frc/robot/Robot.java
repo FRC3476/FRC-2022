@@ -197,6 +197,13 @@ public class Robot extends TimedRobot {
             drive.resetGyro();
         }
 
+        if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
+            drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
+        }
+
+        if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
+            // Going to use this for Issue #19
+        }
     }
 
     /**
