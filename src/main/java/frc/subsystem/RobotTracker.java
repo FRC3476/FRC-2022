@@ -23,10 +23,10 @@ public final class RobotTracker extends AbstractSubsystem {
     }
 
     private Pose2d lastEstimatedPose = new Pose2d();
-
     private final @NotNull SwerveDriveOdometry swerveDriveOdometry;
-
     double lastTime = 0;
+    private @NotNull Rotation2d gyroOffset = new Rotation2d();
+
 
     private RobotTracker() {
         super(20);
@@ -106,6 +106,7 @@ public final class RobotTracker extends AbstractSubsystem {
     }
 
     synchronized public void resetPosition(Pose2d pose, Rotation2d gyroAngle) {
+        gyroOffset = gyroAngle.unaryMinus().rotateBy(pose.getRotation());
         swerveDriveOdometry.resetPosition(pose, gyroAngle);
     }
 
@@ -134,5 +135,17 @@ public final class RobotTracker extends AbstractSubsystem {
     public void close() {
         gyroSensor.close();
         instance = new RobotTracker();
+    }
+
+    /**
+     * @return The gyro angle offset so that it lines up with the robot tracker rotation.
+     */
+    public Rotation2d getGyroAngle() {
+        return gyroSensor.getRotation2d().rotateBy(gyroOffset);
+    }
+
+    public void resetGyro() {
+        getGyro().reset();
+        swerveDriveOdometry.resetPosition(getPoseMeters(), new Rotation2d(0));
     }
 }
