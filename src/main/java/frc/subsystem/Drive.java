@@ -245,7 +245,7 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
                 inputs.getRotation() * 6,
-                RobotTracker.getInstance().getPoseMeters().getRotation());
+                RobotTracker.getInstance().getGyroAngle());
 
         if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
             // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
@@ -518,7 +518,7 @@ public final class Drive extends AbstractSubsystem {
 
 
     public synchronized boolean getTurningDone() {
-        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getAngle()).getDegrees();
+        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
     }
@@ -543,7 +543,7 @@ public final class Drive extends AbstractSubsystem {
      * @param targetHeading
      */
     private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
-        double error = targetHeading.rotateBy(RobotTracker.getInstance().getAngle()).getDegrees();
+        double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
