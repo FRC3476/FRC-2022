@@ -111,4 +111,14 @@ public final class Constants {
 
     //Climber Constants
     public static final int CLIMBER_PERIOD = -1;
+    public static final int CLIMBER_MOTOR_ID = 20;
+    public static final int CLIMBER_MOTOR_2_ID = 21;
+    public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
+    public static final int ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 1;
+
+    public static final int PIVOTING_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 2;
+    public static final int PIVOTING_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 3;
+
+    public static final int PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL = 4;
+    public static final int PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL = 5;
 }

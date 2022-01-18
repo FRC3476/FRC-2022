@@ -21,6 +21,17 @@ public class Climber extends AbstractSubsystem {
 
     private Climber() {
         super(Constants.CLIMBER_PERIOD);
+
+        climberMotor = new LazyTalonSRX(Constants.CLIMBER_MOTOR_ID);
+        climberMotor2 = new LazyTalonSRX(Constants.CLIMBER_MOTOR_2_ID);
+
+        elevatorArmContactSwitchA = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
+        elevatorArmContactSwitchB = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
+
+        pivotingArmContactSwitchA = new DigitalInput(Constants.PIVOTING_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
+        pivotingArmContactSwitchB = new DigitalInput(Constants.PIVOTING_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
+        pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
+        pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
     }
 
 
