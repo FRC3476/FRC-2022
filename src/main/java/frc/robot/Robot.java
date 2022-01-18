@@ -89,7 +89,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", autoChooser);
 
         startSubsystems();
-        drive.resetGyro();
+        robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
     }
