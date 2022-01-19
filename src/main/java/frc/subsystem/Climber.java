@@ -41,6 +41,7 @@ public class Climber extends AbstractSubsystem {
     private boolean stepByStep = false;
     private boolean advanceStep = false;
     private boolean skipChecks = false;
+    private boolean ranEndAction = false;
 
     enum ClimbState {
         IDLE((cl) -> {}, (cl) -> false, (cl) -> {}),
@@ -331,13 +332,17 @@ public class Climber extends AbstractSubsystem {
         if (!isPaused) {
             if (climbState.waitCondition.apply(this)) {
                 climbState.endAction.accept(this);
+                ranEndAction = true;
             }
 
             if ((!stepByStep || advanceStep) && (skipChecks || climbState.waitCondition.apply(this))) {
+                if (!ranEndAction) climbState.endAction.accept(this);
+
                 climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
                 climbState.startAction.accept(this);
                 advanceStep = false;
-                skipChecks = true;
+                skipChecks = false;
+                ranEndAction = false;
             }
         }
     }
