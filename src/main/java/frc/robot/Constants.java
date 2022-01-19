@@ -110,9 +110,19 @@ public final class Constants {
 
 
     //Climber Constants
-    public static final int CLIMBER_PERIOD = -1;
+    public static final int CLIMBER_PERIOD = 50;
     public static final int CLIMBER_MOTOR_ID = 20;
     public static final int CLIMBER_MOTOR_2_ID = 21;
+
+    public static final double CLIMBER_MOTOR_KF = 0.0;
+    public static final double CLIMBER_MOTOR_KP = 0.1;
+    public static final double CLIMBER_MOTOR_KI = 0.0;
+    public static final double CLIMBER_MOTOR_KD = 0.0;
+    public static final double CLIMBER_MOTOR_IZONE = 10;
+    public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
+    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1.0;
+    public static final int CLIMBER_MOTOR_MAX_ERROR = 5;
+
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 1;
 
@@ -121,4 +131,7 @@ public final class Constants {
 
     public static final int PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL = 4;
     public static final int PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL = 5;
+
+    public static final int LATCH_SOLENOID_ID = 1;
+    public static final int PIVOT_SOLENOID_ID = 2;
 }
