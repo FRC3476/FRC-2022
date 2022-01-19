@@ -38,6 +38,10 @@ public class Climber extends AbstractSubsystem {
     private double pausedClimberSetpoint;
     private ControlMode pausedClimberMode;
 
+    private boolean stepByStep = false;
+    private boolean advanceStep = false;
+    private boolean skipChecks = false;
+
     enum ClimbState {
         IDLE((cl) -> {}, (cl) -> false, (cl) -> {}),
 
@@ -252,26 +256,44 @@ public class Climber extends AbstractSubsystem {
         climberMotor.set(ControlMode.Position, climberMotor.getSelectedSensorPosition());
     }
 
-    public void resumeClimb() {
+    public synchronized void resumeClimb() {
         isPaused = false;
         brakeSolenoid.set(false);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
     }
 
-    public void deployClimb() {
+    public synchronized void deployClimb() {
         climberMotor.set(ControlMode.Position, 1000); // TODO: Change position
         brakeSolenoid.set(false);
         latchSolenoid.set(false);
         pivotSolenoid.set(false);
     }
 
+    public synchronized void advanceStep() {
+        advanceStep = true;
+    }
+
+    public synchronized void forceAdvanceStep() {
+        advanceStep = true;
+        skipChecks = true;
+    }
+
+    public synchronized void setStepByStep(boolean stepByStep) {
+        this.stepByStep = stepByStep;
+    }
+
     @Override
-    public void update() {
+    public synchronized void update() {
         if (!isPaused) {
             if (climbState.waitCondition.apply(this)) {
                 climbState.endAction.accept(this);
+            }
+
+            if ((!stepByStep || advanceStep) && (skipChecks || climbState.waitCondition.apply(this))) {
                 climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
                 climbState.startAction.accept(this);
+                advanceStep = false;
+                skipChecks = true;
             }
         }
     }
