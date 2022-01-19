@@ -229,18 +229,29 @@ public class Climber extends AbstractSubsystem {
         brakeSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.BRAKE_SOLENOID_ID); //TODO config solenoid type.
     }
 
-    public void startClimb() {
+    /**
+     * Starts the automated climb sequence and deactivates the brake.
+     */
+    public synchronized void startClimb() {
         climbState = ClimbState.START_CLIMB;
         brakeSolenoid.set(false);
     }
 
-    public void stopClimb() {
+    /**
+     * Stops the climb and resets the climber state. Also activates the brake.
+     */
+    public synchronized void stopClimb() {
         climbState = ClimbState.IDLE;
         climberMotor.set(ControlMode.PercentOutput, 0);
         brakeSolenoid.set(true);
     }
 
-    public void pauseClimb() {
+    /**
+     * Pauses the climb.
+     * <p>
+     * It first stores the current state of the climber in a variable, then sets stops the climber and activates the brake.
+     */
+    public synchronized void pauseClimb() {
         isPaused = true;
         pausedClimberMode = climberMotor.getControlMode();
         if (pausedClimberMode == ControlMode.PercentOutput) {
@@ -252,34 +263,67 @@ public class Climber extends AbstractSubsystem {
         brakeSolenoid.set(true);
     }
 
-    private void stopClimberMotor() {
+    /**
+     * Stops the climber motor from moving.
+     * <p>
+     * It sets the motor to Position Control mode and sets the setpoint to the current position.
+     */
+    private synchronized void stopClimberMotor() {
         climberMotor.set(ControlMode.Position, climberMotor.getSelectedSensorPosition());
     }
 
+    /**
+     * Resumes the climber from a paused state.
+     */
     public synchronized void resumeClimb() {
         isPaused = false;
         brakeSolenoid.set(false);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
     }
 
+    /**
+     * Sets the climber in the correct state to initiate a climb and moves the elevator arm to the up above the high bar.
+     */
     public synchronized void deployClimb() {
-        climberMotor.set(ControlMode.Position, 1000); // TODO: Change position
+        climberMotor.set(ControlMode.Position, climberMotor.getSelectedSensorPosition() + 1000); // TODO: Change position
         brakeSolenoid.set(false);
         latchSolenoid.set(false);
         pivotSolenoid.set(false);
     }
 
+    /**
+     * Tells the robot to advance the climber to the next state in step by step mode. The robot will still wait till all checks
+     * are passing before advancing.
+     * <p>
+     * Step-by-step mode must be enabled for this method to have an effect.
+     */
     public synchronized void advanceStep() {
         advanceStep = true;
     }
 
+    /**
+     * Forces the robot to move to the next step immediately. No checks are made to ensure that the robot is in the correct state
+     * to move to the next step. <b> The person calling this method needs to ensure that the robot is in the correct state.</b>
+     * <p>
+     * This method will also work regardless of whether the robot is in step-by-mode or not.
+     */
     public synchronized void forceAdvanceStep() {
         advanceStep = true;
         skipChecks = true;
     }
 
+    /**
+     * @param stepByStep set to true to enable step-by-step mode.
+     */
     public synchronized void setStepByStep(boolean stepByStep) {
         this.stepByStep = stepByStep;
+    }
+
+    /**
+     * @return true if the climber is in step-by-step mode
+     */
+    public synchronized boolean isStepByStep() {
+        return stepByStep;
     }
 
     @Override
@@ -298,8 +342,29 @@ public class Climber extends AbstractSubsystem {
         }
     }
 
-    public void resetClimb() {
+    /**
+     * @param percentOutput The percent output to set the climber motor to. Will automatically activate/deactivate the brake
+     */
+    public void setClimberMotor(double percentOutput) {
+        isPaused = true;
+        brakeSolenoid.set(Math.abs(percentOutput) < 1.0E-6);
+        climberMotor.set(ControlMode.PercentOutput, percentOutput);
+    }
 
+    /**
+     * Toggles the latch that is on the pivot arm.
+     */
+    public void toggleLatch() {
+        isPaused = true;
+        latchSolenoid.set(!latchSolenoid.get());
+    }
+
+    /**
+     * Toggles the pivot arm in and out. Also pauses the climber motor.
+     */
+    public void togglePivot() {
+        isPaused = true;
+        pivotSolenoid.set(!pivotSolenoid.get());
     }
 
     @Override
