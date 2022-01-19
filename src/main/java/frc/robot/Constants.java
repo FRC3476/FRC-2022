@@ -134,4 +134,5 @@ public final class Constants {
 
     public static final int LATCH_SOLENOID_ID = 1;
     public static final int PIVOT_SOLENOID_ID = 2;
+    public static final int BRAKE_SOLENOID_ID = 3;
 }

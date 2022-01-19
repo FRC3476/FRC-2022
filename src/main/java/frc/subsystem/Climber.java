@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -28,6 +29,7 @@ public class Climber extends AbstractSubsystem {
 
     private final Solenoid latchSolenoid;
     private final Solenoid pivotSolenoid;
+    private final Solenoid brakeSolenoid;
 
     private double data;
 
@@ -208,6 +210,7 @@ public class Climber extends AbstractSubsystem {
         climberMotor.configMaxIntegralAccumulator(0, Constants.CLIMBER_MOTOR_MAX_IACCUMULATOR);
         climberMotor.configPeakOutputForward(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         climberMotor.configPeakOutputReverse(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        climberMotor.setNeutralMode(NeutralMode.Brake);
 
         elevatorArmContactSwitchA = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
         elevatorArmContactSwitchB = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
@@ -219,15 +222,18 @@ public class Climber extends AbstractSubsystem {
 
         latchSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.LATCH_SOLENOID_ID); //TODO config solenoid type.
         pivotSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.PIVOT_SOLENOID_ID); //TODO config solenoid type.
+        brakeSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.BRAKE_SOLENOID_ID); //TODO config solenoid type.
     }
 
     public void startClimb() {
         climbState = ClimbState.START_CLIMB;
+        brakeSolenoid.set(false);
     }
 
     public void stopClimb() {
         climbState = ClimbState.IDLE;
-        stopClimberMotor();
+        climberMotor.set(ControlMode.PercentOutput, 0);
+        brakeSolenoid.set(true);
     }
 
     public void pauseClimb() {
@@ -238,7 +244,8 @@ public class Climber extends AbstractSubsystem {
         } else {
             pausedClimberSetpoint = climberMotor.getClosedLoopTarget();
         }
-        stopClimberMotor();
+        climberMotor.set(ControlMode.PercentOutput, 0);
+        brakeSolenoid.set(true);
     }
 
     private void stopClimberMotor() {
@@ -247,11 +254,15 @@ public class Climber extends AbstractSubsystem {
 
     public void resumeClimb() {
         isPaused = false;
+        brakeSolenoid.set(false);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
     }
 
     public void deployClimb() {
         climberMotor.set(ControlMode.Position, 1000); // TODO: Change position
+        brakeSolenoid.set(false);
+        latchSolenoid.set(false);
+        pivotSolenoid.set(false);
     }
 
     @Override
