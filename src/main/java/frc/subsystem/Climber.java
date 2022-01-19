@@ -29,102 +29,177 @@ public class Climber extends AbstractSubsystem {
     private final Solenoid latchSolenoid;
     private final Solenoid pivotSolenoid;
 
-    Thread climbThread;
+    private double data;
 
-    double data;
+    ClimbState climbState = ClimbState.IDLE;
+    private boolean isPaused = false;
+    private double pausedClimberSetpoint;
+    private ControlMode pausedClimberMode;
 
     enum ClimbState {
+        IDLE((cl) -> {}, (cl) -> false, (cl) -> {}),
+
+        /**
+         * Will immediately transition to the next state to start the climb sequence.
+         */
+        START_CLIMB((cl) -> {}, (cl) -> true, (cl) -> {}),
+
+        /**
+         * Lowers the elevator arm until the contact switch is pressed on the bar.
+         */
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -1),
-                (Climber cl) -> cl.elevatorArmContactSwitchA.get() && cl.elevatorArmContactSwitchB.get(),
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0)
+                (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -1),
+                (cl) -> cl.pivotingArmContactSwitchA.get() && cl.pivotingArmContactSwitchB.get(),
+                (cl) -> cl.stopClimberMotor()
         ),
 
+        /**
+         * Extends the solenoid to latch the pivoting arm onto the bar. Waits until the latch switch is pressed.
+         */
         LATCH_PIVOT_ARM(
-                (Climber cl) -> cl.latchSolenoid.set(true),
-                (Climber cl) -> cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get(),
-                (Climber cl) -> {}
+                (cl) -> cl.latchSolenoid.set(true),
+                (cl) -> cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get(),
+                (cl) -> {}
         ),
 
+        /**
+         * Moves the elevator arm up so that it is no longer supporting the robot.
+         */
         MOVE_WEIGHT_TO_PIVOT_ARM(
-                (Climber cl) -> {
+                (cl) -> {
                     cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //TODO: config this
                     cl.climberMotor.set(ControlMode.Position, cl.data);
                 },
-                (Climber cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data,
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0)
+                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                (cl) -> cl.stopClimberMotor()
         ),
 
+        /**
+         * Extends the solenoid to pivot the robot and cause it to start swinging.
+         */
         PIVOT_PIVOT_ARM(
-                (Climber cl) -> {
+                (cl) -> {
                     cl.pivotSolenoid.set(true);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                (Climber cl) -> Timer.getFPGATimestamp() - cl.data > 0.5, //TODO config this time
-                (Climber cl) -> {}
+                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5, //TODO config this time
+                (cl) -> {}
         ),
 
+        /**
+         * Extends the elevator arm to it's maximum safe height. (This is the max height where the climber arm will not touch the
+         * next bar.)
+         */
         EXTEND_ELEVATOR_ARM_TO_MAX_SAFE_LENGTH(
-                (Climber cl) -> {
+                (cl) -> {
                     cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 1000; //TODO: config this
                     cl.climberMotor.set(ControlMode.Position, cl.data);
                 },
-                (Climber cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data,
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0)
+                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                (cl) -> cl.stopClimberMotor()
 
         ),
 
+        /**
+         * Uses the gyro to wait until the robot is swinging towards the field
+         */
         WAIT_TILL_EXTENSION_IS_SAFE(
-                (Climber cl) -> {},
-                (Climber cl) -> {
+                (cl) -> {},
+                (cl) -> {
                     AHRS gyro = RobotTracker.getInstance().getGyro();
-                    return gyro.getPitch() < 0 && gyro.getRawAccelY() < 0;
+                    return gyro.getPitch() < 0 && gyro.getWorldLinearAccelY() < 0; // TODO: tune these values
                 },
-                (Climber cl) -> {}
+                (cl) -> {}
         ),
 
+        /**
+         * Extends the elevator arm past the safe height. At this point the arm will contact the bar when the robot swings back
+         * towards the bars.
+         */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
-                (Climber cl) -> {
+                (cl) -> {
                     cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //TODO: config this
                     cl.climberMotor.set(ControlMode.Position, cl.data);
                 },
-                (Climber cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data,
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0)
+                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                (cl) -> cl.stopClimberMotor()
         ),
 
+        /**
+         * Waits for the gyro to report that the robot has stopped swinging.
+         */
+        WAIT_FOR_SWING_STOP(
+                (cl) -> {},
+                (cl) -> {
+                    AHRS gyro = RobotTracker.getInstance().getGyro();
+                    return gyro.getPitch() < 0 && Math.abs(gyro.getWorldLinearAccelY()) < 0.1; //TODO: Tune these values
+                },
+                (cl) -> {}
+        ),
+
+        /**
+         * Retracts the elevator arm to until it contacts the bar.
+         */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -1),
-                (Climber cl) -> cl.elevatorArmContactSwitchA.get() && cl.elevatorArmContactSwitchB.get(),
-                (Climber cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0)
+                (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -1),
+                (cl) -> cl.elevatorArmContactSwitchA.get() && cl.elevatorArmContactSwitchB.get(),
+                (cl) -> cl.stopClimberMotor()
         ),
 
+        /**
+         * Unlatches the pivot arm so that the robot is supported by the elevator arm.
+         */
         UNLATCH_PIVOT_ARM(
-                (Climber cl) -> {
+                (cl) -> {
                     cl.latchSolenoid.set(false);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                (Climber cl) -> Timer.getFPGATimestamp() - cl.data > 0.5 && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get(),
-                (Climber cl) -> {}
+                //TODO: Change the time
+                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5 && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get(),
+                (cl) -> {}
         ),
 
+        /**
+         * Unpivot the elevator arm so that the pivot arm is now underneath the next bar.
+         */
         UNPIVOT_PIVOT_ARM(
-                (Climber cl) -> {
+                (cl) -> {
                     cl.pivotSolenoid.set(false);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                (Climber cl) -> Timer.getFPGATimestamp() - cl.data > 0.5,
-                (Climber cl) -> {}
+                //TODO: Change the time
+                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5,
+                (cl) -> {}
         );
 
 
+        /**
+         * @param startAction   The action to perform when the state is entered
+         * @param waitCondition The condition to wait for before transitioning to the next state (true = continue, false = wait)
+         * @param endAction     The action to perform when the state is exited
+         */
         ClimbState(Consumer<Climber> startAction, Function<Climber, Boolean> waitCondition, Consumer<Climber> endAction) {
             this.startAction = startAction;
             this.waitCondition = waitCondition;
             this.endAction = endAction;
         }
 
+        /**
+         * The action to perform when the state is entered.
+         */
         final Consumer<Climber> startAction;
+
+        /**
+         * The condition to wait for before transitioning to the next state.
+         * <p>
+         * Returns true when the condition is met. (When true is returned, the climber state should be transitioned to the next
+         * state.) aka (true = continue, false = wait)
+         */
         final Function<Climber, Boolean> waitCondition;
+
+        /**
+         * The action to perform when the state is exited.
+         */
         final Consumer<Climber> endAction;
     }
 
@@ -157,7 +232,32 @@ public class Climber extends AbstractSubsystem {
     }
 
     public void startClimb() {
+        climbState = ClimbState.START_CLIMB;
+    }
 
+    public void stopClimb() {
+        climbState = ClimbState.IDLE;
+        stopClimberMotor();
+    }
+
+    public void pauseClimb() {
+        isPaused = true;
+        pausedClimberMode = climberMotor.getControlMode();
+        if (pausedClimberMode == ControlMode.PercentOutput) {
+            pausedClimberSetpoint = climberMotor.getMotorOutputPercent();
+        } else {
+            pausedClimberSetpoint = climberMotor.getClosedLoopTarget();
+        }
+        stopClimberMotor();
+    }
+
+    private void stopClimberMotor() {
+        climberMotor.set(ControlMode.Position, climberMotor.getSelectedSensorPosition());
+    }
+
+    public void resumeClimb() {
+        isPaused = false;
+        climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
     }
 
     public void deployClimb() {
@@ -166,11 +266,17 @@ public class Climber extends AbstractSubsystem {
 
     @Override
     public void update() {
-
+        if (!isPaused) {
+            if (climbState.waitCondition.apply(this)) {
+                climbState.endAction.accept(this);
+                climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
+                climbState.startAction.accept(this);
+            }
+        }
     }
 
-    public void stopClimb() {
-        climbThread.interrupt();
+    public void resetClimb() {
+
     }
 
     @Override
