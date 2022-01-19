@@ -63,41 +63,31 @@ public class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Moves the elevator arm up so that it is no longer supporting the robot.
+         * Moves the elevator arm up to the maximum safe height. Will continue to the next state once the elevator is no longer
+         * supporting the robot.
          */
         MOVE_WEIGHT_TO_PIVOT_ARM(
                 (cl) -> {
-                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //TODO: config this
-                    cl.climberMotor.set(ControlMode.Position, cl.data);
+                    //TODO: config these
+                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //position when it is considered "unlatched"
+                    cl.climberMotor.set(ControlMode.Position, cl.climberMotor.getSelectedSensorPosition(0) + 1000);
                 },
                 (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
-                (cl) -> cl.stopClimberMotor()
+                (cl) -> {}
         ),
 
         /**
-         * Extends the solenoid to pivot the robot and cause it to start swinging.
+         * Extends the solenoid to pivot the robot and cause it to start swinging. Waits a minimum time or until the climber motor
+         * has fully extended to it's maximum safe position.
          */
         PIVOT_PIVOT_ARM(
                 (cl) -> {
                     cl.pivotSolenoid.set(true);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5, //TODO config this time
+                //TODO: config this time
+                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5 && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
                 (cl) -> {}
-        ),
-
-        /**
-         * Extends the elevator arm to it's maximum safe height. (This is the max height where the climber arm will not touch the
-         * next bar.)
-         */
-        EXTEND_ELEVATOR_ARM_TO_MAX_SAFE_LENGTH(
-                (cl) -> {
-                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 1000; //TODO: config this
-                    cl.climberMotor.set(ControlMode.Position, cl.data);
-                },
-                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
-                (cl) -> cl.stopClimberMotor()
-
         ),
 
         /**
@@ -122,7 +112,7 @@ public class Climber extends AbstractSubsystem {
                     cl.climberMotor.set(ControlMode.Position, cl.data);
                 },
                 (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
-                (cl) -> cl.stopClimberMotor()
+                (cl) -> {}
         ),
 
         /**
