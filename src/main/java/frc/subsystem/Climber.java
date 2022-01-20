@@ -96,7 +96,10 @@ public class Climber extends AbstractSubsystem {
          * Lowers the elevator arm until the contact switch is pressed on the bar.
          */
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
-                (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -1),
+                (cl) -> {
+                    cl.climberMotor.set(ControlMode.PercentOutput, -1);
+                    cl.setLatchState(LatchState.UNLATCHED);
+                },
                 (cl) -> cl.pivotingArmContactSwitchA.get() && cl.pivotingArmContactSwitchB.get(),
                 (cl) -> cl.stopClimberMotor()
         ),
