@@ -43,6 +43,11 @@ public class Climber extends AbstractSubsystem {
     private boolean skipChecks = false;
     private boolean ranEndAction = false;
 
+    private double gyroPitchVelocity = 0;
+    private double lastGyroPitch;
+    private double gyroRollVelocity = 0;
+    private double lastGyroRoll;
+
     enum ClimbState {
         IDLE((cl) -> {}, (cl) -> false, (cl) -> {}),
 
@@ -104,7 +109,7 @@ public class Climber extends AbstractSubsystem {
                 (cl) -> {},
                 (cl) -> {
                     AHRS gyro = RobotTracker.getInstance().getGyro();
-                    return gyro.getPitch() < 0 && gyro.getWorldLinearAccelY() < 0; // TODO: tune these values
+                    return gyro.getPitch() < 0 && cl.gyroPitchVelocity < 0; // TODO: tune these values
                 },
                 (cl) -> {}
         ),
@@ -123,13 +128,13 @@ public class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Waits for the gyro to report that the robot has stopped swinging.
+         * Waits for the gyro to report that the robot \has stopped swinging.
          */
         WAIT_FOR_SWING_STOP(
                 (cl) -> {},
                 (cl) -> {
                     AHRS gyro = RobotTracker.getInstance().getGyro();
-                    return gyro.getPitch() < 0 && Math.abs(gyro.getWorldLinearAccelY()) < 0.1; //TODO: Tune these values
+                    return Math.abs(gyro.getPitch() - 20) < 4 && Math.abs(cl.gyroPitchVelocity) < 0.1; //TODO: Tune these values
                 },
                 (cl) -> {}
         ),
@@ -329,6 +334,12 @@ public class Climber extends AbstractSubsystem {
 
     @Override
     public synchronized void update() {
+        gyroPitchVelocity = RobotTracker.getInstance().getGyro().getPitch() - lastGyroPitch / Constants.CLIMBER_PERIOD;
+        gyroRollVelocity = RobotTracker.getInstance().getGyro().getRoll() - lastGyroRoll / Constants.CLIMBER_PERIOD;
+
+        lastGyroPitch = RobotTracker.getInstance().getGyro().getPitch();
+        lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
+
         if (!isPaused) {
             if (climbState.waitCondition.apply(this)) {
                 climbState.endAction.accept(this);
