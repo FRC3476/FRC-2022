@@ -3,7 +3,6 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.sensors.CANCoder;
-import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -23,7 +22,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
@@ -47,7 +45,6 @@ public final class Drive extends AbstractSubsystem {
         return instance;
     }
 
-    private final @NotNull AHRS gyroSensor;
     private final @NotNull PIDController turnPID;
     private DriveState driveState;
     Rotation2d wantedHeading = new Rotation2d();
@@ -94,7 +91,6 @@ public final class Drive extends AbstractSubsystem {
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
-        gyroSensor = new AHRS(SPI.Port.kMXP);
 
         final LazyCANSparkMax leftFrontSpark, leftBackSpark, rightFrontSpark, rightBackSpark;
         final CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;
@@ -217,11 +213,6 @@ public final class Drive extends AbstractSubsystem {
         return currentRobotState;
     }
 
-    public void calibrateGyro() {
-        gyroSensor.calibrate();
-    }
-
-
     public void startHold() {
         configBrake();
         driveState = DriveState.HOLD;
@@ -254,7 +245,7 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
                 inputs.getRotation() * 6,
-                RobotTracker.getInstance().getPoseMeters().getRotation());
+                RobotTracker.getInstance().getGyroAngle());
 
         if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
             // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
@@ -419,25 +410,6 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     * You probably want to get the angle from {@link RobotTracker#getPoseMeters()}
-     *
-     * @return the current angle of the robot in degrees
-     */
-    public double getAngle() {
-        return -gyroSensor.getAngle();
-    }
-
-    /**
-     * You probably want to get the angle from {@link RobotTracker#getPoseMeters()}
-     *
-     * @return the rotation reported from the gyro
-     */
-    public @NotNull Rotation2d getGyroAngle() {
-        // -180 through 180
-        return Rotation2d.fromDegrees(-getAngle());
-    }
-
-    /**
      * {@link Drive#getSpeedSquared()} is faster if you don't need the square root
      *
      * @return The robot speed
@@ -549,13 +521,6 @@ public final class Drive extends AbstractSubsystem {
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
-    }
-
-    /**
-     * Do not zero the gyro unless it is on robot init. Set the pose instead {@link RobotTracker#resetPosition(Pose2d)}
-     */
-    public synchronized void resetGyro() {
-        gyroSensor.zeroYaw();
     }
 
     double turnMinSpeed = 0;
@@ -678,7 +643,7 @@ public final class Drive extends AbstractSubsystem {
      * driver station when this happens.
      */
     public void checkGyro() {
-        if (!gyroSensor.isConnected()) {
+        if (!RobotTracker.getInstance().getGyro().isConnected()) {
             if (useFieldRelative) {
                 useFieldRelative = false;
                 DriverStation.reportError("Gyro disconnected, switching to non field relative drive for rest of match", false);
@@ -693,7 +658,6 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].close();
             swerveMotors[i].close();
         }
-        gyroSensor.close();
         instance = new Drive();
     }
 }
