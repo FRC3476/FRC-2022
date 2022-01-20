@@ -16,6 +16,10 @@ import java.util.function.Function;
 public class Climber extends AbstractSubsystem {
     private static Climber instance = new Climber();
 
+    public static Climber getInstance() {
+        return instance;
+    }
+
     private final LazyTalonSRX climberMotor;
     private final LazyTalonSRX climberMotor2;
 
@@ -405,7 +409,7 @@ public class Climber extends AbstractSubsystem {
         setBrakeState(Math.abs(percentOutput) < 1.0E-6 ? BrakeState.BRAKING : BrakeState.FREE);
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
     }
-
+    
     /**
      * Toggles the latch that is on the pivot arm.
      */
@@ -429,7 +433,23 @@ public class Climber extends AbstractSubsystem {
 
     @Override
     public void logData() {
+        logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
+        logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
+        logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
+        logData("Climber Motor Current", climberMotor.getStatorCurrent());
 
+        logData("Pivot Solenoid State", getPivotState().toString());
+        logData("Latch Solenoid State", getLatchState().toString());
+        logData("Brake Solenoid State", getBrakeState().toString());
+
+        logData("Gyro Pitch", RobotTracker.getInstance().getGyro().getPitch());
+        logData("Gyro Pitch Velocity", gyroPitchVelocity);
+        logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll());
+        logData("Gyro Roll Velocity", gyroRollVelocity);
+
+        logData("Climber Is Paused", isPaused);
+        logData("Climber Is Step By Step", stepByStep);
+        logData("Current State", climbState.toString());
     }
 
     @Override

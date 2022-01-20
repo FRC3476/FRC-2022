@@ -52,6 +52,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     }
 
+    public void logData(String key, Object object) {
+
+    }
+
     @Override
     @SuppressWarnings("BusyWait")
     public void run() {
