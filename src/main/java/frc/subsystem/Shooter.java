@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
@@ -150,6 +151,23 @@ public class Shooter extends AbstractSubsystem {
 
     private HoodPositionModes getHoodPositionMode() {
         return hoodPositionMode;
+    }
+
+    private void setShooterSpeed(double speed) {
+        shooterWheelMaster.set(ControlMode.Velocity, speed);
+    }
+
+    private void enableFeederWheel() {
+        feederWheel.set(ControlMode.PercentOutput, 1);
+    }
+
+    private void disableFeederWheel() {
+        feederWheel.set(ControlMode.PercentOutput, 0);
+    }
+
+    private void setHoodPosition(double desiredAngle) {
+        // Finds difference between desired angle and actual angle and sets motor to travel that amount
+        hoodPID.setReference((desiredAngle - getHoodPosition()) / 360, CANSparkMax.ControlType.kPosition);
     }
 
     @Override
