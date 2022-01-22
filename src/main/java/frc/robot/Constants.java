@@ -105,4 +105,8 @@ public final class Constants {
 
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
+
+    // Intake Constants TODO: Need To Set
+    public static final int SOLENOID_CHANNEL = 0;
+    public static final int INTAKE_MOTOR_DEVICE_ID = 1;
 }
