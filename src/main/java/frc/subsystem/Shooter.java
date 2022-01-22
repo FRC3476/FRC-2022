@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
@@ -101,13 +102,12 @@ public class Shooter extends AbstractSubsystem {
     }
 
 
-
     // TODO: May have to add an offset for the encoder if 0 degrees is not on the 90 degree from horizontal
     // angle should be between 0 and 40 representing the 90 and 50 degree of the horizontal
-    public double getHoodPosition() {
+    private double getHoodPosition() {
 
         double angle = 0;
-        if(hoodPositionMode == HoodPositionModes.ABSOLUTE_ENCODER) {
+        if (hoodPositionMode == HoodPositionModes.ABSOLUTE_ENCODER) {
             angle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET; // Put in a wrapper method
 
             // Checks if Absolute Encoder is reading outside of expected range
@@ -119,13 +119,27 @@ public class Shooter extends AbstractSubsystem {
         else
         {
             // TODO: Implement angle Relative to Home
-            
+
         }
         return angle;
     }
 
     private double getHoodAbsoluteEncoderValue() {
         return hoodAbsoluteEncoder.getOutput() * 360;
+    }
+
+    // Find Home switch
+    private void homeHood() {
+        // Gets encoder value at start of homing
+        double currentPosition = hoodRelativeEncoder.getPosition();
+        // Will turn motor towards home switch until home switch is enabled
+        while (homeSwitch.get()) {
+            // Will only set to next position when motor has completed last increment
+            if (Math.abs(hoodMotor.getEncoder().getVelocity()) > 1.0e-3) {
+                hoodPID.setReference(currentPosition + .1, CANSparkMax.ControlType.kPosition);
+            }
+        }
+        hoodRelativeEncoder.setPosition(90);
     }
 
     @Override
