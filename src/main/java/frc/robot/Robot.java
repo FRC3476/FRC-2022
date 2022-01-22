@@ -18,6 +18,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.BlinkinLED;
 import frc.subsystem.Drive;
+import frc.subsystem.Hopper;
 import frc.subsystem.RobotTracker;
 import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
@@ -69,6 +70,7 @@ public class Robot extends TimedRobot {
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
+    private final Hopper hopper = Hopper.getInstance();
 
     //Inputs
     private final Controller xbox = new Controller(0);
@@ -250,6 +252,7 @@ public class Robot extends TimedRobot {
     private void startSubsystems() {
         robotTracker.start();
         drive.start();
+        hopper.start();
     }
 
     public synchronized void killAuto() {
