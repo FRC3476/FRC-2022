@@ -1,7 +1,12 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.jetbrains.annotations.NotNull;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
@@ -10,6 +15,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private int logInterval;
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
     public String subsystemName;
+    Thread thisThread;
 
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
@@ -42,6 +48,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public void start() {
         signal = ThreadSignal.ALIVE;
+        if (thisThread == null || !thisThread.isAlive()) {
+            thisThread = new Thread(this);
+            thisThread.start();
+        }
     }
 
     /**
@@ -50,6 +60,26 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
      */
     public void update() {
 
+    }
+
+    static Map<String, Object> logDataMap = new HashMap<>();
+
+
+    public void logData(String key, Object value) {
+        //SmartDashboard.putString(key, value.toString());
+        logDataMap.put(key, value);
+    }
+
+    int lastLength = 20;
+
+    public void pushLog() {
+        StringBuilder sb = new StringBuilder((int) (lastLength * 1.5));
+
+        for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
+            sb.append(entry.getKey()).append(":").append(entry.getValue()).append("\n");
+        }
+        lastLength = sb.length();
+        SmartDashboard.putRaw(subsystemName, sb.toString().getBytes(StandardCharsets.ISO_8859_1));
     }
 
     @Override
@@ -62,6 +92,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 logInterval++;
                 if (logInterval >= loggingInterval) {
                     logData();
+                    pushLog();
                     logInterval = 1;
                 }
             }
