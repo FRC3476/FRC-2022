@@ -148,6 +148,7 @@ public final class Constants {
     // Hood Constants
 
     public static final int HOOD_ABSOLUTE_ENCODER_OFFSET = 0;
+    public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
 
 
 

@@ -13,7 +13,7 @@ import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonSRX;
 
 
-
+// TODO: Need to add Blinkin LED for the current states of things
 public class Shooter extends AbstractSubsystem {
 
     // Talon500
@@ -38,6 +38,8 @@ public class Shooter extends AbstractSubsystem {
 
     private HoodPositionModes hoodPositionMode;
 
+    private double desiredHoodAngle;
+
     // Singleton Setup
     private static final Shooter instance = new Shooter();
 
@@ -61,6 +63,7 @@ public class Shooter extends AbstractSubsystem {
         hoodMotor = new LazyCANSparkMax(Constants.HOOD_MOTOR_CAN_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hoodAbsoluteEncoder = new DutyCycle(new DigitalInput(Constants.HOOD_ENCODER_DIO_ID));
         hoodRelativeEncoder = hoodMotor.getEncoder();
+        hoodRelativeEncoder.setPositionConversionFactor(Constants.HOOD_DEGREES_PER_MOTOR_ROTATION);
         homeSwitch = new DigitalInput(Constants.HOOD_HOME_SWITCH_DIO_ID);
 
         configPID();
@@ -126,7 +129,7 @@ public class Shooter extends AbstractSubsystem {
     }
 
     // Find Home switch
-    private void homeHood() {
+    public void homeHood() {
         // Gets encoder value at start of homing
         double currentPosition = hoodRelativeEncoder.getPosition();
         // Will turn motor towards home switch until home switch is enabled
@@ -140,16 +143,17 @@ public class Shooter extends AbstractSubsystem {
     }
 
     // Toggles between methods to get hood positions
-    private void toggleHoodPositionMode() {
+    public void toggleHoodPositionMode() {
         // Checks current Hood position mode to tell which to switch to
         if (getHoodPositionMode() == HoodPositionModes.ABSOLUTE_ENCODER) {
             hoodPositionMode = HoodPositionModes.RELATIVE_TO_HOME;
+            homeHood();
         } else {
             hoodPositionMode = HoodPositionModes.ABSOLUTE_ENCODER;
         }
     }
 
-    private HoodPositionModes getHoodPositionMode() {
+    public HoodPositionModes getHoodPositionMode() {
         return hoodPositionMode;
     }
 
@@ -157,6 +161,7 @@ public class Shooter extends AbstractSubsystem {
         shooterWheelMaster.set(ControlMode.Velocity, speed);
     }
 
+    // TODO: Feeder wheel needs to check if hood is at proper position and wheel is at desired speed
     private void enableFeederWheel() {
         feederWheel.set(ControlMode.PercentOutput, 1);
     }
@@ -166,8 +171,20 @@ public class Shooter extends AbstractSubsystem {
     }
 
     private void setHoodPosition(double desiredAngle) {
-        // Finds difference between desired angle and actual angle and sets motor to travel that amount
-        hoodPID.setReference((desiredAngle - getHoodPosition()) / 360, CANSparkMax.ControlType.kPosition);
+        // Finds difference between desired angle and actual angle and sets motor to travel that amount 
+        // Checks to make sure that hood angle does not get set past maximum allowed value
+        if (desiredAngle < 50) {
+            desiredAngle = 50;
+        }
+        if (desiredAngle > 90) {
+            desiredAngle = 90;
+        }
+        desiredHoodAngle = desiredAngle;
+    }
+
+    @Override
+    public void update() {
+        hoodPID.setReference((desiredHoodAngle - getHoodPosition()), CANSparkMax.ControlType.kPosition);
     }
 
     @Override
