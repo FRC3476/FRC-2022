@@ -44,7 +44,7 @@ public class Hopper extends AbstractSubsystem {
     @Override
     public void update() {
         Color detectedColor = colorSensor.getColor();
-
+        private final Color kBlueTarget = ColorMatch.makeColor(0.143, 0.427, 0.429);
         SmartDashboard.putNumber("Red", detectedColor.red);
         SmartDashboard.putNumber("Green", detectedColor.green);
         SmartDashboard.putNumber("Blue", detectedColor.blue);
