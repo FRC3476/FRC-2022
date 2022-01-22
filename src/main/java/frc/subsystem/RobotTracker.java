@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -124,7 +125,7 @@ public final class RobotTracker extends AbstractSubsystem {
         previousAccelerometerData.add(0, Map.entry(time,
                 new Translation2d(gyroSensor.getWorldLinearAccelX(), gyroSensor.getWorldLinearAccelY()))); //Robot Centric
 
-        double currentOdometryTime = time - 0.112;
+        double currentOdometryTime = time - Constants.SPARK_VELOCITY_MEASUREMENT_LATENCY;
         if (previousAbsolutePositions.get(previousAbsolutePositions.size() - 1).getKey() > currentOdometryTime &&
                 previousGyroRotations.get(previousGyroRotations.size() - 1).getKey() > currentOdometryTime) {
 

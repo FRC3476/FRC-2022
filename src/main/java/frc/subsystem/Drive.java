@@ -453,7 +453,8 @@ public final class Drive extends AbstractSubsystem {
 
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
-        Trajectory.State trackerPose = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime - 0.112);
+        Trajectory.State trackerPose = currentAutoTrajectory.sample(
+                Timer.getFPGATimestamp() - autoStartTime - Constants.SPARK_VELOCITY_MEASUREMENT_LATENCY);
 
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(), goal,
                 trackerPose, autoTargetHeading);
