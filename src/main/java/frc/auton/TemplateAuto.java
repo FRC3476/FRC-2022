@@ -25,7 +25,7 @@ public abstract class TemplateAuto implements Runnable {
     }
 
     public Translation2d here() {
-        return RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation();
+        return RobotTracker.getInstance().getLatencyCompedPoseMeters().getTranslation();
     }
 
     public Rotation2d dir() {

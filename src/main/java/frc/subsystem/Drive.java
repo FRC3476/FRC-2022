@@ -10,7 +10,6 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
 import com.revrobotics.SparkMaxPIDController;
-import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,6 +26,7 @@ import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
+import frc.utility.wpimodified.HolonomicDriveController;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -453,9 +453,10 @@ public final class Drive extends AbstractSubsystem {
 
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
-        System.out.println(goal);
+        Trajectory.State trackerPose = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime - 0.112);
+
         ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(), goal,
-                autoTargetHeading);
+                trackerPose, autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
         if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;

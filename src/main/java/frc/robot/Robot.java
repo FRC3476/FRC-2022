@@ -105,8 +105,8 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         if (isEnabled()) {
             //Get data from the robot tracker and upload it to the robot tracker (Units must be in meters)
-            xPos.setDouble(robotTracker.getLastEstimatedPoseMeters().getX());
-            yPos.setDouble(robotTracker.getLastEstimatedPoseMeters().getY());
+            xPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getX());
+            yPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getY());
         }
 
         //Listen changes in the network auto
