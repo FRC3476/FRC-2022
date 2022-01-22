@@ -100,9 +100,9 @@ public final class RobotTracker extends AbstractSubsystem {
         swerveDriveOdometry.resetPosition(new Pose2d(), gyroSensor.getRotation2d());
     }
 
-    List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
-    List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(20);
-    Queue<Map.Entry<Double, Pose2d>> deferredVisionUpdates = new ArrayDeque<>(20);
+    private final List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
+    private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(20);
+    private final Queue<Map.Entry<Double, Pose2d>> deferredVisionUpdates = new ArrayDeque<>(20);
 
     double currentOdometryTime = -1;
 
@@ -119,29 +119,43 @@ public final class RobotTracker extends AbstractSubsystem {
         previousAbsolutePositions.add(Map.entry(time, drive.getAbsolutePositions()));
         previousGyroRotations.add(Map.entry(time, gyroSensor.getRotation2d()));
 
-        synchronized (this) {
-            currentOdometryTime = time - 0.112;
-            if (previousAbsolutePositions.get(previousAbsolutePositions.size() - 1).getKey() > currentOdometryTime &&
-                    previousGyroRotations.get(previousGyroRotations.size() - 1).getKey() > currentOdometryTime) {
+
+        double currentOdometryTime = time - 0.112;
+        if (previousAbsolutePositions.get(previousAbsolutePositions.size() - 1).getKey() > currentOdometryTime &&
+                previousGyroRotations.get(previousGyroRotations.size() - 1).getKey() > currentOdometryTime) {
 
 
-                double[] currentAbsolutePositions = getAbsolutePositions(currentOdometryTime);
-                Rotation2d currentGyroRotation = getGyroRotation(currentOdometryTime);
-                double[] swerveModuleSpeeds = drive.getModuleSpeeds();
+            double[] currentAbsolutePositions = getAbsolutePositions(currentOdometryTime);
+            Rotation2d currentGyroRotation = getGyroRotation(currentOdometryTime);
+            double[] swerveModuleSpeeds = drive.getModuleSpeeds();
 
 
-                SwerveModuleState[] swerveModuleStates = new SwerveModuleState[4];
-                for (int i = 0; i < 4; i++) {
-                    swerveModuleStates[i] = new SwerveModuleState(swerveModuleSpeeds[i],
-                            new Rotation2d(currentAbsolutePositions[i]));
-                }
+            SwerveModuleState[] swerveModuleStates = new SwerveModuleState[4];
+            for (int i = 0; i < 4; i++) {
+                swerveModuleStates[i] = new SwerveModuleState(swerveModuleSpeeds[i],
+                        new Rotation2d(currentAbsolutePositions[i]));
+            }
 
-                updateOdometry(time, currentGyroRotation, swerveModuleStates);
+            updateOdometry(time, currentGyroRotation, swerveModuleStates);
 
-                for (Map.Entry<Double, Pose2d> visionUpdate : deferredVisionUpdates) {
+            for (Map.Entry<Double, Pose2d> visionUpdate : deferredVisionUpdates) {
+                if (visionUpdate.getKey() > currentOdometryTime) break;
+                swerveDriveOdometry.addVisionMeasurement(visionUpdate.getValue(), visionUpdate.getKey());
+            }
+
+            synchronized (this) {
+                this.currentOdometryTime = time;
+
+                while (!deferredVisionUpdates.isEmpty() && deferredVisionUpdates.peek().getKey() <= currentOdometryTime) {
+                    var visionUpdate = deferredVisionUpdates.poll();
                     if (visionUpdate.getKey() > currentOdometryTime) break;
                     swerveDriveOdometry.addVisionMeasurement(visionUpdate.getValue(), visionUpdate.getKey());
+                    deferredVisionUpdates.remove(visionUpdate);
                 }
+
+
+                latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
+                gyroOffset = latestEstimatedPose.getRotation().minus(currentGyroRotation);
             }
         }
     }
@@ -260,7 +274,7 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * @return The gyro angle offset so that it lines up with the robot tracker rotation.
      */
-    public Rotation2d getGyroAngle() {
+    public synchronized Rotation2d getGyroAngle() {
         return gyroSensor.getRotation2d().rotateBy(gyroOffset);
     }
 
