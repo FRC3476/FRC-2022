@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +35,8 @@ public class RobotTrackerTest {
     }
 
     @Test
-    void robotTrackerTest() { //TODO: Figure out why messing with rotation breaks things
+    void robotTrackerTest() throws NoSuchFieldException, IllegalAccessException { //TODO: Figure out why messing with rotation
+        // breaks things
         double time = 0;
         for (int j = 0; j < 100; j++) {
             double x = random.nextDouble() * 5 - 2.5;
@@ -65,9 +68,13 @@ public class RobotTrackerTest {
                         drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
             }
 
-            assertEquals(x, robotTracker.getLastEstimatedPoseMeters().getTranslation().getX(), 0.3);
-            assertEquals(y, robotTracker.getLastEstimatedPoseMeters().getTranslation().getY(), 0.3);
-            assertEquals(theta, robotTracker.getLastEstimatedPoseMeters().getRotation().getDegrees(), 0.1);
+            Field swerveDriveOdometry = RobotTracker.class.getDeclaredField("swerveDriveOdometry");
+            swerveDriveOdometry.setAccessible(true);
+            Pose2d odometry = ((SwerveDrivePoseEstimator) swerveDriveOdometry.get(robotTracker)).getEstimatedPosition();
+
+            assertEquals(x, odometry.getTranslation().getX(), 0.3);
+            assertEquals(y, odometry.getTranslation().getY(), 0.3);
+            assertEquals(theta, odometry.getRotation().getDegrees(), 0.1);
         }
 
     }
