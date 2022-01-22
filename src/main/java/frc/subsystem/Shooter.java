@@ -26,7 +26,6 @@ public class Shooter extends AbstractSubsystem {
     private LazyCANSparkMax hoodMotor;
     private SparkMaxPIDController hoodPID;
     private RelativeEncoder hoodRelativeEncoder;
-    private double absoluteHoodPosition;
 
     // REV Through Bore Encoder
     private DutyCycle hoodAbsoluteEncoder;
@@ -47,6 +46,7 @@ public class Shooter extends AbstractSubsystem {
 
     // Private constructor for singleton
     private Shooter() {
+        // TODO: May have to invert direction of motors
         // Sets update method's iteration
         super(Constants.SHOOTER_PERIOD_MS);
 
@@ -96,9 +96,6 @@ public class Shooter extends AbstractSubsystem {
         hoodPID.setFF(Constants.HOOD_F,0);
         hoodPID.setIZone(Constants.HOOD_I_ZONE);
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
-
-
-
     }
 
 
@@ -118,8 +115,7 @@ public class Shooter extends AbstractSubsystem {
         }
         else
         {
-            // TODO: Implement angle Relative to Home
-
+            angle = hoodRelativeEncoder.getPosition();
         }
         return angle;
     }
@@ -140,6 +136,20 @@ public class Shooter extends AbstractSubsystem {
             }
         }
         hoodRelativeEncoder.setPosition(90);
+    }
+
+    // Toggles between methods to get hood positions
+    private void toggleHoodPositionMode() {
+        // Checks current Hood position mode to tell which to switch to
+        if (getHoodPositionMode() == HoodPositionModes.ABSOLUTE_ENCODER) {
+            hoodPositionMode = HoodPositionModes.RELATIVE_TO_HOME;
+        } else {
+            hoodPositionMode = HoodPositionModes.ABSOLUTE_ENCODER;
+        }
+    }
+
+    private HoodPositionModes getHoodPositionMode() {
+        return hoodPositionMode;
     }
 
     @Override
