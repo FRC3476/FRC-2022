@@ -27,8 +27,12 @@ import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -192,6 +196,8 @@ public final class Drive extends AbstractSubsystem {
         driveState = DriveState.TELEOP;
     }
 
+    Queue<Double> xQueue = new LinkedList<>();
+
     synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
@@ -333,7 +339,6 @@ public final class Drive extends AbstractSubsystem {
         lastLoopTime = Timer.getFPGATimestamp();
 
         ChassisSpeeds actualVelocity = getRobotState();
-        if (actualVelocity == null) actualVelocity = new ChassisSpeeds(0, 0, 0);
 
         // Converts ChassisSpeeds to Translation2d
         Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
@@ -625,6 +630,36 @@ public final class Drive extends AbstractSubsystem {
         } else {
             return swerveCanCoders[moduleNumber].getPosition();
         }
+    }
+
+    /**
+     * Returns the angle/position of the modules
+     *
+     * @return and array of the four angles
+     */
+    public double[] getAbsolutePositions() {
+        double[] positions = new double[4];
+        for (int i = 0; i < 4; i++) {
+            if (useRelativeEncoderPosition) {
+                double relPos = swerveEncoders[i].getPosition() % 360;
+                if (relPos < 0) relPos += 360;
+                positions[i] = relPos;
+            } else {
+                positions[i] = swerveCanCoders[i].getPosition();
+            }
+        }
+        return positions;
+    }
+
+
+    @Contract(pure = true)
+    public double[] getModuleSpeeds() {
+        double[] speeds = new double[4];
+
+        for (int i = 0; i < 4; i++) {
+            speeds[i] = (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION;
+        }
+        return speeds;
     }
 
     /**
