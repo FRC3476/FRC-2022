@@ -105,4 +105,51 @@ public final class Constants {
 
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
+
+    // Shooter Constants
+
+   public static final int SHOOTER_PERIOD_MS = 20;
+
+    public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 0; // TODO: Get actual CAN ID for all shooter components
+    public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 0;
+    public static final int FEEDER_WHEEL_CAN_ID = 0;
+    public static final int HOOD_MOTOR_CAN_ID = 0;
+
+    public static final int HOOD_ENCODER_DIO_ID = 0;
+    public static final int HOOD_HOME_SWITCH_DIO_ID = 0;
+
+    // Shooter PID
+    // TODO: Configure PID for all shooter motors and current limits
+
+
+    public static final int SHOOTER_PID_TIMEOUT_MS = 10;
+
+    public static final int SHOOTER_P = 0;
+    public static final int SHOOTER_I = 0;
+    public static final int SHOOTER_D = 0;
+    public static final int SHOOTER_F = 0;
+    public static final int SHOOTER_I_ZONE = 0;
+    public static final int SHOOTER_CURRENT_LIMIT_AMPS = 0;
+
+    public static final int FEEDER_P = 0;
+    public static final int FEEDER_I = 0;
+    public static final int FEEDER_D = 0;
+    public static final int FEEDER_F = 0;
+    public static final int FEEDER_I_ZONE = 0;
+    public static final int FEEDER_CURRENT_LIMIT_AMPS = 0;
+
+    public static final int HOOD_P = 0;
+    public static final int HOOD_I = 0;
+    public static final int HOOD_D = 0;
+    public static final int HOOD_F = 0;
+    public static final int HOOD_I_ZONE = 0;
+    public static final int HOOD_CURRENT_LIMIT_AMPS = 0;
+
+    // Hood Constants
+
+    public static final int HOOD_ABSOLUTE_ENCODER_OFFSET = 0;
+
+
+
+
 }
