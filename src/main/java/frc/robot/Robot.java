@@ -105,8 +105,8 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         if (isEnabled()) {
             //Get data from the robot tracker and upload it to the robot tracker (Units must be in meters)
-            xPos.setDouble(robotTracker.getPoseMeters().getX());
-            yPos.setDouble(robotTracker.getPoseMeters().getY());
+            xPos.setDouble(robotTracker.getLastEstimatedPoseMeters().getX());
+            yPos.setDouble(robotTracker.getLastEstimatedPoseMeters().getY());
         }
 
         //Listen changes in the network auto
@@ -203,7 +203,7 @@ public class Robot extends TimedRobot {
 
 
         if (xbox.getRisingEdge(1)) {
-            robotTracker.resetPosition(new Pose2d(robotTracker.getPoseMeters().getTranslation(), new Rotation2d(0)));
+            robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {

@@ -454,7 +454,7 @@ public final class Drive extends AbstractSubsystem {
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
         System.out.println(goal);
-        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
+        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(), goal,
                 autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
         if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {

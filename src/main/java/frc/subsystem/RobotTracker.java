@@ -6,6 +6,7 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+@SuppressWarnings("unused")
 public final class RobotTracker extends AbstractSubsystem {
 
     private final @NotNull AHRS gyroSensor;
@@ -22,13 +24,11 @@ public final class RobotTracker extends AbstractSubsystem {
     private static @NotNull RobotTracker instance = new RobotTracker();
 
     private final Drive drive = Drive.getInstance();
-    ;
 
     public static @NotNull RobotTracker getInstance() {
         return RobotTracker.instance;
     }
 
-    private @NotNull ChassisSpeeds lastChassisSpeeds = new ChassisSpeeds();
     private @NotNull Pose2d latestEstimatedPose = new Pose2d();
     private @NotNull ChassisSpeeds latestChassisSpeeds = new ChassisSpeeds();
 
@@ -36,7 +36,6 @@ public final class RobotTracker extends AbstractSubsystem {
     private @NotNull ChassisSpeeds latencyCompensatedChassisSpeeds = new ChassisSpeeds();
 
     private final @NotNull SwerveDrivePoseEstimator swerveDriveOdometry;
-    double lastTime = 0;
     private @NotNull Rotation2d gyroOffset = new Rotation2d();
 
 
@@ -69,11 +68,13 @@ public final class RobotTracker extends AbstractSubsystem {
      *                              as Timer.getFPGATimestamp.) This means that you should use Timer.getFPGATimestamp as your time
      *                              source or sync the epochs.
      */
-    public synchronized void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        if (timestampSeconds > currentOdometryTime) {
-            swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
-        } else {
-            deferredVisionUpdates.add(Map.entry(timestampSeconds, visionRobotPoseMeters));
+    public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
+        synchronized (deferredVisionUpdates) {
+            if (timestampSeconds > currentOdometryTime) {
+                swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
+            } else {
+                deferredVisionUpdates.add(Map.entry(timestampSeconds, visionRobotPoseMeters));
+            }
         }
     }
 
@@ -103,6 +104,7 @@ public final class RobotTracker extends AbstractSubsystem {
     private final List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
     private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(20);
     private final Queue<Map.Entry<Double, Pose2d>> deferredVisionUpdates = new ArrayDeque<>(20);
+    List<Map.Entry<Double, Translation2d>> previousAccelerometerData = new ArrayList<>(20);
 
     double currentOdometryTime = -1;
 
@@ -114,16 +116,17 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     @Override
     public void update() {
-        double time = WPIUtilJNI.now() * 1.0e-6;
+        double time = WPIUtilJNI.now() * 1.0e-6; // seconds
 
-        previousAbsolutePositions.add(Map.entry(time, drive.getAbsolutePositions()));
-        previousGyroRotations.add(Map.entry(time, gyroSensor.getRotation2d()));
-
+        // Store sensor data for later. New data is always at the front of the list.
+        previousAbsolutePositions.add(0, Map.entry(time, drive.getAbsolutePositions()));
+        previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
+        previousAccelerometerData.add(0, Map.entry(time,
+                new Translation2d(gyroSensor.getWorldLinearAccelX(), gyroSensor.getWorldLinearAccelY()))); //Robot Centric
 
         double currentOdometryTime = time - 0.112;
         if (previousAbsolutePositions.get(previousAbsolutePositions.size() - 1).getKey() > currentOdometryTime &&
                 previousGyroRotations.get(previousGyroRotations.size() - 1).getKey() > currentOdometryTime) {
-
 
             double[] currentAbsolutePositions = getAbsolutePositions(currentOdometryTime);
             Rotation2d currentGyroRotation = getGyroRotation(currentOdometryTime);
@@ -143,25 +146,75 @@ public final class RobotTracker extends AbstractSubsystem {
                 swerveDriveOdometry.addVisionMeasurement(visionUpdate.getValue(), visionUpdate.getKey());
             }
 
-            synchronized (this) {
-                this.currentOdometryTime = time;
-
+            synchronized (deferredVisionUpdates) {
                 while (!deferredVisionUpdates.isEmpty() && deferredVisionUpdates.peek().getKey() <= currentOdometryTime) {
                     var visionUpdate = deferredVisionUpdates.poll();
                     if (visionUpdate.getKey() > currentOdometryTime) break;
                     swerveDriveOdometry.addVisionMeasurement(visionUpdate.getValue(), visionUpdate.getKey());
                     deferredVisionUpdates.remove(visionUpdate);
                 }
+                this.currentOdometryTime = currentOdometryTime;
+            }
 
+            Pose2d latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
 
-                latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
-                gyroOffset = latestEstimatedPose.getRotation().minus(currentGyroRotation);
+            ChassisSpeeds latestChassisSpeeds =
+                    getRotatedSpeeds(drive.getSwerveDriveKinematics().toChassisSpeeds(swerveModuleStates),
+                            latestEstimatedPose.getRotation());
+
+            Translation2d velocity = new Translation2d(latestChassisSpeeds.vxMetersPerSecond,
+                    latestChassisSpeeds.vyMetersPerSecond);
+            Translation2d latencyCompensatedTranslation = latestEstimatedPose.getTranslation();
+            Rotation2d gyroOffset = latestEstimatedPose.getRotation().minus(currentGyroRotation);
+
+            for (int i = previousAccelerometerData.size() - 1; i >= 0; i--) {
+                if (previousAccelerometerData.get(i).getKey() < currentOdometryTime) {
+                    previousAccelerometerData.remove(i);
+                } else {
+                    // Use accelerometer to calculate the current pose
+                    double dt;
+                    if (previousAccelerometerData.size() > i + 1) {
+                        dt = previousAccelerometerData.get(i).getKey() -
+                                previousAccelerometerData.get(i - 1).getKey();
+                    } else {
+                        dt = previousAccelerometerData.get(i).getKey() - currentOdometryTime;
+                    }
+                    latencyCompensatedTranslation = latencyCompensatedTranslation.plus(velocity.times(dt));
+                    previousAccelerometerData.get(i).getValue().times(dt)
+                            .rotateBy(previousGyroRotations.get(i).getValue().rotateBy(gyroOffset));
+                    velocity = velocity.plus(previousAccelerometerData.get(i).getValue().times(dt));
+                }
+            }
+
+            synchronized (this) {
+                this.gyroOffset = gyroOffset;
+                this.latestEstimatedPose = latestEstimatedPose;
+                this.latestChassisSpeeds = latestChassisSpeeds;
+                this.latencyCompensatedPose = new Pose2d(latencyCompensatedTranslation,
+                        previousGyroRotations.get(0).getValue().rotateBy(gyroOffset));
+                this.latencyCompensatedChassisSpeeds = new ChassisSpeeds(velocity.getX(), velocity.getY(),
+                        (previousGyroRotations.get(0).getValue().getRadians() - previousGyroRotations.get(
+                                1).getValue().getRadians())
+                                / time - previousGyroRotations.get(1).getKey());
             }
         }
     }
 
-    private final Comparator comparator = (o1, o2) -> Double.compare(((Map.Entry<Double, ?>) o1).getKey(), (double) o2);
+    /**
+     * Converts a ChassisSpeeds to a field relative ChassisSpeeds.
+     *
+     * @return The field relative ChassisSpeeds.
+     */
+    private ChassisSpeeds getRotatedSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
+        double dist = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        return new ChassisSpeeds(
+                dist * rotation.getCos(),
+                dist * rotation.getSin(),
+                speeds.omegaRadiansPerSecond
+        );
+    }
 
+    private final Comparator comparator = (o1, o2) -> Double.compare(((Map.Entry<Double, ?>) o1).getKey(), (double) o2);
 
     /**
      * Will also delete the vision measurements that are older than the current time.
@@ -239,19 +292,59 @@ public final class RobotTracker extends AbstractSubsystem {
         resetPosition(pose, gyroSensor.getRotation2d());
     }
 
-    synchronized public void resetPosition(Pose2d pose, Rotation2d gyroAngle) {
+    synchronized public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle) {
         gyroOffset = gyroAngle.unaryMinus().rotateBy(pose.getRotation());
         swerveDriveOdometry.resetPosition(pose, gyroAngle);
     }
 
     /**
-     * Returns the position of the robot on the field.
+     * Returns the last estimated position of the robot on the field.
+     * <p>
+     * This method may have up to 110ms latency. Use {@link RobotTracker#getLatencyCompedPoseMeters} if you need to get the
+     * position at the current time.
      *
      * @return The pose of the robot (x and y are in meters).
      */
-    synchronized public Pose2d getPoseMeters() {
+    public synchronized @NotNull Pose2d getLastEstimatedPoseMeters() {
         return latestEstimatedPose;
     }
+
+    /**
+     * Returns the position of the robot on the field.
+     * <p>
+     * This method returns the position of the robot at the current time. It integrates accelerometer data and gyroscope data to
+     * get the last 100ms of data.
+     *
+     * @return The pose of the robot (x and y are in meters).
+     */
+    public synchronized @NotNull Pose2d getLatencyCompedPoseMeters() {
+        return latencyCompensatedPose;
+    }
+
+    /**
+     * Returns the last calculated velocity of the robot on the field.
+     * <p>
+     * This method may have up to 110ms latency. Use {@link RobotTracker#getLatencyCompedChassisSpeeds} if you need to get the
+     * velocity
+     *
+     * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
+     */
+    public synchronized @NotNull ChassisSpeeds getLastChassisSpeeds() {
+        return latestChassisSpeeds;
+    }
+
+    /**
+     * Returns the current velocity of the robot on the field.
+     * <p>
+     * This method gets uses the last 100ms of data from the accelerometer and gyroscope to calculate the velocity & angular
+     * acceleration.
+     *
+     * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
+     */
+    public synchronized @NotNull ChassisSpeeds getLatencyCompedChassisSpeeds() {
+        return latencyCompensatedChassisSpeeds;
+    }
+
 
     @Override
     public void selfTest() {
@@ -260,9 +353,9 @@ public final class RobotTracker extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        SmartDashboard.putNumber("Robot Pose X", getPoseMeters().getX());
-        SmartDashboard.putNumber("Robot Pose Y", getPoseMeters().getX());
-        SmartDashboard.putNumber("Robot Pose Angle", getPoseMeters().getRotation().getDegrees());
+        SmartDashboard.putNumber("Robot Pose X", getLastEstimatedPoseMeters().getX());
+        SmartDashboard.putNumber("Robot Pose Y", getLastEstimatedPoseMeters().getX());
+        SmartDashboard.putNumber("Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getDegrees());
     }
 
     @Override
@@ -280,6 +373,6 @@ public final class RobotTracker extends AbstractSubsystem {
 
     public void resetGyro() {
         getGyro().reset();
-        swerveDriveOdometry.resetPosition(getPoseMeters(), new Rotation2d(0));
+        swerveDriveOdometry.resetPosition(getLastEstimatedPoseMeters(), new Rotation2d(0));
     }
 }
