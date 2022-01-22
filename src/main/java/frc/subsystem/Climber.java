@@ -127,7 +127,8 @@ public class Climber extends AbstractSubsystem {
                     cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //position when it is considered "unlatched"
                     cl.climberMotor.set(ControlMode.Position, cl.climberMotor.getSelectedSensorPosition(0) + 1000);
                 },
-                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
+                        !cl.elevatorArmContactSwitchA.get() && !cl.elevatorArmContactSwitchB.get(),
                 (cl) -> {}
         ),
 
