@@ -15,6 +15,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private int logInterval;
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
     public String subsystemName;
+    Thread thisThread;
 
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
@@ -47,6 +48,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public void start() {
         signal = ThreadSignal.ALIVE;
+        if (thisThread == null || !thisThread.isAlive()) {
+            thisThread = new Thread(this);
+            thisThread.start();
+        }
     }
 
     /**
@@ -87,6 +92,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 logInterval++;
                 if (logInterval >= loggingInterval) {
                     logData();
+                    pushLog();
                     logInterval = 1;
                 }
             }
