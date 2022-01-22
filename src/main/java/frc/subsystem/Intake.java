@@ -12,13 +12,18 @@ public class Intake extends AbstractSubsystem {
 
     private static Intake instance = new Intake();
 
-    private final Solenoid intakeSol = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.SOLENOID_CHANNEL);
+    private final Solenoid intakeSol;
+    private LazyCANSparkMax intakeMotor;
 
     public static Intake getInstance() {
         return instance;
     }
 
-    private LazyCANSparkMax intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+    private Intake() {
+        super(-1);
+        intakeSol =  new Solenoid(PneumaticsModuleType.CTREPCM, Constants.SOLENOID_CHANNEL);
+        intakeMotor= new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+    }
 
     @Override
     public void selfTest() {
