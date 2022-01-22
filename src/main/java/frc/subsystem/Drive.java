@@ -31,9 +31,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
 
 public final class Drive extends AbstractSubsystem {
 
@@ -195,8 +192,6 @@ public final class Drive extends AbstractSubsystem {
     synchronized public void setTeleop() {
         driveState = DriveState.TELEOP;
     }
-
-    Queue<Double> xQueue = new LinkedList<>();
 
     synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
