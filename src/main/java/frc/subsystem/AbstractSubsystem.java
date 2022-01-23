@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,13 +72,9 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     int lastLength = 20;
 
     public void pushLog() {
-        StringBuilder sb = new StringBuilder((int) (lastLength * 1.5));
-
         for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
-            sb.append(entry.getKey()).append(":").append(entry.getValue()).append("\n");
+            SmartDashboard.putString(entry.getKey(), entry.getValue().toString());
         }
-        lastLength = sb.length();
-        SmartDashboard.putRaw(subsystemName, sb.toString().getBytes(StandardCharsets.ISO_8859_1));
     }
 
     @Override
