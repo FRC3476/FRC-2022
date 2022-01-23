@@ -114,6 +114,7 @@ public class Shooter extends AbstractSubsystem {
 
         double angle = 0;
         if (hoodPositionMode == HoodPositionModes.ABSOLUTE_ENCODER) {
+            // TODO: Figure out where encoder will be placed and convert to correct angle if necessary
             angle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET; // Put in a wrapper method
 
             // Checks if Absolute Encoder is reading outside of expected range
@@ -124,7 +125,6 @@ public class Shooter extends AbstractSubsystem {
         }
         else
         {
-            // TODO: Figure out where encoder will be placed and convert to correct angle if necessary
             angle = hoodRelativeEncoder.getPosition();
         }
         return angle;
@@ -139,6 +139,7 @@ public class Shooter extends AbstractSubsystem {
         // Gets encoder value at start of homing
         double currentPosition = hoodRelativeEncoder.getPosition();
         // Will turn motor towards home switch until home switch is enabled
+        // TODO: Add time limit for loop
         while (homeSwitch.get()) {
             // Will only set to next position when motor has completed last increment
             if (Math.abs(hoodMotor.getEncoder().getVelocity()) > 1.0e-3) {
