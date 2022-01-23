@@ -17,6 +17,7 @@ import frc.utility.controllers.LazyTalonSRX;
 
 
 // TODO: Need to add Blinkin LED for the current states of things
+// TODO: Make javadocs
 public class Shooter extends AbstractSubsystem {
 
     // Talon500 Initialization
@@ -67,7 +68,7 @@ public class Shooter extends AbstractSubsystem {
         ON
     }
 
-    private ShooterState shooterState;
+    private ShooterState shooterState = ShooterState.OFF;
 
     // The target hood angle
     private double desiredHoodAngle;
@@ -139,7 +140,7 @@ public class Shooter extends AbstractSubsystem {
 
     // Gets the hood angle for using the current encoder mode
     public double getHoodAngle() {
-        double hoodAngle = 0;
+        double hoodAngle;
 
         // If using Absolute Encoder
         if (hoodPositionMode == HoodPositionMode.ABSOLUTE_ENCODER) {
@@ -165,28 +166,9 @@ public class Shooter extends AbstractSubsystem {
         return hoodAbsoluteEncoder.getOutput() * 360;
     }
 
-    // Find Home switch
-    // Will turn motor towards home switch until home switch is enabled
+    // Sets ShooterState to HOMING, HOMING will occur in update
     public void homeHood() {
-
-        double currentPosition = 0;
-
-        double startTime = Timer.getFPGATimestamp();
-        double currentTime = startTime;
-
-        while (getHomeSwitchState() == HomeSwitchState.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
-            // Gets current time
-            currentTime = Timer.getFPGATimestamp();
-            // Gets encoder value at start of homing
-            currentPosition = hoodRelativeEncoder.getPosition();
-
-            // Will only set to next position when motor has completed last increment
-            if (Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3) {
-                hoodPID.setReference(currentPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
-                        CANSparkMax.ControlType.kPosition);
-            }
-        }
-        hoodRelativeEncoder.setPosition(90);
+        shooterState = ShooterState.HOMING;
     }
 
     // Toggles between methods to get hood positions
@@ -256,6 +238,14 @@ public class Shooter extends AbstractSubsystem {
                 getShooterRPM() < Math.abs(getDesiredShooterSpeed() + (Constants.ALLOWED_SHOOTER_SPEED_ERROR / 2.0));
     }
 
+    public void turnShooterOFF() {
+        shooterState = ShooterState.OFF;
+    }
+
+    public void turnShooterON() {
+        shooterState = ShooterState.ON;
+    }
+
     @Override
     public void update() {
         // Sets shooter motor to desired shooter speed
@@ -277,6 +267,42 @@ public class Shooter extends AbstractSubsystem {
                 feederWheel.set(ControlMode.PercentOutput, 0);
             }
         }
+
+        // Does homing sequence if state is set to HOMING
+        // Will turn motor towards home switch until home switch is enabled
+        if (shooterState == ShooterState.HOMING) {
+            // currentPosition will be updated after each increment of .1 motor rotations
+            // it will then be used to calculate the next targetPosition by incrementing it by .1
+            double currentPosition;
+
+            // startTime and currentTime will be used to check how long the homing is occurring
+            double startTime = Timer.getFPGATimestamp();
+            double currentTime = startTime;
+
+            while (getHomeSwitchState() == HomeSwitchState.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
+                // Gets current time
+                currentTime = Timer.getFPGATimestamp();
+                // Gets encoder value at start of homing
+                currentPosition = hoodRelativeEncoder.getPosition();
+
+                // Will only set to next position when motor has completed last increment
+                if (Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3) {
+                    hoodPID.setReference(currentPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
+                            CANSparkMax.ControlType.kPosition);
+                }
+            }
+            // Sets the relative encoder reference to the position of the home switch
+            hoodRelativeEncoder.setPosition(90);
+
+            // Changes shooter state back to ON when HOMING is finished
+            turnShooterON();
+        }
+
+        if (shooterState == ShooterState.OFF) {
+            setShooterSpeed(0);
+            disableFeederWheel();
+            setHoodPosition(50);
+        }
     }
 
     @Override
@@ -286,13 +312,12 @@ public class Shooter extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        // TODO: Implement logging
+        logData("Shooter Flywheel Speed", getShooterRPM());
+        logData();
     }
 
     @Override
     public void close() throws Exception {
         // Todo: Implement
     }
-
-    // TODO: Implment shuffleboard connectivity
 }
