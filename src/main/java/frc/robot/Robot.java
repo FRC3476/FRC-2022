@@ -248,6 +248,7 @@ public class Robot extends TimedRobot {
     }
 
     private void startSubsystems() {
+        System.out.println("Starting Subsystems");
         robotTracker.start();
         drive.start();
     }
