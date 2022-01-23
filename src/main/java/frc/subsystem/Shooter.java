@@ -26,6 +26,7 @@ public class Shooter extends AbstractSubsystem {
 
     // 775Pro Initialization
     private LazyTalonSRX feederWheel;
+    private double forceFeederOnTime;
 
     // NEO550 Initialization
     private LazyCANSparkMax hoodMotor;
@@ -39,17 +40,34 @@ public class Shooter extends AbstractSubsystem {
     private DigitalInput homeSwitch;
 
     // Declarations of Modes and States
-    private enum HoodPositionModes {ABSOLUTE_ENCODER, RELATIVE_TO_HOME}
+    public enum HoodPositionMode {ABSOLUTE_ENCODER, RELATIVE_TO_HOME}
 
-    private HoodPositionModes hoodPositionMode;
+    private HoodPositionMode hoodPositionMode;
 
-    private enum HomeSwitchStates {PRESSED, NOT_PRESSED}
+    public enum HomeSwitchState {PRESSED, NOT_PRESSED}
 
-    private HomeSwitchStates homeSwitchState;
+    public enum FeederWheelState {ON, OFF}
 
-    private enum FeederWheelStates {ON, OFF}
+    private FeederWheelState feederWheelState;
 
-    private FeederWheelStates feederWheelState;
+    public enum ShooterState {
+        /**
+         * Will turn off all motors
+         */
+        OFF,
+
+        /**
+         * Shooter is homing the hood
+         */
+        HOMING,
+
+        /**
+         * Flywheel is spinning and getting ready/is ready to shoot
+         */
+        ON
+    }
+
+    private ShooterState shooterState;
 
     // The target hood angle
     private double desiredHoodAngle;
@@ -68,11 +86,13 @@ public class Shooter extends AbstractSubsystem {
         super(Constants.SHOOTER_PERIOD_MS);
 
         // Sets hood position mode, can be either using absolute encoder or be relative to home switch
-        hoodPositionMode = HoodPositionModes.ABSOLUTE_ENCODER;
+        hoodPositionMode = HoodPositionMode.ABSOLUTE_ENCODER;
 
-        // Sets roboRIO IDs to each component
+        // Sets CAN IDs to each component
         shooterWheelMaster = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_MASTER_ID);
         shooterWheelSlave = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_SLAVE_ID);
+        // Sets one of the shooter motors inverted
+        shooterWheelSlave.setInverted(true);
         feederWheel = new LazyTalonSRX(Constants.FEEDER_WHEEL_CAN_ID);
         hoodMotor = new LazyCANSparkMax(Constants.HOOD_MOTOR_CAN_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hoodAbsoluteEncoder = new DutyCycle(new DigitalInput(Constants.HOOD_ENCODER_DIO_ID));
@@ -84,7 +104,6 @@ public class Shooter extends AbstractSubsystem {
     }
 
     private void configPID() {
-
         // Second Falcon Follows Speed Of Main Falcon
         shooterWheelSlave.follow(shooterWheelMaster);
 
@@ -123,7 +142,7 @@ public class Shooter extends AbstractSubsystem {
         double hoodAngle = 0;
 
         // If using Absolute Encoder
-        if (hoodPositionMode == HoodPositionModes.ABSOLUTE_ENCODER) {
+        if (hoodPositionMode == HoodPositionMode.ABSOLUTE_ENCODER) {
             // TODO: Figure out where encoder will be placed and convert to correct angle if necessary
             hoodAngle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET;
 
@@ -155,14 +174,14 @@ public class Shooter extends AbstractSubsystem {
         double startTime = Timer.getFPGATimestamp();
         double currentTime = startTime;
 
-        while (getHomeSwitchState() == HomeSwitchStates.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
+        while (getHomeSwitchState() == HomeSwitchState.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
             // Gets current time
             currentTime = Timer.getFPGATimestamp();
             // Gets encoder value at start of homing
             currentPosition = hoodRelativeEncoder.getPosition();
 
             // Will only set to next position when motor has completed last increment
-            if (Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3) {
+            if (Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3) {
                 hoodPID.setReference(currentPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
                         CANSparkMax.ControlType.kPosition);
             }
@@ -173,48 +192,42 @@ public class Shooter extends AbstractSubsystem {
     // Toggles between methods to get hood positions
     public void toggleHoodPositionMode() {
         // Checks current mode and switches to the alternate mode
-        if (getHoodPositionMode() == HoodPositionModes.ABSOLUTE_ENCODER) {
-            hoodPositionMode = HoodPositionModes.RELATIVE_TO_HOME;
+        if (getHoodPositionMode() == HoodPositionMode.ABSOLUTE_ENCODER) {
+            hoodPositionMode = HoodPositionMode.RELATIVE_TO_HOME;
             homeHood();
         } else {
-            hoodPositionMode = HoodPositionModes.ABSOLUTE_ENCODER;
+            hoodPositionMode = HoodPositionMode.ABSOLUTE_ENCODER;
         }
     }
 
     // Returns if the Hood Position is being obtained through an absolute or relative encoder
-    public HoodPositionModes getHoodPositionMode() {
+    public HoodPositionMode getHoodPositionMode() {
         return hoodPositionMode;
     }
 
     // Sets Speed of Shooter Wheel
-    // TODO: Figure out of input speed needs to be converted to work with gearbox
     public void setShooterSpeed(double desiredShooterSpeed) {
         this.desiredShooterSpeed = desiredShooterSpeed;
     }
 
     // Enables Feeder Wheel
     public void enableFeederWheel() {
-        feederWheelState = FeederWheelStates.ON;
+        feederWheelState = FeederWheelState.ON;
     }
 
     // Disables Feeder Wheel
     public void disableFeederWheel() {
-        feederWheelState = FeederWheelStates.OFF;
+        feederWheelState = FeederWheelState.OFF;
     }
 
     // Gets state of feeder Wheel
-    public FeederWheelStates getFeederWheelState() {
+    public FeederWheelState getFeederWheelState() {
         return feederWheelState;
     }
 
     // Updates the state of home switch and returns the state
-    public HomeSwitchStates getHomeSwitchState() {
-        if (homeSwitch.get()) {
-            homeSwitchState = HomeSwitchStates.PRESSED;
-        } else {
-            homeSwitchState = HomeSwitchStates.NOT_PRESSED;
-        }
-        return homeSwitchState;
+    public HomeSwitchState getHomeSwitchState() {
+        return homeSwitch.get() ? HomeSwitchState.PRESSED : HomeSwitchState.NOT_PRESSED;
     }
 
     public void setHoodPosition(double desiredAngle) {
@@ -229,7 +242,6 @@ public class Shooter extends AbstractSubsystem {
         desiredHoodAngle = desiredAngle;
     }
 
-    // TODO: Make sure this is accurate as motor is going into gearbox
     public double getShooterRPM() {
         // Convert Falcon 500 encoder units for velocity into RPM
         return shooterWheelMaster.getSelectedSensorVelocity() * Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER;
@@ -249,40 +261,38 @@ public class Shooter extends AbstractSubsystem {
         // Sets shooter motor to desired shooter speed
         shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
 
-        // Updates the state of the home switch to PRESSED or NOT_PRESSED
-        if (homeSwitch.get()) {
-            homeSwitchState = HomeSwitchStates.PRESSED;
-        } else {
-            homeSwitchState = HomeSwitchStates.NOT_PRESSED;
-        }
-
         // Sets Motor to travel to desired hood angle
         hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
 
         // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target speed
-        if ((feederWheelState == FeederWheelStates.ON) && Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3 &&
+        if ((feederWheelState == FeederWheelState.ON) && Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3 &&
                 isShooterAtTargetSpeed()) {
 
             // Set Feeder wheel to MAX speed
             feederWheel.set(ControlMode.PercentOutput, 1);
+            forceFeederOnTime = Timer.getFPGATimestamp() + 0.5;
         } else {
             // Turn OFF Feeder Wheel
-            feederWheel.set(ControlMode.PercentOutput, 0);
+            if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                feederWheel.set(ControlMode.PercentOutput, 0);
+            }
         }
     }
 
     @Override
     public void selfTest() {
-
+        // TODO: Implement self test
     }
 
     @Override
     public void logData() {
-
+        // TODO: Implement logging
     }
 
     @Override
     public void close() throws Exception {
-
+        // Todo: Implement
     }
+
+    // TODO: Implment shuffleboard connectivity
 }
