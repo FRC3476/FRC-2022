@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
@@ -10,6 +11,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycle;
 import frc.robot.Constants;
 import frc.utility.controllers.LazyCANSparkMax;
+import frc.utility.controllers.LazyTalonFX;
 import frc.utility.controllers.LazyTalonSRX;
 
 
@@ -17,11 +19,12 @@ import frc.utility.controllers.LazyTalonSRX;
 public class Shooter extends AbstractSubsystem {
 
     // Talon500
-    private LazyTalonSRX shooterWheelMaster;
-    private LazyTalonSRX shooterWheelSlave;
+    private LazyTalonFX shooterWheelMaster;
+    private LazyTalonFX shooterWheelSlave;
 
     // 775Pro
     private LazyTalonSRX feederWheel;
+    private boolean enableFeederWheel;
 
     // NEO550
     private LazyCANSparkMax hoodMotor;
@@ -57,8 +60,8 @@ public class Shooter extends AbstractSubsystem {
         hoodPositionMode = HoodPositionModes.ABSOLUTE_ENCODER;
 
         // Sets roboRIO IDs to each component
-        shooterWheelMaster = new LazyTalonSRX(Constants.SHOOTER_WHEEL_CAN_MASTER_ID);
-        shooterWheelSlave = new LazyTalonSRX(Constants.SHOOTER_WHEEL_CAN_SLAVE_ID);
+        shooterWheelMaster = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_MASTER_ID);
+        shooterWheelSlave = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_SLAVE_ID);
         feederWheel = new LazyTalonSRX(Constants.FEEDER_WHEEL_CAN_ID);
         hoodMotor = new LazyCANSparkMax(Constants.HOOD_MOTOR_CAN_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hoodAbsoluteEncoder = new DutyCycle(new DigitalInput(Constants.HOOD_ENCODER_DIO_ID));
@@ -80,8 +83,9 @@ public class Shooter extends AbstractSubsystem {
         shooterWheelMaster.config_kD(0, Constants.SHOOTER_D, Constants.SHOOTER_PID_TIMEOUT_MS);
         shooterWheelMaster.config_kF(0, Constants.SHOOTER_F, Constants.SHOOTER_PID_TIMEOUT_MS);
         shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE, Constants.SHOOTER_PID_TIMEOUT_MS);
-        shooterWheelMaster.enableCurrentLimit(true);
-        shooterWheelMaster.configContinuousCurrentLimit(Constants.SHOOTER_CURRENT_LIMIT_AMPS);
+
+        shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
+                Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
 
 
         // This PID setup for 775pro will not be used
@@ -90,14 +94,15 @@ public class Shooter extends AbstractSubsystem {
         feederWheel.config_kD(0, Constants.FEEDER_D, Constants.SHOOTER_PID_TIMEOUT_MS);
         feederWheel.config_kF(0, Constants.FEEDER_F, Constants.SHOOTER_PID_TIMEOUT_MS);
         feederWheel.config_IntegralZone(0, Constants.FEEDER_I_ZONE, Constants.SHOOTER_PID_TIMEOUT_MS);
-        feederWheel.enableCurrentLimit(true);
-        feederWheel.configContinuousCurrentLimit(Constants.FEEDER_CURRENT_LIMIT_AMPS);
+
+        shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.FEEDER_CURRENT_LIMIT,
+                Constants.FEEDER_TRIGGER_THRESHOLD_CURRENT, Constants.FEEDER_TRIGGER_THRESHOLD_TIME));
 
         hoodPID = hoodMotor.getPIDController();
         hoodPID.setP(Constants.HOOD_P, 0);
-        hoodPID.setI(Constants.HOOD_I,0);
-        hoodPID.setD(Constants.HOOD_D,0);
-        hoodPID.setFF(Constants.HOOD_F,0);
+        hoodPID.setI(Constants.HOOD_I, 0);
+        hoodPID.setD(Constants.HOOD_D, 0);
+        hoodPID.setFF(Constants.HOOD_F, 0);
         hoodPID.setIZone(Constants.HOOD_I_ZONE);
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
     }
@@ -163,11 +168,11 @@ public class Shooter extends AbstractSubsystem {
 
     // TODO: Feeder wheel needs to check if hood is at proper position and wheel is at desired speed
     private void enableFeederWheel() {
-        feederWheel.set(ControlMode.PercentOutput, 1);
+        enableFeederWheel = true;
     }
 
     private void disableFeederWheel() {
-        feederWheel.set(ControlMode.PercentOutput, 0);
+        enableFeederWheel = false;
     }
 
     private void setHoodPosition(double desiredAngle) {
@@ -182,9 +187,21 @@ public class Shooter extends AbstractSubsystem {
         desiredHoodAngle = desiredAngle;
     }
 
+    public double getShooterRPM() {
+        // Convert Falcon 500 encoder units for velocity into RPM
+        return shooterWheelMaster.getSelectedSensorVelocity() * Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER;
+    }
+
     @Override
     public void update() {
         hoodPID.setReference((desiredHoodAngle - getHoodPosition()), CANSparkMax.ControlType.kPosition);
+
+        // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target speed
+        if (enableFeederWheel && Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3 &&) {
+            feederWheel.set(ControlMode.PercentOutput, 1);
+        } else {
+            feederWheel.set(ControlMode.PercentOutput, 0);
+        }
     }
 
     @Override

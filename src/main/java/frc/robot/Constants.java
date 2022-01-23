@@ -118,39 +118,48 @@ public final class Constants {
     public static final int HOOD_ENCODER_DIO_ID = 0;
     public static final int HOOD_HOME_SWITCH_DIO_ID = 0;
 
-    // Shooter PID
+    // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
 
     public static final int SHOOTER_PID_TIMEOUT_MS = 10;
 
-    public static final int SHOOTER_P = 0;
-    public static final int SHOOTER_I = 0;
-    public static final int SHOOTER_D = 0;
-    public static final int SHOOTER_F = 0;
-    public static final int SHOOTER_I_ZONE = 0;
-    public static final int SHOOTER_CURRENT_LIMIT_AMPS = 0;
+    public static final double SHOOTER_P = 0;
+    public static final double SHOOTER_I = 0;
+    public static final double SHOOTER_D = 0;
+    public static final double SHOOTER_F = 0;
+    public static final double SHOOTER_I_ZONE = 0;
 
-    public static final int FEEDER_P = 0;
-    public static final int FEEDER_I = 0;
-    public static final int FEEDER_D = 0;
-    public static final int FEEDER_F = 0;
-    public static final int FEEDER_I_ZONE = 0;
-    public static final int FEEDER_CURRENT_LIMIT_AMPS = 0;
+    public static final double SHOOTER_CURRENT_LIMIT = 0;
+    public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 0;
+    public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;
 
-    public static final int HOOD_P = 0;
-    public static final int HOOD_I = 0;
-    public static final int HOOD_D = 0;
-    public static final int HOOD_F = 0;
-    public static final int HOOD_I_ZONE = 0;
+
+    // 2048 is Sensor Units Per Revolution
+    // 600 Converts From Time of 100ms to 1 minute
+    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600 / 2048;
+
+
+    public static final double FEEDER_P = 0;
+    public static final double FEEDER_I = 0;
+    public static final double FEEDER_D = 0;
+    public static final double FEEDER_F = 0;
+    public static final double FEEDER_I_ZONE = 0;
+
+    public static final double FEEDER_CURRENT_LIMIT = 0;
+    public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 0;
+    public static final double FEEDER_TRIGGER_THRESHOLD_TIME = 0;
+
+    public static final double HOOD_P = 0;
+    public static final double HOOD_I = 0;
+    public static final double HOOD_D = 0;
+    public static final double HOOD_F = 0;
+    public static final double HOOD_I_ZONE = 0;
+
     public static final int HOOD_CURRENT_LIMIT_AMPS = 0;
 
     // Hood Constants
 
-    public static final int HOOD_ABSOLUTE_ENCODER_OFFSET = 0;
+    public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0;
     public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
-
-
-
-
 }
