@@ -134,7 +134,7 @@ public final class Constants {
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 0;
     public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;
 
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR 20;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR = 20;
 
     // 2048 is Sensor Units Per Revolution
     // 600 Converts From Time of 100ms to 1 minute
