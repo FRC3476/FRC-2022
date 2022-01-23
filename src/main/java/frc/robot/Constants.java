@@ -108,5 +108,6 @@ public final class Constants {
 
     // Intake Constants TODO: Need To Set
     public static final int SOLENOID_CHANNEL = 0;
-    public static final int INTAKE_MOTOR_DEVICE_ID = 1;
+    public static final int INTAKE_MOTOR_DEVICE_ID = 40;
+    public static final double INTAKE_MOTOR_SPEED = 1.0;
 }
