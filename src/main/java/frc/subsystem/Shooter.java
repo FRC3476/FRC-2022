@@ -124,6 +124,7 @@ public class Shooter extends AbstractSubsystem {
         }
         else
         {
+            // TODO: Figure out where encoder will be placed and convert to correct angle if necessary
             angle = hoodRelativeEncoder.getPosition();
         }
         return angle;
