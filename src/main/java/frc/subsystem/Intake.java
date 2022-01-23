@@ -77,12 +77,12 @@ public class Intake extends AbstractSubsystem {
             switch(intakeState) {
                 case INTAKE:
                     setIntakeSolState(IntakeSolState.OPEN);
-                    intakeMotor.set(0.6);
+                    intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
                     break;
 
                 case EJECT:
                     setIntakeSolState(IntakeSolState.OPEN);
-                    intakeMotor.set(-0.6);
+                    intakeMotor.set(-Constants.INTAKE_MOTOR_SPEED);
                     break;
 
                 case OFF:

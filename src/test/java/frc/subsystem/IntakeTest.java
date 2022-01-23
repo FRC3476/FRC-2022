@@ -53,6 +53,18 @@ class IntakeTest {
         intakeMotorField.setAccessible(true);
         LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
 
+        assertEquals(-Constants.INTAKE_MOTOR_SPEED, intakeMotor.get(), DELTA);
+    }
+
+    @Test
+    public void intakeDoesRunsWhenOpen() throws Exception{
+        intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
+        intake.setIntakeState(Intake.IntakeState.INTAKE);
+
+        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
+        intakeMotorField.setAccessible(true);
+        LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
+
         assertEquals(Constants.INTAKE_MOTOR_SPEED, intakeMotor.get(), DELTA);
     }
 }
