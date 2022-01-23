@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
+import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 
 public class Intake extends AbstractSubsystem {
@@ -15,13 +16,15 @@ public class Intake extends AbstractSubsystem {
     private final Solenoid intakeSol;
     private LazyCANSparkMax intakeMotor;
 
+    private double allowIntakeRunTime = 0;
+
     public static Intake getInstance() {
         return instance;
     }
 
     private Intake() {
-        super(-1);
-        intakeSol =  new Solenoid(PneumaticsModuleType.CTREPCM, Constants.SOLENOID_CHANNEL);
+        super(100);
+        intakeSol = new Solenoid(PneumaticsModuleType.REVPH, Constants.SOLENOID_CHANNEL);
         intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
     }
 
@@ -49,6 +52,9 @@ public class Intake extends AbstractSubsystem {
         instance = new Intake();
     }
 
+    public IntakeSolState getIntakeSolState() {
+        return intakeSol.get() ? IntakeSolState.OPEN : IntakeSolState.CLOSE;
+    }
 
     // Intake States
 
@@ -59,6 +65,9 @@ public class Intake extends AbstractSubsystem {
     public void setIntakeSolState(IntakeSolState intakeSolState) {
         switch (intakeSolState) {
             case OPEN:
+                if (getIntakeSolState() == IntakeSolState.CLOSE) {
+                    allowIntakeRunTime = Timer.getFPGATimestamp() + Constants.INTAKE_OPEN_TIME;
+                }
                 intakeSol.set(true);
                 break;
             case CLOSE:
@@ -69,27 +78,35 @@ public class Intake extends AbstractSubsystem {
     enum IntakeState {
         INTAKE, EJECT, OFF
     }
-    public void setIntakeState(IntakeState intakeState) {
-        if (intakeSol.get()) {
-            switch(intakeState) {
-                case INTAKE:
-                    setIntakeSolState(IntakeSolState.OPEN);
-                    intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
-                    break;
 
-                case EJECT:
-                    setIntakeSolState(IntakeSolState.OPEN);
-                    intakeMotor.set(-Constants.INTAKE_MOTOR_SPEED);
-                    break;
+    IntakeState wantedIntakeState = IntakeState.OFF;
 
-                case OFF:
-                    setIntakeSolState(IntakeSolState.CLOSE);
-                    intakeMotor.set(0);
-                    break;
-            }
-        } else {
-            intakeMotor.set(0);
+    public void setWantedIntakeState(IntakeState intakeState) {
+        wantedIntakeState = intakeState;
+    }
+
+    private void setIntakeState(IntakeState intakeState) {
+        switch (intakeState) {
+            case INTAKE:
+                intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
+                break;
+
+            case EJECT:
+                intakeMotor.set(-Constants.INTAKE_MOTOR_SPEED);
+                break;
+
+            case OFF:
+                intakeMotor.set(0);
+                break;
         }
+    }
 
+    @Override
+    public void update() {
+        if (Timer.getFPGATimestamp() > allowIntakeRunTime && getIntakeSolState() == IntakeSolState.OPEN) {
+            setIntakeState(wantedIntakeState);
+        } else {
+            setIntakeState(IntakeState.OFF);
+        }
     }
 }

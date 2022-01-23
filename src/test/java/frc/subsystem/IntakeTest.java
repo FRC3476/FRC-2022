@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import frc.robot.Constants;
+import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,9 +22,13 @@ class IntakeTest {
     }
 
     @Test
-    public void intakeDoesNotRunWhenClosed() throws Exception{
+    public void intakeDoesNotRunWhenClosed() throws Exception {
+        Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
-        intake.setIntakeState(Intake.IntakeState.INTAKE);
+        intake.update();
+        Timer.setTime(0.5);
+        intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
+        intake.update();
 
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
         intakeMotorField.setAccessible(true);
@@ -33,10 +38,13 @@ class IntakeTest {
     }
 
     @Test
-    public void intakeDoesNotRunReversedWhenClosed() throws Exception{
+    public void intakeDoesNotRunReversedWhenClosed() throws Exception {
+        Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
-        intake.setIntakeState(Intake.IntakeState.EJECT);
-
+        intake.update();
+        Timer.setTime(0.5);
+        intake.setWantedIntakeState(Intake.IntakeState.EJECT);
+        intake.update();
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
         intakeMotorField.setAccessible(true);
         LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
@@ -45,9 +53,13 @@ class IntakeTest {
     }
 
     @Test
-    public void intakeDoesRunsReversedWhenOpen() throws Exception{
+    public void intakeDoesRunReversedWhenOpen() throws Exception {
+        Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
-        intake.setIntakeState(Intake.IntakeState.EJECT);
+        intake.update();
+        Timer.setTime(0.5);
+        intake.setWantedIntakeState(Intake.IntakeState.EJECT);
+        intake.update();
 
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
         intakeMotorField.setAccessible(true);
@@ -57,9 +69,13 @@ class IntakeTest {
     }
 
     @Test
-    public void intakeDoesRunsWhenOpen() throws Exception{
+    public void intakeDoesRunWhenOpen() throws Exception {
+        Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
-        intake.setIntakeState(Intake.IntakeState.INTAKE);
+        intake.update();
+        Timer.setTime(0.5);
+        intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
+        intake.update();
 
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
         intakeMotorField.setAccessible(true);

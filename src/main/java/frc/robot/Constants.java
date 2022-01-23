@@ -110,4 +110,5 @@ public final class Constants {
     public static final int SOLENOID_CHANNEL = 0;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = 1.0;
+    public static final double INTAKE_OPEN_TIME = 0.3;
 }
