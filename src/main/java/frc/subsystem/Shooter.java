@@ -24,7 +24,7 @@ public class Shooter extends AbstractSubsystem {
 
     // 775Pro
     private LazyTalonSRX feederWheel;
-    private boolean enableFeederWheel;
+    private boolean feederWheelState;
 
     // NEO550
     private LazyCANSparkMax hoodMotor;
@@ -135,14 +135,18 @@ public class Shooter extends AbstractSubsystem {
     }
 
     // Find Home switch
+    // Will turn motor towards home switch until home switch is enabled
     public void homeHood() {
-        // Gets encoder value at start of homing
-        double currentPosition = hoodRelativeEncoder.getPosition();
-        // Will turn motor towards home switch until home switch is enabled
+
+        double currentPosition = 0;
+
         // TODO: Add time limit for loop
-        while (homeSwitch.get()) {
+        while (homeSwitch.get() == false) {
+            // Gets encoder value at start of homing
+            currentPosition = hoodRelativeEncoder.getPosition();
+
             // Will only set to next position when motor has completed last increment
-            if (Math.abs(hoodMotor.getEncoder().getVelocity()) > 1.0e-3) {
+            if (Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3) {
                 hoodPID.setReference(currentPosition + .1, CANSparkMax.ControlType.kPosition);
             }
         }
@@ -169,17 +173,12 @@ public class Shooter extends AbstractSubsystem {
     }
 
     // TODO: Feeder wheel needs to check if hood is at proper position and wheel is at desired speed
-    private void enableFeederWheel() {
-        enableFeederWheel = true;
-    }
-
-    private void disableFeederWheel() {
-        enableFeederWheel = false;
+    private void setFeederWheelState(boolean state) {
+        feederWheelState = state;
     }
 
     private void setHoodPosition(double desiredAngle) {
-        // Finds difference between desired angle and actual angle and sets motor to travel that amount 
-        // Checks to make sure that hood angle does not get set past maximum allowed value
+        // Preform Bounds checking between MAX and MIN range
         if (desiredAngle < 50) {
             desiredAngle = 50;
         }
@@ -196,12 +195,15 @@ public class Shooter extends AbstractSubsystem {
 
     @Override
     public void update() {
+        // Set hood to desired position
         hoodPID.setReference((desiredHoodAngle - getHoodPosition()), CANSparkMax.ControlType.kPosition);
 
         // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target speed
-        if (enableFeederWheel && Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3 &&) {
+        if ((feederWheelState == true) && Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3 &&) {
+            // Set Feeder wheel to MAX speed
             feederWheel.set(ControlMode.PercentOutput, 1);
         } else {
+            // Turn OFF Feeder Wheel
             feederWheel.set(ControlMode.PercentOutput, 0);
         }
     }
