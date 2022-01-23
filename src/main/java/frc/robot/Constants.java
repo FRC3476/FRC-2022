@@ -134,6 +134,7 @@ public final class Constants {
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 0;
     public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;
 
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR 20;
 
     // 2048 is Sensor Units Per Revolution
     // 600 Converts From Time of 100ms to 1 minute
@@ -160,7 +161,7 @@ public final class Constants {
 
     // Hood Constants
 
-    public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0;
+    public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0; // TODO: Find proper offset
     public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
     public static final double MAX_HOMING_TIME_S = 45;
     // Higher precision equates to slower homing

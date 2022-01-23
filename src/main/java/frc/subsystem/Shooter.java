@@ -19,29 +19,39 @@ import frc.utility.controllers.LazyTalonSRX;
 // TODO: Need to add Blinkin LED for the current states of things
 public class Shooter extends AbstractSubsystem {
 
-    // Talon500
+    // Talon500 Initialization
     private LazyTalonFX shooterWheelMaster;
     private LazyTalonFX shooterWheelSlave;
+    private double desiredShooterSpeed;
 
-    // 775Pro
+    // 775Pro Initialization
     private LazyTalonSRX feederWheel;
-    private boolean feederWheelState;
 
-    // NEO550
+    // NEO550 Initialization
     private LazyCANSparkMax hoodMotor;
     private SparkMaxPIDController hoodPID;
     private RelativeEncoder hoodRelativeEncoder;
 
-    // REV Through Bore Encoder
+    // REV Through Bore Encoder Initialization
     private DutyCycle hoodAbsoluteEncoder;
 
-    // Home Switch
+    // Home Switch Initialization
     private DigitalInput homeSwitch;
 
+    // Declarations of Modes and States
     private enum HoodPositionModes {ABSOLUTE_ENCODER, RELATIVE_TO_HOME}
 
     private HoodPositionModes hoodPositionMode;
 
+    private enum HomeSwitchStates {PRESSED, NOT_PRESSED}
+
+    private HomeSwitchStates homeSwitchState;
+
+    private enum FeederWheelStates {ON, OFF}
+
+    private FeederWheelStates feederWheelState;
+
+    // The target hood angle
     private double desiredHoodAngle;
 
     // Singleton Setup
@@ -108,27 +118,28 @@ public class Shooter extends AbstractSubsystem {
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
     }
 
+    // Gets the hood angle for using the current encoder mode
+    public double getHoodAngle() {
+        double hoodAngle = 0;
 
-    // TODO: May have to add an offset for the encoder if 0 degrees is not on the 90 degree from horizontal
-    // angle should be between 0 and 40 representing the 90 and 50 degree of the horizontal
-    private double getHoodPosition() {
-
-        double angle = 0;
+        // If using Absolute Encoder
         if (hoodPositionMode == HoodPositionModes.ABSOLUTE_ENCODER) {
             // TODO: Figure out where encoder will be placed and convert to correct angle if necessary
-            angle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET; // Put in a wrapper method
+            hoodAngle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET;
 
             // Checks if Absolute Encoder is reading outside of expected range
-            if (angle > 90.5 || angle < 49.5) {
+            if (hoodAngle > 90.5 || hoodAngle < 49.5) {
                 DriverStation.reportWarning("Hood position reading values over MAX expected.\n" +
                         "Should switch to home relative", false);
             }
         }
-        else
-        {
-            angle = hoodRelativeEncoder.getPosition();
+
+        // If using Relative Encoder
+        else {
+            hoodAngle = hoodRelativeEncoder.getPosition();
         }
-        return angle;
+
+        return hoodAngle;
     }
 
     private double getHoodAbsoluteEncoderValue() {
@@ -144,8 +155,7 @@ public class Shooter extends AbstractSubsystem {
         double startTime = Timer.getFPGATimestamp();
         double currentTime = startTime;
 
-
-        while (homeSwitch.get() == false && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
+        while (getHomeSwitchState() == HomeSwitchStates.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
             // Gets current time
             currentTime = Timer.getFPGATimestamp();
             // Gets encoder value at start of homing
@@ -162,7 +172,7 @@ public class Shooter extends AbstractSubsystem {
 
     // Toggles between methods to get hood positions
     public void toggleHoodPositionMode() {
-        // Checks current Hood position mode to tell which to switch to
+        // Checks current mode and switches to the alternate mode
         if (getHoodPositionMode() == HoodPositionModes.ABSOLUTE_ENCODER) {
             hoodPositionMode = HoodPositionModes.RELATIVE_TO_HOME;
             homeHood();
@@ -171,42 +181,88 @@ public class Shooter extends AbstractSubsystem {
         }
     }
 
+    // Returns if the Hood Position is being obtained through an absolute or relative encoder
     public HoodPositionModes getHoodPositionMode() {
         return hoodPositionMode;
     }
 
-    private void setShooterSpeed(double speed) {
-        shooterWheelMaster.set(ControlMode.Velocity, speed);
+    // Sets Speed of Shooter Wheel
+    // TODO: Figure out of input speed needs to be converted to work with gearbox
+    public void setShooterSpeed(double desiredShooterSpeed) {
+        this.desiredShooterSpeed = desiredShooterSpeed;
     }
 
-    // TODO: Feeder wheel needs to check if hood is at proper position and wheel is at desired speed
-    private void setFeederWheelState(boolean state) {
-        feederWheelState = state;
+    // Enables Feeder Wheel
+    public void enableFeederWheel() {
+        feederWheelState = FeederWheelStates.ON;
     }
 
-    private void setHoodPosition(double desiredAngle) {
+    // Disables Feeder Wheel
+    public void disableFeederWheel() {
+        feederWheelState = FeederWheelStates.OFF;
+    }
+
+    // Gets state of feeder Wheel
+    public FeederWheelStates getFeederWheelState() {
+        return feederWheelState;
+    }
+
+    // Updates the state of home switch and returns the state
+    public HomeSwitchStates getHomeSwitchState() {
+        if (homeSwitch.get()) {
+            homeSwitchState = HomeSwitchStates.PRESSED;
+        } else {
+            homeSwitchState = HomeSwitchStates.NOT_PRESSED;
+        }
+        return homeSwitchState;
+    }
+
+    public void setHoodPosition(double desiredAngle) {
         // Preform Bounds checking between MAX and MIN range
         if (desiredAngle < 50) {
             desiredAngle = 50;
         }
+
         if (desiredAngle > 90) {
             desiredAngle = 90;
         }
         desiredHoodAngle = desiredAngle;
     }
 
+    // TODO: Make sure this is accurate as motor is going into gearbox
     public double getShooterRPM() {
         // Convert Falcon 500 encoder units for velocity into RPM
         return shooterWheelMaster.getSelectedSensorVelocity() * Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER;
     }
 
+    public double getDesiredShooterSpeed() {
+        return desiredShooterSpeed;
+    }
+
+    public boolean isShooterAtTargetSpeed() {
+        return getShooterRPM() > Math.abs(getDesiredShooterSpeed() - (Constants.ALLOWED_SHOOTER_SPEED_ERROR / 2.0)) &&
+                getShooterRPM() < Math.abs(getDesiredShooterSpeed() + (Constants.ALLOWED_SHOOTER_SPEED_ERROR / 2.0));
+    }
+
     @Override
     public void update() {
-        // Set hood to desired position
-        hoodPID.setReference((desiredHoodAngle - getHoodPosition()), CANSparkMax.ControlType.kPosition);
+        // Sets shooter motor to desired shooter speed
+        shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
+
+        // Updates the state of the home switch to PRESSED or NOT_PRESSED
+        if (homeSwitch.get()) {
+            homeSwitchState = HomeSwitchStates.PRESSED;
+        } else {
+            homeSwitchState = HomeSwitchStates.NOT_PRESSED;
+        }
+
+        // Sets Motor to travel to desired hood angle
+        hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
 
         // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target speed
-        if ((feederWheelState == true) && Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3 &&) {
+        if ((feederWheelState == FeederWheelStates.ON) && Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3 &&
+                isShooterAtTargetSpeed()) {
+
             // Set Feeder wheel to MAX speed
             feederWheel.set(ControlMode.PercentOutput, 1);
         } else {
