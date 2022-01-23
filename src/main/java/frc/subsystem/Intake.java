@@ -37,13 +37,10 @@ public class Intake extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        //SmartDashboard.putNumber("Motor speed: ", intakeMotor.get());
-        logData("Motor speed: ",  intakeMotor.get() );
+        SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotor.get());
+        SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
     }
 
-    public void logData(String k, double v) {
-        SmartDashboard.putNumber(k, v);
-    }
 
     @Override
     public void close() throws Exception {
