@@ -162,4 +162,7 @@ public final class Constants {
 
     public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0;
     public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
+    public static final double MAX_HOMING_TIME_S = 45;
+    // Higher precision equates to slower homing
+    public static final double HOMING_PRECISION_IN_MOTOR_ROTATIONS = .1;
 }

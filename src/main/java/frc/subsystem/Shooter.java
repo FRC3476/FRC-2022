@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycle;
 import frc.robot.Constants;
+import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.controllers.LazyTalonSRX;
@@ -140,14 +141,20 @@ public class Shooter extends AbstractSubsystem {
 
         double currentPosition = 0;
 
-        // TODO: Add time limit for loop
-        while (homeSwitch.get() == false) {
+        double startTime = Timer.getFPGATimestamp();
+        double currentTime = startTime;
+
+
+        while (homeSwitch.get() == false && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
+            // Gets current time
+            currentTime = Timer.getFPGATimestamp();
             // Gets encoder value at start of homing
             currentPosition = hoodRelativeEncoder.getPosition();
 
             // Will only set to next position when motor has completed last increment
             if (Math.abs(hoodMotor.getEncoder().getVelocity()) < 1.0e-3) {
-                hoodPID.setReference(currentPosition + .1, CANSparkMax.ControlType.kPosition);
+                hoodPID.setReference(currentPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
+                        CANSparkMax.ControlType.kPosition);
             }
         }
         hoodRelativeEncoder.setPosition(90);
