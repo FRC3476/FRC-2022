@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,14 +71,26 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     int lastLength = 20;
 
-    public void pushLog() {
-        StringBuilder sb = new StringBuilder((int) (lastLength * 1.5));
 
+    public void pushLog() {
         for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
-            sb.append(entry.getKey()).append(":").append(entry.getValue()).append("\n");
+            Object obj = entry.getValue();
+            Class<?> cl = obj.getClass();
+
+            //@formatter:off
+            if (cl.equals(Integer.class)) SmartDashboard.putNumber(entry.getKey(), (int) obj);
+            else if(cl.equals(Double.class)) SmartDashboard.putNumber(entry.getKey(), (double) obj);
+            else if(cl.equals(Short.class)) SmartDashboard.putNumber(entry.getKey(), (short) obj);
+            else if(cl.equals(Long.class)) SmartDashboard.putNumber(entry.getKey(), (long) obj);
+            else if(cl.equals(Float.class)) SmartDashboard.putNumber(entry.getKey(), (float) obj);
+            else if (cl.equals(Byte.class)) SmartDashboard.putNumber(entry.getKey(), (byte) obj);
+            else if(cl.equals(Boolean.class)) SmartDashboard.putBoolean(entry.getKey(), (boolean) obj);
+            else if(cl.equals(String.class)) SmartDashboard.putString(entry.getKey(), (String) obj);
+            else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(entry.getKey(), (Double[]) obj);
+            else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(entry.getKey(), (Boolean[]) obj);
+            else if (cl.equals(String[].class)) SmartDashboard.putStringArray(entry.getKey(), (String[]) obj);
+            //@formatter:on
         }
-        lastLength = sb.length();
-        SmartDashboard.putRaw(subsystemName, sb.toString().getBytes(StandardCharsets.ISO_8859_1));
     }
 
     @Override

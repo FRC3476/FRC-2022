@@ -113,4 +113,11 @@ public final class Constants {
     public static final int HOPPER_PERIOD = 200;
     public static final double HOPPER_SPEED = 1;
     public static final int HOPPER_MOTOR_ID = 30;
+
+    
+    // Intake Constants TODO: Need To Set
+    public static final int SOLENOID_CHANNEL = 0;
+    public static final int INTAKE_MOTOR_DEVICE_ID = 40;
+    public static final double INTAKE_MOTOR_SPEED = 1.0;
+    public static final double INTAKE_OPEN_TIME = 0.3;
 }
