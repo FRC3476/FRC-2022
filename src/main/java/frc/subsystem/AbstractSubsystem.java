@@ -1,7 +1,11 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
@@ -10,6 +14,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private int logInterval;
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
     public String subsystemName;
+    Thread thisThread;
 
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
@@ -42,6 +47,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public void start() {
         signal = ThreadSignal.ALIVE;
+        if (thisThread == null || !thisThread.isAlive()) {
+            thisThread = new Thread(this);
+            thisThread.start();
+        }
     }
 
     /**
@@ -50,6 +59,38 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
      */
     public void update() {
 
+    }
+
+    private final Map<String, Object> logDataMap = new HashMap<>();
+
+
+    public void logData(String key, Object value) {
+        //SmartDashboard.putString(key, value.toString());
+        logDataMap.put(key, value);
+    }
+
+    int lastLength = 20;
+
+
+    public void pushLog() {
+        for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
+            Object obj = entry.getValue();
+            Class<?> cl = obj.getClass();
+
+            //@formatter:off
+            if (cl.equals(Integer.class)) SmartDashboard.putNumber(entry.getKey(), (int) obj);
+            else if (cl.equals(Double.class)) SmartDashboard.putNumber(entry.getKey(), (double) obj);
+            else if (cl.equals(Short.class)) SmartDashboard.putNumber(entry.getKey(), (short) obj);
+            else if (cl.equals(Long.class)) SmartDashboard.putNumber(entry.getKey(), (long) obj);
+            else if (cl.equals(Float.class)) SmartDashboard.putNumber(entry.getKey(), (float) obj);
+            else if (cl.equals(Byte.class)) SmartDashboard.putNumber(entry.getKey(), (byte) obj);
+            else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(entry.getKey(), (boolean) obj);
+            else if (cl.equals(String.class)) SmartDashboard.putString(entry.getKey(), (String) obj);
+            else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(entry.getKey(), (Double[]) obj);
+            else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(entry.getKey(), (Boolean[]) obj);
+            else if (cl.equals(String[].class)) SmartDashboard.putStringArray(entry.getKey(), (String[]) obj);
+            //@formatter:on
+        }
     }
 
     @Override
@@ -62,6 +103,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 logInterval++;
                 if (logInterval >= loggingInterval) {
                     logData();
+                    pushLog();
                     logInterval = 1;
                 }
             }

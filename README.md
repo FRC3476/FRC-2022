@@ -8,3 +8,4 @@ Code Orange's Code for the 2022 season
 - Aditya Rawat
 - Harry Wang
 - Matthew Kasper
+- Badrish Ananth
