@@ -109,6 +109,7 @@ public final class Constants {
     // Shooter Constants
 
    public static final int SHOOTER_PERIOD_MS = 20;
+    public static final int SHOOTER_LOGGING_PERIOD_MS = 60;
 
     public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 0; // TODO: Get actual CAN ID for all shooter components
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 0;

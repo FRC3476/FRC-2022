@@ -84,7 +84,7 @@ public class Shooter extends AbstractSubsystem {
     private Shooter() {
         // TODO: May have to invert direction of motors
         // Sets update method's iteration
-        super(Constants.SHOOTER_PERIOD_MS);
+        super(Constants.SHOOTER_PERIOD_MS, Constants.SHOOTER_LOGGING_PERIOD_MS);
 
         // Sets hood position mode, can be either using absolute encoder or be relative to home switch
         hoodPositionMode = HoodPositionMode.ABSOLUTE_ENCODER;
@@ -261,6 +261,10 @@ public class Shooter extends AbstractSubsystem {
         return desiredHoodAngle;
     }
 
+    public ShooterState getShooterState() {
+        return shooterState;
+    }
+
     @Override
     public void update() {
         // Sets shooter motor to desired shooter speed
@@ -346,7 +350,15 @@ public class Shooter extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Shooter Flywheel Speed", getShooterRPM());
-        logData();
+        logData("Hood Angle", getHoodAngle());
+        logData("Desired Shooter Speed", getDesiredShooterSpeed());
+        logData("Desired Hood Angle", getDesiredHoodAngle());
+        logData("Feeder Wheel State", getFeederWheelState());
+        logData("Home Switch State", getHomeSwitchState());
+        logData("Hood Positioning Mode", getHoodPositionMode());
+        logData("Is Hood at Target Angle?", isHoodAtTargetAngle());
+        logData("Is Shooter at Target Speed?", isShooterAtTargetSpeed());
+        logData("Shooter State", getShooterState());
     }
 
     @Override
