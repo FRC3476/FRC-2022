@@ -13,6 +13,7 @@ import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.utility.geometry.MutableTranslation2d;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -157,15 +158,14 @@ public final class RobotTracker extends AbstractSubsystem {
                 this.currentOdometryTime = currentOdometryTime;
             }
 
+            //@formatter:off
             Pose2d latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
 
-            ChassisSpeeds latestChassisSpeeds =
-                    getRotatedSpeeds(drive.getSwerveDriveKinematics().toChassisSpeeds(swerveModuleStates),
-                            latestEstimatedPose.getRotation());
+            ChassisSpeeds latestChassisSpeeds = getRotatedSpeeds(drive.getSwerveDriveKinematics().toChassisSpeeds(swerveModuleStates),
+                    latestEstimatedPose.getRotation());
+            final MutableTranslation2d velocity = new MutableTranslation2d(latestChassisSpeeds.vxMetersPerSecond, latestChassisSpeeds.vyMetersPerSecond);
+            final MutableTranslation2d latencyCompensatedTranslation = new MutableTranslation2d(latestEstimatedPose.getTranslation());
 
-            Translation2d velocity = new Translation2d(latestChassisSpeeds.vxMetersPerSecond,
-                    latestChassisSpeeds.vyMetersPerSecond);
-            Translation2d latencyCompensatedTranslation = latestEstimatedPose.getTranslation();
             Rotation2d gyroOffset = latestEstimatedPose.getRotation().minus(currentGyroRotation);
 
             for (int i = previousAccelerometerData.size() - 1; i >= 0; i--) {
@@ -174,16 +174,18 @@ public final class RobotTracker extends AbstractSubsystem {
                 } else {
                     // Use accelerometer to calculate the current pose
                     double dt;
+                    Translation2d acceleration;
                     if (previousAccelerometerData.size() > i + 1) {
-                        dt = previousAccelerometerData.get(i).getKey() -
-                                previousAccelerometerData.get(i - 1).getKey();
+                        dt = previousAccelerometerData.get(i).getKey() - previousAccelerometerData.get(i - 1).getKey();
+                        acceleration = previousAccelerometerData.get(i).getValue().plus(previousAccelerometerData.get(i - 1).getValue()).times(0.5)
+                                .rotateBy(previousGyroRotations.get(i).getValue().rotateBy(previousGyroRotations.get(i+1).getValue()).times(0.5));
                     } else {
                         dt = previousAccelerometerData.get(i).getKey() - currentOdometryTime;
+                        acceleration = previousAccelerometerData.get(i).getValue();
                     }
-                    latencyCompensatedTranslation = latencyCompensatedTranslation.plus(velocity.times(dt));
-                    previousAccelerometerData.get(i).getValue().times(dt)
-                            .rotateBy(previousGyroRotations.get(i).getValue().rotateBy(gyroOffset));
-                    velocity = velocity.plus(previousAccelerometerData.get(i).getValue().times(dt));
+                    latencyCompensatedTranslation.plus(velocity.times(dt));
+                    velocity.plus(acceleration.times(dt));
+                    //@formatter:on
                 }
             }
 
@@ -191,8 +193,9 @@ public final class RobotTracker extends AbstractSubsystem {
                 this.gyroOffset = gyroOffset;
                 this.latestEstimatedPose = latestEstimatedPose;
                 this.latestChassisSpeeds = latestChassisSpeeds;
-                this.latencyCompensatedPose = new Pose2d(latencyCompensatedTranslation,
+                this.latencyCompensatedPose = new Pose2d(latencyCompensatedTranslation.getTranslation2d(),
                         previousGyroRotations.get(0).getValue().rotateBy(gyroOffset));
+
                 this.latencyCompensatedChassisSpeeds = new ChassisSpeeds(velocity.getX(), velocity.getY(),
                         (previousGyroRotations.get(0).getValue().getRadians() - previousGyroRotations.get(
                                 1).getValue().getRadians())
