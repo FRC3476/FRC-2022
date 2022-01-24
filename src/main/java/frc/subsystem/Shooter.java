@@ -229,21 +229,36 @@ public class Shooter extends AbstractSubsystem {
         return shooterWheelMaster.getSelectedSensorVelocity() * Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER;
     }
 
+    // Returns desired/commanded shooter speed
     public double getDesiredShooterSpeed() {
         return desiredShooterSpeed;
     }
 
+    // Checks if shooter is at target speed with a configurable allowed error
     public boolean isShooterAtTargetSpeed() {
         return getShooterRPM() > Math.abs(getDesiredShooterSpeed() - (Constants.ALLOWED_SHOOTER_SPEED_ERROR / 2.0)) &&
                 getShooterRPM() < Math.abs(getDesiredShooterSpeed() + (Constants.ALLOWED_SHOOTER_SPEED_ERROR / 2.0));
     }
 
+    // Sets shooter state to OFF, will lock motors
     public void turnShooterOFF() {
         shooterState = ShooterState.OFF;
     }
 
+    // Turns shooter ON
     public void turnShooterON() {
         shooterState = ShooterState.ON;
+    }
+
+    // Checks if Hood is at the target angle with a configurable allowed error
+    public boolean isHoodAtTargetAngle() {
+        return getHoodAngle() > (getDesiredHoodAngle() - Constants.ALLOWED_HOOD_ANGLE_ERROR / 2.0) &&
+                getHoodAngle() < (getDesiredHoodAngle() + Constants.ALLOWED_HOOD_ANGLE_ERROR / 2.0);
+    }
+
+    // Returns desired/commanded hood angle
+    public double getDesiredHoodAngle() {
+        return desiredHoodAngle;
     }
 
     @Override
@@ -262,6 +277,7 @@ public class Shooter extends AbstractSubsystem {
             feederWheel.set(ControlMode.PercentOutput, 1);
             forceFeederOnTime = Timer.getFPGATimestamp() + 0.5;
         } else {
+
             // Turn OFF Feeder Wheel
             if (Timer.getFPGATimestamp() > forceFeederOnTime) {
                 feederWheel.set(ControlMode.PercentOutput, 0);
@@ -282,6 +298,7 @@ public class Shooter extends AbstractSubsystem {
             while (getHomeSwitchState() == HomeSwitchState.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
                 // Gets current time
                 currentTime = Timer.getFPGATimestamp();
+
                 // Gets encoder value at start of homing
                 currentPosition = hoodRelativeEncoder.getPosition();
 
@@ -298,10 +315,26 @@ public class Shooter extends AbstractSubsystem {
             turnShooterON();
         }
 
+        // Will lock the motors if Shooter State is OFF
         if (shooterState == ShooterState.OFF) {
             setShooterSpeed(0);
             disableFeederWheel();
             setHoodPosition(50);
+        }
+
+        // If Shooter is not at the target speed, LED will display this color
+        if (isShooterAtTargetSpeed() == false) {
+            BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
+        }
+
+        // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
+        else if (isHoodAtTargetAngle() == false) {
+            BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
+        }
+
+        // If both hood and flywheel are ready for shooting, LED will display this color
+        else {
+            BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_READY_TO_SHOOT);
         }
     }
 

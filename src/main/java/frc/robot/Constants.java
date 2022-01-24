@@ -164,8 +164,19 @@ public final class Constants {
     public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0; // TODO: Find proper offset
     public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
     public static final double MAX_HOMING_TIME_S = 45;
+
     // Higher precision equates to slower homing
     public static final double HOMING_PRECISION_IN_MOTOR_ROTATIONS = .1;
+
+    // Units are in rotations of the motor. 1 Rotation is 3.69230 degrees of the hood
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = .2;
+
+    // Shooter Blinkin LED Constants
+    // TODO: May want to change colors later
+    public static final double LED_FLYWHEEL_APPROACHING_DESIRED_SPEED = 0.2;
+    public static final double LED_HOOD_APPROACHING_DESIRED_POSITION = 0.3;
+    public static final double LED_SHOOTER_READY_TO_SHOOT = 0.4;
+
 
     // Intake Constants TODO: Need To Set
     public static final int SOLENOID_CHANNEL = 0;
