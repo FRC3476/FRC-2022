@@ -15,8 +15,6 @@ import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.controllers.LazyTalonSRX;
 
-
-// TODO: Need to add Blinkin LED for the current states of things
 // TODO: Make javadocs
 public class Shooter extends AbstractSubsystem {
 
@@ -74,7 +72,7 @@ public class Shooter extends AbstractSubsystem {
     private double desiredHoodAngle;
 
     // Singleton Setup
-    private static final Shooter instance = new Shooter();
+    private static Shooter instance = new Shooter();
 
     public static Shooter getInstance() {
         return instance;
@@ -144,7 +142,7 @@ public class Shooter extends AbstractSubsystem {
 
         // If using Absolute Encoder
         if (hoodPositionMode == HoodPositionMode.ABSOLUTE_ENCODER) {
-            // TODO: Figure out where encoder will be placed and convert to correct angle if necessary
+            // Adds and offset to correct angle of the encoder
             hoodAngle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET;
 
             // Checks if Absolute Encoder is reading outside of expected range
@@ -327,12 +325,12 @@ public class Shooter extends AbstractSubsystem {
         }
 
         // If Shooter is not at the target speed, LED will display this color
-        if (isShooterAtTargetSpeed() == false) {
+        if (!isShooterAtTargetSpeed()) {
             BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
         }
 
         // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
-        else if (isHoodAtTargetAngle() == false) {
+        else if (!isHoodAtTargetAngle()) {
             BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
         }
 
@@ -347,6 +345,7 @@ public class Shooter extends AbstractSubsystem {
         // TODO: Implement self test
     }
 
+    // Logs variety of values and states to ShuffleBoard
     @Override
     public void logData() {
         logData("Shooter Flywheel Speed", getShooterRPM());
@@ -359,10 +358,12 @@ public class Shooter extends AbstractSubsystem {
         logData("Is Hood at Target Angle?", isHoodAtTargetAngle());
         logData("Is Shooter at Target Speed?", isShooterAtTargetSpeed());
         logData("Shooter State", getShooterState());
+        logData("Shooter Flywheel Speed Error", getDesiredShooterSpeed() - getShooterRPM());
+        logData("Hood Position Error", getDesiredHoodAngle() - getHoodAngle());
     }
 
     @Override
-    public void close() throws Exception {
-        // Todo: Implement
+    public void close() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("Can not close this object");
     }
 }
