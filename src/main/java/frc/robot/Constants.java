@@ -135,4 +135,11 @@ public final class Constants {
     public static final int LATCH_SOLENOID_ID = 1;
     public static final int PIVOT_SOLENOID_ID = 2;
     public static final int BRAKE_SOLENOID_ID = 3;
+
+    // Intake Constants TODO: Need To Set
+    public static final int INTAKE_PERIOD = 50;
+    public static final int SOLENOID_CHANNEL = 0;
+    public static final int INTAKE_MOTOR_DEVICE_ID = 40;
+    public static final double INTAKE_MOTOR_SPEED = 1.0;
+    public static final double INTAKE_OPEN_TIME = 0.3;
 }
