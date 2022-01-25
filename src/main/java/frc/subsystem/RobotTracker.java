@@ -226,23 +226,8 @@ public final class RobotTracker extends AbstractSubsystem {
      * @param time the time of the measurement
      * @return the state of the absolute encoders at the specified time
      */
-    public double[] getAbsolutePositions(double time) {
-        if (previousAbsolutePositions.isEmpty()) {
-            throw new IllegalStateException("No previous positions");
-        } else if (previousAbsolutePositions.get(0).getKey() < time) {
-            throw new IllegalArgumentException("Time is not in this list");
-        } else if (previousAbsolutePositions.get(previousAbsolutePositions.size() - 1).getKey() > time) {
-            throw new IllegalArgumentException("Time is too far in the past");
-        }
-
-        int index = Collections.binarySearch(previousAbsolutePositions, time, comparator);
-        if (index < 0) index = -index - 1;
-
-        if (previousAbsolutePositions.size() > index + 2) {
-            previousAbsolutePositions.subList(index + 2, previousAbsolutePositions.size()).clear();
-        }
-
-        return previousAbsolutePositions.get(index).getValue();
+    private double[] getAbsolutePositions(double time) {
+        return getPositionOnListForTime(previousAbsolutePositions, time);
     }
 
     /**
@@ -251,23 +236,34 @@ public final class RobotTracker extends AbstractSubsystem {
      * @param time the time of the measurement
      * @return the state of the gyro at the specified time
      */
-    public Rotation2d getGyroRotation(double time) {
-        if (previousGyroRotations.isEmpty()) {
-            throw new IllegalStateException("No previous rotations");
-        } else if (previousGyroRotations.get(0).getKey() < time) {
+    private Rotation2d getGyroRotation(double time) {
+        return getPositionOnListForTime(previousGyroRotations, time);
+    }
+
+    /**
+     * Will also delete entries on the list that are past the specified time.
+     *
+     * @param list the list to search
+     * @param time the time to search for
+     * @return the index of the value
+     */
+    private <T> T getPositionOnListForTime(List<Map.Entry<Double, T>> list, double time) {
+        if (list.isEmpty()) {
+            throw new IllegalStateException("Provided list is empty");
+        } else if (list.get(0).getKey() < time) {
             throw new IllegalArgumentException("Time is not in this list");
-        } else if (previousGyroRotations.get(previousGyroRotations.size() - 1).getKey() > time) {
+        } else if (list.get(list.size() - 1).getKey() > time) {
             throw new IllegalArgumentException("Time is too far in the past");
         }
 
-        int index = Collections.binarySearch(previousGyroRotations, time, comparator);
+        int index = Collections.binarySearch(list, time, comparator);
         if (index < 0) index = -index - 1;
 
-        if (previousGyroRotations.size() > index + 2) {
-            previousGyroRotations.subList(index + 2, previousGyroRotations.size()).clear();
+        if (list.size() > index + 2) {
+            list.subList(index + 2, list.size()).clear();
         }
 
-        return previousGyroRotations.get(index).getValue();
+        return list.get(index).getValue();
     }
 
 
