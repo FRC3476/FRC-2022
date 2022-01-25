@@ -172,6 +172,19 @@ public class Climber extends AbstractSubsystem {
         ),
 
         /**
+         * Unpivot the elevator arm so that the pivot arm is now underneath the next bar.
+         */
+        UNPIVOT_PIVOT_ARM(
+                (cl) -> {
+                    cl.setPivotState(PivotState.INLINE);
+                    cl.data = Timer.getFPGATimestamp();
+                },
+                //TODO: Change the time
+                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5,
+                (cl) -> {}
+        ),
+
+        /**
          * Waits for the gyro to report that the robot \has stopped swinging.
          */
         WAIT_FOR_SWING_STOP(
@@ -202,19 +215,6 @@ public class Climber extends AbstractSubsystem {
                 },
                 //TODO: Change the time
                 (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5 && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get(),
-                (cl) -> {}
-        ),
-
-        /**
-         * Unpivot the elevator arm so that the pivot arm is now underneath the next bar.
-         */
-        UNPIVOT_PIVOT_ARM(
-                (cl) -> {
-                    cl.setPivotState(PivotState.INLINE);
-                    cl.data = Timer.getFPGATimestamp();
-                },
-                //TODO: Change the time
-                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5,
                 (cl) -> {}
         );
 
