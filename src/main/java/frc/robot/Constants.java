@@ -14,7 +14,13 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 50;
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz //22Hz
+
+    /**
+     * Relative position of the limelight from the center of the robot.
+     */
+    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.5, 0.5); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD = Math.pow(1.0, 2); //TODO: CHANGE
 
     //Drive Constants
     public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
@@ -111,10 +117,17 @@ public final class Constants {
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 
+    /**
+     * The distance to the center of the goal to the vision tape.
+     */
+    public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
+
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
     public static final int SOLENOID_CHANNEL = 0;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = 1.0;
     public static final double INTAKE_OPEN_TIME = 0.3;
+
+
 }

@@ -1,12 +1,13 @@
 package frc.subsystem;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
+import frc.utility.MathUtil;
+import frc.utility.geometry.MutableTranslation2d;
 
 public class VisionManager extends AbstractSubsystem {
     private static VisionManager instance = new VisionManager();
@@ -38,7 +39,7 @@ public class VisionManager extends AbstractSubsystem {
         Translation2d currentRobotVelocity = new Translation2d(currentRobotState.vxMetersPerSecond,
                 currentRobotState.vyMetersPerSecond);
 
-        Translation2d predictedPosition = predictFutureTranslation(0.2, getCurrentPose().getTranslation(), currentRobotVelocity);
+        Translation2d predictedPosition = predictFutureTranslation(0.2, getCurrentTranslation(), currentRobotVelocity);
         double neededBallVelocity = getNeededBallVelocity(predictedPosition.getNorm());
 
         Translation2d neededEjectionVector = new Translation2d(neededBallVelocity,
@@ -55,14 +56,15 @@ public class VisionManager extends AbstractSubsystem {
     }
 
     // Calculate Current Robot Position
-    public Pose2d getCurrentPose() {
+    public Translation2d getCurrentTranslation() {
         Rotation2d currentGyroAngle = RobotTracker.getInstance().getGyroAngle();
-        double limelightHorizontalOffset = -limelight.getHorizontalOffset();
-        double distanceToTarget = limelight.getDistance();
-        double angleToTarget = 180 + currentGyroAngle.getDegrees() - limelightHorizontalOffset;
-        Translation2d currentPose = new Translation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
-                distanceToTarget * Math.sin(Math.toRadians(angleToTarget)));
-        return new Pose2d(currentPose, currentGyroAngle);
+
+        double distanceToTarget = limelight.getDistance() + Constants.GOAL_RADIUS;
+        double angleToTarget = 180 + currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
+        MutableTranslation2d currentPose = new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
+                distanceToTarget * Math.sin(Math.toRadians(angleToTarget))).minus(Constants.LIMELIGHT_CENTER_OFFSET).plus(
+                Constants.GOAL_POSITION);
+        return currentPose.getTranslation2d();
     }
 
     // Predict Position In The Future
@@ -83,11 +85,27 @@ public class VisionManager extends AbstractSubsystem {
         return wantedEjectionVector.minus(robotVelocityVector);
     }
 
+    /**
+     * Adds a vision update to the robot tracker even if the calculated pose is too far from the expected pose.
+     */
+    public void forceUpdatePose() {
+
+    }
+
+    @Override
+    public void update() {
+        Translation2d currentTranslation = getCurrentTranslation();
+        if (MathUtil.dist2(robotTracker.getPoseMeters().getTranslation(),
+                currentTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD) {
+            logData("Using Vision Info", Boolean.TRUE);
+        } else {
+            logData("Using Vision Info", Boolean.FALSE);
+        }
+    }
+
 
     @Override
     public void close() throws Exception {
 
     }
-
-
 }
