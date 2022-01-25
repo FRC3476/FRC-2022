@@ -108,7 +108,6 @@ public final class Constants {
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 
-
     //Climber Constants
     public static final int CLIMBER_PERIOD = 50;
     public static final int CLIMBER_MOTOR_ID = 20;
@@ -181,6 +180,9 @@ public final class Constants {
      */
     public static final double MAX_CLIMBER_EXTENSION = 11000;
 
+    //Robot Tracker
+    public static final double SPARK_VELOCITY_MEASUREMENT_LATENCY = 0.112;
+    public static final int ROBOT_TRACKER_PERIOD = 10;
 
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
