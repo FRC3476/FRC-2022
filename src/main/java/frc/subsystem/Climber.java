@@ -124,24 +124,23 @@ public class Climber extends AbstractSubsystem {
         MOVE_WEIGHT_TO_PIVOT_ARM(
                 (cl) -> {
                     //position when it is considered "unlatched"
-                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
+                    cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
                     cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
                 },
-                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
+                (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
                         !cl.elevatorArmContactSwitchA.get() && !cl.elevatorArmContactSwitchB.get(),
                 (cl) -> {}
         ),
 
         /**
-         * Extends the solenoid to pivot the robot and cause it to start swinging. Waits a minimum time or until the climber motor
-         * has fully extended to it's maximum safe position.
+         * Extends the solenoid to pivot the robot and cause it to start swinging. Waits a minimum time and until the climber
+         * motor has fully extended to it's maximum safe position.
          */
         PIVOT_PIVOT_ARM(
                 (cl) -> {
                     cl.setPivotState(PivotState.PIVOTED);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                //TODO: config this time
                 (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION
                         && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
                 (cl) -> {}
@@ -165,15 +164,14 @@ public class Climber extends AbstractSubsystem {
          */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
                 (cl) -> {
-                    cl.data = Constants.MAX_CLIMBER_EXTENSION;
-                    cl.climberMotor.set(ControlMode.Position, cl.data);
+                    cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION);
                 },
-                (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
                 (cl) -> {}
         ),
 
         /**
-         * Unpivot the elevator arm so that the pivot arm is now underneath the next bar.
+         * Unpivot the elevator arm so elevator arm is pulled onto the next bar
          */
         UNPIVOT_PIVOT_ARM(
                 (cl) -> {
