@@ -416,6 +416,7 @@ public class Climber extends AbstractSubsystem {
      */
     public void setClimberMotor(double percentOutput) {
         isPaused = true;
+        climbState = ClimbState.IDLE;
         setBrakeState(Math.abs(percentOutput) < 1.0E-6 ? BrakeState.BRAKING : BrakeState.FREE);
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
     }
@@ -425,6 +426,7 @@ public class Climber extends AbstractSubsystem {
      */
     public void toggleLatch() {
         isPaused = true;
+        climbState = ClimbState.IDLE;
         latchSolenoid.set(!latchSolenoid.get());
     }
 
@@ -433,6 +435,7 @@ public class Climber extends AbstractSubsystem {
      */
     public void togglePivot() {
         isPaused = true;
+        climbState = ClimbState.IDLE;
         pivotSolenoid.set(!pivotSolenoid.get());
     }
 
