@@ -8,6 +8,7 @@
         <option value="organizeImports" />
         <option value="reformatChangedCode" />
         <option value="missingOverrideAnnotation" />
+        <option value="unnecessarySemicolon" />
       </set>
     </option>
     <option name="configurationPath" value="" />

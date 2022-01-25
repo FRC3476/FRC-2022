@@ -595,18 +595,17 @@ public final class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             double relPos = swerveEncoders[i].getPosition() % 360;
             if (relPos < 0) relPos += 360;
-            SmartDashboard.putNumber("Swerve Motor " + i + " Relative Position", relPos);
-            SmartDashboard.putNumber("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
-            SmartDashboard.putNumber("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
-            SmartDashboard.putNumber("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
-            SmartDashboard.putNumber("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
-
+            logData("Swerve Motor " + i + " Relative Position", relPos);
+            logData("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
+            logData("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
+            logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
+            logData("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
         }
 
         ChassisSpeeds chassisSpeeds = getRobotState();
-        SmartDashboard.putNumber("Computed Robot X Velocity", chassisSpeeds.vxMetersPerSecond);
-        SmartDashboard.putNumber("Computed Robot Y Velocity", chassisSpeeds.vyMetersPerSecond);
-        SmartDashboard.putNumber("Computed Robot Rotation", chassisSpeeds.omegaRadiansPerSecond);
+        logData("Computed Robot X Velocity", chassisSpeeds.vxMetersPerSecond);
+        logData("Computed Robot Y Velocity", chassisSpeeds.vyMetersPerSecond);
+        logData("Computed Robot Rotation", chassisSpeeds.omegaRadiansPerSecond);
     }
 
 
