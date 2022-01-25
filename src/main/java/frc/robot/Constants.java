@@ -108,6 +108,10 @@ public final class Constants {
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 
+    //Robot Tracker
+    public static final double SPARK_VELOCITY_MEASUREMENT_LATENCY = 0.112;
+    public static final int ROBOT_TRACKER_PERIOD = 10;
+
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
     public static final int SOLENOID_CHANNEL = 0;
