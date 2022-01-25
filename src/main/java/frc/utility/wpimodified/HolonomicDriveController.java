@@ -129,6 +129,15 @@ public class HolonomicDriveController {
             currentPose, desiredState.poseMeters, desiredState.poseMeters, desiredState.velocityMetersPerSecond, angleRef);
   }
 
+  /**
+   * Returns the next output of the holonomic drive controller.
+   *
+   * @param currentPose     The current pose.
+   * @param correctionState The state to compare the current pose to.
+   * @param desiredState    The desired trajectory state.
+   * @param angleRef        The desired end-angle.
+   * @return The next output of the holonomic drive controller.
+   */
   public ChassisSpeeds calculate(
           Pose2d currentPose, Trajectory.State desiredState, Trajectory.State correctionState, Rotation2d angleRef) {
     return calculate(

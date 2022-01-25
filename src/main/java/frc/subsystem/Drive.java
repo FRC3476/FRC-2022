@@ -198,7 +198,7 @@ public final class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
                     (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
-                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+                    Rotation2d.fromDegrees(getWheelRotation(i)));
             swerveModuleState[i] = moduleState;
         }
         return swerveModuleState;
@@ -291,11 +291,11 @@ public final class Drive extends AbstractSubsystem {
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, double acceleration) {
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
-            //                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+            //                    Rotation2d.fromDegrees(getWheelRotation(i)));
             // TODO: flip the acceleration if we flip the module
             SwerveModuleState targetState = moduleStates[i];
             double targetAngle = targetState.angle.getDegrees();
-            double currentAngle = getAbsolutePosition(i); //swerveEncoders[i].getPosition();
+            double currentAngle = getWheelRotation(i); //swerveEncoders[i].getPosition();
 
             double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
 
@@ -599,7 +599,7 @@ public final class Drive extends AbstractSubsystem {
             double relPos = swerveEncoders[i].getPosition() % 360;
             if (relPos < 0) relPos += 360;
             logData("Swerve Motor " + i + " Relative Position", relPos);
-            logData("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
+            logData("Swerve Motor " + i + " Absolute Position", getWheelRotation(i));
             logData("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
@@ -618,7 +618,7 @@ public final class Drive extends AbstractSubsystem {
      * @param moduleNumber the module to set
      * @return angle in degrees of the module
      */
-    public double getAbsolutePosition(int moduleNumber) {
+    public double getWheelRotation(int moduleNumber) {
         if (useRelativeEncoderPosition) {
             double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
             if (relPos < 0) relPos += 360;
@@ -633,7 +633,7 @@ public final class Drive extends AbstractSubsystem {
      *
      * @return and array of the four angles
      */
-    public double[] getAbsolutePositions() {
+    public double[] getWheelRotations() {
         double[] positions = new double[4];
         for (int i = 0; i < 4; i++) {
             if (useRelativeEncoderPosition) {

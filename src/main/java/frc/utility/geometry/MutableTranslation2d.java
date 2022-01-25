@@ -20,12 +20,12 @@ import java.util.Objects;
 @SuppressWarnings({"ParameterName", "MemberName"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
-public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.geometry.Translation2d> {
+public class MutableTranslation2d implements Interpolatable<MutableTranslation2d> {
     private double m_x;
     private double m_y;
 
     /**
-     * Constructs a Translation2d with X and Y components equal to zero.
+     * Constructs a MutableTranslation2d with X and Y components equal to zero.
      */
     public MutableTranslation2d() {
         this(0.0, 0.0);
@@ -45,7 +45,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     }
 
     /**
-     * Constructs a Translation2d with the X and Y components equal to the provided values.
+     * Constructs a MutableTranslation2d with the X and Y components equal to the provided values.
      *
      * @param x The x component of the translation.
      * @param y The y component of the translation.
@@ -59,8 +59,8 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     }
 
     /**
-     * Constructs a Translation2d with the provided distance and angle. This is essentially converting from polar coordinates to
-     * Cartesian coordinates.
+     * Constructs a MutableTranslation2d with the provided distance and angle. This is essentially converting from polar
+     * coordinates to Cartesian coordinates.
      *
      * @param distance The distance from the origin to the end of the translation.
      * @param angle    The angle between the x-axis and the translation vector.
@@ -71,7 +71,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     }
 
     /**
-     * Sets this Translation2d to the X and Y components equal to the provided values.
+     * Sets this MutableTranslation2d to the X and Y components equal to the provided values.
      *
      * @param x The x component of the translation.
      * @param y The y component of the translation.
@@ -84,8 +84,8 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
 
 
     /**
-     * Set this Translation2d with the provided distance and angle. This is essentially converting from polar coordinates to
-     * Cartesian coordinates.
+     * Set this MutableTranslation2d with the provided distance and angle. This is essentially converting from polar coordinates
+     * to Cartesian coordinates.
      *
      * @param distance The distance from the origin to the end of the translation.
      * @param angle    The angle between the x-axis and the translation vector.
@@ -144,7 +144,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
      * <p>This multiplies the translation vector by a counterclockwise rotation matrix of the given
      * angle. [x_new] [other.cos, -other.sin][x] [y_new] = [other.sin, other.cos][y]
      *
-     * <p>For example, rotating a Translation2d of {2, 0} by 90 degrees will return a Translation2d of
+     * <p>For example, rotating a MutableTranslation2d of {2, 0} by 90 degrees will return a MutableTranslation2d of
      * {0, 2}.
      *
      * @param other The rotation to rotate the translation by.
@@ -157,7 +157,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     /**
      * Adds two translations in 2d space and returns the sum. This is similar to vector addition.
      *
-     * <p>For example, Translation2d{1.0, 2.5} + Translation2d{2.0, 5.5} = Translation2d{3.0, 8.0}
+     * <p>For example, MutableTranslation2d{1.0, 2.5} + MutableTranslation2d{2.0, 5.5} = MutableTranslation2d{3.0, 8.0}
      *
      * @param other The translation to add.
      * @return The sum of the translations.
@@ -169,7 +169,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     /**
      * Adds two translations in 2d space and returns the sum. This is similar to vector addition.
      *
-     * <p>For example, Translation2d{1.0, 2.5} + Translation2d{2.0, 5.5} = Translation2d{3.0, 8.0}
+     * <p>For example, MutableTranslation2d{1.0, 2.5} + MutableTranslation2d{2.0, 5.5} = MutableTranslation2d{3.0, 8.0}
      *
      * @param other The translation to add.
      * @return The sum of the translations.
@@ -181,7 +181,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     /**
      * Subtracts the other translation from the other translation and returns the difference.
      *
-     * <p>For example, Translation2d{5.0, 4.0} - Translation2d{1.0, 2.0} = Translation2d{4.0, 2.0}
+     * <p>For example, MutableTranslation2d{5.0, 4.0} - MutableTranslation2d{1.0, 2.0} = MutableTranslation2d{4.0, 2.0}
      *
      * @param other The translation to subtract.
      * @return The difference between the two translations.
@@ -203,7 +203,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     /**
      * Multiplies the translation by a scalar and returns the new translation.
      *
-     * <p>For example, Translation2d{2.0, 2.5} * 2 = Translation2d{4.0, 5.0}
+     * <p>For example, MutableTranslation2d{2.0, 2.5} * 2 = MutableTranslation2d{4.0, 5.0}
      *
      * @param scalar The scalar to multiply by.
      * @return The scaled translation.
@@ -215,7 +215,7 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     /**
      * Divides the translation by a scalar and returns the new translation.
      *
-     * <p>For example, Translation2d{2.0, 2.5} / 2 = Translation2d{1.0, 1.25}
+     * <p>For example, MutableTranslation2d{2.0, 2.5} / 2 = MutableTranslation2d{1.0, 1.25}
      *
      * @param scalar The scalar to multiply by.
      * @return This mutated object.
@@ -226,11 +226,11 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
 
     @Override
     public String toString() {
-        return String.format("Translation2d(X: %.2f, Y: %.2f)", m_x, m_y);
+        return String.format("MutableTranslation2d(X: %.2f, Y: %.2f)", m_x, m_y);
     }
 
     /**
-     * Checks equality between this Translation2d and another object.
+     * Checks equality between this MutableTranslation2d and another object.
      *
      * @param obj The other object.
      * @return Whether the two objects are equal or not.
@@ -253,9 +253,8 @@ public class MutableTranslation2d implements Interpolatable<edu.wpi.first.math.g
     }
 
     @Override
-    public edu.wpi.first.math.geometry.Translation2d interpolate(edu.wpi.first.math.geometry.Translation2d endValue, double t) {
-        return new edu.wpi.first.math.geometry.Translation2d(
-                MathUtil.interpolate(this.getX(), endValue.getX(), t),
+    public MutableTranslation2d interpolate(MutableTranslation2d endValue, double t) {
+        return set(MathUtil.interpolate(this.getX(), endValue.getX(), t),
                 MathUtil.interpolate(this.getY(), endValue.getY(), t));
     }
 

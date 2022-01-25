@@ -42,17 +42,19 @@ public final class RobotTracker extends AbstractSubsystem {
 
 
     private RobotTracker() {
-        super(10);
+        super(Constants.ROBOT_TRACKER_PERIOD);
         gyroSensor = new AHRS(SPI.Port.kMXP, (byte) 100);
         gyroSensor.getRequestedUpdateRate();
+        //@formatter:off
         swerveDriveOdometry = new SwerveDrivePoseEstimator(
                 gyroSensor.getRotation2d(),
                 new Pose2d(),
                 drive.getSwerveDriveKinematics(),
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02),
-                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.00035),
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.2, 0.2, 0.07),
-                20.0d / 1000.0d);
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02), // stateStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
+                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.00035), // localMeasurementStdDevs – [theta], with units in radians.
+                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.2, 0.2, 0.07), // visionMeasurementStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
+                Constants.ROBOT_TRACKER_PERIOD / 1000.0d);
+        //@formatter:on
         //swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), gyroSensor.getRotation2d());
     }
 
@@ -121,7 +123,7 @@ public final class RobotTracker extends AbstractSubsystem {
         double time = WPIUtilJNI.now() * 1.0e-6; // seconds
 
         // Store sensor data for later. New data is always at the front of the list.
-        previousAbsolutePositions.add(0, Map.entry(time, drive.getAbsolutePositions()));
+        previousAbsolutePositions.add(0, Map.entry(time, drive.getWheelRotations()));
         previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
         previousAccelerometerData.add(0, Map.entry(time,
                 new Translation2d(gyroSensor.getWorldLinearAccelX(), gyroSensor.getWorldLinearAccelY()))); //Robot Centric
@@ -197,9 +199,9 @@ public final class RobotTracker extends AbstractSubsystem {
                         previousGyroRotations.get(0).getValue().rotateBy(gyroOffset));
 
                 this.latencyCompensatedChassisSpeeds = new ChassisSpeeds(velocity.getX(), velocity.getY(),
-                        (previousGyroRotations.get(0).getValue().getRadians() - previousGyroRotations.get(
-                                1).getValue().getRadians())
-                                / time - previousGyroRotations.get(1).getKey());
+                        (previousGyroRotations.get(0).getValue().getRadians()
+                                - previousGyroRotations.get(1).getValue().getRadians()) /
+                                (time - previousGyroRotations.get(1).getKey()));
             }
         }
     }
@@ -259,6 +261,7 @@ public final class RobotTracker extends AbstractSubsystem {
         int index = Collections.binarySearch(list, time, comparator);
         if (index < 0) index = -index - 1;
 
+        // Remove all entries that are past the time
         if (list.size() > index + 2) {
             list.subList(index + 2, list.size()).clear();
         }
@@ -353,9 +356,19 @@ public final class RobotTracker extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        SmartDashboard.putNumber("Robot Pose X", getLastEstimatedPoseMeters().getX());
-        SmartDashboard.putNumber("Robot Pose Y", getLastEstimatedPoseMeters().getX());
-        SmartDashboard.putNumber("Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getDegrees());
+        SmartDashboard.putNumber("Last Estimated Robot Pose X", getLastEstimatedPoseMeters().getX());
+        SmartDashboard.putNumber("Last Estimated Robot Pose Y", getLastEstimatedPoseMeters().getX());
+        SmartDashboard.putNumber("Last Estimated Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getDegrees());
+        SmartDashboard.putNumber("Last Estimated Robot Velocity X", getLastChassisSpeeds().vxMetersPerSecond);
+        SmartDashboard.putNumber("Last Estimated Robot Velocity Y", getLastChassisSpeeds().vyMetersPerSecond);
+        SmartDashboard.putNumber("Last Estimated Robot Velocity Theta", getLastChassisSpeeds().omegaRadiansPerSecond);
+
+        SmartDashboard.putNumber("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());
+        SmartDashboard.putNumber("Latency Comped Robot Pose Y", getLatencyCompedPoseMeters().getX());
+        SmartDashboard.putNumber("Latency Comped Robot Pose Angle", getLatencyCompedPoseMeters().getRotation().getDegrees());
+        SmartDashboard.putNumber("Latency Comped Robot Velocity X", getLatencyCompedChassisSpeeds().vxMetersPerSecond);
+        SmartDashboard.putNumber("Latency Comped Robot Velocity Y", getLatencyCompedChassisSpeeds().vyMetersPerSecond);
+        SmartDashboard.putNumber("Latency Comped Robot Velocity Theta", getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
     }
 
     @Override
