@@ -101,7 +101,7 @@ public class Climber extends AbstractSubsystem {
          */
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
                 (cl) -> {
-                    cl.climberMotor.set(ControlMode.PercentOutput, -1);
+                    cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
                     cl.setLatchState(LatchState.UNLATCHED);
                 },
                 (cl) -> cl.pivotingArmContactSwitchA.get() && cl.pivotingArmContactSwitchB.get(),
@@ -123,9 +123,9 @@ public class Climber extends AbstractSubsystem {
          */
         MOVE_WEIGHT_TO_PIVOT_ARM(
                 (cl) -> {
-                    //TODO: config these
-                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //position when it is considered "unlatched"
-                    cl.climberMotor.set(ControlMode.Position, cl.climberMotor.getSelectedSensorPosition(0) + 1000);
+                    //position when it is considered "unlatched"
+                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
+                    cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
                 },
                 (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
                         !cl.elevatorArmContactSwitchA.get() && !cl.elevatorArmContactSwitchB.get(),
@@ -142,7 +142,8 @@ public class Climber extends AbstractSubsystem {
                     cl.data = Timer.getFPGATimestamp();
                 },
                 //TODO: config this time
-                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5 && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
+                (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION
+                        && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
                 (cl) -> {}
         ),
 
@@ -164,7 +165,7 @@ public class Climber extends AbstractSubsystem {
          */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
                 (cl) -> {
-                    cl.data = cl.climberMotor.getSelectedSensorPosition(0) + 100; //TODO: config this
+                    cl.data = Constants.MAX_CLIMBER_EXTENSION;
                     cl.climberMotor.set(ControlMode.Position, cl.data);
                 },
                 (cl) -> cl.climberMotor.getSelectedSensorPosition(0) > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
@@ -180,12 +181,12 @@ public class Climber extends AbstractSubsystem {
                     cl.data = Timer.getFPGATimestamp();
                 },
                 //TODO: Change the time
-                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5,
+                (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_UNPIVOT_DURATION,
                 (cl) -> {}
         ),
 
         /**
-         * Waits for the gyro to report that the robot \has stopped swinging.
+         * Waits for the gyro to report that the robot has stopped swinging.
          */
         WAIT_FOR_SWING_STOP(
                 (cl) -> {},
@@ -200,7 +201,7 @@ public class Climber extends AbstractSubsystem {
          * Retracts the elevator arm to until it contacts the bar.
          */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
-                (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -1),
+                (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT),
                 (cl) -> cl.elevatorArmContactSwitchA.get() && cl.elevatorArmContactSwitchB.get(),
                 (cl) -> cl.stopClimberMotor()
         ),
@@ -213,8 +214,8 @@ public class Climber extends AbstractSubsystem {
                     cl.setLatchState(LatchState.UNLATCHED);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                //TODO: Change the time
-                (cl) -> Timer.getFPGATimestamp() - cl.data > 0.5 && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get(),
+                (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
+                        && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get(),
                 (cl) -> {}
         );
 
@@ -335,7 +336,7 @@ public class Climber extends AbstractSubsystem {
      * Sets the climber in the correct state to initiate a climb and moves the elevator arm to the up above the high bar.
      */
     public synchronized void deployClimb() {
-        climberMotor.set(ControlMode.Position, climberMotor.getSelectedSensorPosition() + 1000); // TODO: Change position
+        climberMotor.set(ControlMode.Position, Constants.CLIMBER_DEPLOY_HEIGHT); // TODO: Change position
         setBrakeState(BrakeState.FREE);
         setLatchState(LatchState.UNLATCHED);
         setPivotState(PivotState.INLINE);
@@ -385,6 +386,14 @@ public class Climber extends AbstractSubsystem {
         lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
 
         if (!isPaused) {
+            if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
+                    && climberMotor.getSelectedSensorVelocity() < 0) {
+                stopClimb();
+            } else if (climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_ELEVATOR_HEIGHT
+                    && climberMotor.getSelectedSensorVelocity() > 0) {
+                stopClimb();
+            }
+
             if (climbState.waitCondition.apply(this)) {
                 climbState.endAction.accept(this);
                 ranEndAction = true;
