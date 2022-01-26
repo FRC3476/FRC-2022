@@ -23,7 +23,7 @@ public class Shooter extends AbstractSubsystem {
     private LazyTalonFX shooterWheelSlave;
     private double desiredShooterSpeed;
 
-    // 775Pro Initialization
+    // 775Pro Initialization (TalonSRX may change to spark in the future)
     private LazyTalonSRX feederWheel;
     private double forceFeederOnTime;
 
@@ -63,7 +63,12 @@ public class Shooter extends AbstractSubsystem {
         /**
          * Flywheel is spinning and getting ready/is ready to shoot
          */
-        ON
+        ON,
+
+        /**
+         * Test state that will drive motors expected conditions
+         */
+        TEST
     }
 
     private ShooterState shooterState = ShooterState.OFF;
@@ -82,7 +87,7 @@ public class Shooter extends AbstractSubsystem {
     private Shooter() {
         // TODO: May have to invert direction of motors
         // Sets update method's iteration
-        super(Constants.SHOOTER_PERIOD_MS, Constants.SHOOTER_LOGGING_PERIOD_MS);
+        super(Constants.SHOOTER_PERIOD_MS, Constants.SHOOTER_PERIODS_PER_LOG);
 
         // Sets hood position mode, can be either using absolute encoder or be relative to home switch
         hoodPositionMode = HoodPositionMode.ABSOLUTE_ENCODER;
@@ -338,11 +343,17 @@ public class Shooter extends AbstractSubsystem {
         else {
             BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_READY_TO_SHOOT);
         }
+
+        if (shooterState == ShooterState.TEST) {
+
+
+        }
     }
 
     @Override
     public void selfTest() {
-        // TODO: Implement self test
+
+        shooterState = ShooterState.TEST;
     }
 
     // Logs variety of values and states to ShuffleBoard

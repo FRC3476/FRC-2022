@@ -109,7 +109,7 @@ public final class Constants {
     // Shooter Constants
 
    public static final int SHOOTER_PERIOD_MS = 20;
-    public static final int SHOOTER_LOGGING_PERIOD_MS = 60;
+    public static final int SHOOTER_PERIODS_PER_LOG = 3;
 
     public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 0; // TODO: Get actual CAN ID for all shooter components
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 0;
@@ -177,6 +177,9 @@ public final class Constants {
     public static final double LED_FLYWHEEL_APPROACHING_DESIRED_SPEED = 0.2;
     public static final double LED_HOOD_APPROACHING_DESIRED_POSITION = 0.3;
     public static final double LED_SHOOTER_READY_TO_SHOOT = 0.4;
+
+    // Shooter Test Constants
+    public static final double SHOOTER_TEST_SPEED = 3000;
 
 
     // Intake Constants TODO: Need To Set
