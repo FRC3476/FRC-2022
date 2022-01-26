@@ -38,6 +38,17 @@ public class Shooter extends AbstractSubsystem {
     // Home Switch Initialization
     private DigitalInput homeSwitch;
 
+    // Homing initialization
+
+    // currentPosition will be updated after each increment of .1 motor rotations
+    // it will then be used to calculate the next targetPosition by incrementing it by .1
+    double currentHomingPosition;
+
+    // startTime and currentTime will be used to check how long the homing is occurring
+    // Negative 1 used for a check to see if homingStartTime has been initialized in HOMING case
+    double homingStartTime = -1;
+    double homingCurrentTime;
+
     // Declarations of Modes and States
     public enum HoodPositionMode {ABSOLUTE_ENCODER, RELATIVE_TO_HOME}
 
@@ -71,7 +82,7 @@ public class Shooter extends AbstractSubsystem {
         TEST
     }
 
-    private ShooterState shooterState = ShooterState.OFF;
+    private ShooterState shooterState = ShooterState.ON;
 
     // The target hood angle
     private double desiredHoodAngle;
@@ -95,14 +106,15 @@ public class Shooter extends AbstractSubsystem {
         // Sets CAN IDs to each component
         shooterWheelMaster = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_MASTER_ID);
         shooterWheelSlave = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_SLAVE_ID);
-        // Sets one of the shooter motors inverted
-        shooterWheelSlave.setInverted(true);
         feederWheel = new LazyTalonSRX(Constants.FEEDER_WHEEL_CAN_ID);
         hoodMotor = new LazyCANSparkMax(Constants.HOOD_MOTOR_CAN_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hoodAbsoluteEncoder = new DutyCycle(new DigitalInput(Constants.HOOD_ENCODER_DIO_ID));
         hoodRelativeEncoder = hoodMotor.getEncoder();
         hoodRelativeEncoder.setPositionConversionFactor(Constants.HOOD_DEGREES_PER_MOTOR_ROTATION);
         homeSwitch = new DigitalInput(Constants.HOOD_HOME_SWITCH_DIO_ID);
+
+        // Sets one of the shooter motors inverted
+        shooterWheelSlave.setInverted(true);
 
         configPID();
     }
@@ -255,8 +267,8 @@ public class Shooter extends AbstractSubsystem {
 
     // Checks if Hood is at the target angle with a configurable allowed error
     public boolean isHoodAtTargetAngle() {
-        return getHoodAngle() > (getDesiredHoodAngle() - Constants.ALLOWED_HOOD_ANGLE_ERROR / 2.0) &&
-                getHoodAngle() < (getDesiredHoodAngle() + Constants.ALLOWED_HOOD_ANGLE_ERROR / 2.0);
+        return getHoodAngle() > (Math.abs(getDesiredHoodAngle() - Constants.ALLOWED_HOOD_ANGLE_ERROR) / 2.0) &&
+                getHoodAngle() < (Math.abs(getDesiredHoodAngle() + Constants.ALLOWED_HOOD_ANGLE_ERROR) / 2.0);
     }
 
     // Returns desired/commanded hood angle
@@ -264,78 +276,26 @@ public class Shooter extends AbstractSubsystem {
         return desiredHoodAngle;
     }
 
+    // Returns current Shooter State, can be OFF, ON, HOMING, or TEST
     public ShooterState getShooterState() {
         return shooterState;
     }
 
-    @Override
-    public void update() {
-        // Sets shooter motor to desired shooter speed
-        shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
+    private void setLedForOffMode() {
 
-        // Sets Motor to travel to desired hood angle
-        hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
+    }
 
-        // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target speed
-        if ((feederWheelState == FeederWheelState.ON) && Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3 &&
-                isShooterAtTargetSpeed()) {
+    // Sets LED different colors, depends on if flywheel is up to speed and if hood is in correct position
+    private void setLedForOnMode() {
 
-            // Set Feeder wheel to MAX speed
-            feederWheel.set(ControlMode.PercentOutput, 1);
-            forceFeederOnTime = Timer.getFPGATimestamp() + 0.5;
-        } else {
-
-            // Turn OFF Feeder Wheel
-            if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                feederWheel.set(ControlMode.PercentOutput, 0);
-            }
-        }
-
-        // Does homing sequence if state is set to HOMING
-        // Will turn motor towards home switch until home switch is enabled
-        if (shooterState == ShooterState.HOMING) {
-            // currentPosition will be updated after each increment of .1 motor rotations
-            // it will then be used to calculate the next targetPosition by incrementing it by .1
-            double currentPosition;
-
-            // startTime and currentTime will be used to check how long the homing is occurring
-            double startTime = Timer.getFPGATimestamp();
-            double currentTime = startTime;
-
-            while (getHomeSwitchState() == HomeSwitchState.PRESSED && currentTime - startTime > Constants.MAX_HOMING_TIME_S) {
-                // Gets current time
-                currentTime = Timer.getFPGATimestamp();
-
-                // Gets encoder value at start of homing
-                currentPosition = hoodRelativeEncoder.getPosition();
-
-                // Will only set to next position when motor has completed last increment
-                if (Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3) {
-                    hoodPID.setReference(currentPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
-                            CANSparkMax.ControlType.kPosition);
-                }
-            }
-            // Sets the relative encoder reference to the position of the home switch
-            hoodRelativeEncoder.setPosition(90);
-
-            // Changes shooter state back to ON when HOMING is finished
-            turnShooterON();
-        }
-
-        // Will lock the motors if Shooter State is OFF
-        if (shooterState == ShooterState.OFF) {
-            setShooterSpeed(0);
-            disableFeederWheel();
-            setHoodPosition(50);
-        }
-
+        // Sets LED different colors for different shooter scenarios
         // If Shooter is not at the target speed, LED will display this color
-        if (!isShooterAtTargetSpeed()) {
+        if (isShooterAtTargetSpeed() == false) {
             BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
         }
 
         // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
-        else if (!isHoodAtTargetAngle()) {
+        else if (isHoodAtTargetAngle() == false) {
             BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
         }
 
@@ -343,10 +303,104 @@ public class Shooter extends AbstractSubsystem {
         else {
             BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_READY_TO_SHOOT);
         }
+    }
 
-        if (shooterState == ShooterState.TEST) {
+    private void setLedForHomingMode() {
 
+    }
 
+    private void setLedForTestMode() {
+
+    }
+
+    @Override
+    public void update() {
+        // Switch statement only allows certain code to be run for specific states of the robot
+        switch (shooterState) {
+            case OFF:
+                // Will lock the motors if Shooter State is OFF
+                setShooterSpeed(0);
+                disableFeederWheel();
+                setHoodPosition(50);
+
+                break;
+
+            case ON:
+                // Sets shooter motor to desired shooter speed
+                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
+
+                // Sets Motor to travel to desired hood angle
+                hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
+
+                // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target
+                // speed
+                if ((feederWheelState == FeederWheelState.ON) && Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3 &&
+                        isShooterAtTargetSpeed()) {
+
+                    // Set Feeder wheel to MAX speed
+                    feederWheel.set(ControlMode.PercentOutput, 1);
+                    forceFeederOnTime = Timer.getFPGATimestamp() + 0.5;
+                } else {
+
+                    // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
+                    if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                        feederWheel.set(ControlMode.PercentOutput, 0);
+                    }
+                }
+
+                // Sets Blinkin LED different colors for different flywheel and hood states
+                setLedForOnMode();
+
+                break;
+
+            case HOMING:
+                // Does homing sequence if state is set to HOMING
+                // Will turn motor towards home switch until home switch is enabled
+
+                // Checks if homing has started yet
+                if (homingStartTime == -1) {
+                    // Records start of homing time, with current time being the same as the start time
+                    homingStartTime = Timer.getFPGATimestamp();
+                    homingCurrentTime = homingStartTime;
+                }
+
+                // Executes this if home switch is not pressed
+                if (getHomeSwitchState() == HomeSwitchState.NOT_PRESSED) {
+                    // Gets current time
+                    homingCurrentTime = Timer.getFPGATimestamp();
+
+                    // Gets current encoder value
+                    currentHomingPosition = hoodRelativeEncoder.getPosition();
+
+                    // Only executes if last homing increment has finished
+                    if (Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3) {
+                        hoodPID.setReference(currentHomingPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
+                                CANSparkMax.ControlType.kPosition);
+                    }
+                }
+                // If home switch is pressed
+                else {
+                    // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
+                    hoodRelativeEncoder.setPosition(90);
+
+                    // Changes shooter state back to ON when HOMING is finished
+                    turnShooterON();
+                }
+
+                // Executes this if homing has been going on for the MAX allotted time
+                if (homingCurrentTime - homingStartTime > Constants.MAX_HOMING_TIME_S) {
+                    DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
+                            false);
+
+                    // Turns homing off
+                    turnShooterON();
+                }
+
+                break;
+
+            case TEST:
+
+                break;
         }
     }
 
