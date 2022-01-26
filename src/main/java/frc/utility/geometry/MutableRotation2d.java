@@ -15,46 +15,46 @@ import java.util.Objects;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
-public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geometry.Rotation2d> {
-    private double value;
+public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
+    private double radians;
     private double cos;
     private double sin;
 
     /**
-     * Constructs a Rotation2d with a default angle of 0 degrees.
+     * Constructs a MutableRotation2d with a default angle of 0 degrees.
      */
     public MutableRotation2d() {
-        value = 0.0;
+        radians = 0.0;
         cos = 1.0;
         sin = 0.0;
     }
 
     public MutableRotation2d(Rotation2d rotation) {
-        this.value = rotation.getRadians();
+        this.radians = rotation.getRadians();
         this.cos = rotation.getCos();
         this.sin = rotation.getSin();
     }
 
     public MutableRotation2d(MutableRotation2d translation) {
-        this.value = translation.getRadians();
+        this.radians = translation.getRadians();
         cos = translation.getCos();
         sin = translation.getSin();
     }
 
     /**
-     * Constructs a Rotation2d with the given radian value. The x and y don't have to be normalized.
+     * Constructs a MutableRotation2d with the given radian radians. The x and y don't have to be normalized.
      *
-     * @param value The value of the angle in radians.
+     * @param radians The radians of the angle in radians.
      */
     @JsonCreator
-    public MutableRotation2d(@JsonProperty(required = true, value = "radians") double value) {
-        this.value = value;
-        cos = Math.cos(value);
-        sin = Math.sin(value);
+    public MutableRotation2d(@JsonProperty(required = true, value = "radians") double radians) {
+        this.radians = radians;
+        cos = Math.cos(radians);
+        sin = Math.sin(radians);
     }
 
     /**
-     * Constructs a Rotation2d with the given x and y (cosine and sine) components.
+     * Constructs a MutableRotation2d with the given x and y (cosine and sine) components.
      *
      * @param x The x component or cosine of the rotation.
      * @param y The y component or sine of the rotation.
@@ -68,11 +68,11 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
             sin = 0.0;
             cos = 1.0;
         }
-        value = Math.atan2(sin, cos);
+        radians = Math.atan2(sin, cos);
     }
 
     /**
-     * Constructs and returns a Rotation2d with the given degree value.
+     * Constructs and returns a MutableRotation2d with the given degree value.
      *
      * @param degrees The value of the angle in degrees.
      * @return The rotation object with the desired angle value.
@@ -84,7 +84,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
     /**
      * Adds two rotations together, with the result being bounded between -pi and pi.
      *
-     * <p>For example, Rotation2d.fromDegrees(30) + Rotation2d.fromDegrees(60) = Rotation2d{-pi/2}
+     * <p>For example, MutableRotation2d.fromDegrees(30) + MutableRotation2d.fromDegrees(60) = MutableRotation2d{-pi/2}
      *
      * @param other The rotation to add.
      * @return The sum of the two rotations.
@@ -96,7 +96,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
     /**
      * Adds two rotations together, with the result being bounded between -pi and pi.
      *
-     * <p>For example, Rotation2d.fromDegrees(30) + Rotation2d.fromDegrees(60) = Rotation2d{-pi/2}
+     * <p>For example, MutableRotation2d.fromDegrees(30) + MutableRotation2d.fromDegrees(60) = MutableRotation2d{-pi/2}
      *
      * @param other The rotation to add.
      * @return The sum of the two rotations.
@@ -108,7 +108,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
     /**
      * Subtracts the new rotation from the current rotation and returns the new rotation.
      *
-     * <p>For example, Rotation2d.fromDegrees(10) - Rotation2d.fromDegrees(100) = Rotation2d{-pi/2}
+     * <p>For example, MutableRotation2d.fromDegrees(10) - MutableRotation2d.fromDegrees(100) = MutableRotation2d{-pi/2}
      *
      * @param other The rotation to subtract.
      * @return The difference between the two rotations.
@@ -120,7 +120,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
     /**
      * Subtracts the new rotation from the current rotation and returns the new rotation.
      *
-     * <p>For example, Rotation2d.fromDegrees(10) - Rotation2d.fromDegrees(100) = Rotation2d{-pi/2}
+     * <p>For example, MutableRotation2d.fromDegrees(10) - MutableRotation2d.fromDegrees(100) = MutableRotation2d{-pi/2}
      *
      * @param other The rotation to subtract.
      * @return The difference between the two rotations.
@@ -135,17 +135,17 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
      * @return The inverse of the current rotation.
      */
     public MutableRotation2d unaryMinus() {
-        return setRadians(-value);
+        return setRadians(-radians);
     }
 
     /**
      * Multiplies the current rotation by a scalar.
      *
      * @param scalar The scalar.
-     * @return This scaled Rotation2d.
+     * @return This scaled MutableRotation2d.
      */
     public MutableRotation2d times(double scalar) {
-        return setRadians(value * scalar);
+        return setRadians(radians * scalar);
     }
 
     /**
@@ -160,7 +160,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
      * </pre>
      *
      * @param other The rotation to rotate by.
-     * @return This rotated Rotation2d.
+     * @return This rotated MutableRotation2d.
      */
     public MutableRotation2d rotateBy(MutableRotation2d other) {
         return set(cos * other.cos - sin * other.sin, cos * other.sin + sin * other.cos);
@@ -178,7 +178,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
      * </pre>
      *
      * @param other The rotation to rotate by.
-     * @return This rotated Rotation2d.
+     * @return This rotated MutableRotation2d.
      */
     public MutableRotation2d rotateBy(Rotation2d other) {
         return set(cos * other.getCos() - sin * other.getSin(), cos * other.getSin() + sin * other.getCos());
@@ -191,7 +191,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
      */
     @JsonProperty
     public double getRadians() {
-        return value;
+        return radians;
     }
 
     /**
@@ -200,7 +200,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
      * @return The degree value of the rotation.
      */
     public double getDegrees() {
-        return Math.toDegrees(value);
+        return Math.toDegrees(radians);
     }
 
     /**
@@ -237,17 +237,17 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
      * @return This MutableRotation2d.
      */
     public MutableRotation2d setRadians(double radians) {
-        this.value = radians;
-        this.cos = Math.cos(value);
-        this.sin = Math.sin(value);
+        this.radians = radians;
+        this.cos = Math.cos(this.radians);
+        this.sin = Math.sin(this.radians);
         return this;
     }
 
     /**
-     * Sets this MutableRotation2d to the given degree value.
+     * Sets this MutableRotation2d to the given degree radians.
      *
      * @param degrees The value of the angle in degrees.
-     * @return This rotation with desired angle value.
+     * @return This rotation with desired angle radians.
      */
     public MutableRotation2d setDegrees(double degrees) {
         setRadians(Math.toRadians(degrees));
@@ -255,7 +255,7 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
     }
 
     /**
-     * Sets this Rotation2d with the given x and y (cosine and sine) components.
+     * Sets this MutableRotation2d with the given x and y (cosine and sine) components.
      *
      * @param x The x component or cosine of the rotation.
      * @param y The y component or sine of the rotation.
@@ -270,18 +270,18 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
             sin = 0.0;
             cos = 1.0;
         }
-        value = Math.atan2(sin, cos);
+        radians = Math.atan2(sin, cos);
         return this;
     }
 
 
     @Override
     public String toString() {
-        return String.format("Rotation2d(Rads: %.2f, Deg: %.2f)", value, Math.toDegrees(value));
+        return String.format("MutableRotation2d(Rads: %.2f, Deg: %.2f)", radians, Math.toDegrees(radians));
     }
 
     /**
-     * Checks equality between this Rotation2d and another object.
+     * Checks equality between this MutableRotation2d and another object.
      *
      * @param obj The other object.
      * @return Whether the two objects are equal or not.
@@ -298,14 +298,18 @@ public class MutableRotation2d implements Interpolatable<edu.wpi.first.math.geom
         return false;
     }
 
+    public Rotation2d getRotation2d() {
+        return new Rotation2d(cos, sin);
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return Objects.hash(radians);
     }
 
     @Override
     @SuppressWarnings("ParameterName")
-    public edu.wpi.first.math.geometry.Rotation2d interpolate(edu.wpi.first.math.geometry.Rotation2d endValue, double t) {
-        return new edu.wpi.first.math.geometry.Rotation2d(MathUtil.interpolate(this.getRadians(), endValue.getRadians(), t));
+    public MutableRotation2d interpolate(MutableRotation2d endValue, double t) {
+        return setRadians(MathUtil.interpolate(this.getRadians(), endValue.getRadians(), t));
     }
 }

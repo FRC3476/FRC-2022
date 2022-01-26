@@ -48,6 +48,7 @@ public class Robot extends TimedRobot {
     @NotNull NetworkTable position = autoDataTable.getSubTable("position");
     NetworkTableEntry xPos = position.getEntry("x");
     NetworkTableEntry yPos = position.getEntry("y");
+    NetworkTableEntry rotationPos = position.getEntry("rotation");
     NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
     NetworkTableEntry pathProcessingStatusEntry = autoDataTable.getEntry("processing");
     NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
@@ -104,9 +105,10 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         if (isEnabled()) {
-            //Get data from the robot tracker and upload it to the robot tracker (Units must be in meters)
-            xPos.setDouble(robotTracker.getPoseMeters().getX());
-            yPos.setDouble(robotTracker.getPoseMeters().getY());
+            //Get data from the robot tracker and upload it to the auto GUI (Units must be in meters)
+            xPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getX());
+            yPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getY());
+            rotationPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getRotation().getRadians());
         }
 
         //Listen changes in the network auto
@@ -203,7 +205,8 @@ public class Robot extends TimedRobot {
 
 
         if (xbox.getRisingEdge(1)) {
-            robotTracker.resetPosition(new Pose2d(robotTracker.getPoseMeters().getTranslation(), new Rotation2d(0)));
+            //Resets the current robot heading to zero. Useful if the heading drifts for some reason
+            robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {

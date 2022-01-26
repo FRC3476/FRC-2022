@@ -10,7 +10,6 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
 import com.revrobotics.SparkMaxPIDController;
-import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,6 +26,8 @@ import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
+import frc.utility.wpimodified.HolonomicDriveController;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -197,7 +198,7 @@ public final class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
                     (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
-                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+                    Rotation2d.fromDegrees(getWheelRotation(i)));
             swerveModuleState[i] = moduleState;
         }
         return swerveModuleState;
@@ -290,11 +291,11 @@ public final class Drive extends AbstractSubsystem {
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, double acceleration) {
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
-            //                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+            //                    Rotation2d.fromDegrees(getWheelRotation(i)));
             // TODO: flip the acceleration if we flip the module
             SwerveModuleState targetState = moduleStates[i];
             double targetAngle = targetState.angle.getDegrees();
-            double currentAngle = getAbsolutePosition(i); //swerveEncoders[i].getPosition();
+            double currentAngle = getWheelRotation(i); //swerveEncoders[i].getPosition();
 
             double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
 
@@ -452,9 +453,11 @@ public final class Drive extends AbstractSubsystem {
 
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
-        System.out.println(goal);
-        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
-                autoTargetHeading);
+        Trajectory.State trackerPose = currentAutoTrajectory.sample(
+                Timer.getFPGATimestamp() - autoStartTime - Constants.SPARK_VELOCITY_MEASUREMENT_LATENCY);
+
+        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(), goal,
+                trackerPose, autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
         if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;
@@ -596,7 +599,7 @@ public final class Drive extends AbstractSubsystem {
             double relPos = swerveEncoders[i].getPosition() % 360;
             if (relPos < 0) relPos += 360;
             logData("Swerve Motor " + i + " Relative Position", relPos);
-            logData("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
+            logData("Swerve Motor " + i + " Absolute Position", getWheelRotation(i));
             logData("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
@@ -615,7 +618,7 @@ public final class Drive extends AbstractSubsystem {
      * @param moduleNumber the module to set
      * @return angle in degrees of the module
      */
-    public double getAbsolutePosition(int moduleNumber) {
+    public double getWheelRotation(int moduleNumber) {
         if (useRelativeEncoderPosition) {
             double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
             if (relPos < 0) relPos += 360;
@@ -623,6 +626,36 @@ public final class Drive extends AbstractSubsystem {
         } else {
             return swerveCanCoders[moduleNumber].getPosition();
         }
+    }
+
+    /**
+     * Returns the angle/position of the modules
+     *
+     * @return and array of the four angles
+     */
+    public double[] getWheelRotations() {
+        double[] positions = new double[4];
+        for (int i = 0; i < 4; i++) {
+            if (useRelativeEncoderPosition) {
+                double relPos = swerveEncoders[i].getPosition() % 360;
+                if (relPos < 0) relPos += 360;
+                positions[i] = relPos;
+            } else {
+                positions[i] = swerveCanCoders[i].getPosition();
+            }
+        }
+        return positions;
+    }
+
+
+    @Contract(pure = true)
+    public double[] getModuleSpeeds() {
+        double[] speeds = new double[4];
+
+        for (int i = 0; i < 4; i++) {
+            speeds[i] = (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION;
+        }
+        return speeds;
     }
 
     /**

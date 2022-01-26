@@ -122,12 +122,14 @@ public final class Constants {
      */
     public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
 
+    //Robot Tracker
+    public static final double SPARK_VELOCITY_MEASUREMENT_LATENCY = 0.112;
+    public static final int ROBOT_TRACKER_PERIOD = 10;
+
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
     public static final int SOLENOID_CHANNEL = 0;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = 1.0;
     public static final double INTAKE_OPEN_TIME = 0.3;
-
-
 }

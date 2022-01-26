@@ -25,11 +25,11 @@ public abstract class TemplateAuto implements Runnable {
     }
 
     public Translation2d here() {
-        return RobotTracker.getInstance().getPoseMeters().getTranslation();
+        return RobotTracker.getInstance().getLatencyCompedPoseMeters().getTranslation();
     }
 
     public Rotation2d dir() {
-        return RobotTracker.getInstance().getPoseMeters().getRotation();
+        return RobotTracker.getInstance().getLastEstimatedPoseMeters().getRotation();
     }
 
     synchronized public void killSwitch() {
