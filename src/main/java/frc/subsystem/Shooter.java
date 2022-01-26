@@ -84,6 +84,30 @@ public class Shooter extends AbstractSubsystem {
 
     private ShooterState shooterState = ShooterState.ON;
 
+    public enum NextState {
+        /**
+         * Will turn off all motors
+         */
+        OFF,
+
+        /**
+         * Shooter is homing the hood
+         */
+        HOMING,
+
+        /**
+         * Flywheel is spinning and getting ready/is ready to shoot
+         */
+        ON,
+
+        /**
+         * Test state that will drive motors expected conditions
+         */
+        TEST
+    }
+
+    private NextState nextState;
+
     // The target hood angle
     private double desiredHoodAngle;
 
@@ -183,7 +207,12 @@ public class Shooter extends AbstractSubsystem {
 
     // Sets ShooterState to HOMING, HOMING will occur in update
     public void homeHood() {
-        shooterState = ShooterState.HOMING;
+        // Checks to make sure that robot is not currently HOMING or TESTING
+        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
+            nextState = nextState.HOMING;
+        } else {
+            shooterState = ShooterState.HOMING;
+        }
     }
 
     // Toggles between methods to get hood positions
@@ -257,12 +286,22 @@ public class Shooter extends AbstractSubsystem {
 
     // Sets shooter state to OFF, will lock motors
     public void turnShooterOFF() {
-        shooterState = ShooterState.OFF;
+        // Checks to make sure that HOMING or TEST is not occurring
+        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
+            nextState = nextState.OFF;
+        } else {
+            shooterState = ShooterState.HOMING.OFF;
+        }
     }
 
     // Turns shooter ON
     public void turnShooterON() {
-        shooterState = ShooterState.ON;
+        // Checks to make sure that HOMING or TEST is not occurring
+        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
+            nextState = NextState.ON;
+        } else {
+            shooterState = ShooterState.ON;
+        }
     }
 
     // Checks if Hood is at the target angle with a configurable allowed error
@@ -281,6 +320,38 @@ public class Shooter extends AbstractSubsystem {
         return shooterState;
     }
 
+    /**
+     * Returns queued state for states that have been requested but could not be changed immediately
+     *
+     * @return returns queued state, may be null if there is no queued state
+     */
+    public NextState getNextState() {
+        return nextState;
+    }
+
+    // Changes shooter state to nextValue, will be called
+    private void setNextStateToCurrentState() {
+        // Changes shooter state to nextValue
+        if (nextState == NextState.ON) {
+            shooterState = shooterState.ON;
+        } else if (nextState == NextState.OFF) {
+            shooterState = shooterState.OFF;
+        } else if (nextState == NextState.HOMING) {
+            shooterState = shooterState.HOMING;
+        } else if (nextState == NextState.TEST) {
+            shooterState = shooterState.TEST;
+        }
+
+        // Defaults to ON if next state is not specified
+        else {
+            shooterState = shooterState.ON;
+        }
+
+        // Resets nextState
+        nextState = null;
+    }
+
+    // TODO: Fill out the rest of the LED methods
     private void setLedForOffMode() {
 
     }
@@ -383,8 +454,8 @@ public class Shooter extends AbstractSubsystem {
                     // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
                     hoodRelativeEncoder.setPosition(90);
 
-                    // Changes shooter state back to ON when HOMING is finished
-                    turnShooterON();
+                    // Turns homing off and sets it to the next queued state, ON if no state queued
+                    setNextStateToCurrentState();
                 }
 
                 // Executes this if homing has been going on for the MAX allotted time
@@ -392,13 +463,16 @@ public class Shooter extends AbstractSubsystem {
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);
 
-                    // Turns homing off
-                    turnShooterON();
+                    // Turns homing off and sets it to the next queued state, ON if no state queued
+                    setNextStateToCurrentState();
                 }
 
                 break;
 
             case TEST:
+
+                // Turns TESTING off and sets it to the next queued state, ON if no state queued
+                setNextStateToCurrentState();
 
                 break;
         }
@@ -406,8 +480,12 @@ public class Shooter extends AbstractSubsystem {
 
     @Override
     public void selfTest() {
-
-        shooterState = ShooterState.TEST;
+        // Checks to make sure that robot is not currently HOMING or TESTING
+        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
+            nextState = nextState.TEST;
+        } else {
+            shooterState = ShooterState.TEST;
+        }
     }
 
     // Logs variety of values and states to ShuffleBoard
