@@ -752,6 +752,7 @@ public class Shooter extends AbstractSubsystem {
         logData("Shooter State", getShooterState());
         logData("Shooter Flywheel Speed Error", getDesiredShooterSpeed() - getShooterRPM());
         logData("Hood Position Error", getDesiredHoodAngle() - getHoodAngle());
+        logData("Current Test", getCurrentTest());
     }
 
     @Override
