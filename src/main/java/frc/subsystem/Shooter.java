@@ -111,6 +111,27 @@ public class Shooter extends AbstractSubsystem {
     // The target hood angle
     private double desiredHoodAngle;
 
+    // Test Pass or Fail Booleans, only records latest tests
+    public boolean shooterMeetsExpectedSpeedTest;
+    public boolean feederMeetsExpectedSpeedTest;
+    public boolean hoodMeetsMinimumAngleTest;
+    public boolean hoodMeetsMaximumAngleTest;
+
+    // Enum to keep track of currently tested part, allows one test to be done at a time
+    private enum CurrentTest {
+        SHOOTER,
+        FEEDER,
+        HOOD_MIN_ANGLE,
+        HOOD_MAX_ANGLE,
+        TESTS_FINISHED
+    }
+
+    private CurrentTest currentTest;
+
+    // Test Timing Constants
+    private double testStartTime = -1;
+    private double testCurrentTime;
+
     // Singleton Setup
     private static Shooter instance = new Shooter();
 
@@ -379,6 +400,17 @@ public class Shooter extends AbstractSubsystem {
         BlinkinLED.getInstance().setColor(Constants.LED_TEST_IN_PROGRESS);
     }
 
+    // Gets the currently running test, will be null if no test is running
+    public CurrentTest getCurrentTest() {
+        return currentTest;
+    }
+
+    // Checks to see if current test is taking longer than expected
+    private boolean doesCurrentTestExceedTimeLimit() {
+        // Checks to see if difference between current test time and start of test time is greater than allowed test time
+        return (testCurrentTime - testStartTime) > Constants.MAX_INDIVIDUAL_TEST_TIME_SEC;
+    }
+
     @Override
     public void update() {
         // Switch statement only allows certain code to be run for specific states of the robot
@@ -490,11 +522,207 @@ public class Shooter extends AbstractSubsystem {
 
             case TEST:
 
-                // Turns TESTING off and sets it to the next queued state, ON if no state queued
-                setNextStateToCurrentState();
+                // Initialization of test
+                if (testStartTime == -1) {
+                    // Sets start time and current time
+                    testStartTime = Timer.getFPGATimestamp();
+                    testCurrentTime = testStartTime;
+
+                    // Resets last test booleans
+                    shooterMeetsExpectedSpeedTest = false;
+                    feederMeetsExpectedSpeedTest = false;
+                    hoodMeetsMinimumAngleTest = false;
+                    hoodMeetsMaximumAngleTest = false;
+
+                    // Sets shooter to first test
+                    currentTest = CurrentTest.SHOOTER;
+
+                    // Prints out start of test time
+                    System.out.println("Shooter Test Starting At: " + testCurrentTime);
+                }
+
+                // Runs specified test if current test equals that test
+
+                // Tests Shooter Flywheel
+                if (currentTest == CurrentTest.SHOOTER) {
+                    // Sets shooter speed to test speed
+                    setShooterSpeed(Constants.SHOOTER_TEST_SPEED);
+
+                    if (isShooterAtTargetSpeed() == true) {
+                        // Stops shooter
+                        setShooterSpeed(0);
+
+                        // Sets test boolean to true
+                        shooterMeetsExpectedSpeedTest = true;
+
+                        // Sets next test to feeder
+                        currentTest = CurrentTest.FEEDER;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Flywheel Passed Speed Up Test At: " + testCurrentTime);
+                    }
+
+                    if (doesCurrentTestExceedTimeLimit()) {
+                        // Stops shooter
+                        setShooterSpeed(0);
+
+                        // Sets test boolean to true
+                        shooterMeetsExpectedSpeedTest = false;
+
+                        // Sets next test to feeder
+                        currentTest = CurrentTest.FEEDER;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Flywheel Failed Speed Up Test At: " + testCurrentTime);
+
+                        DriverStation.reportWarning("Shooter Flywheel Failed Speed Up Test At: " + testCurrentTime, false);
+                    }
+                }
+
+                // Tests Feeder Wheel
+                if (currentTest == CurrentTest.FEEDER) {
+                    // Enables Feeder Wheel
+                    feederWheel.set(ControlMode.PercentOutput, 1);
+
+                    // Checks to see if feederWheel is receiving proper current
+                    if (feederWheel.getSupplyCurrent() > Constants.FEEDER_PASSING_TEST_CURRENT) {
+                        // Disables Feeder Wheel
+                        feederWheel.set(ControlMode.PercentOutput, 0);
+
+                        // Sets test boolean to false
+                        feederMeetsExpectedSpeedTest = true;
+
+                        // Sets next test to hood MAX angle
+                        currentTest = CurrentTest.HOOD_MAX_ANGLE;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Feeder Passed Speed Up Test At: " + testCurrentTime);
+                    }
+
+                    if (doesCurrentTestExceedTimeLimit()) {
+                        // Disables Feeder Wheel
+                        feederWheel.set(ControlMode.PercentOutput, 0);
+
+                        // Sets test boolean to false
+                        feederMeetsExpectedSpeedTest = false;
+
+                        // Sets next test to hood MAX angle
+                        currentTest = CurrentTest.HOOD_MAX_ANGLE;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Feeder Failed Speed Up Test At: " + testCurrentTime);
+
+                        DriverStation.reportWarning("Shooter Feeder Failed Speed Up Test At: " + testCurrentTime, false);
+                    }
+                }
+
+                // Tests Maximum hood angle
+                if (currentTest == CurrentTest.HOOD_MAX_ANGLE) {
+                    // Sets hood to MAX position
+                    setHoodPosition(90);
+
+                    if (isHoodAtTargetAngle()) {
+                        // Sets test boolean to true
+                        hoodMeetsMaximumAngleTest = true;
+
+                        // Sets next test to hood MIN angle
+                        currentTest = CurrentTest.HOOD_MIN_ANGLE;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Hood Reached MAXIMUM Angle At: " + testCurrentTime);
+                    }
+
+                    if (doesCurrentTestExceedTimeLimit()) {
+                        // Sets test boolean to false
+                        hoodMeetsMaximumAngleTest = false;
+
+                        // Sets next test to hood MIN angle
+                        currentTest = CurrentTest.HOOD_MIN_ANGLE;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Hood Failed To Reach MAXIMUM Angle At: " + testCurrentTime);
+
+                        DriverStation.reportWarning("Shooter Hood Failed To Reach MAXIMUM Angle At: " + testCurrentTime, false);
+                    }
+                }
+
+                // Tests MINIMUM Hood Angle
+                if (currentTest == CurrentTest.HOOD_MIN_ANGLE) {
+                    // Sets hood to MIN position
+                    setHoodPosition(50);
+
+                    if (isHoodAtTargetAngle()) {
+                        // Sets test boolean to true
+                        hoodMeetsMinimumAngleTest = true;
+
+                        // Allows for test wrap up to occur
+                        currentTest = CurrentTest.TESTS_FINISHED;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Hood Reached MINIMUM Angle At: " + testCurrentTime);
+                    }
+
+                    if (doesCurrentTestExceedTimeLimit()) {
+                        // Sets test boolean to false
+                        hoodMeetsMinimumAngleTest = false;
+
+                        // Sets next test to hood MIN angle
+                        currentTest = CurrentTest.TESTS_FINISHED;
+
+                        // Resets start time for next test
+                        testStartTime = Timer.getFPGATimestamp();
+
+                        // Prints out result of test
+                        System.out.println("Shooter Hood Failed To Reach MINIMUM Angle At: " + testCurrentTime);
+
+                        DriverStation.reportWarning("Shooter Hood Failed To Raech MINIMUM Angle At " + testCurrentTime, false);
+                    }
+                }
+
+                // Wraps up testing
+                if (currentTest == CurrentTest.TESTS_FINISHED) {
+                    // Updates Current Test Time
+                    testCurrentTime = Timer.getFPGATimestamp();
+
+                    // Turns TESTING off and sets it to the next queued state, ON if no state queued
+                    setNextStateToCurrentState();
+
+                    // Fully resets testing start time
+                    testStartTime = -1;
+
+                    // Resets currentTest
+                    currentTest = null;
+
+                    // Prints out alert that tests are finished
+                    System.out.println("All Shooter Tests Completed At: " + testCurrentTime);
+                }
+                // Updates Current Test Time
+                testCurrentTime = Timer.getFPGATimestamp();
 
                 // Sets LED for testing states
                 setLedForTestMode();
+
                 break;
         }
     }

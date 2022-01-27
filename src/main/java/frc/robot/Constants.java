@@ -191,7 +191,11 @@ public final class Constants {
     public static final double LED_TEST_IN_PROGRESS = 0.8;
 
     // Shooter Test Constants
+    public static final double MAX_INDIVIDUAL_TEST_TIME_SEC = 20;
+
     public static final double SHOOTER_TEST_SPEED = 3000;
+
+    public static final double FEEDER_PASSING_TEST_CURRENT = .5;
 
 
     // Intake Constants TODO: Need To Set
