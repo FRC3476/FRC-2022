@@ -369,6 +369,8 @@ public final class RobotTracker extends AbstractSubsystem {
         SmartDashboard.putNumber("Latency Comped Robot Velocity X", getLatencyCompedChassisSpeeds().vxMetersPerSecond);
         SmartDashboard.putNumber("Latency Comped Robot Velocity Y", getLatencyCompedChassisSpeeds().vyMetersPerSecond);
         SmartDashboard.putNumber("Latency Comped Robot Velocity Theta", getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+
+        SmartDashboard.putNumber("Timestamp", currentOdometryTime);
     }
 
     @Override
