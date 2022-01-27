@@ -1,12 +1,13 @@
 package frc.subsystem;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.MathUtil;
+import frc.utility.Timer;
 import frc.utility.geometry.MutableTranslation2d;
 
 public class VisionManager extends AbstractSubsystem {
@@ -35,53 +36,55 @@ public class VisionManager extends AbstractSubsystem {
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs) {
-        ChassisSpeeds currentRobotState = drive.getRobotState();
-        Translation2d currentRobotVelocity = new Translation2d(currentRobotState.vxMetersPerSecond,
-                currentRobotState.vyMetersPerSecond);
-
-        Translation2d predictedPosition = predictFutureTranslation(0.2, getCurrentTranslation(), currentRobotVelocity);
-        double neededBallVelocity = getNeededBallVelocity(predictedPosition.getNorm());
-
-        Translation2d neededEjectionVector = new Translation2d(neededBallVelocity,
-                Math.atan2(predictedPosition.getY(), predictedPosition.getX()));
-
-        Translation2d velocityCompensatedEjectionVector = getVelocityCompensatedEjectionVector(currentRobotVelocity,
-                neededEjectionVector);
-
-        double wantedAngle = Math.atan2(velocityCompensatedEjectionVector.getY(), velocityCompensatedEjectionVector.getX());
-
-        drive.updateTurn(controllerDriveInputs.getX(), controllerDriveInputs.getY(), new Rotation2d(wantedAngle));
-
-        //TODO: set the shooter speed
     }
 
-    // Calculate Current Robot Position
-    public Translation2d getCurrentTranslation() {
+    /**
+     * @return the current translation of the robot based on the vision data
+     */
+    public MutableTranslation2d getCurrentTranslation() {
         Rotation2d currentGyroAngle = RobotTracker.getInstance().getGyroAngle();
 
         double distanceToTarget = limelight.getDistance() + Constants.GOAL_RADIUS;
         double angleToTarget = 180 + currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
-        MutableTranslation2d currentPose = new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
-                distanceToTarget * Math.sin(Math.toRadians(angleToTarget))).minus(Constants.LIMELIGHT_CENTER_OFFSET).plus(
-                Constants.GOAL_POSITION);
-        return currentPose.getTranslation2d();
+        return new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
+                distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
+                .minus(Constants.LIMELIGHT_CENTER_OFFSET).plus(Constants.GOAL_POSITION);
     }
 
-    // Predict Position In The Future
 
-    public Translation2d predictFutureTranslation(double predictAheadTime, Translation2d currentTranslation,
-                                                  Translation2d currentVelocity) {
+    /*
+     * @return the current position of the robot based on a translation and some time. It adds the current velocity * time to
+     * the translation.
+     */
+    public MutableTranslation2d predictFutureTranslation(double predictAheadTime, MutableTranslation2d currentTranslation,
+                                                         Translation2d currentVelocity) {
         return currentTranslation.plus(currentVelocity.times(predictAheadTime));
     }
 
-    // TODO: actually calculate this
-    public double getNeededBallVelocity(double distance) {
-        return distance * 5;
+
+    /**
+     * @param dist  distance to target (meters)
+     * @param angle angle of the hood (radians)
+     * @return horizontal velocity needed to hit target
+     */
+    public double getNeededHorizontalBallVelocity(double dist, double angle) {
+        //@formatter:off
+        return Math.sqrt((0.5 * Constants.GRAVITY * dist) / (Math.tan(angle) - ((Constants.GOAL_HEIGHT - Constants.SHOOTER_HEIGHT) / dist)));
+        //@formatter:on
     }
 
+    /**
+     * @param speed     wanted ejection velocity
+     * @param hoodAngle angle of the hood
+     */
+    public void getShooterRPM(double speed, double hoodAngle) {
+
+    }
+    
+
     @SuppressWarnings("NewMethodNamingConvention")
-    public Translation2d getVelocityCompensatedEjectionVector(Translation2d robotVelocityVector,
-                                                              Translation2d wantedEjectionVector) {
+    public MutableTranslation2d getVelocityCompensatedEjectionVector(Translation2d robotVelocityVector,
+                                                                     MutableTranslation2d wantedEjectionVector) {
         return wantedEjectionVector.minus(robotVelocityVector);
     }
 
@@ -89,14 +92,19 @@ public class VisionManager extends AbstractSubsystem {
      * Adds a vision update to the robot tracker even if the calculated pose is too far from the expected pose.
      */
     public void forceUpdatePose() {
-
+        robotTracker.addVisionMeasurement(
+                new Pose2d(getCurrentTranslation().getTranslation2d(), robotTracker.getLatencyCompedPoseMeters().getRotation()),
+                Timer.getFPGATimestamp());
     }
 
     @Override
     public void update() {
-        Translation2d currentTranslation = getCurrentTranslation();
-        if (MathUtil.dist2(robotTracker.getPoseMeters().getTranslation(),
-                currentTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD) {
+        MutableTranslation2d robotTranslation = getCurrentTranslation();
+        if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
+                robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD) {
+            robotTracker.addVisionMeasurement(
+                    new Pose2d(robotTranslation.getTranslation2d(), robotTracker.getLatencyCompedPoseMeters().getRotation()),
+                    Timer.getFPGATimestamp());
             logData("Using Vision Info", Boolean.TRUE);
         } else {
             logData("Using Vision Info", Boolean.FALSE);

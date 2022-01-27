@@ -114,13 +114,28 @@ public final class Constants {
      */
     public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
 
-    //field constants
+    //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 
     /**
      * The distance to the center of the goal to the vision tape.
      */
     public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
+
+    public static final double GRAVITY = 9.80665;
+
+    /**
+     * Goal height in meters.
+     */
+    public static final double GOAL_HEIGHT = 2.64;
+    /**
+     * The height of the center of the Ejection point in meters.
+     */
+    public static final double SHOOTER_HEIGHT = 0.5; //TODO: Config
+
+    public static final double MAX_SHOOTER_RPM = 5500;
+    public static final double MAX_PREFER_SHOOTER_RPM = 4500;
+
 
     //Robot Tracker
     public static final double SPARK_VELOCITY_MEASUREMENT_LATENCY = 0.112;
