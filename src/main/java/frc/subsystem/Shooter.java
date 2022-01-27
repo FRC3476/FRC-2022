@@ -451,14 +451,14 @@ public class Shooter extends AbstractSubsystem {
                     // Gets current encoder value
                     currentHomingPosition = hoodRelativeEncoder.getPosition();
 
-                    // Only executes if last homing increment has finished
-                    if (Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3) {
-                        hoodPID.setReference(currentHomingPosition + Constants.HOMING_PRECISION_IN_MOTOR_ROTATIONS,
-                                CANSparkMax.ControlType.kPosition);
-                    }
+                    // Runs Motor at .05 Amps while home switch is not pressed
+                    hoodPID.setReference(Constants.HOMING_MOTOR_CURRENT_AMPS, CANSparkMax.ControlType.kCurrent);
                 }
                 // If home switch is pressed
                 else {
+                    // Sets current to zero if home switch is pressed
+                    hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
+
                     // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
                     hoodRelativeEncoder.setPosition(90);
 
@@ -468,6 +468,9 @@ public class Shooter extends AbstractSubsystem {
 
                 // Executes this if homing has been going on for the MAX allotted time
                 if (homingCurrentTime - homingStartTime > Constants.MAX_HOMING_TIME_S) {
+                    // Sets current to zero if max time is exceeded
+                    hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
+
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);
 
