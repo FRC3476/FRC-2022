@@ -191,10 +191,8 @@ public class Shooter extends AbstractSubsystem {
                 DriverStation.reportWarning("Hood position reading values over MAX expected.\n" +
                         "Should switch to home relative", false);
             }
-        }
-
-        // If using Relative Encoder
-        else {
+        } else {
+            // If using Relative Encoder
             hoodAngle = hoodRelativeEncoder.getPosition();
         }
 
@@ -340,10 +338,8 @@ public class Shooter extends AbstractSubsystem {
             shooterState = shooterState.HOMING;
         } else if (nextState == NextState.TEST) {
             shooterState = shooterState.TEST;
-        }
-
-        // Defaults to ON if next state is not specified
-        else {
+        } else {
+            // Defaults to ON if next state is not specified
             shooterState = shooterState.ON;
         }
 
@@ -361,18 +357,14 @@ public class Shooter extends AbstractSubsystem {
     private void setLedForOnMode() {
 
         // Sets LED different colors for different shooter scenarios
-        // If Shooter is not at the target speed, LED will display this color
         if (isShooterAtTargetSpeed() == false) {
+            // If Shooter is not at the target speed, LED will display this color
             BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
-        }
-
-        // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
-        else if (isHoodAtTargetAngle() == false) {
+        } else if (isHoodAtTargetAngle() == false) {
+            // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
             BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
-        }
-
-        // If both hood and flywheel are ready for shooting, LED will display this color
-        else {
+        } else {
+            // If both hood and flywheel are ready for shooting, LED will display this color
             BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_READY_TO_SHOOT);
         }
     }
@@ -453,9 +445,8 @@ public class Shooter extends AbstractSubsystem {
 
                     // Runs Motor at .05 Amps while home switch is not pressed
                     hoodPID.setReference(Constants.HOMING_MOTOR_CURRENT_AMPS, CANSparkMax.ControlType.kCurrent);
-                }
-                // If home switch is pressed
-                else {
+                } else {
+                    // If home switch is pressed
                     // Sets current to zero if home switch is pressed
                     hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
 
