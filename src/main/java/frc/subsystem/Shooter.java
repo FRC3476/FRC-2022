@@ -433,6 +433,9 @@ public class Shooter extends AbstractSubsystem {
                     // Records start of homing time, with current time being the same as the start time
                     homingStartTime = Timer.getFPGATimestamp();
                     homingCurrentTime = homingStartTime;
+
+                    // Sends Homing start message to console
+                    System.out.println("Homing Starting At: " + homingStartTime);
                 }
 
                 // Executes this if home switch is not pressed
@@ -455,6 +458,12 @@ public class Shooter extends AbstractSubsystem {
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
                     setNextStateToCurrentState();
+
+                    // Sends Homing start message to console
+                    System.out.println("Homing Finished Successfully At: " + homingCurrentTime);
+
+                    // Resets Homing Start Time
+                    homingStartTime = -1;
                 }
 
                 // Executes this if homing has been going on for the MAX allotted time
@@ -467,6 +476,12 @@ public class Shooter extends AbstractSubsystem {
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
                     setNextStateToCurrentState();
+
+                    // Sends Homing start message to console
+                    System.out.println("Homing Failed At: " + homingCurrentTime);
+
+                    // Resets Homing Start Time
+                    homingStartTime = -1;
                 }
 
                 // Sets LED for Homing states
