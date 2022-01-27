@@ -352,8 +352,9 @@ public class Shooter extends AbstractSubsystem {
     }
 
     // TODO: Fill out the rest of the LED methods
+    // Sets Blinkin LED to color when robot is OFF
     private void setLedForOffMode() {
-
+        BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_OFF);
     }
 
     // Sets LED different colors, depends on if flywheel is up to speed and if hood is in correct position
@@ -376,12 +377,14 @@ public class Shooter extends AbstractSubsystem {
         }
     }
 
+    // Sets BlinkinLED to color when robot is in homing mode
     private void setLedForHomingMode() {
-
+        BlinkinLED.getInstance().setColor(Constants.LED_HOOD_HOMING_IN_PROGRESS);
     }
 
+    // Sets BlinkinLED to color when robot is in test mode
     private void setLedForTestMode() {
-
+        BlinkinLED.getInstance().setColor(Constants.LED_TEST_IN_PROGRESS);
     }
 
     @Override
@@ -392,7 +395,12 @@ public class Shooter extends AbstractSubsystem {
                 // Will lock the motors if Shooter State is OFF
                 setShooterSpeed(0);
                 disableFeederWheel();
+
+                // Sets hood to lowest possible position
                 setHoodPosition(50);
+
+                // Sets LED for OFF mode
+                setLedForOffMode();
 
                 break;
 
@@ -467,6 +475,8 @@ public class Shooter extends AbstractSubsystem {
                     setNextStateToCurrentState();
                 }
 
+                // Sets LED for Homing states
+                setLedForHomingMode();
                 break;
 
             case TEST:
@@ -474,6 +484,8 @@ public class Shooter extends AbstractSubsystem {
                 // Turns TESTING off and sets it to the next queued state, ON if no state queued
                 setNextStateToCurrentState();
 
+                // Sets LED for testing states
+                setLedForTestMode();
                 break;
         }
     }

@@ -174,9 +174,20 @@ public final class Constants {
 
     // Shooter Blinkin LED Constants
     // TODO: May want to change colors later
+
+    // ON mode
     public static final double LED_FLYWHEEL_APPROACHING_DESIRED_SPEED = 0.2;
     public static final double LED_HOOD_APPROACHING_DESIRED_POSITION = 0.3;
     public static final double LED_SHOOTER_READY_TO_SHOOT = 0.4;
+
+    // OFF mode
+    public static final double LED_SHOOTER_OFF = 0.5;
+
+    // HOMING
+    public static final double LED_HOOD_HOMING_IN_PROGRESS = 0.6;
+
+    // TEST
+    public static final double LED_TEST_IN_PROGRESS = 0.8;
 
     // Shooter Test Constants
     public static final double SHOOTER_TEST_SPEED = 3000;
