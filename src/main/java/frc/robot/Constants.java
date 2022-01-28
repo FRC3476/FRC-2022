@@ -181,6 +181,11 @@ public final class Constants {
     public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 0;
     public static final double FEEDER_TRIGGER_THRESHOLD_TIME = 0;
 
+    /**
+     * The time that the feeder must be on before it is allowed to turn off
+     */
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = .5;
+
     public static final double HOOD_P = 0;
     public static final double HOOD_I = 0;
     public static final double HOOD_D = 0;
@@ -212,7 +217,7 @@ public final class Constants {
     /**
      * Maximum allowed time homing should take in seconds
      */
-    public static final double MAX_HOMING_TIME_S = 30;
+    public static final double MAX_HOMING_TIME_S = 2;
 
     /**
      * How many amps should be fed into Hood motor when HOMING
@@ -225,56 +230,63 @@ public final class Constants {
      */
     public static final double ALLOWED_HOOD_ANGLE_ERROR = .2;
 
+    /**
+     * If hood speed is under this value, hood has stopped
+     */
+    public static final double HOOD_HAS_STOPPED_REFERENCE = 1.0e-3;
+
     // Shooter Blinkin LED Constants
-    // TODO: May want to change colors later
 
     // ON mode
     /**
      * Color value from -1 to 1 to be used with Blinkin LED
+     * <p>
+     * LED color is Red Orange - Solid
      */
-    public static final double LED_FLYWHEEL_APPROACHING_DESIRED_SPEED = 0.2;
+    public static final double LED_FLYWHEEL_APPROACHING_DESIRED_SPEED = 0.63;
 
     /**
      * Color value from -1 to 1 to be used with Blinkin LED
+     * <p>
+     * LED color is Yellow - Solid
      */
-    public static final double LED_HOOD_APPROACHING_DESIRED_POSITION = 0.3;
+    public static final double LED_HOOD_APPROACHING_DESIRED_POSITION = 0.69;
 
     /**
      * Color value from -1 to 1 to be used with Blinkin LED
+     * <p>
+     * LED color is Lime - Solid
      */
-    public static final double LED_SHOOTER_READY_TO_SHOOT = 0.4;
-
-    // OFF mode
-    /**
-     * Color value from -1 to 1 to be used with Blinkin LED
-     */
-    public static final double LED_SHOOTER_OFF = 0.5;
+    public static final double LED_SHOOTER_READY_TO_SHOOT = 0.73;
 
     // HOMING
     /**
      * Color value from -1 to 1 to be used with Blinkin LED
+     * <p>
+     * Color is Blue - Strobe light
      */
-    public static final double LED_HOOD_HOMING_IN_PROGRESS = 0.6;
+    public static final double LED_HOOD_HOMING_IN_PROGRESS = -.09;
 
     // TEST
-    /** Color value from -1 to 1 to be used with Blinkin LED */
-    public static final double LED_TEST_IN_PROGRESS = 0.8;
+    /**
+     * Color value from -1 to 1 to be used with Blinkin
+     * <p>
+     * LED Color is Gold - Strobe light
+     */
+    public static final double LED_TEST_IN_PROGRESS = -.07;
 
     // Shooter Test Constants
-    /**
-     * How long an individual test is allowed to take in seconds
-     */
-    public static final double MAX_INDIVIDUAL_TEST_TIME_SEC = 20;
 
     /**
      * Shooter Speed in RPM that is used for TEST
      */
-    public static final double SHOOTER_TEST_SPEED = 3000;
+    public static final double SHOOTER_TEST_SPEED_RPM = 3000;
 
     /**
-     * Minimum current required to be sensed from feeder in order for it to pass test
+     * How long an individual test of a component should go on for in miliseconds
      */
-    public static final double FEEDER_PASSING_TEST_CURRENT = .5;
+    public static final long TEST_TIME_MS = 5000;
+
 
     //Climber Constants
     public static final int CLIMBER_PERIOD = 50;

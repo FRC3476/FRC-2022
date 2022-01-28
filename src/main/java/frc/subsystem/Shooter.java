@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
@@ -10,6 +11,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycle;
 import frc.robot.Constants;
+import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
@@ -54,7 +56,6 @@ public class Shooter extends AbstractSubsystem {
     // startTime and currentTime will be used to check how long the homing is occurring
     // Negative 1 used for a check to see if homingStartTime has been initialized in HOMING case
     private double homingStartTime = -1;
-    private double homingCurrentTime;
 
     // Declarations of Modes and States
 
@@ -97,23 +98,33 @@ public class Shooter extends AbstractSubsystem {
      */
     public enum FeederWheelState {
         /**
-         * Feeder Wheel is ON, uses 100% of power it has.
+         * Feeder Wheel is running forwards, uses 100% of power it has.
          */
-        ON,
+        FORWARD,
 
         /**
          * Feeder Wheel is OFF.
          */
-        OFF
+        OFF,
+
+        /**
+         * Feeder Wheel is running backwards, uses 100% of power it has.
+         */
+        BACKWARD
     }
 
-    private FeederWheelState feederWheelState;
+    private FeederWheelState feederWheelState = FeederWheelState.OFF;
 
     /**
      * Shooter can either be OFF, ON, HOMING, or TESTING.
      * <p>
-     * OFF locks the motors ON allows commands to be sent to the motors HOMING homes the relative encoder on the hood TEST tests
-     * the functionality of Shooter Flywheel, Feeder Wheel, and Hood. (Max and Min angles)
+     * OFF turns off the motors
+     * <p>
+     * ON allows commands to be sent to the motors
+     * <p>
+     * HOMING homes the relative encoder on the hood
+     * <p>
+     * TEST tests the functionality of Shooter Flywheel, Feeder Wheel, and Hood. (Max and Min angles)
      * <p>
      * If HOMING or TESTING is occurring and there is a request to change the shooter state, the state change will be placed in a
      * 1 slot queue where it will wait for HOMING or TESTING to be finished before switching to requested state.
@@ -147,29 +158,8 @@ public class Shooter extends AbstractSubsystem {
      * <p>
      * This will be used when a state is requested to be changed to while HOMING or TESTING is occurring.
      */
-    public enum NextState {
-        /**
-         * Will turn off all motors.
-         */
-        OFF,
 
-        /**
-         * Shooter is homing the hood.
-         */
-        HOMING,
-
-        /**
-         * Commands may be sent to motors.
-         */
-        ON,
-
-        /**
-         * Test state that will drive motors expected conditions.
-         */
-        TEST
-    }
-
-    private NextState nextState;
+    private ShooterState nextState = ShooterState.OFF;
 
     // The target hood angle
     private double desiredHoodAngle;
@@ -281,6 +271,9 @@ public class Shooter extends AbstractSubsystem {
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
                 Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
 
+        // Turns off brake mode for shooter flywheel
+        shooterWheelMaster.setNeutralMode(NeutralMode.Coast);
+
 
         // This PID setup for 775pro will not be used
         feederWheel.config_kP(0, Constants.FEEDER_WHEEL_P, Constants.SHOOTER_PID_TIMEOUT_MS);
@@ -345,16 +338,11 @@ public class Shooter extends AbstractSubsystem {
      * changed to after HOMING has completed.
      */
     public void homeHood() {
-        // Checks to make sure that robot is not currently HOMING or TESTING
-        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
-            nextState = nextState.HOMING;
-        } else {
             shooterState = ShooterState.HOMING;
-        }
     }
 
     /**
-     * Toggles between methods to get hood positions.
+     * Allows setting of Hood Position Mode
      * <p>
      * Includes two options, ABSOLUTE_ENCODER and RELATIVE_TO_HOME.
      * <p>
@@ -362,14 +350,8 @@ public class Shooter extends AbstractSubsystem {
      * <p>
      * RELATIVE_TO_HOME uses the built in NEO550 relative encoder which is not 1:1 with hood angle.
      */
-    public void toggleHoodPositionMode() {
-        // Checks current mode and switches to the alternate mode
-        if (getHoodPositionMode() == HoodPositionMode.ABSOLUTE_ENCODER) {
-            hoodPositionMode = HoodPositionMode.RELATIVE_TO_HOME;
-            homeHood();
-        } else {
-            hoodPositionMode = HoodPositionMode.ABSOLUTE_ENCODER;
-        }
+    public void setHoodPositionMode(HoodPositionMode hoodPositionMode) {
+        this.hoodPositionMode = hoodPositionMode;
     }
 
     /**
@@ -387,10 +369,10 @@ public class Shooter extends AbstractSubsystem {
     }
 
     /**
-     * Enables Feeder Wheel. Will run at MAXIMUM speed.
+     * Enables Feeder Wheel, running it forwards. Will run at MAXIMUM speed.
      */
-    public void enableFeederWheel() {
-        feederWheelState = FeederWheelState.ON;
+    public void enableFeederWheelForward() {
+        feederWheelState = FeederWheelState.FORWARD;
     }
 
     /**
@@ -398,6 +380,13 @@ public class Shooter extends AbstractSubsystem {
      */
     public void disableFeederWheel() {
         feederWheelState = FeederWheelState.OFF;
+    }
+
+    /**
+     * Enables Feeder Wheel, running it backwards
+     */
+    public void enableFeederWheelBackward() {
+        feederWheelState = FeederWheelState.BACKWARD;
     }
 
     /**
@@ -459,14 +448,14 @@ public class Shooter extends AbstractSubsystem {
     }
 
     /**
-     * Sets shooter state to OFF, will lock motors.
+     * Sets shooter state to OFF, will turn off motors.
      */
     public void turnShooterOFF() {
         // Checks to make sure that HOMING or TEST is not occurring
         if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
             nextState = nextState.OFF;
         } else {
-            shooterState = ShooterState.HOMING.OFF;
+            shooterState = ShooterState.OFF;
         }
     }
 
@@ -478,7 +467,7 @@ public class Shooter extends AbstractSubsystem {
     public void turnShooterON() {
         // Checks to make sure that HOMING or TEST is not occurring
         if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
-            nextState = NextState.ON;
+            nextState = ShooterState.ON;
         } else {
             shooterState = ShooterState.ON;
         }
@@ -513,43 +502,18 @@ public class Shooter extends AbstractSubsystem {
      *
      * @return returns queued state, may be null if there is no queued state.
      */
-    public NextState getNextState() {
+    public ShooterState getNextState() {
         return nextState;
-    }
-
-    // Changes shooter state to nextValue, will be called
-    private void setNextStateToCurrentState() {
-        // Changes shooter state to nextValue
-        if (nextState == NextState.ON) {
-            shooterState = shooterState.ON;
-        } else if (nextState == NextState.OFF) {
-            shooterState = shooterState.OFF;
-        } else if (nextState == NextState.HOMING) {
-            shooterState = shooterState.HOMING;
-        } else if (nextState == NextState.TEST) {
-            shooterState = shooterState.TEST;
-        } else {
-            // Defaults to ON if next state is not specified
-            shooterState = shooterState.ON;
-        }
-
-        // Resets nextState
-        nextState = null;
-    }
-
-    // Sets Blinkin LED to color when robot is OFF
-    private void setLedForOffMode() {
-        BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_OFF);
     }
 
     // Sets LED different colors, depends on if flywheel is up to speed and if hood is in correct position
     private void setLedForOnMode() {
 
         // Sets LED different colors for different shooter scenarios
-        if (isShooterAtTargetSpeed() == false) {
+        if (!isShooterAtTargetSpeed()) {
             // If Shooter is not at the target speed, LED will display this color
             BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
-        } else if (isHoodAtTargetAngle() == false) {
+        } else if (!isHoodAtTargetAngle()) {
             // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
             BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
         } else {
@@ -568,18 +532,6 @@ public class Shooter extends AbstractSubsystem {
         BlinkinLED.getInstance().setColor(Constants.LED_TEST_IN_PROGRESS);
     }
 
-    /**
-     * Gets the currently running test, will be null if no test is running.
-     */
-    public CurrentTest getCurrentTest() {
-        return currentTest;
-    }
-
-    // Checks to see if current test is taking longer than expected
-    private boolean doesCurrentTestExceedTimeLimit() {
-        // Checks to see if difference between current test time and start of test time is greater than allowed test time
-        return (testCurrentTime - testStartTime) > Constants.MAX_INDIVIDUAL_TEST_TIME_SEC;
-    }
 
     /**
      * Update Method for Shooter.
@@ -588,7 +540,7 @@ public class Shooter extends AbstractSubsystem {
      * <p>
      * Controls the actions that will be taken for each individual robot state.
      * <p>
-     * OFF - locks motors.
+     * OFF - turns off motors.
      * <p>
      * ON - allows commands to be sent to motors.
      * <p>
@@ -603,43 +555,67 @@ public class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-                // Will lock the motors if Shooter State is OFF
-                setShooterSpeed(0);
-                disableFeederWheel();
+                // Will quit out of OFF mode and switch on ON mode if desired shooter speed is not equal to zero
+                if (getDesiredShooterSpeed() != 0) {
+                    shooterState = ShooterState.ON;
+                } else {
 
-                // Sets hood to lowest possible position
-                setHoodPosition(50);
+                    // Will turn off the motors if Shooter State is OFF
+                    setShooterSpeed(0);
+                    disableFeederWheel();
 
-                // Sets LED for OFF mode
-                setLedForOffMode();
+                    // Sets hood to lowest possible position
+                    setHoodPosition(50);
+                }
 
                 break;
 
             case ON:
-                // Sets shooter motor to desired shooter speed
-                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
+                if (getDesiredShooterSpeed() == 0) {
 
-                // Sets Motor to travel to desired hood angle
-                hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
+                    // Sets shooter motor to desired shooter speed
+                    shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
 
-                // Checks to see if feeder wheel is enabled, if hoodMotor had finished moving, and if shooterWheel is at target
-                // speed
-                if ((feederWheelState == FeederWheelState.ON) && Math.abs(hoodRelativeEncoder.getVelocity()) < 1.0e-3 &&
-                        isShooterAtTargetSpeed()) {
+                    // Sets Motor to travel to desired hood angle
+                    hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
 
-                    // Set Feeder wheel to MAX speed
-                    feederWheel.set(ControlMode.PercentOutput, 1);
-                    forceFeederOnTime = Timer.getFPGATimestamp() + 0.5;
-                } else {
+                    // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
+                    // is at target speed
+                    if ((feederWheelState == FeederWheelState.FORWARD) && Math.abs(
+                            hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE &&
+                            isShooterAtTargetSpeed()) {
 
-                    // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
-                    if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                        feederWheel.set(ControlMode.PercentOutput, 0);
+                        // Set Feeder wheel to MAX speed
+                        feederWheel.set(ControlMode.PercentOutput, 1);
+                        forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                    } else {
+
+                        // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
+                        if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                            feederWheel.set(ControlMode.PercentOutput, 0);
+                        }
                     }
-                }
 
-                // Sets Blinkin LED different colors for different flywheel and hood states
-                setLedForOnMode();
+                    // Checks to see if feeder wheel is enabled backward, if hoodMotor had finished moving, and if shooterWheel
+                    // is at target speed
+                    if ((feederWheelState == FeederWheelState.BACKWARD) && Math.abs(
+                            hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE &&
+                            isShooterAtTargetSpeed()) {
+
+                        // Set Feeder wheel to MAX speed
+                        feederWheel.set(ControlMode.PercentOutput, -1);
+                        forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                    } else {
+
+                        // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
+                        if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                            feederWheel.set(ControlMode.PercentOutput, 0);
+                        }
+                    }
+
+                    // Sets Blinkin LED different colors for different flywheel and hood states
+                    setLedForOnMode();
+                }
 
                 break;
 
@@ -651,42 +627,36 @@ public class Shooter extends AbstractSubsystem {
                 if (homingStartTime == -1) {
                     // Records start of homing time, with current time being the same as the start time
                     homingStartTime = Timer.getFPGATimestamp();
-                    homingCurrentTime = homingStartTime;
 
                     // Sends Homing start message to console
                     System.out.println("Homing Starting At: " + homingStartTime);
                 }
 
-                // Executes this if home switch is not pressed
-                if (getHomeSwitchState() == HomeSwitchState.NOT_PRESSED) {
-                    // Gets current time
-                    homingCurrentTime = Timer.getFPGATimestamp();
-
-                    // Gets current encoder value
-                    currentHomingPosition = hoodRelativeEncoder.getPosition();
-
-                    // Runs Motor at .05 Amps while home switch is not pressed
-                    hoodPID.setReference(Constants.HOMING_MOTOR_CURRENT_AMPS, CANSparkMax.ControlType.kCurrent);
-                } else {
-                    // If home switch is pressed
-                    // Sets current to zero if home switch is pressed
-                    hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
+                // Executes this if home switch is pressed
+                if (getHomeSwitchState() == HomeSwitchState.PRESSED) {
 
                     // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
                     hoodRelativeEncoder.setPosition(90);
+                    // Sets current to zero if home switch is pressed
+                    hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
+
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
-                    setNextStateToCurrentState();
+                    shooterState = nextState;
 
                     // Sends Homing start message to console
-                    System.out.println("Homing Finished Successfully At: " + homingCurrentTime);
+                    System.out.println("Homing Finished Successfully At: " + Timer.getFPGATimestamp());
 
                     // Resets Homing Start Time
                     homingStartTime = -1;
+                } else {
+
+                    // Runs Motor at .05 Amps while home switch is not pressed
+                    hoodPID.setReference(Constants.HOMING_MOTOR_CURRENT_AMPS, CANSparkMax.ControlType.kCurrent);
                 }
 
                 // Executes this if homing has been going on for the MAX allotted time
-                if (homingCurrentTime - homingStartTime > Constants.MAX_HOMING_TIME_S) {
+                if (Timer.getFPGATimestamp() - homingStartTime > Constants.MAX_HOMING_TIME_S) {
                     // Sets current to zero if max time is exceeded
                     hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
 
@@ -694,10 +664,10 @@ public class Shooter extends AbstractSubsystem {
                             false);
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
-                    setNextStateToCurrentState();
+                    shooterState = nextState;
 
                     // Sends Homing start message to console
-                    System.out.println("Homing Failed At: " + homingCurrentTime);
+                    System.out.println("Homing Failed At: " + Timer.getFPGATimestamp());
 
                     // Resets Homing Start Time
                     homingStartTime = -1;
@@ -709,205 +679,7 @@ public class Shooter extends AbstractSubsystem {
 
             case TEST:
 
-                // Initialization of test
-                if (testStartTime == -1) {
-                    // Sets start time and current time
-                    testStartTime = Timer.getFPGATimestamp();
-                    testCurrentTime = testStartTime;
-
-                    // Resets last test booleans
-                    shooterMeetsExpectedSpeedTest = false;
-                    feederMeetsExpectedSpeedTest = false;
-                    hoodMeetsMinimumAngleTest = false;
-                    hoodMeetsMaximumAngleTest = false;
-
-                    // Sets shooter to first test
-                    currentTest = CurrentTest.SHOOTER;
-
-                    // Prints out start of test time
-                    System.out.println("Shooter Test Starting At: " + testCurrentTime);
-                }
-
-                // Runs specified test if current test equals that test
-
-                // Tests Shooter Flywheel
-                if (currentTest == CurrentTest.SHOOTER) {
-                    // Sets shooter speed to test speed
-                    setShooterSpeed(Constants.SHOOTER_TEST_SPEED);
-
-                    if (isShooterAtTargetSpeed() == true) {
-                        // Stops shooter
-                        setShooterSpeed(0);
-
-                        // Sets test boolean to true
-                        shooterMeetsExpectedSpeedTest = true;
-
-                        // Sets next test to feeder
-                        currentTest = CurrentTest.FEEDER;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Flywheel Passed Speed Up Test At: " + testCurrentTime);
-                    }
-
-                    if (doesCurrentTestExceedTimeLimit()) {
-                        // Stops shooter
-                        setShooterSpeed(0);
-
-                        // Sets test boolean to true
-                        shooterMeetsExpectedSpeedTest = false;
-
-                        // Sets next test to feeder
-                        currentTest = CurrentTest.FEEDER;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Flywheel Failed Speed Up Test At: " + testCurrentTime);
-
-                        DriverStation.reportWarning("Shooter Flywheel Failed Speed Up Test At: " + testCurrentTime, false);
-                    }
-                }
-
-                // Tests Feeder Wheel
-                if (currentTest == CurrentTest.FEEDER) {
-                    // Enables Feeder Wheel
-                    feederWheel.set(ControlMode.PercentOutput, 1);
-
-                    // Checks to see if feederWheel is receiving proper current
-                    if (feederWheel.getSupplyCurrent() > Constants.FEEDER_PASSING_TEST_CURRENT) {
-                        // Disables Feeder Wheel
-                        feederWheel.set(ControlMode.PercentOutput, 0);
-
-                        // Sets test boolean to false
-                        feederMeetsExpectedSpeedTest = true;
-
-                        // Sets next test to hood MAX angle
-                        currentTest = CurrentTest.HOOD_MAX_ANGLE;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Feeder Passed Speed Up Test At: " + testCurrentTime);
-                    }
-
-                    if (doesCurrentTestExceedTimeLimit()) {
-                        // Disables Feeder Wheel
-                        feederWheel.set(ControlMode.PercentOutput, 0);
-
-                        // Sets test boolean to false
-                        feederMeetsExpectedSpeedTest = false;
-
-                        // Sets next test to hood MAX angle
-                        currentTest = CurrentTest.HOOD_MAX_ANGLE;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Feeder Failed Speed Up Test At: " + testCurrentTime);
-
-                        DriverStation.reportWarning("Shooter Feeder Failed Speed Up Test At: " + testCurrentTime, false);
-                    }
-                }
-
-                // Tests Maximum hood angle
-                if (currentTest == CurrentTest.HOOD_MAX_ANGLE) {
-                    // Sets hood to MAX position
-                    setHoodPosition(90);
-
-                    if (isHoodAtTargetAngle()) {
-                        // Sets test boolean to true
-                        hoodMeetsMaximumAngleTest = true;
-
-                        // Sets next test to hood MIN angle
-                        currentTest = CurrentTest.HOOD_MIN_ANGLE;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Hood Reached MAXIMUM Angle At: " + testCurrentTime);
-                    }
-
-                    if (doesCurrentTestExceedTimeLimit()) {
-                        // Sets test boolean to false
-                        hoodMeetsMaximumAngleTest = false;
-
-                        // Sets next test to hood MIN angle
-                        currentTest = CurrentTest.HOOD_MIN_ANGLE;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Hood Failed To Reach MAXIMUM Angle At: " + testCurrentTime);
-
-                        DriverStation.reportWarning("Shooter Hood Failed To Reach MAXIMUM Angle At: " + testCurrentTime, false);
-                    }
-                }
-
-                // Tests MINIMUM Hood Angle
-                if (currentTest == CurrentTest.HOOD_MIN_ANGLE) {
-                    // Sets hood to MIN position
-                    setHoodPosition(50);
-
-                    if (isHoodAtTargetAngle()) {
-                        // Sets test boolean to true
-                        hoodMeetsMinimumAngleTest = true;
-
-                        // Allows for test wrap up to occur
-                        currentTest = CurrentTest.TESTS_FINISHED;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Hood Reached MINIMUM Angle At: " + testCurrentTime);
-                    }
-
-                    if (doesCurrentTestExceedTimeLimit()) {
-                        // Sets test boolean to false
-                        hoodMeetsMinimumAngleTest = false;
-
-                        // Sets next test to hood MIN angle
-                        currentTest = CurrentTest.TESTS_FINISHED;
-
-                        // Resets start time for next test
-                        testStartTime = Timer.getFPGATimestamp();
-
-                        // Prints out result of test
-                        System.out.println("Shooter Hood Failed To Reach MINIMUM Angle At: " + testCurrentTime);
-
-                        DriverStation.reportWarning("Shooter Hood Failed To Raech MINIMUM Angle At " + testCurrentTime, false);
-                    }
-                }
-
-                // Wraps up testing
-                if (currentTest == CurrentTest.TESTS_FINISHED) {
-                    // Updates Current Test Time
-                    testCurrentTime = Timer.getFPGATimestamp();
-
-                    // Turns TESTING off and sets it to the next queued state, ON if no state queued
-                    setNextStateToCurrentState();
-
-                    // Fully resets testing start time
-                    testStartTime = -1;
-
-                    // Resets currentTest
-                    currentTest = null;
-
-                    // Prints out alert that tests are finished
-                    System.out.println("All Shooter Tests Completed At: " + testCurrentTime);
-                }
-                // Updates Current Test Time
-                testCurrentTime = Timer.getFPGATimestamp();
-
-                // Sets LED for testing states
+                // Sets LED for testing state
                 setLedForTestMode();
 
                 break;
@@ -917,20 +689,56 @@ public class Shooter extends AbstractSubsystem {
     /**
      * Sets robot state to TEST mode.
      * <p>
-     * Will activate self test that diagnoses functionality of the Shooter Flywheel, Feeder Wheel, and Hood.
-     * <p>
-     * Test results will be printed to the console.
-     * <p>
-     * Failed tests will send warnings to the drive station.
+     * Will activate self test that will help diagnose functionality of the Shooter Flywheel, Feeder Wheel, and Hood.
      */
     @Override
     public void selfTest() {
-        // Checks to make sure that robot is not currently HOMING or TESTING
-        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
-            nextState = nextState.TEST;
-        } else {
-            shooterState = ShooterState.TEST;
-        }
+        shooterState = ShooterState.TEST;
+
+        // Prints out start of test time
+        System.out.println("Shooter Test Starting At: " + Timer.getFPGATimestamp());
+
+        // Sets shooter to test speed
+        setShooterSpeed(Constants.SHOOTER_TEST_SPEED_RPM);
+
+        // Waits 5 seconds
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        // Turns shooter off
+        setShooterSpeed(Constants.SHOOTER_TEST_SPEED_RPM);
+
+        // Prints out start of test time
+        System.out.println("Feeder Test Starting At: " + Timer.getFPGATimestamp());
+
+        // Turns feeder on
+        feederWheel.set(ControlMode.PercentOutput, 1);
+
+        // Waits 5 seconds
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        // Turns feeder off
+        feederWheel.set(ControlMode.PercentOutput, 0);
+
+        // Prints out start of test time
+        System.out.println("Hood Test Starting At: " + Timer.getFPGATimestamp());
+
+        // Sets hood to 90 degrees
+        setHoodPosition(90);
+
+        // Waits 5 seconds
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        // Sets hood to 50 degrees
+        setHoodPosition(50);
+
+        // Waits 5 seconds
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        // Prints out start of test time
+        System.out.println("All Tests Completed At: " + Timer.getFPGATimestamp());
+
+        // Leaves TEST mode
+        shooterState = ShooterState.OFF;
     }
 
     /**
