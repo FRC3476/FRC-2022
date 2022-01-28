@@ -61,7 +61,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     }
 
-    static Map<String, Object> logDataMap = new HashMap<>();
+    private final Map<String, Object> logDataMap = new HashMap<>();
 
 
     public void logData(String key, Object value) {
@@ -79,13 +79,13 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
             //@formatter:off
             if (cl.equals(Integer.class)) SmartDashboard.putNumber(entry.getKey(), (int) obj);
-            else if(cl.equals(Double.class)) SmartDashboard.putNumber(entry.getKey(), (double) obj);
-            else if(cl.equals(Short.class)) SmartDashboard.putNumber(entry.getKey(), (short) obj);
-            else if(cl.equals(Long.class)) SmartDashboard.putNumber(entry.getKey(), (long) obj);
-            else if(cl.equals(Float.class)) SmartDashboard.putNumber(entry.getKey(), (float) obj);
+            else if (cl.equals(Double.class)) SmartDashboard.putNumber(entry.getKey(), (double) obj);
+            else if (cl.equals(Short.class)) SmartDashboard.putNumber(entry.getKey(), (short) obj);
+            else if (cl.equals(Long.class)) SmartDashboard.putNumber(entry.getKey(), (long) obj);
+            else if (cl.equals(Float.class)) SmartDashboard.putNumber(entry.getKey(), (float) obj);
             else if (cl.equals(Byte.class)) SmartDashboard.putNumber(entry.getKey(), (byte) obj);
-            else if(cl.equals(Boolean.class)) SmartDashboard.putBoolean(entry.getKey(), (boolean) obj);
-            else if(cl.equals(String.class)) SmartDashboard.putString(entry.getKey(), (String) obj);
+            else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(entry.getKey(), (boolean) obj);
+            else if (cl.equals(String.class)) SmartDashboard.putString(entry.getKey(), (String) obj);
             else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(entry.getKey(), (Double[]) obj);
             else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(entry.getKey(), (Boolean[]) obj);
             else if (cl.equals(String[].class)) SmartDashboard.putStringArray(entry.getKey(), (String[]) obj);
