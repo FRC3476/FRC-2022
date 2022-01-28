@@ -100,7 +100,9 @@ public final class Constants {
     public static final double MAX_TURN_ERROR = 0.85;
     public static final double MAX_PID_STOP_SPEED = 5.2;
 
-    /** Units are in Meters Per Second Squared*/
+    /**
+     * Units are in Meters Per Second Squared
+     */
     public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
 
     //field constants
@@ -108,7 +110,12 @@ public final class Constants {
 
     // Shooter Constants
 
-   public static final int SHOOTER_PERIOD_MS = 20;
+
+    public static final int SHOOTER_PERIOD_MS = 20;
+
+    /**
+     * Amount of Shooter Periods that have to elapse before 1 logging period is called
+     */
     public static final int SHOOTER_PERIODS_PER_LOG = 3;
 
     public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 0; // TODO: Get actual CAN ID for all shooter components
@@ -122,31 +129,54 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-
+    /**
+     * Timeout for shooter PIDs
+     */
     public static final int SHOOTER_PID_TIMEOUT_MS = 10;
 
     public static final double SHOOTER_P = 0;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
+
+    /**
+     * Shooter Flywheel Feed Forward for PID
+     */
     public static final double SHOOTER_F = 0;
+
+    /**
+     * Integral Zone of shooter flywheel PID
+     */
     public static final double SHOOTER_I_ZONE = 0;
 
     public static final double SHOOTER_CURRENT_LIMIT = 0;
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 0;
     public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;
 
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR = 20;
+    /**
+     * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
+     */
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 20;
 
-    // 2048 is Sensor Units Per Revolution
-    // 600 Converts From Time of 100ms to 1 minute
+    /**
+     * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
+     * minute
+     */
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600 / 2048;
 
 
-    public static final double FEEDER_P = 0;
-    public static final double FEEDER_I = 0;
-    public static final double FEEDER_D = 0;
-    public static final double FEEDER_F = 0;
-    public static final double FEEDER_I_ZONE = 0;
+    public static final double FEEDER_WHEEL_P = 0;
+    public static final double FEEDER_WHEEL_I = 0;
+    public static final double FEEDER_WHEEL_D = 0;
+
+    /**
+     * Feed Forward for Feeder Wheel
+     */
+    public static final double FEEDER_WHEEL_F = 0;
+
+    /**
+     * Integral Zone for Feeder Wheel
+     */
+    public static final double FEEDER_WHEEL_I_ZONE = 0;
 
     public static final double FEEDER_CURRENT_LIMIT = 0;
     public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 0;
@@ -155,46 +185,90 @@ public final class Constants {
     public static final double HOOD_P = 0;
     public static final double HOOD_I = 0;
     public static final double HOOD_D = 0;
+
+    /**
+     * Hood Feed Forward for PID
+     */
     public static final double HOOD_F = 0;
+
+    /**
+     * Hood Integral Zone for PID
+     */
     public static final double HOOD_I_ZONE = 0;
 
     public static final int HOOD_CURRENT_LIMIT_AMPS = 0;
 
     // Hood Constants
 
+    /**
+     * Offset for the absolute encoder on hood in order to make angle between 50 and 90
+     */
     public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0; // TODO: Find proper offset
+
+    /**
+     * Amount of degrees the hood turns per NEO550 rotation
+     */
     public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
-    public static final double MAX_HOMING_TIME_S = 45;
+
+    /**
+     * Maximum allowed time homing should take in seconds
+     */
+    public static final double MAX_HOMING_TIME_S = 30;
+
+    /**
+     * How many amps should be fed into Hood motor when HOMING
+     */
     public static final double HOMING_MOTOR_CURRENT_AMPS = .05;
 
-    // Higher precision equates to slower homing
-    public static final double HOMING_PRECISION_IN_MOTOR_ROTATIONS = .1;
-
-    // Units are in rotations of the motor. 1 Rotation is 3.69230 degrees of the hood
+    /**
+     * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
+     * degrees of the hood
+     */
     public static final double ALLOWED_HOOD_ANGLE_ERROR = .2;
 
     // Shooter Blinkin LED Constants
     // TODO: May want to change colors later
 
     // ON mode
+    /**
+     * Color value from -1 to 1 to be used with Blinkin LED
+     */
     public static final double LED_FLYWHEEL_APPROACHING_DESIRED_SPEED = 0.2;
+
+    /**
+     * Color value from -1 to 1 to be used with Blinkin LED
+     */
     public static final double LED_HOOD_APPROACHING_DESIRED_POSITION = 0.3;
+
+    /**
+     * Color value from -1 to 1 to be used with Blinkin LED
+     */
     public static final double LED_SHOOTER_READY_TO_SHOOT = 0.4;
 
     // OFF mode
+    /**
+     * Color value from -1 to 1 to be used with Blinkin LED
+     */
     public static final double LED_SHOOTER_OFF = 0.5;
 
     // HOMING
+    /**
+     * Color value from -1 to 1 to be used with Blinkin LED
+     */
     public static final double LED_HOOD_HOMING_IN_PROGRESS = 0.6;
 
     // TEST
+    /** Color value from -1 to 1 to be used with Blinkin LED */
     public static final double LED_TEST_IN_PROGRESS = 0.8;
 
     // Shooter Test Constants
+    /** How long an individual test is allowed to take in seconds */
     public static final double MAX_INDIVIDUAL_TEST_TIME_SEC = 20;
 
+    /** Shooter Speed in RPM that is used for TEST */
     public static final double SHOOTER_TEST_SPEED = 3000;
 
+    /** Minimum current required to be sensed from feeder in order for it to pass test */
     public static final double FEEDER_PASSING_TEST_CURRENT = .5;
 
 
