@@ -36,6 +36,7 @@ public class VisionManager extends AbstractSubsystem {
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs) {
+
     }
 
     /**
@@ -78,7 +79,7 @@ public class VisionManager extends AbstractSubsystem {
      * @param hoodAngle angle of the hood
      */
     public void getShooterRPM(double speed, double hoodAngle) {
-
+        
     }
     
 
