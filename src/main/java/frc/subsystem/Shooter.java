@@ -293,6 +293,8 @@ public final class Shooter extends AbstractSubsystem {
      * ABSOLUTE_ENCODER uses the absolute encoder that has a 1:1 ratio with the hood angle.
      * <p>
      * RELATIVE_TO_HOME uses the built-in NEO550 relative encoder which is not 1:1 with hood angle.
+     * <p>
+     * Switching to relative mode expects hood to be homed already.
      */
     public void setHoodPositionMode(HoodPositionMode hoodPositionMode) {
         this.hoodPositionMode = hoodPositionMode;
