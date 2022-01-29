@@ -370,4 +370,5 @@ public final class Constants {
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = 1.0;
     public static final double INTAKE_OPEN_TIME = 0.3;
+    public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 1; // Todo
 }

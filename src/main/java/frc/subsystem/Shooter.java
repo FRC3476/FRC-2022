@@ -3,13 +3,13 @@ package frc.subsystem;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DutyCycle;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
@@ -47,7 +47,7 @@ public final class Shooter extends AbstractSubsystem {
     private final RelativeEncoder hoodRelativeEncoder;
 
     // REV Through Bore Encoder Initialization
-    private final DutyCycle hoodAbsoluteEncoder;
+    private final CANCoder hoodAbsoluteEncoder;
 
     // Home Switch Initialization
     private final DigitalInput homeSwitch;
@@ -190,7 +190,7 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelSlave = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_SLAVE_ID);
         feederWheel = new LazyTalonFX(Constants.FEEDER_WHEEL_CAN_ID);
         hoodMotor = new LazyCANSparkMax(Constants.HOOD_MOTOR_CAN_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
-        hoodAbsoluteEncoder = new DutyCycle(new DigitalInput(Constants.HOOD_ENCODER_DIO_ID));
+        hoodAbsoluteEncoder = new CANCoder(Constants.HOOD_ABSOLUTE_ENCODER_CAN_ID);
         hoodRelativeEncoder = hoodMotor.getEncoder();
         hoodRelativeEncoder.setPositionConversionFactor(Constants.HOOD_DEGREES_PER_MOTOR_ROTATION);
         homeSwitch = new DigitalInput(Constants.HOOD_HOME_SWITCH_DIO_ID);
@@ -269,7 +269,7 @@ public final class Shooter extends AbstractSubsystem {
 
     // Raw degree measurement from Absolute Encoder, The angle may need an offset
     private double getHoodAbsoluteEncoderValue() {
-        return hoodAbsoluteEncoder.getOutput() * 360;
+        return hoodAbsoluteEncoder.getAbsolutePosition() * 360;
     }
 
     /**
@@ -515,7 +515,7 @@ public final class Shooter extends AbstractSubsystem {
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
                 // is at target speed
-                if ((feederWheelState == FeederWheelState.FORWARD) && isHoodHasStopped() && isShooterAtTargetSpeed()) {
+                if ((feederWheelState == FeederWheelState.FORWARD) && isHoodStopped() && isShooterAtTargetSpeed()) {
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, 1);
@@ -608,7 +608,7 @@ public final class Shooter extends AbstractSubsystem {
         }
     }
 
-    private boolean isHoodHasStopped() {
+    private boolean isHoodStopped() {
         return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
     }
 
