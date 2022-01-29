@@ -109,7 +109,7 @@ public final class Constants {
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 
     // Shooter Constants
-    
+
     public static final int SHOOTER_PERIOD_MS = 20;
 
     /**
@@ -117,13 +117,13 @@ public final class Constants {
      */
     public static final int SHOOTER_PERIODS_PER_LOG = 3;
 
-    public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 0; // TODO: Get actual CAN ID for all shooter components
-    public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 0;
-    public static final int FEEDER_WHEEL_CAN_ID = 0;
-    public static final int HOOD_MOTOR_CAN_ID = 0;
+    public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 50; // TODO: Get actual CAN ID for all shooter components
+    public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 51;
+    public static final int FEEDER_WHEEL_CAN_ID = 52;
+    public static final int HOOD_MOTOR_CAN_ID = 53;
 
-    public static final int HOOD_ENCODER_DIO_ID = 0;
-    public static final int HOOD_HOME_SWITCH_DIO_ID = 0;
+    public static final int HOOD_ENCODER_DIO_ID = 5;
+    public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
@@ -131,7 +131,7 @@ public final class Constants {
     /**
      * Timeout for shooter PIDs
      */
-    public static final int SHOOTER_PID_TIMEOUT_MS = 10;
+    public static final int SHOOTER_PID_TIMEOUT_MS = 50;
 
     public static final double SHOOTER_P = 0;
     public static final double SHOOTER_I = 0;
@@ -147,14 +147,14 @@ public final class Constants {
      */
     public static final double SHOOTER_I_ZONE = 0;
 
-    public static final double SHOOTER_CURRENT_LIMIT = 0;
-    public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 0;
+    public static final double SHOOTER_CURRENT_LIMIT = 40;
+    public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;
 
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 20;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 200;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
@@ -177,8 +177,8 @@ public final class Constants {
      */
     public static final double FEEDER_WHEEL_I_ZONE = 0;
 
-    public static final double FEEDER_CURRENT_LIMIT = 0;
-    public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 0;
+    public static final double FEEDER_CURRENT_LIMIT = 30;
+    public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 30;
     public static final double FEEDER_TRIGGER_THRESHOLD_TIME = 0;
 
     /**
@@ -200,7 +200,7 @@ public final class Constants {
      */
     public static final double HOOD_I_ZONE = 0;
 
-    public static final int HOOD_CURRENT_LIMIT_AMPS = 0;
+    public static final int HOOD_CURRENT_LIMIT_AMPS = 20;
 
     // Hood Constants
 

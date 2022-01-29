@@ -15,7 +15,7 @@ import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
-import frc.utility.controllers.LazyTalonSRX;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Shooter class controls the shooter flywheel, feeder wheel, and variable hood Has motor control wrappers for setting velocity
@@ -29,15 +29,19 @@ import frc.utility.controllers.LazyTalonSRX;
 public final class Shooter extends AbstractSubsystem {
 
     // Talon500 Initialization
+
+    // Shooter Flywheel
     private final LazyTalonFX shooterWheelMaster;
     private final LazyTalonFX shooterWheelSlave;
     private double desiredShooterSpeed;
 
-    // 775Pro Initialization (TalonSRX may change to spark in the future)
-    private final LazyTalonSRX feederWheel;
+    // Feeder
+    private final LazyTalonFX feederWheel;
     private double forceFeederOnTime;
 
     // NEO550 Initialization
+
+    // Hood
     private final LazyCANSparkMax hoodMotor;
     private SparkMaxPIDController hoodPID;
     private final RelativeEncoder hoodRelativeEncoder;
@@ -90,8 +94,8 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     /**
-     * Feeder Wheel does not have to be controlled accurately like the flywheel or hood; therefore, we have two states: ON and
-     * OFF.
+     * Feeder Wheel does not have to be controlled accurately like the flywheel or hood; therefore, we have three states: ON and
+     * OFF. and BACKWARDS
      */
     public enum FeederWheelState {
         /**
@@ -156,13 +160,13 @@ public final class Shooter extends AbstractSubsystem {
      * This will be used when a state is requested to be changed to while HOMING or TESTING is occurring.
      */
 
-    private ShooterState nextState = ShooterState.OFF;
+    private @NotNull ShooterState nextState = ShooterState.OFF;
 
     // The target hood angle
     private double desiredHoodAngle;
 
     // Singleton Setup
-    
+
     private static final Shooter instance = new Shooter();
 
     /**
@@ -184,7 +188,7 @@ public final class Shooter extends AbstractSubsystem {
         // Sets CAN IDs to each component
         shooterWheelMaster = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_MASTER_ID);
         shooterWheelSlave = new LazyTalonFX(Constants.SHOOTER_WHEEL_CAN_SLAVE_ID);
-        feederWheel = new LazyTalonSRX(Constants.FEEDER_WHEEL_CAN_ID);
+        feederWheel = new LazyTalonFX(Constants.FEEDER_WHEEL_CAN_ID);
         hoodMotor = new LazyCANSparkMax(Constants.HOOD_MOTOR_CAN_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hoodAbsoluteEncoder = new DutyCycle(new DigitalInput(Constants.HOOD_ENCODER_DIO_ID));
         hoodRelativeEncoder = hoodMotor.getEncoder();
@@ -383,8 +387,7 @@ public final class Shooter extends AbstractSubsystem {
      * Checks if shooter is at target speed within a configurable allowed error.
      */
     public boolean isShooterAtTargetSpeed() {
-        return getShooterRPM() > Math.abs(getDesiredShooterSpeed() - (Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM / 2.0)) &&
-                getShooterRPM() < Math.abs(getDesiredShooterSpeed() + (Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM / 2.0));
+        return Math.abs(getShooterRPM() - getDesiredShooterSpeed()) < Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM;
     }
 
     /**
@@ -417,8 +420,7 @@ public final class Shooter extends AbstractSubsystem {
      * Checks if Hood is at the target angle within a configurable allowed error.
      */
     public boolean isHoodAtTargetAngle() {
-        return getHoodAngle() > (Math.abs(getDesiredHoodAngle() - Constants.ALLOWED_HOOD_ANGLE_ERROR) / 2.0) &&
-                getHoodAngle() < (Math.abs(getDesiredHoodAngle() + Constants.ALLOWED_HOOD_ANGLE_ERROR) / 2.0);
+        return Math.abs(getHoodAngle() - getDesiredHoodAngle()) < Constants.ALLOWED_HOOD_ANGLE_ERROR;
     }
 
     /**
@@ -440,9 +442,9 @@ public final class Shooter extends AbstractSubsystem {
     /**
      * Returns queued state for states that have been requested but could not be changed immediately.
      *
-     * @return returns queued state, may be null if there is no queued state.
+     * @return returns queued state
      */
-    public ShooterState getNextState() {
+    public @NotNull ShooterState getNextState() {
         return nextState;
     }
 
@@ -496,79 +498,68 @@ public final class Shooter extends AbstractSubsystem {
         switch (shooterState) {
             case OFF:
 
-                if (getDesiredShooterSpeed() == 0) {
-
-                    // Will turn off the motors if Shooter State is OFF
-                    setShooterSpeed(0);
-
-                    // Sets hood to the lowest possible position
-                    setHoodPosition(50);
-
-                    // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
-                    // for a specified time period
-                    if (feederWheelState == FeederWheelState.BACKWARD) {
-
-                        // Set Feeder wheel to MAX speed
-                        feederWheel.set(ControlMode.PercentOutput, -1);
-                        forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
-                    } else {
-
-                        // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
-                        if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                            feederWheel.set(ControlMode.PercentOutput, 0);
-                        }
-                    }
-                } else {
+                if (getDesiredShooterSpeed() != 0) {
                     // Will quit out of OFF mode and switch on ON mode if desired shooter speed is not equal to zero
                     shooterState = ShooterState.ON;
+                    break;
+                }
+
+                // Will turn off the motors if Shooter State is OFF
+                setShooterSpeed(0);
+
+                // Sets hood to the lowest possible position
+                setHoodPosition(50);
+
+                // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
+                // for a specified time period
+                if (feederWheelState == FeederWheelState.BACKWARD) {
+                    // Set Feeder wheel to MAX speed
+                    feederWheel.set(ControlMode.PercentOutput, -1);
+                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                } else {
+                    feederWheel.set(ControlMode.PercentOutput, 0);
                 }
 
                 break;
 
             case ON:
                 if (getDesiredShooterSpeed() == 0) {
+                    // Will quit out of OB mode and switch on OFF mode if desired shooter speed is equal to zero
+                    shooterState = ShooterState.OFF;
+                    break;
+                }
 
-                    // Sets shooter motor to desired shooter speed
-                    shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
+                // Sets shooter motor to desired shooter speed
+                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
 
-                    // Sets Motor to travel to desired hood angle
-                    hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
+                // Sets Motor to travel to desired hood angle
+                hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
 
-                    // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
-                    // is at target speed
-                    if ((feederWheelState == FeederWheelState.FORWARD) && Math.abs(
-                            hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE &&
-                            isShooterAtTargetSpeed()) {
+                // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
+                // is at target speed
+                if ((feederWheelState == FeederWheelState.FORWARD) &&
+                        Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE &&
+                        isShooterAtTargetSpeed()) {
 
-                        // Set Feeder wheel to MAX speed
-                        feederWheel.set(ControlMode.PercentOutput, 1);
-                        forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
-                    } else {
-
-                        // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
-                        if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                            feederWheel.set(ControlMode.PercentOutput, 0);
-                        }
-                    }
-
+                    // Set Feeder wheel to MAX speed
+                    feederWheel.set(ControlMode.PercentOutput, 1);
+                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                } else if (feederWheelState == FeederWheelState.BACKWARD) {
                     // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
                     // for a specified time period
-                    if (feederWheelState == FeederWheelState.BACKWARD) {
-
-                        // Set Feeder wheel to MAX speed
-                        feederWheel.set(ControlMode.PercentOutput, -1);
-                        forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
-                    } else {
-
-                        // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
-                        if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                            feederWheel.set(ControlMode.PercentOutput, 0);
-                        }
+                    // Set Feeder wheel to MAX speed
+                    feederWheel.set(ControlMode.PercentOutput, -1);
+                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                } else {
+                    // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
+                    if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                        feederWheel.set(ControlMode.PercentOutput, 0);
                     }
+                }
 
                     // Sets Blinkin LED different colors for different flywheel and hood states
                     setLedForOnMode();
-                }
+
 
                 break;
 
@@ -716,6 +707,10 @@ public final class Shooter extends AbstractSubsystem {
         logData("Shooter State", getShooterState());
         logData("Shooter Flywheel Speed Error", getDesiredShooterSpeed() - getShooterRPM());
         logData("Hood Position Error", getDesiredHoodAngle() - getHoodAngle());
+        logData("Shooter Flywheel Master Current", shooterWheelMaster.getSupplyCurrent());
+        logData("Shooter Flywheel Slave Current", shooterWheelSlave.getSupplyCurrent());
+        logData("Feeder Wheel Current", feederWheel.getSupplyCurrent());
+        logData("Hood Motor Current", hoodMotor.getOutputCurrent());
     }
 
     /** Closing of Shooter motors is not supported. */
