@@ -152,7 +152,7 @@ public final class Shooter extends AbstractSubsystem {
         TEST
     }
 
-    private ShooterState shooterState = ShooterState.ON;
+    private ShooterState shooterState = ShooterState.OFF;
 
     /**
      * A 1 slot queue that holds a requested state change if the state could not be changed at the moment.
@@ -310,6 +310,19 @@ public final class Shooter extends AbstractSubsystem {
      */
     public void setShooterSpeed(double desiredShooterSpeed) {
         this.desiredShooterSpeed = desiredShooterSpeed;
+        if (desiredShooterSpeed == 0) {
+            if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
+                nextState = ShooterState.OFF;
+            } else {
+                shooterState = ShooterState.OFF;
+            }
+        } else {
+            if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
+                nextState = ShooterState.ON;
+            } else {
+                shooterState = ShooterState.ON;
+            }
+        }
     }
 
     /**
@@ -391,32 +404,6 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     /**
-     * Sets shooter state to OFF, will turn off motors.
-     */
-    public void turnShooterOFF() {
-        // Checks to make sure that HOMING or TEST is not occurring
-        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
-            nextState = ShooterState.OFF;
-        } else {
-            shooterState = ShooterState.OFF;
-        }
-    }
-
-    /**
-     * Turns shooter ON
-     * <p>
-     * Allows the motors to receive commands
-     */
-    public void turnShooterON() {
-        // Checks to make sure that HOMING or TEST is not occurring
-        if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
-            nextState = ShooterState.ON;
-        } else {
-            shooterState = ShooterState.ON;
-        }
-    }
-
-    /**
      * Checks if Hood is at the target angle within a configurable allowed error.
      */
     public boolean isHoodAtTargetAngle() {
@@ -474,6 +461,10 @@ public final class Shooter extends AbstractSubsystem {
         BlinkinLED.getInstance().setColor(Constants.LED_TEST_IN_PROGRESS);
     }
 
+    private void moveHoodMotor() {
+        hoodPID.setReference((desiredHoodAngle - getHoodAngle() + hoodRelativeEncoder.getPosition()),
+                CANSparkMax.ControlType.kPosition);
+    }
 
     /**
      * Update Method for Shooter.
@@ -497,13 +488,6 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-
-                if (getDesiredShooterSpeed() != 0) {
-                    // Will quit out of OFF mode and switch on ON mode if desired shooter speed is not equal to zero
-                    shooterState = ShooterState.ON;
-                    break;
-                }
-
                 // Will turn off the motors if Shooter State is OFF
                 setShooterSpeed(0);
 
@@ -523,23 +507,15 @@ public final class Shooter extends AbstractSubsystem {
                 break;
 
             case ON:
-                if (getDesiredShooterSpeed() == 0) {
-                    // Will quit out of OB mode and switch on OFF mode if desired shooter speed is equal to zero
-                    shooterState = ShooterState.OFF;
-                    break;
-                }
-
                 // Sets shooter motor to desired shooter speed
                 shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
 
                 // Sets Motor to travel to desired hood angle
-                hoodPID.setReference((desiredHoodAngle - getHoodAngle()), CANSparkMax.ControlType.kPosition);
+                moveHoodMotor();
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
                 // is at target speed
-                if ((feederWheelState == FeederWheelState.FORWARD) &&
-                        Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE &&
-                        isShooterAtTargetSpeed()) {
+                if ((feederWheelState == FeederWheelState.FORWARD) && isHoodHasStopped() && isShooterAtTargetSpeed()) {
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, 1);
@@ -557,10 +533,8 @@ public final class Shooter extends AbstractSubsystem {
                     }
                 }
 
-                    // Sets Blinkin LED different colors for different flywheel and hood states
-                    setLedForOnMode();
-
-
+                // Sets Blinkin LED different colors for different flywheel and hood states
+                setLedForOnMode();
                 break;
 
             case HOMING:
@@ -611,7 +585,7 @@ public final class Shooter extends AbstractSubsystem {
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);
 
-                    // Turns homing off and sets it to the next queued state, ON if no state queued
+                    // Turns homing off and sets it to the next queued state, OFF if no state queued
                     shooterState = nextState;
 
                     // Sends Homing start message to console
@@ -632,6 +606,10 @@ public final class Shooter extends AbstractSubsystem {
 
                 break;
         }
+    }
+
+    private boolean isHoodHasStopped() {
+        return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
     }
 
     /**
