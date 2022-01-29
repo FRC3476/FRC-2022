@@ -638,7 +638,7 @@ public class Shooter extends AbstractSubsystem {
                     // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
                     hoodRelativeEncoder.setPosition(90);
                     // Sets current to zero if home switch is pressed
-                    hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
+                    hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle);
 
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
@@ -651,14 +651,14 @@ public class Shooter extends AbstractSubsystem {
                     homingStartTime = -1;
                 } else {
 
-                    // Runs Motor at .05 Amps while home switch is not pressed
-                    hoodPID.setReference(Constants.HOMING_MOTOR_CURRENT_AMPS, CANSparkMax.ControlType.kCurrent);
+                    // Runs Motor at 30 percent to home
+                    hoodPID.setReference(Constants.HOMING_MOTOR__PERCENT_OUTPUT, CANSparkMax.ControlType.kDutyCycle);
                 }
 
                 // Executes this if homing has been going on for the MAX allotted time
                 if (Timer.getFPGATimestamp() - homingStartTime > Constants.MAX_HOMING_TIME_S) {
                     // Sets current to zero if max time is exceeded
-                    hoodPID.setReference(0, CANSparkMax.ControlType.kCurrent);
+                    hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle);
 
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);

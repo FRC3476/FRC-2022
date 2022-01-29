@@ -220,9 +220,9 @@ public final class Constants {
     public static final double MAX_HOMING_TIME_S = 2;
 
     /**
-     * How many amps should be fed into Hood motor when HOMING
+     * 30 Percent of motor power should be used when homing
      */
-    public static final double HOMING_MOTOR_CURRENT_AMPS = .05;
+    public static final double HOMING_MOTOR__PERCENT_OUTPUT = .30;
 
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
