@@ -106,8 +106,8 @@ public final class Constants {
 
     // 2048 sensor units per revolution
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION = 2048;
-    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_VELOCITY = 600 / 2048;
-    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 8.1503;
+    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_VELOCITY = 600 / 2048.0d;
+    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
 
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 30;

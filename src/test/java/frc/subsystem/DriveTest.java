@@ -60,7 +60,7 @@ public class DriveTest {
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
-        Timer.setTime(50.05);
+        Timer.setTime(50.1);
         drive.stopMovement();
         for (int i = 0; i < drive.swerveMotors.length; i++) {
             assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
