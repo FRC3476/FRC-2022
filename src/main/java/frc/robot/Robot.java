@@ -44,11 +44,6 @@ public class Robot extends TimedRobot {
     NetworkTableInstance instance = NetworkTableInstance.getDefault();
     NetworkTable autoDataTable = instance.getTable("autodata");
     NetworkTableEntry autoPath = autoDataTable.getEntry("autoPath");
-
-    @NotNull NetworkTable position = autoDataTable.getSubTable("position");
-    NetworkTableEntry xPos = position.getEntry("x");
-    NetworkTableEntry yPos = position.getEntry("y");
-    NetworkTableEntry rotationPos = position.getEntry("rotation");
     NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
     NetworkTableEntry pathProcessingStatusEntry = autoDataTable.getEntry("processing");
     NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
@@ -104,13 +99,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        if (isEnabled()) {
-            //Get data from the robot tracker and upload it to the auto GUI (Units must be in meters)
-            xPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getX());
-            yPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getY());
-            rotationPos.setDouble(robotTracker.getLatencyCompedPoseMeters().getRotation().getRadians());
-        }
-
         //Listen changes in the network auto
         if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
             lastAutoPath = autoPath.getString(null);

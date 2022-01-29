@@ -29,7 +29,6 @@ import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.wpimodified.HolonomicDriveController;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -55,12 +54,7 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-    private double maxVelocityChange = getMaxAllowedVelocityChange();
-
     private double lastLoopTime = 0;
-
-    private double accelLimitPeriod = 0;
-    private @Nullable ChassisSpeeds currentRobotState;
 
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
@@ -204,16 +198,6 @@ public final class Drive extends AbstractSubsystem {
         return swerveModuleState;
     }
 
-    /**
-     * The method gets the states of the swerve modules and then uses this information to return a chassis speeds
-     *
-     * @return The current state of the robot as chassis speeds
-     */
-    public @NotNull ChassisSpeeds getRobotState() {
-        if (currentRobotState == null) return new ChassisSpeeds();
-        return currentRobotState;
-    }
-
     public void startHold() {
         configBrake();
         driveState = DriveState.HOLD;
@@ -328,12 +312,12 @@ public final class Drive extends AbstractSubsystem {
      */
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
 
-        maxVelocityChange = getMaxAllowedVelocityChange();
+        double maxVelocityChange = getMaxAllowedVelocityChange();
 
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
 
-        ChassisSpeeds actualVelocity = getRobotState();
+        ChassisSpeeds actualVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
 
         // Converts ChassisSpeeds to Translation2d
         Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
@@ -379,6 +363,7 @@ public final class Drive extends AbstractSubsystem {
     double getMaxAllowedVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
         // If iteration period is greater than allowed amount, iteration period = 50 ms
+        double accelLimitPeriod;
         if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
             accelLimitPeriod = 0.050;
         } else {
@@ -415,7 +400,7 @@ public final class Drive extends AbstractSubsystem {
      * @return The robot speed
      */
     public double getSpeed() {
-        ChassisSpeeds robotState = getRobotState();
+        ChassisSpeeds robotState = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
         return Math.sqrt(Math.pow(robotState.vxMetersPerSecond, 2) + Math.pow(robotState.vyMetersPerSecond, 2));
     }
 
@@ -425,7 +410,7 @@ public final class Drive extends AbstractSubsystem {
      * @return The robot speed squared
      */
     public double getSpeedSquared() {
-        ChassisSpeeds robotState = getRobotState();
+        ChassisSpeeds robotState = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
         return Math.pow(robotState.vxMetersPerSecond, 2) + Math.pow(robotState.vyMetersPerSecond, 2);
     }
 
@@ -476,19 +461,12 @@ public final class Drive extends AbstractSubsystem {
 
     @Override
     public void update() {
-        //	System.out.println("L speed " + getLeftSpeed() + " position x " + RobotTracker.getInstance().getOdometry()
-        //	.translationMat.getX());
-        //	System.out.println("R speed " + getRightSpeed() + " position y " + RobotTracker.getInstance().getOdometry()
-        //	.translationMat.getY());
-        //debugSpeed();
-        //System.out.println(driveState);
         DriveState snapDriveState;
         synchronized (this) {
             snapDriveState = driveState;
-            currentRobotState = swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
         }
 
-        checkGyro();
+        checkGyroConnection();
 
         switch (snapDriveState) {
             case TURN:
@@ -513,15 +491,15 @@ public final class Drive extends AbstractSubsystem {
             wantedHeading = angle;
             driveState = DriveState.TURN;
             rotateAuto = true;
-            isAiming = !getTurningDone();
+            isAiming = !isTurningDone();
             configBrake();
         }
     }
 
 
-    public synchronized boolean getTurningDone() {
+    public synchronized boolean isTurningDone() {
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
     }
 
@@ -547,7 +525,7 @@ public final class Drive extends AbstractSubsystem {
     public void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
         double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
-        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
@@ -604,11 +582,6 @@ public final class Drive extends AbstractSubsystem {
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
         }
-
-        ChassisSpeeds chassisSpeeds = getRobotState();
-        logData("Computed Robot X Velocity", chassisSpeeds.vxMetersPerSecond);
-        logData("Computed Robot Y Velocity", chassisSpeeds.vyMetersPerSecond);
-        logData("Computed Robot Rotation", chassisSpeeds.omegaRadiansPerSecond);
     }
 
 
@@ -673,7 +646,7 @@ public final class Drive extends AbstractSubsystem {
      * Checks if gyro is connected. If disconnected, switches to robot-centric drive for the rest of the match. Reports error to
      * driver station when this happens.
      */
-    public void checkGyro() {
+    public void checkGyroConnection() {
         if (!RobotTracker.getInstance().getGyro().isConnected()) {
             if (useFieldRelative) {
                 useFieldRelative = false;

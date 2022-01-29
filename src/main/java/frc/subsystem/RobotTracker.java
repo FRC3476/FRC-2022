@@ -42,7 +42,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
 
     private RobotTracker() {
-        super(Constants.ROBOT_TRACKER_PERIOD);
+        super(Constants.ROBOT_TRACKER_PERIOD, 5);
         gyroSensor = new AHRS(SPI.Port.kMXP, (byte) 100);
         gyroSensor.getRequestedUpdateRate();
         //@formatter:off
@@ -369,6 +369,8 @@ public final class RobotTracker extends AbstractSubsystem {
         SmartDashboard.putNumber("Latency Comped Robot Velocity X", getLatencyCompedChassisSpeeds().vxMetersPerSecond);
         SmartDashboard.putNumber("Latency Comped Robot Velocity Y", getLatencyCompedChassisSpeeds().vyMetersPerSecond);
         SmartDashboard.putNumber("Latency Comped Robot Velocity Theta", getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+
+        SmartDashboard.putNumber("Timestamp", currentOdometryTime);
     }
 
     @Override
