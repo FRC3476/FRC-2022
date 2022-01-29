@@ -36,7 +36,6 @@ public class VisionManager extends AbstractSubsystem {
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs) {
-
     }
 
     /**
@@ -102,7 +101,7 @@ public class VisionManager extends AbstractSubsystem {
     public void update() {
         MutableTranslation2d robotTranslation = getCurrentTranslation();
         if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
-                robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD) {
+                robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
             robotTracker.addVisionMeasurement(
                     new Pose2d(robotTranslation.getTranslation2d(), robotTracker.getLatencyCompedPoseMeters().getRotation()),
                     Timer.getFPGATimestamp());

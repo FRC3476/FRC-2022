@@ -20,7 +20,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.5, 0.5); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD = Math.pow(1.0, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
 
     //Drive Constants
     public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
@@ -116,7 +116,7 @@ public final class Constants {
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
-
+    public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
     /**
      * The distance to the center of the goal to the vision tape.
      */
