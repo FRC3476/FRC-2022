@@ -26,8 +26,6 @@ import frc.utility.controllers.LazyTalonSRX;
  * Has support for logging to Shuffleboard Communicates some shooting, testing, and homing states with BlinkinLED.
  */
 
-@SuppressWarnings("unused")
-
 public final class Shooter extends AbstractSubsystem {
 
     // Talon500 Initialization
@@ -164,7 +162,7 @@ public final class Shooter extends AbstractSubsystem {
     private double desiredHoodAngle;
 
     // Singleton Setup
-
+    
     private static final Shooter instance = new Shooter();
 
     /**
