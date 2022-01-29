@@ -9,12 +9,12 @@ import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 
-public class Intake extends AbstractSubsystem {
+public final class Intake extends AbstractSubsystem {
 
     private static Intake instance = new Intake();
 
     private final Solenoid intakeSol;
-    private LazyCANSparkMax intakeMotor;
+    private final LazyCANSparkMax intakeMotor;
 
     private double allowIntakeRunTime = 0;
 
@@ -23,7 +23,7 @@ public class Intake extends AbstractSubsystem {
     }
 
     private Intake() {
-        super(100);
+        super(Constants.INTAKE_PERIOD);
         intakeSol = new Solenoid(PneumaticsModuleType.REVPH, Constants.SOLENOID_CHANNEL);
         intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
     }

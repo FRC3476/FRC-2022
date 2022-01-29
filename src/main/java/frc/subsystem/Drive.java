@@ -10,7 +10,6 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
 import com.revrobotics.SparkMaxPIDController;
-import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,8 +26,9 @@ import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
+import frc.utility.wpimodified.HolonomicDriveController;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -54,12 +54,7 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-    private double maxVelocityChange = getMaxAllowedVelocityChange();
-
     private double lastLoopTime = 0;
-
-    private double accelLimitPeriod = 0;
-    private @Nullable ChassisSpeeds currentRobotState;
 
     private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
@@ -197,20 +192,10 @@ public final class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
                     (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
-                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+                    Rotation2d.fromDegrees(getWheelRotation(i)));
             swerveModuleState[i] = moduleState;
         }
         return swerveModuleState;
-    }
-
-    /**
-     * The method gets the states of the swerve modules and then uses this information to return a chassis speeds
-     *
-     * @return The current state of the robot as chassis speeds
-     */
-    public @NotNull ChassisSpeeds getRobotState() {
-        if (currentRobotState == null) return new ChassisSpeeds();
-        return currentRobotState;
     }
 
     public void startHold() {
@@ -290,11 +275,11 @@ public final class Drive extends AbstractSubsystem {
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, double acceleration) {
         for (int i = 0; i < 4; i++) {
             //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
-            //                    Rotation2d.fromDegrees(getAbsolutePosition(i)));
+            //                    Rotation2d.fromDegrees(getWheelRotation(i)));
             // TODO: flip the acceleration if we flip the module
             SwerveModuleState targetState = moduleStates[i];
             double targetAngle = targetState.angle.getDegrees();
-            double currentAngle = getAbsolutePosition(i); //swerveEncoders[i].getPosition();
+            double currentAngle = getWheelRotation(i); //swerveEncoders[i].getPosition();
 
             double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
 
@@ -327,13 +312,12 @@ public final class Drive extends AbstractSubsystem {
      */
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
 
-        maxVelocityChange = getMaxAllowedVelocityChange();
+        double maxVelocityChange = getMaxAllowedVelocityChange();
 
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
 
-        ChassisSpeeds actualVelocity = getRobotState();
-        if (actualVelocity == null) actualVelocity = new ChassisSpeeds(0, 0, 0);
+        ChassisSpeeds actualVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
 
         // Converts ChassisSpeeds to Translation2d
         Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
@@ -379,6 +363,7 @@ public final class Drive extends AbstractSubsystem {
     double getMaxAllowedVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
         // If iteration period is greater than allowed amount, iteration period = 50 ms
+        double accelLimitPeriod;
         if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
             accelLimitPeriod = 0.050;
         } else {
@@ -415,7 +400,7 @@ public final class Drive extends AbstractSubsystem {
      * @return The robot speed
      */
     public double getSpeed() {
-        ChassisSpeeds robotState = getRobotState();
+        ChassisSpeeds robotState = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
         return Math.sqrt(Math.pow(robotState.vxMetersPerSecond, 2) + Math.pow(robotState.vyMetersPerSecond, 2));
     }
 
@@ -425,7 +410,7 @@ public final class Drive extends AbstractSubsystem {
      * @return The robot speed squared
      */
     public double getSpeedSquared() {
-        ChassisSpeeds robotState = getRobotState();
+        ChassisSpeeds robotState = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
         return Math.pow(robotState.vxMetersPerSecond, 2) + Math.pow(robotState.vyMetersPerSecond, 2);
     }
 
@@ -453,9 +438,11 @@ public final class Drive extends AbstractSubsystem {
 
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
-        System.out.println(goal);
-        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getPoseMeters(), goal,
-                autoTargetHeading);
+        Trajectory.State trackerPose = currentAutoTrajectory.sample(
+                Timer.getFPGATimestamp() - autoStartTime - Constants.SPARK_VELOCITY_MEASUREMENT_LATENCY);
+
+        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(), goal,
+                trackerPose, autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
         if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;
@@ -474,19 +461,12 @@ public final class Drive extends AbstractSubsystem {
 
     @Override
     public void update() {
-        //	System.out.println("L speed " + getLeftSpeed() + " position x " + RobotTracker.getInstance().getOdometry()
-        //	.translationMat.getX());
-        //	System.out.println("R speed " + getRightSpeed() + " position y " + RobotTracker.getInstance().getOdometry()
-        //	.translationMat.getY());
-        //debugSpeed();
-        //System.out.println(driveState);
         DriveState snapDriveState;
         synchronized (this) {
             snapDriveState = driveState;
-            currentRobotState = swerveKinematics.toChassisSpeeds(getSwerveModuleStates());
         }
 
-        checkGyro();
+        checkGyroConnection();
 
         switch (snapDriveState) {
             case TURN:
@@ -511,15 +491,15 @@ public final class Drive extends AbstractSubsystem {
             wantedHeading = angle;
             driveState = DriveState.TURN;
             rotateAuto = true;
-            isAiming = !getTurningDone();
+            isAiming = !isTurningDone();
             configBrake();
         }
     }
 
 
-    public synchronized boolean getTurningDone() {
+    public synchronized boolean isTurningDone() {
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
     }
 
@@ -545,7 +525,7 @@ public final class Drive extends AbstractSubsystem {
     private void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
         double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
         double pidDeltaSpeed = turnPID.calculate(error);
-        double curSpeed = Math.toDegrees(getRobotState().omegaRadiansPerSecond);
+        double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
@@ -597,16 +577,11 @@ public final class Drive extends AbstractSubsystem {
             double relPos = swerveEncoders[i].getPosition() % 360;
             if (relPos < 0) relPos += 360;
             logData("Swerve Motor " + i + " Relative Position", relPos);
-            logData("Swerve Motor " + i + " Absolute Position", getAbsolutePosition(i));
+            logData("Swerve Motor " + i + " Absolute Position", getWheelRotation(i));
             logData("Drive Motor " + i + " Velocity", swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d);
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getOutputCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getOutputCurrent());
         }
-
-        ChassisSpeeds chassisSpeeds = getRobotState();
-        logData("Computed Robot X Velocity", chassisSpeeds.vxMetersPerSecond);
-        logData("Computed Robot Y Velocity", chassisSpeeds.vyMetersPerSecond);
-        logData("Computed Robot Rotation", chassisSpeeds.omegaRadiansPerSecond);
     }
 
 
@@ -616,7 +591,7 @@ public final class Drive extends AbstractSubsystem {
      * @param moduleNumber the module to set
      * @return angle in degrees of the module
      */
-    public double getAbsolutePosition(int moduleNumber) {
+    public double getWheelRotation(int moduleNumber) {
         if (useRelativeEncoderPosition) {
             double relPos = swerveEncoders[moduleNumber].getPosition() % 360;
             if (relPos < 0) relPos += 360;
@@ -624,6 +599,36 @@ public final class Drive extends AbstractSubsystem {
         } else {
             return swerveCanCoders[moduleNumber].getPosition();
         }
+    }
+
+    /**
+     * Returns the angle/position of the modules
+     *
+     * @return and array of the four angles
+     */
+    public double[] getWheelRotations() {
+        double[] positions = new double[4];
+        for (int i = 0; i < 4; i++) {
+            if (useRelativeEncoderPosition) {
+                double relPos = swerveEncoders[i].getPosition() % 360;
+                if (relPos < 0) relPos += 360;
+                positions[i] = relPos;
+            } else {
+                positions[i] = swerveCanCoders[i].getPosition();
+            }
+        }
+        return positions;
+    }
+
+
+    @Contract(pure = true)
+    public double[] getModuleSpeeds() {
+        double[] speeds = new double[4];
+
+        for (int i = 0; i < 4; i++) {
+            speeds[i] = (swerveDriveMotors[i].getEncoder().getVelocity() / 60.0d) * Constants.SWERVE_METER_PER_ROTATION;
+        }
+        return speeds;
     }
 
     /**
@@ -641,7 +646,7 @@ public final class Drive extends AbstractSubsystem {
      * Checks if gyro is connected. If disconnected, switches to robot-centric drive for the rest of the match. Reports error to
      * driver station when this happens.
      */
-    public void checkGyro() {
+    public void checkGyroConnection() {
         if (!RobotTracker.getInstance().getGyro().isConnected()) {
             if (useFieldRelative) {
                 useFieldRelative = false;
