@@ -602,8 +602,11 @@ public final class Shooter extends AbstractSubsystem {
 
                 // Executes this if homing has been going on for the MAX allotted time
                 if (Timer.getFPGATimestamp() - homingStartTime > Constants.MAX_HOMING_TIME_S) {
-                    // Sets current to zero if max time is exceeded
+                    // Sets motor speed to zero if max time is exceeded
                     hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle);
+
+                    // Sets current position as the 90 degree mark
+                    hoodRelativeEncoder.setPosition(90);
 
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);
