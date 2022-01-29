@@ -13,7 +13,12 @@ import frc.utility.controllers.LazyCANSparkMax;
 public class Hopper extends AbstractSubsystem {
     public static Hopper instance = new Hopper();
     LazyCANSparkMax hopperMotor;
-    private final ColorSensorV3 colorSensor = new ColorSensorV3(I2C.Port.kMXP);
+    private final ColorSensorV3 topBall = new ColorSensorV3(I2C.Port.kMXP);
+    private final ColorSensorV3 bottomBall = new ColorSensorV3(I2C.Port.kOnboard);
+
+    private boolean topBallDetected = false;
+    private boolean bottomBallDetected = false;
+
 
     /**
      * A Rev Color Match object is used to register and detect known colors. This can be calibrated ahead of time or during
@@ -37,11 +42,60 @@ public class Hopper extends AbstractSubsystem {
         ON, OFF, REVERSE
     }
 
+    HopperState wantedHopperState = HopperState.OFF;
+
     private Hopper() {
         super(Constants.HOPPER_PERIOD);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
+    }
+
+    public void checkBallColor() {
+        Color detectedColorTop = topBall.getColor();
+        Color detectedColorBottom = bottomBall.getColor();
+
+        SmartDashboard.putNumber("Red", detectedColorTop.red);
+        SmartDashboard.putNumber("Green", detectedColorTop.green);
+        SmartDashboard.putNumber("Blue", detectedColorTop.blue);
+        SmartDashboard.putNumber("Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
+
+        SmartDashboard.putNumber("Red", detectedColorBottom.red);
+        SmartDashboard.putNumber("Green", detectedColorBottom.green);
+        SmartDashboard.putNumber("Blue", detectedColorBottom.blue);
+        SmartDashboard.putNumber("Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
+
+        if (colorMatcher.matchClosestColor(detectedColorTop).color == redTarget) {
+            SmartDashboard.putString("Top Ball Color", "Red");
+            topBallDetected = true;
+        } else if (colorMatcher.matchClosestColor(detectedColorTop).color == blueTarget) {
+            SmartDashboard.putString("Top Ball Color", "Blue");
+            topBallDetected = true;
+        } else {
+            SmartDashboard.putString("Top Ball Color", "No Ball Detected");
+            topBallDetected = false;
+        }
+
+        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
+            SmartDashboard.putString("Bottom Ball Color", "Red");
+            bottomBallDetected = true;
+        } else if (colorMatcher.matchClosestColor(detectedColorBottom).color == blueTarget) {
+            SmartDashboard.putString("Bottom Ball Color", "Blue");
+            bottomBallDetected = true;
+        } else {
+            SmartDashboard.putString("Bottom Ball Color", "No Ball Detected");
+            bottomBallDetected = false;
+        }
+    }
+
+    public void numberOfBalls() {
+        if (topBallDetected && bottomBallDetected) {
+            SmartDashboard.putNumber("Number of Balls", 2);
+        } else if (bottomBallDetected || topBallDetected) {
+            SmartDashboard.putNumber("Number of Balls", 1);
+        } else {
+            SmartDashboard.putNumber("Number of Balls", 0);
+        }
     }
 
     public void setHopperState(HopperState hopperState) {
@@ -60,19 +114,13 @@ public class Hopper extends AbstractSubsystem {
 
     @Override
     public void update() {
-        Color detectedColor = colorSensor.getColor();
-        SmartDashboard.putNumber("Red", detectedColor.red);
-        SmartDashboard.putNumber("Green", detectedColor.green);
-        SmartDashboard.putNumber("Blue", detectedColor.blue);
-        SmartDashboard.putNumber("Confidence", colorMatcher.matchClosestColor(detectedColor).confidence);
+        setHopperState(wantedHopperState);
+        checkBallColor();
+        numberOfBalls();
+    }
 
-        if (colorMatcher.matchClosestColor(detectedColor).color == redTarget) {
-            SmartDashboard.putString("Color", "Red");
-        } else if (colorMatcher.matchClosestColor(detectedColor).color == blueTarget) {
-            SmartDashboard.putString("Color", "Blue");
-        }
-//        SmartDashboard.putNumber("Raw Color", Double.parseDouble(colorSensor.getRawColor().toString()));
-//        SmartDashboard.putNumber("Closest Detected Color", Double.parseDouble(detectedColor.toString()));
+    public void setWantedHopperState(HopperState hopperState) {
+        wantedHopperState = hopperState;
     }
 
     @Override
@@ -89,6 +137,7 @@ public class Hopper extends AbstractSubsystem {
 
     @Override
     public void close() throws Exception {
-
+        setHopperState(HopperState.OFF);
+        instance = new Hopper();
     }
 }
