@@ -47,6 +47,9 @@ public final class Constants {
     public static final double SWERVE_DRIVE_D = 0.00;
     public static final double SWERVE_DRIVE_I = 0.00;
     public static final double SWERVE_DRIVE_F = 0.00;
+    public static final double SWERVE_DRIVE_INTEGRAL_ZONE = 0.00;
+
+    public static final int SWERVE_MOTOR_PID_TIMEOUT_MS = 50;
 
     /**
      * Feed forward constants for the drivetrain.
@@ -64,6 +67,7 @@ public final class Constants {
             new SimpleMotorFeedforward(0.153, 1.6, 0.18),
             new SimpleMotorFeedforward(0.153, 1.6, 0.18),
             new SimpleMotorFeedforward(0.153, 1.6, 0.18)};
+
 
     /**
      * What the module states should be in hold mode. The wheels will be put in an X pattern to prevent the robot from moving.
@@ -99,6 +103,15 @@ public final class Constants {
 
     public static final double MAX_TURN_ERROR = 0.85;
     public static final double MAX_PID_STOP_SPEED = 5.2;
+
+    // 2048 sensor units per revolution
+    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION = 2048;
+    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_VELOCITY = 600 / 2048;
+    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 8.1503;
+
+    public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
+    public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 30;
+    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
 
     /**
      * Units are in Meters Per Second Squared
