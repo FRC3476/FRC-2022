@@ -336,14 +336,14 @@ public final class Drive extends AbstractSubsystem {
             // Get limited velocity vector difference in cartesian coordinate system
             Translation2d limitedVelocityVectorChange =
                     new Translation2d(Math.cos(velocityDiffAngle) * maxVelocityChange,
-                            Math.sin(velocityDiffAngle) * maxVelocityChange); // remove
+                            Math.sin(velocityDiffAngle) * maxVelocityChange);
 
             // Compute limited velocity
-            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector); // remove
+            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector);
 
             // Convert to format compatible with serveDrive
-            limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(),
-                    limitedVelocityVector.getY(), commandedVelocity.omegaRadiansPerSecond); // remove
+            limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
+                    commandedVelocity.omegaRadiansPerSecond);
 
         }
 

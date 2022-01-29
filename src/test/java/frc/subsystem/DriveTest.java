@@ -55,12 +55,12 @@ public class DriveTest {
         currentRobotState.setAccessible(true);
         currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
 
-        Timer.setTime(50);
+        Timer.setTime(55);
         drive.swerveDrive(new ChassisSpeeds(1, 1, 0.0));
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
-        Timer.setTime(50.1);
+        Timer.setTime(55.1);
         drive.stopMovement();
         for (int i = 0; i < drive.swerveMotors.length; i++) {
             assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
