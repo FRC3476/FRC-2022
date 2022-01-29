@@ -25,33 +25,32 @@ import frc.utility.controllers.LazyTalonSRX;
  * <p>
  * Has support for logging to Shuffleboard Communicates some shooting, testing, and homing states with BlinkinLED.
  */
-public class Shooter extends AbstractSubsystem {
+
+@SuppressWarnings("unused")
+
+public final class Shooter extends AbstractSubsystem {
 
     // Talon500 Initialization
-    private LazyTalonFX shooterWheelMaster;
-    private LazyTalonFX shooterWheelSlave;
+    private final LazyTalonFX shooterWheelMaster;
+    private final LazyTalonFX shooterWheelSlave;
     private double desiredShooterSpeed;
 
     // 775Pro Initialization (TalonSRX may change to spark in the future)
-    private LazyTalonSRX feederWheel;
+    private final LazyTalonSRX feederWheel;
     private double forceFeederOnTime;
 
     // NEO550 Initialization
-    private LazyCANSparkMax hoodMotor;
+    private final LazyCANSparkMax hoodMotor;
     private SparkMaxPIDController hoodPID;
-    private RelativeEncoder hoodRelativeEncoder;
+    private final RelativeEncoder hoodRelativeEncoder;
 
     // REV Through Bore Encoder Initialization
-    private DutyCycle hoodAbsoluteEncoder;
+    private final DutyCycle hoodAbsoluteEncoder;
 
     // Home Switch Initialization
-    private DigitalInput homeSwitch;
+    private final DigitalInput homeSwitch;
 
     // Homing initialization
-
-    // currentPosition will be updated after each increment of .1 motor rotations
-    // it will then be used to calculate the next targetPosition by incrementing it by .1
-    private double currentHomingPosition;
 
     // startTime and currentTime will be used to check how long the homing is occurring
     // Negative 1 used for a check to see if homingStartTime has been initialized in HOMING case
@@ -118,7 +117,7 @@ public class Shooter extends AbstractSubsystem {
     /**
      * Shooter can either be OFF, ON, HOMING, or TESTING.
      * <p>
-     * OFF turns off the motors
+     * OFF, turns off the motors
      * <p>
      * ON allows commands to be sent to the motors
      * <p>
@@ -141,7 +140,7 @@ public class Shooter extends AbstractSubsystem {
         HOMING,
 
         /**
-         * Commands may be sent to motors.
+         * Commands may be sent to the motors.
          */
         ON,
 
@@ -164,66 +163,9 @@ public class Shooter extends AbstractSubsystem {
     // The target hood angle
     private double desiredHoodAngle;
 
-    // Test Pass or Fail Booleans, only records latest tests
-
-    /**
-     * Test Result of if the shooter flywheel accurately speeds up to a certain speed.
-     */
-    public boolean shooterMeetsExpectedSpeedTest;
-
-    /**
-     * Test Result of if the feeder wheel turns on and speeds up.
-     */
-    public boolean feederMeetsExpectedSpeedTest;
-
-    /**
-     * Test Result of if the hood is able to travel to the MINIMUM angle it should: 50 degrees from horizontal.
-     */
-    public boolean hoodMeetsMinimumAngleTest;
-
-    /**
-     * Test Result of if the hood is able to travel to the MAXIMUM angle it should: 90 degrees from the horizontal.
-     */
-    public boolean hoodMeetsMaximumAngleTest;
-
-    /**
-     * The current test being executed. Will be null if no test is being executed.
-     */
-    public enum CurrentTest {
-        /**
-         * Shooter is currently being tested.
-         */
-        SHOOTER,
-
-        /**
-         * Feeder is currently being tested.
-         */
-        FEEDER,
-
-        /**
-         * Hood is currently being tested to see if it can make it to the MINIMUM expected angle.
-         */
-        HOOD_MIN_ANGLE,
-
-        /**
-         * Hood is currently being tested to see if it can make it to the MAXIMUM expected angle.
-         */
-        HOOD_MAX_ANGLE,
-
-        /**
-         * All tests are finished and testing operations are being wrapped up.
-         */
-        TESTS_FINISHED
-    }
-
-    private CurrentTest currentTest;
-
-    // Test Timing Constants
-    private double testStartTime = -1;
-    private double testCurrentTime;
-
     // Singleton Setup
-    private static Shooter instance = new Shooter();
+
+    private static final Shooter instance = new Shooter();
 
     /**
      * returns the singleton instance of Shooter.
@@ -310,7 +252,7 @@ public class Shooter extends AbstractSubsystem {
             // Adds and offset to correct angle of the encoder
             hoodAngle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET;
 
-            // Checks if Absolute Encoder is reading outside of expected range
+            // Checks if Absolute Encoder is reading outside expected range
             if (hoodAngle > 90.5 || hoodAngle < 49.5) {
                 DriverStation.reportWarning("Hood position reading values over MAX expected.\n" +
                         "Should switch to home relative", false);
@@ -323,7 +265,7 @@ public class Shooter extends AbstractSubsystem {
         return hoodAngle;
     }
 
-    // Raw degree measurement from Absolute Encoder, May need an offset
+    // Raw degree measurement from Absolute Encoder, The angle may need an offset
     private double getHoodAbsoluteEncoderValue() {
         return hoodAbsoluteEncoder.getOutput() * 360;
     }
@@ -348,7 +290,7 @@ public class Shooter extends AbstractSubsystem {
      * <p>
      * ABSOLUTE_ENCODER uses the absolute encoder that has a 1:1 ratio with the hood angle.
      * <p>
-     * RELATIVE_TO_HOME uses the built in NEO550 relative encoder which is not 1:1 with hood angle.
+     * RELATIVE_TO_HOME uses the built-in NEO550 relative encoder which is not 1:1 with hood angle.
      */
     public void setHoodPositionMode(HoodPositionMode hoodPositionMode) {
         this.hoodPositionMode = hoodPositionMode;
@@ -453,7 +395,7 @@ public class Shooter extends AbstractSubsystem {
     public void turnShooterOFF() {
         // Checks to make sure that HOMING or TEST is not occurring
         if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
-            nextState = nextState.OFF;
+            nextState = ShooterState.OFF;
         } else {
             shooterState = ShooterState.OFF;
         }
@@ -462,7 +404,7 @@ public class Shooter extends AbstractSubsystem {
     /**
      * Turns shooter ON
      * <p>
-     * Allows motors to receive commands
+     * Allows the motors to receive commands
      */
     public void turnShooterON() {
         // Checks to make sure that HOMING or TEST is not occurring
@@ -542,7 +484,7 @@ public class Shooter extends AbstractSubsystem {
      * <p>
      * OFF - turns off motors.
      * <p>
-     * ON - allows commands to be sent to motors.
+     * ON - allows commands to be sent to the motors.
      * <p>
      * HOMING - Enacts homing procedures.
      * <p>
@@ -555,17 +497,32 @@ public class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-                // Will quit out of OFF mode and switch on ON mode if desired shooter speed is not equal to zero
-                if (getDesiredShooterSpeed() != 0) {
-                    shooterState = ShooterState.ON;
-                } else {
+
+                if (getDesiredShooterSpeed() == 0) {
 
                     // Will turn off the motors if Shooter State is OFF
                     setShooterSpeed(0);
-                    disableFeederWheel();
 
-                    // Sets hood to lowest possible position
+                    // Sets hood to the lowest possible position
                     setHoodPosition(50);
+
+                    // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
+                    // for a specified time period
+                    if (feederWheelState == FeederWheelState.BACKWARD) {
+
+                        // Set Feeder wheel to MAX speed
+                        feederWheel.set(ControlMode.PercentOutput, -1);
+                        forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                    } else {
+
+                        // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
+                        if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                            feederWheel.set(ControlMode.PercentOutput, 0);
+                        }
+                    }
+                } else {
+                    // Will quit out of OFF mode and switch on ON mode if desired shooter speed is not equal to zero
+                    shooterState = ShooterState.ON;
                 }
 
                 break;
@@ -596,11 +553,9 @@ public class Shooter extends AbstractSubsystem {
                         }
                     }
 
-                    // Checks to see if feeder wheel is enabled backward, if hoodMotor had finished moving, and if shooterWheel
-                    // is at target speed
-                    if ((feederWheelState == FeederWheelState.BACKWARD) && Math.abs(
-                            hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE &&
-                            isShooterAtTargetSpeed()) {
+                    // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
+                    // for a specified time period
+                    if (feederWheelState == FeederWheelState.BACKWARD) {
 
                         // Set Feeder wheel to MAX speed
                         feederWheel.set(ControlMode.PercentOutput, -1);
@@ -624,6 +579,7 @@ public class Shooter extends AbstractSubsystem {
                 // Will turn motor towards home switch until home switch is enabled
 
                 // Checks if homing has started yet
+                //noinspection FloatingPointEquality
                 if (homingStartTime == -1) {
                     // Records start of homing time, with current time being the same as the start time
                     homingStartTime = Timer.getFPGATimestamp();
