@@ -97,6 +97,11 @@ public class VisionManager extends AbstractSubsystem {
                 Timer.getFPGATimestamp());
     }
 
+    public void autoTurnRobotToTarget() {
+        double degreeOffset = Limelight.getInstance().getHorizontalOffset();
+        drive.setRotation(robotTracker.getGyroAngle().rotateBy(Rotation2d.fromDegrees(-degreeOffset)));
+    }
+
     @Override
     public void update() {
         MutableTranslation2d robotTranslation = getCurrentTranslation();
