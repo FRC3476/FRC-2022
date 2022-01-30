@@ -27,19 +27,19 @@ public final class Constants {
     //    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 17;
 
     public static final int DRIVE_LEFT_FRONT_ID = 11;
-    public static final int DRIVE_LEFT_BACK_ID = 13;
-    public static final int DRIVE_RIGHT_FRONT_ID = 10;
-    public static final int DRIVE_RIGHT_BACK_ID = 12;
-
-    public static final int CAN_LEFT_FRONT_ID = 1;
-    public static final int CAN_LEFT_BACK_ID = 3;
-    public static final int CAN_RIGHT_FRONT_ID = 0;
-    public static final int CAN_RIGHT_BACK_ID = 2;
+    public static final int DRIVE_LEFT_BACK_ID = 12;
+    public static final int DRIVE_RIGHT_FRONT_ID = 13;
+    public static final int DRIVE_RIGHT_BACK_ID = 14;
 
     public static final int DRIVE_LEFT_FRONT_SWERVE_ID = 15;
-    public static final int DRIVE_LEFT_BACK_SWERVE_ID = 17;
-    public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 14;
-    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 16;
+    public static final int DRIVE_LEFT_BACK_SWERVE_ID = 16;
+    public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 17;
+    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 18;
+
+    public static final int CAN_LEFT_FRONT_ID = 19;
+    public static final int CAN_LEFT_BACK_ID = 20;
+    public static final int CAN_RIGHT_FRONT_ID = 21;
+    public static final int CAN_RIGHT_BACK_ID = 22;
 
     public static final double SWERVE_INCHES_PER_ROTATION = (3.0d / 5.0d) * Math.PI;
     public static final double SWERVE_METER_PER_ROTATION = Units.inchesToMeters(SWERVE_INCHES_PER_ROTATION);
@@ -125,8 +125,8 @@ public final class Constants {
 
     //Climber Constants
     public static final int CLIMBER_PERIOD = 50;
-    public static final int CLIMBER_MOTOR_ID = 20;
-    public static final int CLIMBER_MOTOR_2_ID = 21;
+    public static final int CLIMBER_MOTOR_ID = 25;
+    public static final int CLIMBER_MOTOR_2_ID = 25;
 
     public static final double CLIMBER_MOTOR_KF = 0.0;
     public static final double CLIMBER_MOTOR_KP = 0.1;
