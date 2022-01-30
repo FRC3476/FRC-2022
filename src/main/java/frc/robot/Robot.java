@@ -16,11 +16,7 @@ import frc.auton.TemplateAuto;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
-import frc.subsystem.BlinkinLED;
-import frc.subsystem.Drive;
-import frc.subsystem.Hopper;
-import frc.subsystem.Intake;
-import frc.subsystem.RobotTracker;
+import frc.subsystem.*;
 import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
@@ -205,9 +201,11 @@ public class Robot extends TimedRobot {
         if (xbox.getRawAxis(3) > 0.1) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
+            hopper.setHopperState(Hopper.HopperState.ON);
         } else if (buttonPanel.getRawButton(10)) {
             // Eject everything
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
+            hopper.setHopperState(Hopper.HopperState.REVERSE);
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
         }

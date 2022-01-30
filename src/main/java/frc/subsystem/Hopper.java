@@ -37,7 +37,7 @@ public class Hopper extends AbstractSubsystem {
         return instance;
     }
 
-    enum HopperState {
+    public enum HopperState {
         ON, OFF, REVERSE
     }
 
