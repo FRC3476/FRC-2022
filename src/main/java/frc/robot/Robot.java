@@ -18,6 +18,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.BlinkinLED;
 import frc.subsystem.Drive;
+import frc.subsystem.Hopper;
 import frc.subsystem.Intake;
 import frc.subsystem.RobotTracker;
 import frc.utility.Controller;
@@ -66,6 +67,7 @@ public class Robot extends TimedRobot {
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
+    private final Hopper hopper = Hopper.getInstance();
     private final Intake intake = Intake.getInstance();
 //    private final Shooter shooter = Shooter.getInstance();
 //    private final Climber climber = Climber.getInstance();
@@ -262,6 +264,7 @@ public class Robot extends TimedRobot {
         robotTracker.start();
         drive.start();
         intake.start();
+        hopper.start();
     }
 
     public synchronized void killAuto() {

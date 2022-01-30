@@ -108,6 +108,13 @@ public final class Constants {
     //field constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
 
+
+    //Hopper Constants
+    public static final int HOPPER_PERIOD = 200;
+    public static final double HOPPER_SPEED = 1;
+    public static final int HOPPER_MOTOR_ID = 30;
+
+    
     // Shooter Constants
 
     public static final int SHOOTER_PERIOD_MS = 20;
