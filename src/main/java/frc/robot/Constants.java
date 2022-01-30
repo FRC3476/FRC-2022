@@ -41,7 +41,7 @@ public final class Constants {
     public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 14;
     public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 16;
 
-    public static final double SWERVE_INCHES_PER_ROTATION = Math.PI;
+    public static final double SWERVE_INCHES_PER_ROTATION = (3.0d / 5.0d) * Math.PI;
     public static final double SWERVE_METER_PER_ROTATION = Units.inchesToMeters(SWERVE_INCHES_PER_ROTATION);
     public static final double SWERVE_DRIVE_P = 0.08;
     public static final double SWERVE_DRIVE_D = 0.00;
@@ -105,15 +105,15 @@ public final class Constants {
     public static final double MAX_PID_STOP_SPEED = 5.2;
 
     // 2048 sensor units per revolution
-    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION = 2048;
-    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_VELOCITY = 600 / 2048.0d;
+    public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
+    public static final double FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM = 600 / 2048.0d;
     public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
 
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
-    public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 30;
+    public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
 
-    public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 1;
+    public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
 
     /**
      * Units are in Meters Per Second Squared

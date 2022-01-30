@@ -130,8 +130,8 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].configVoltageCompSaturation(Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
 
             // This makes motors brake when no RPM is set
-            swerveDriveMotors[i].setNeutralMode(NeutralMode.Brake);
-            swerveMotors[i].setNeutralMode(NeutralMode.Brake);
+            swerveDriveMotors[i].setNeutralMode(NeutralMode.Coast);
+            swerveMotors[i].setNeutralMode(NeutralMode.Coast);
         }
 
         configMotors();
@@ -143,19 +143,24 @@ public final class Drive extends AbstractSubsystem {
         configBrake();
     }
 
-    // Returns position of swerve motors
+    /**
+     * @return the position of the selected swerve drive motor
+     */
     private double getSwervePosition(int motorNum) {
-        return swerveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION *
+        return swerveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS *
                 Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR;
     }
 
+
     private double getSwerveDrivePosition(int motorNum) {
-        return (swerveDriveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION) * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
+        return (swerveDriveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
     }
 
-    // Returns velocity in RPM
+    /**
+     * @return Returns requested drive wheel velocity in RPM
+     */
     private double getSwerveDriveVelocity(int motorNum) {
-        return swerveDriveMotors[motorNum].getSelectedSensorVelocity() * Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_VELOCITY;
+        return swerveDriveMotors[motorNum].getSelectedSensorVelocity() * Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
     }
 
     public @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
