@@ -4,7 +4,6 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
@@ -55,46 +54,46 @@ public class Hopper extends AbstractSubsystem {
         Color detectedColorTop = topBall.getColor();
         Color detectedColorBottom = bottomBall.getColor();
 
-        SmartDashboard.putNumber("Red", detectedColorTop.red);
-        SmartDashboard.putNumber("Green", detectedColorTop.green);
-        SmartDashboard.putNumber("Blue", detectedColorTop.blue);
-        SmartDashboard.putNumber("Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
+        logData("Top Ball Red", detectedColorTop.red);
+        logData("Top Ball Green", detectedColorTop.green);
+        logData("Top Ball Blue", detectedColorTop.blue);
+        logData("Top Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
 
-        SmartDashboard.putNumber("Red", detectedColorBottom.red);
-        SmartDashboard.putNumber("Green", detectedColorBottom.green);
-        SmartDashboard.putNumber("Blue", detectedColorBottom.blue);
-        SmartDashboard.putNumber("Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
+        logData("Bottom Red", detectedColorBottom.red);
+        logData("Bottom Green", detectedColorBottom.green);
+        logData("Bottom Blue", detectedColorBottom.blue);
+        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
 
         if (colorMatcher.matchClosestColor(detectedColorTop).color == redTarget) {
-            SmartDashboard.putString("Top Ball Color", "Red");
+            logData("Top Ball Color", "Red");
             topBallDetected = true;
         } else if (colorMatcher.matchClosestColor(detectedColorTop).color == blueTarget) {
-            SmartDashboard.putString("Top Ball Color", "Blue");
+            logData("Top Ball Color", "Blue");
             topBallDetected = true;
         } else {
-            SmartDashboard.putString("Top Ball Color", "No Ball Detected");
+            logData("Top Ball Color", "No Ball Detected");
             topBallDetected = false;
         }
 
         if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
-            SmartDashboard.putString("Bottom Ball Color", "Red");
+            logData("Bottom Ball Color", "Red");
             bottomBallDetected = true;
         } else if (colorMatcher.matchClosestColor(detectedColorBottom).color == blueTarget) {
-            SmartDashboard.putString("Bottom Ball Color", "Blue");
+            logData("Bottom Ball Color", "Blue");
             bottomBallDetected = true;
         } else {
-            SmartDashboard.putString("Bottom Ball Color", "No Ball Detected");
+            logData("Bottom Ball Color", "No Ball Detected");
             bottomBallDetected = false;
         }
     }
 
     public void numberOfBalls() {
         if (topBallDetected && bottomBallDetected) {
-            SmartDashboard.putNumber("Number of Balls", 2);
+            logData("Number of Balls", 2);
         } else if (bottomBallDetected || topBallDetected) {
-            SmartDashboard.putNumber("Number of Balls", 1);
+            logData("Number of Balls", 1);
         } else {
-            SmartDashboard.putNumber("Number of Balls", 0);
+            logData("Number of Balls", 0);
         }
     }
 
