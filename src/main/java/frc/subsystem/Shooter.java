@@ -197,6 +197,7 @@ public final class Shooter extends AbstractSubsystem {
 
         // Sets one of the shooter motors inverted
         shooterWheelSlave.setInverted(true);
+        shooterWheelMaster.setInverted(false);
 
         configPID();
     }
@@ -520,12 +521,11 @@ public final class Shooter extends AbstractSubsystem {
                 if ((feederWheelState == FeederWheelState.FORWARD) && isHoodStopped() && isShooterAtTargetSpeed()) {
 
                     // Set Feeder wheel to MAX speed
-                    feederWheel.set(ControlMode.PercentOutput, 1);
+                    feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                 } else if (feederWheelState == FeederWheelState.BACKWARD) {
                     // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
                     // for a specified time period
-                    // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, -1);
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                 } else {

@@ -122,7 +122,6 @@ public final class Constants {
     public static final int FEEDER_WHEEL_CAN_ID = 52;
     public static final int HOOD_MOTOR_CAN_ID = 53;
 
-    public static final int HOOD_ENCODER_DIO_ID = 5;
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
@@ -136,15 +135,7 @@ public final class Constants {
     public static final double SHOOTER_P = 0;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
-
-    /**
-     * Shooter Flywheel Feed Forward for PID
-     */
     public static final double SHOOTER_F = 0;
-
-    /**
-     * Integral Zone of shooter flywheel PID
-     */
     public static final double SHOOTER_I_ZONE = 0;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -160,22 +151,16 @@ public final class Constants {
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
      * minute
      */
-    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600 / 2048;
+    public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600.0d / 2048.0d;
 
 
     public static final double FEEDER_WHEEL_P = 0;
     public static final double FEEDER_WHEEL_I = 0;
     public static final double FEEDER_WHEEL_D = 0;
-
-    /**
-     * Feed Forward for Feeder Wheel
-     */
     public static final double FEEDER_WHEEL_F = 0;
-
-    /**
-     * Integral Zone for Feeder Wheel
-     */
     public static final double FEEDER_WHEEL_I_ZONE = 0;
+
+    public static final double FEEDER_WHEEL_SPEED = 1.0;
 
     public static final double FEEDER_CURRENT_LIMIT = 30;
     public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 30;
@@ -184,7 +169,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = .5;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.5;
 
     public static final double HOOD_P = 0;
     public static final double HOOD_I = 0;
@@ -222,13 +207,13 @@ public final class Constants {
     /**
      * 30 Percent of motor power should be used when homing
      */
-    public static final double HOMING_MOTOR__PERCENT_OUTPUT = .30;
+    public static final double HOMING_MOTOR__PERCENT_OUTPUT = 0.30;
 
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
      * degrees of the hood
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = .2;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 0.2;
 
     /**
      * If hood speed is under this value, hood has stopped
@@ -265,7 +250,7 @@ public final class Constants {
      * <p>
      * Color is Blue - Strobe light
      */
-    public static final double LED_HOOD_HOMING_IN_PROGRESS = -.09;
+    public static final double LED_HOOD_HOMING_IN_PROGRESS = -0.09;
 
     // TEST
     /**
@@ -273,7 +258,7 @@ public final class Constants {
      * <p>
      * LED Color is Gold - Strobe light
      */
-    public static final double LED_TEST_IN_PROGRESS = -.07;
+    public static final double LED_TEST_IN_PROGRESS = -0.07;
 
     // Shooter Test Constants
 
