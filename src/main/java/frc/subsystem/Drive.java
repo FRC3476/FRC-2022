@@ -150,7 +150,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private double getSwerveDrivePosition(int motorNum) {
-        return swerveDriveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION;
+        return (swerveDriveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER_POSITION) * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
     }
 
     // Returns velocity in RPM

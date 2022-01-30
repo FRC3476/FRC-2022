@@ -113,6 +113,8 @@ public final class Constants {
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 30;
     public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
 
+    public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 1;
+
     /**
      * Units are in Meters Per Second Squared
      */
