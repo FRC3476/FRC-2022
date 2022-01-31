@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
@@ -95,7 +96,7 @@ public final class Shooter extends AbstractSubsystem {
 
     /**
      * Feeder Wheel does not have to be controlled accurately like the flywheel or hood; therefore, we have three states: ON and
-     * OFF. and BACKWARDS
+     * OFF.
      */
     public enum FeederWheelState {
         /**
@@ -107,11 +108,6 @@ public final class Shooter extends AbstractSubsystem {
          * Feeder Wheel is OFF.
          */
         OFF,
-
-        /**
-         * Feeder Wheel is running backwards, uses 100% of power it has.
-         */
-        BACKWARD
     }
 
     private FeederWheelState feederWheelState = FeederWheelState.OFF;
@@ -207,25 +203,30 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelSlave.follow(shooterWheelMaster);
 
         // Configure PID Constants and current limit
-        shooterWheelMaster.config_kP(0, Constants.SHOOTER_P, Constants.SHOOTER_PID_TIMEOUT_MS);
-        shooterWheelMaster.config_kI(0, Constants.SHOOTER_I, Constants.SHOOTER_PID_TIMEOUT_MS);
-        shooterWheelMaster.config_kD(0, Constants.SHOOTER_D, Constants.SHOOTER_PID_TIMEOUT_MS);
-        shooterWheelMaster.config_kF(0, Constants.SHOOTER_F, Constants.SHOOTER_PID_TIMEOUT_MS);
-        shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE, Constants.SHOOTER_PID_TIMEOUT_MS);
+        shooterWheelMaster.config_kP(0, Constants.SHOOTER_P);
+        shooterWheelMaster.config_kI(0, Constants.SHOOTER_I);
+        shooterWheelMaster.config_kD(0, Constants.SHOOTER_D);
+        shooterWheelMaster.config_kF(0, Constants.SHOOTER_F);
+        shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE);
 
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
                 Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
+        shooterWheelSlave.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
+                Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
+
+        shooterWheelMaster.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_10Ms);
 
         // Turns off brake mode for shooter flywheel
         shooterWheelMaster.setNeutralMode(NeutralMode.Coast);
+        shooterWheelSlave.setNeutralMode(NeutralMode.Coast);
 
 
         // This PID setup for 775pro will not be used
-        feederWheel.config_kP(0, Constants.FEEDER_WHEEL_P, Constants.SHOOTER_PID_TIMEOUT_MS);
-        feederWheel.config_kI(0, Constants.FEEDER_WHEEL_I, Constants.SHOOTER_PID_TIMEOUT_MS);
-        feederWheel.config_kD(0, Constants.FEEDER_WHEEL_D, Constants.SHOOTER_PID_TIMEOUT_MS);
-        feederWheel.config_kF(0, Constants.FEEDER_WHEEL_F, Constants.SHOOTER_PID_TIMEOUT_MS);
-        feederWheel.config_IntegralZone(0, Constants.FEEDER_WHEEL_I_ZONE, Constants.SHOOTER_PID_TIMEOUT_MS);
+        feederWheel.config_kP(0, Constants.FEEDER_WHEEL_P);
+        feederWheel.config_kI(0, Constants.FEEDER_WHEEL_I);
+        feederWheel.config_kD(0, Constants.FEEDER_WHEEL_D);
+        feederWheel.config_kF(0, Constants.FEEDER_WHEEL_F);
+        feederWheel.config_IntegralZone(0, Constants.FEEDER_WHEEL_I_ZONE);
 
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.FEEDER_CURRENT_LIMIT,
                 Constants.FEEDER_TRIGGER_THRESHOLD_CURRENT, Constants.FEEDER_TRIGGER_THRESHOLD_TIME));
@@ -329,24 +330,16 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     /**
-     * Enables Feeder Wheel, running it forwards. Will run at MAXIMUM speed.
+     * Turns the shooter feeder-wheel on/off
+     *
+     * @param shoot true to turn on, false to turn off
      */
-    public void enableFeederWheelForward() {
-        feederWheelState = FeederWheelState.FORWARD;
-    }
-
-    /**
-     * Stops Feeder Wheel.
-     */
-    public void disableFeederWheel() {
-        feederWheelState = FeederWheelState.OFF;
-    }
-
-    /**
-     * Enables Feeder Wheel, running it backwards
-     */
-    public void enableFeederWheelBackward() {
-        feederWheelState = FeederWheelState.BACKWARD;
+    public void shoot(boolean shoot) {
+        if (shoot) {
+            feederWheelState = FeederWheelState.FORWARD;
+        } else {
+            feederWheelState = FeederWheelState.OFF;
+        }
     }
 
     /**
@@ -491,30 +484,16 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-                // Will turn off the motors if Shooter State is OFF
                 setShooterSpeed(0);
-
-                // Sets hood to the lowest possible position
-                setHoodPosition(50);
-
-                // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
-                // for a specified time period
-                if (feederWheelState == FeederWheelState.BACKWARD) {
-                    // Set Feeder wheel to MAX speed
-                    feederWheel.set(ControlMode.PercentOutput, -1);
-                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
-                } else {
-                    feederWheel.set(ControlMode.PercentOutput, 0);
-                }
+                setHoodPosition(50); // Sets hood to the lowest possible position
+                feederWheel.set(ControlMode.PercentOutput, 0);
 
                 break;
 
             case ON:
-                // Sets shooter motor to desired shooter speed
-                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed);
+                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed); // Sets shooter motor to desired shooter speed
 
-                // Sets Motor to travel to desired hood angle
-                moveHoodMotor();
+                moveHoodMotor(); // Sets Motor to travel to desired hood angle
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
                 // is at target speed
@@ -522,11 +501,6 @@ public final class Shooter extends AbstractSubsystem {
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
-                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
-                } else if (feederWheelState == FeederWheelState.BACKWARD) {
-                    // Sets feeder wheel to backwards if feeder state is backwards. Does not allow shooter state to be changed
-                    // for a specified time period
-                    feederWheel.set(ControlMode.PercentOutput, -1);
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second

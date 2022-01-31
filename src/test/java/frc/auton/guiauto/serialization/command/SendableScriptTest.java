@@ -16,7 +16,6 @@ class SendableScriptTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        Drive.getInstance().close();
         Drive.getInstance().kill();
 
     }
