@@ -16,9 +16,7 @@ import frc.auton.TemplateAuto;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
-import frc.subsystem.BlinkinLED;
-import frc.subsystem.Drive;
-import frc.subsystem.RobotTracker;
+import frc.subsystem.*;
 import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
@@ -65,6 +63,10 @@ public class Robot extends TimedRobot {
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
+    private final Hopper hopper = Hopper.getInstance();
+    private final Intake intake = Intake.getInstance();
+//    private final Shooter shooter = Shooter.getInstance();
+//    private final Climber climber = Climber.getInstance();
 
     //Inputs
     private final Controller xbox = new Controller(0);
@@ -191,6 +193,23 @@ public class Robot extends TimedRobot {
             }
         }
 
+        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
+            intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
+                    Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
+        }
+
+        if (xbox.getRawAxis(3) > 0.1) {
+            // Intake balls
+            intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
+            hopper.setHopperState(Hopper.HopperState.ON);
+        } else if (buttonPanel.getRawButton(10)) {
+            // Eject everything
+            intake.setWantedIntakeState(Intake.IntakeState.EJECT);
+            hopper.setHopperState(Hopper.HopperState.REVERSE);
+        } else {
+            intake.setWantedIntakeState(Intake.IntakeState.OFF);
+        }
+
 
         if (xbox.getRisingEdge(1)) {
             //Resets the current robot heading to zero. Useful if the heading drifts for some reason
@@ -242,6 +261,8 @@ public class Robot extends TimedRobot {
         System.out.println("Starting Subsystems");
         robotTracker.start();
         drive.start();
+        intake.start();
+        hopper.start();
     }
 
     public synchronized void killAuto() {
@@ -252,7 +273,8 @@ public class Robot extends TimedRobot {
         if (selectedAuto != null) {
             //auto.interrupt();
             //while(!auto.isInterrupted());
-            while (autoThread.getState() != Thread.State.TERMINATED) ;
+            assert autoThread != null;
+            while (autoThread.getState() != Thread.State.TERMINATED) OrangeUtility.sleep(10);
 
             drive.stopMovement();
             drive.setTeleop();

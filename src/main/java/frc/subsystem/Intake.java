@@ -58,7 +58,7 @@ public final class Intake extends AbstractSubsystem {
 
     // Intake States
 
-    enum IntakeSolState {
+    public enum IntakeSolState {
         OPEN, CLOSE
     }
 
@@ -75,7 +75,7 @@ public final class Intake extends AbstractSubsystem {
         }
     }
 
-    enum IntakeState {
+    public enum IntakeState {
         INTAKE, EJECT, OFF
     }
 
