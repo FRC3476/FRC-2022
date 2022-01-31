@@ -143,8 +143,8 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      *
      * <p>This multiplies the translation vector by a counterclockwise rotation matrix of the given
      * angle. [x_new] [other.cos, -other.sin][x] [y_new] = [other.sin, other.cos][y]
-     *
-     * <p>For example, rotating a MutableTranslation2d of {2, 0} by 90 degrees will return a MutableTranslation2d of
+     * <p>
+     * For example, rotating a MutableTranslation2d of {2, 0} by 90 degrees will return a MutableTranslation2d of
      * {0, 2}.
      *
      * @param other The rotation to rotate the translation by.
@@ -156,8 +156,8 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
 
     /**
      * Adds two translations in 2d space and returns the sum. This is similar to vector addition.
-     *
-     * <p>For example, MutableTranslation2d{1.0, 2.5} + MutableTranslation2d{2.0, 5.5} = MutableTranslation2d{3.0, 8.0}
+     * <p>
+     * For example, MutableTranslation2d{1.0, 2.5} + MutableTranslation2d{2.0, 5.5} = MutableTranslation2d{3.0, 8.0}
      *
      * @param other The translation to add.
      * @return The sum of the translations.

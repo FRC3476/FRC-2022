@@ -72,10 +72,10 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     }
 
     /**
-     * Constructs and returns a MutableRotation2d with the given degree radians.
+     * Constructs and returns a MutableRotation2d with the given degree value.
      *
-     * @param degrees The radians of the angle in degrees.
-     * @return The rotation object with the desired angle radians.
+     * @param degrees The value of the angle in degrees.
+     * @return The rotation object with the desired angle value.
      */
     public static MutableRotation2d fromDegrees(double degrees) {
         return new MutableRotation2d(Math.toRadians(degrees));
@@ -130,7 +130,7 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     }
 
     /**
-     * Takes the inverse of the current rotation. This is simply the negative of the current angular radians.
+     * Takes the inverse of the current rotation. This is simply the negative of the current angular value.
      *
      * @return The inverse of the current rotation.
      */
@@ -185,9 +185,9 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     }
 
     /**
-     * Returns the radian radians of the rotation.
+     * Returns the radian value of the rotation.
      *
-     * @return The radian radians of the rotation.
+     * @return The radian value of the rotation.
      */
     @JsonProperty
     public double getRadians() {
@@ -195,9 +195,9 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     }
 
     /**
-     * Returns the degree radians of the rotation.
+     * Returns the degree value of the rotation.
      *
-     * @return The degree radians of the rotation.
+     * @return The degree value of the rotation.
      */
     public double getDegrees() {
         return Math.toDegrees(radians);
@@ -231,9 +231,9 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     }
 
     /**
-     * Sets this MutableRotation2d to the given radian radians. The x and y don't have to be normalized.
+     * Sets this MutableRotation2d to the given radian value. The x and y don't have to be normalized.
      *
-     * @param radians The radians of the angle in radians.
+     * @param radians The value of the angle in radians.
      * @return This MutableRotation2d.
      */
     public MutableRotation2d setRadians(double radians) {
@@ -246,7 +246,7 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     /**
      * Sets this MutableRotation2d to the given degree radians.
      *
-     * @param degrees The radians of the angle in degrees.
+     * @param degrees The value of the angle in degrees.
      * @return This rotation with desired angle radians.
      */
     public MutableRotation2d setDegrees(double degrees) {

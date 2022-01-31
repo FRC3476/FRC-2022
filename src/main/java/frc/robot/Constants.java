@@ -13,6 +13,15 @@ public final class Constants {
     public static final double CAMERA_TARGET_HEIGHT_OFFSET = 0; //TODO: CHANGE
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
+    // Vision Manager
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz //22Hz
+
+    /**
+     * Relative position of the limelight from the center of the robot.
+     */
+    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.5, 0.5); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
+
     //Drive Constants
     public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
 
@@ -120,8 +129,28 @@ public final class Constants {
      */
     public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
 
-    //field constants
+    //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
+    public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
+    /**
+     * The distance to the center of the goal to the vision tape.
+     */
+    public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
+
+    public static final double GRAVITY = 9.80665;
+
+    /**
+     * Goal height in meters.
+     */
+    public static final double GOAL_HEIGHT = 2.64;
+    /**
+     * The height of the center of the Ejection point in meters.
+     */
+    public static final double SHOOTER_HEIGHT = 0.5; //TODO: Config
+
+    public static final double MAX_SHOOTER_RPM = 5500;
+    public static final double MAX_PREFER_SHOOTER_RPM = 4500;
+
 
 
     //Hopper Constants
