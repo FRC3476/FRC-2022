@@ -132,6 +132,7 @@ public final class Drive extends AbstractSubsystem {
             // This makes motors brake when no RPM is set
             swerveDriveMotors[i].setNeutralMode(NeutralMode.Coast);
             swerveMotors[i].setNeutralMode(NeutralMode.Coast);
+            swerveMotors[i].setInverted(true);
         }
 
         configMotors();
@@ -144,11 +145,11 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     * @return the position of the selected swerve drive motor
+     * @return the relative position of the selected swerve drive motor
      */
-    private double getSwervePosition(int motorNum) {
-        return swerveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS *
-                Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR;
+    private double getRelativeSwervePosition(int motorNum) {
+        return (swerveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) *
+                Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR * 360;
     }
 
 
@@ -286,7 +287,10 @@ public final class Drive extends AbstractSubsystem {
             if (Math.abs(angleDiff) < 5 || !rotate) {
                 swerveMotors[i].set(ControlMode.Velocity, 0);
             } else {
-                swerveMotors[i].set(ControlMode.Position, getSwervePosition(i) + angleDiff);
+                swerveMotors[i].set(ControlMode.Position,
+                        (((getRelativeSwervePosition(i) + angleDiff) / 360.0) *
+                                Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) *
+                                Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR);
             }
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
@@ -294,7 +298,7 @@ public final class Drive extends AbstractSubsystem {
             setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, acceleration);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
-            SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getSwervePosition(i) + angleDiff);
+            SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getRelativeSwervePosition(i) + angleDiff);
             SmartDashboard.putNumber("Swerve Motor " + i + " Error", angleDiff);
         }
     }
@@ -575,7 +579,7 @@ public final class Drive extends AbstractSubsystem {
     @Override
     public void logData() {
         for (int i = 0; i < 4; i++) {
-            double relPos = getSwervePosition(i) % 360;
+            double relPos = getRelativeSwervePosition(i) % 360;
             if (relPos < 0) relPos += 360;
             logData("Swerve Motor " + i + " Relative Position", relPos);
             logData("Swerve Motor " + i + " Absolute Position", getWheelRotation(i));
@@ -594,7 +598,7 @@ public final class Drive extends AbstractSubsystem {
      */
     public double getWheelRotation(int moduleNumber) {
         if (useRelativeEncoderPosition) {
-            double relPos = getSwervePosition(moduleNumber) % 360;
+            double relPos = getRelativeSwervePosition(moduleNumber) % 360;
             if (relPos < 0) relPos += 360;
             return relPos;
         } else {
@@ -611,7 +615,7 @@ public final class Drive extends AbstractSubsystem {
         double[] positions = new double[4];
         for (int i = 0; i < 4; i++) {
             if (useRelativeEncoderPosition) {
-                double relPos = getSwervePosition(i) % 360;
+                double relPos = getRelativeSwervePosition(i) % 360;
                 if (relPos < 0) relPos += 360;
                 positions[i] = relPos;
             } else {
