@@ -30,7 +30,6 @@ public class RobotTrackerTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        drive.close();
         robotTracker.close();
     }
 

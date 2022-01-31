@@ -65,8 +65,8 @@ public class Robot extends TimedRobot {
     private final Limelight limelight = Limelight.getInstance();
     private final Hopper hopper = Hopper.getInstance();
     private final Intake intake = Intake.getInstance();
-//    private final Shooter shooter = Shooter.getInstance();
-//    private final Climber climber = Climber.getInstance();
+    private final Shooter shooter = Shooter.getInstance();
+    private final Climber climber = Climber.getInstance();
 
     //Inputs
     private final Controller xbox = new Controller(0);
@@ -76,6 +76,10 @@ public class Robot extends TimedRobot {
 
     //Control loop states
     boolean limelightTakeSnapshots;
+    private double hoodPosition = 55;
+    private double shooterSpeed = 4000;
+    private boolean visionOn = true;
+    private int shooterMode = 1;
 
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
@@ -173,23 +177,54 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
-        if (useFieldRelative && drive.useFieldRelative) {
-            if (xbox.getRawButton(3)) {
-                //Increase the deadzone so that we drive straight
-                drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+
+        if (buttonPanel.getRisingEdge(1)) {
+            hoodPosition = 25;
+            shooterSpeed = 5500;
+            visionOn = true;
+            shooterMode = 1;
+        } else if (buttonPanel.getRisingEdge(2)) {
+            hoodPosition = 33;
+            visionOn = true;
+            shooterSpeed = 5400;
+            shooterMode = 2;
+        } else if (buttonPanel.getRisingEdge(3)) {
+            hoodPosition = 55;
+            shooterSpeed = 5000;//3250;,  5500
+            visionOn = false;
+            shooterMode = 3;
+        }
+
+        if (xbox.getRawAxis(2) > 0.5 || stick.getRawButton(1)) {
+            limelight.setLedMode(Limelight.LedMode.ON);
+            if (!visionOn || stick.getRawButton(1)) {
+                shooter.shoot(true);
+                hopper.setHopperState(Hopper.HopperState.ON);
+                //TODO: Add vision off
             } else {
-                drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+                //We want to do auto aiming (This should shoot by itself if no target is visble)
+                // TODO: add vision on
             }
         } else {
-            if (xbox.getRawButton(3)) {
-                //Increase the deadzone so that we drive straight
-                drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+            //Normal driving
+            if (useFieldRelative && drive.useFieldRelative) {
+                if (xbox.getRawButton(Controller.XboxButtons.X)) {
+                    //Increase the deadzone so that we drive straight
+                    drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                            -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+                } else {
+                    drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                            -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+                }
             } else {
-                drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+                if (xbox.getRawButton(Controller.XboxButtons.X)) {
+                    //Increase the deadzone so that we drive straight
+                    drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                            -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
+                } else {
+                    drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                            -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
+                }
             }
         }
 

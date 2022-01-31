@@ -13,6 +13,15 @@ public final class Constants {
     public static final double CAMERA_TARGET_HEIGHT_OFFSET = 0; //TODO: CHANGE
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
+    // Vision Manager
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz //22Hz
+
+    /**
+     * Relative position of the limelight from the center of the robot.
+     */
+    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.5, 0.5); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
+
     //Drive Constants
     public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
 
@@ -27,26 +36,29 @@ public final class Constants {
     //    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 17;
 
     public static final int DRIVE_LEFT_FRONT_ID = 11;
-    public static final int DRIVE_LEFT_BACK_ID = 13;
-    public static final int DRIVE_RIGHT_FRONT_ID = 10;
-    public static final int DRIVE_RIGHT_BACK_ID = 12;
-
-    public static final int CAN_LEFT_FRONT_ID = 1;
-    public static final int CAN_LEFT_BACK_ID = 3;
-    public static final int CAN_RIGHT_FRONT_ID = 0;
-    public static final int CAN_RIGHT_BACK_ID = 2;
+    public static final int DRIVE_LEFT_BACK_ID = 12;
+    public static final int DRIVE_RIGHT_FRONT_ID = 13;
+    public static final int DRIVE_RIGHT_BACK_ID = 14;
 
     public static final int DRIVE_LEFT_FRONT_SWERVE_ID = 15;
-    public static final int DRIVE_LEFT_BACK_SWERVE_ID = 17;
-    public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 14;
-    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 16;
+    public static final int DRIVE_LEFT_BACK_SWERVE_ID = 16;
+    public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 17;
+    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 18;
 
-    public static final double SWERVE_INCHES_PER_ROTATION = Math.PI;
+    public static final int CAN_LEFT_FRONT_ID = 19;
+    public static final int CAN_LEFT_BACK_ID = 20;
+    public static final int CAN_RIGHT_FRONT_ID = 21;
+    public static final int CAN_RIGHT_BACK_ID = 22;
+
+    public static final double SWERVE_INCHES_PER_ROTATION = (3.0d / 5.0d) * Math.PI;
     public static final double SWERVE_METER_PER_ROTATION = Units.inchesToMeters(SWERVE_INCHES_PER_ROTATION);
     public static final double SWERVE_DRIVE_P = 0.08;
     public static final double SWERVE_DRIVE_D = 0.00;
     public static final double SWERVE_DRIVE_I = 0.00;
     public static final double SWERVE_DRIVE_F = 0.00;
+    public static final double SWERVE_DRIVE_INTEGRAL_ZONE = 0.00;
+
+    public static final int SWERVE_MOTOR_PID_TIMEOUT_MS = 50;
 
     /**
      * Feed forward constants for the drivetrain.
@@ -64,6 +76,7 @@ public final class Constants {
             new SimpleMotorFeedforward(0.153, 1.6, 0.18),
             new SimpleMotorFeedforward(0.153, 1.6, 0.18),
             new SimpleMotorFeedforward(0.153, 1.6, 0.18)};
+
 
     /**
      * What the module states should be in hold mode. The wheels will be put in an X pattern to prevent the robot from moving.
@@ -88,10 +101,10 @@ public final class Constants {
     //    public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.381, 0.381);
     //    public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(0.381, -0.381);
 
-    public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(-0.381, 0.381);
-    public static final Translation2d SWERVE_LEFT_BACK_LOCATION = new Translation2d(-0.381, -0.381);
-    public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.381, 0.381);
-    public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(0.381, -0.381);
+    public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(0.307975, 0.307975);
+    public static final Translation2d SWERVE_LEFT_BACK_LOCATION = new Translation2d(-0.307975, 0.307975);
+    public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.307975, -0.307975);
+    public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(-0.307975, -0.307975);
 
 
     public static final double DRIVE_HIGH_SPEED_M = 7.26;
@@ -100,13 +113,44 @@ public final class Constants {
     public static final double MAX_TURN_ERROR = 0.85;
     public static final double MAX_PID_STOP_SPEED = 5.2;
 
+    // 2048 sensor units per revolution
+    public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
+    public static final double FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM = 600 / 2048.0d;
+    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
+
+    public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
+    public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
+    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
+
+    public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
+
     /**
      * Units are in Meters Per Second Squared
      */
     public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
 
-    //field constants
+    //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
+    public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
+    /**
+     * The distance to the center of the goal to the vision tape.
+     */
+    public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
+
+    public static final double GRAVITY = 9.80665;
+
+    /**
+     * Goal height in meters.
+     */
+    public static final double GOAL_HEIGHT = 2.64;
+    /**
+     * The height of the center of the Ejection point in meters.
+     */
+    public static final double SHOOTER_HEIGHT = 0.5; //TODO: Config
+
+    public static final double MAX_SHOOTER_RPM = 5500;
+    public static final double MAX_PREFER_SHOOTER_RPM = 4500;
+
 
 
     //Hopper Constants
@@ -282,8 +326,8 @@ public final class Constants {
 
     //Climber Constants
     public static final int CLIMBER_PERIOD = 50;
-    public static final int CLIMBER_MOTOR_ID = 20;
-    public static final int CLIMBER_MOTOR_2_ID = 21;
+    public static final int CLIMBER_MOTOR_ID = 25;
+    public static final int CLIMBER_MOTOR_2_ID = 25;
 
     public static final double CLIMBER_MOTOR_KF = 0.0;
     public static final double CLIMBER_MOTOR_KP = 0.1;
