@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -17,16 +18,14 @@ import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
-import frc.utility.Controller;
-import frc.utility.ControllerDriveInputs;
-import frc.utility.Limelight;
-import frc.utility.Limelight.CamMode;
-import frc.utility.Limelight.LedMode;
-import frc.utility.OrangeUtility;
+import frc.utility.*;
+import frc.utility.shooter.visionlookup.ShooterConfig;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -48,8 +47,13 @@ public class Robot extends TimedRobot {
     NetworkTableEntry pathProcessingStatusEntry = autoDataTable.getEntry("processing");
     NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
 
+    NetworkTableEntry shooterConfigEntry = instance.getTable("limelightgui").getEntry("shooterconfig");
+    NetworkTableEntry shooterConfigStatusEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatus");
+    NetworkTableEntry shooterConfigStatusIdEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatusId");
+
     NetworkAuto networkAuto;
     @Nullable String lastAutoPath = null;
+    @Nullable String lastShooterConfig = null;
 
     @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
 
@@ -128,6 +132,31 @@ public class Robot extends TimedRobot {
             });
         }
 
+        if (shooterConfigEntry.getString(null) != null && !shooterConfigEntry.getString(null).equals(lastShooterConfig)) {
+            lastShooterConfig = shooterConfigEntry.getString(null);
+            deserializerExecutor.execute(() -> {
+                System.out.println("start parsing shooter config");
+                //Set networktable entries for the loading circle
+                shooterConfigStatusEntry.setDouble(2);
+                shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                try {
+                    ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
+                            ShooterConfig.class);
+                    Collections.sort(shooterConfig.getShooterConfigs());
+                    visionManager.setShooterConfig(shooterConfig);
+                    System.out.println(shooterConfig.getShooterConfigs());
+                } catch (IOException e) {
+                    //Should never happen. The gui should never upload invalid data.
+                    DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
+                }
+
+                System.out.println("done parsing shooter config");
+                //Set networktable entries for the loading circle
+                shooterConfigStatusEntry.setDouble(1);
+                shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+            });
+        }
+
         //TODO: Debug why this does not work
         if (buttonPanel.getRisingEdge(9)) {
             limelightTakeSnapshots = !limelightTakeSnapshots;
@@ -201,47 +230,50 @@ public class Robot extends TimedRobot {
         }
 
         if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1)) {
-            limelight.setLedMode(Limelight.LedMode.ON); //Turn on the limelight
-            limelight.setCamMode(Limelight.CamMode.VISION_PROCESSOR);
+            visionManager.forceVisionOn(true);
 
             if (!visionOn || stick.getRawButton(1)) { //If vision is off, or we're requesting to do a no vision shot
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
             } else {
-                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
+                if (buttonPanel.getRawButton(5)) {
+                    visionManager.shootAndMove(getControllerDriveInputs());
+                } else {
+                    visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
+                }
             }
         } else {
             shooter.setFiring(false);
-            if (!buttonPanel.getRawButton(6)) { // We're not trying to run the flywheel.
-                limelight.setLedMode(Limelight.LedMode.OFF); //Turn off the limelight
-                limelight.setCamMode(Limelight.CamMode.DRIVER_CAMERA);
+            if (!buttonPanel.getRawButton(6) && !buttonPanel.getRawButton(13)) {
+                // We're not trying to run the flywheel and not trying to force update the pose
+                visionManager.forceVisionOn(false);
             }
             doNormalDriving();
+        }
+
+        if (xbox.getRawAxis(3) > 0.1 || stick.getRawButton(2)) {
+            if (buttonPanel.getRawButton(7)) {
+                // Turns Shooter flywheel on considering a moving robot
+                visionManager.forceVisionOn(true);
+                visionManager.updateShooterState();
+            } else if (buttonPanel.getRawButton(6)) {
+                //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
+                visionManager.forceVisionOn(true);
+                visionManager.updateShooterStateStaticPose();
+            } else if (buttonPanel.getRawButton(5)) {
+                //Turn shooter flywheel on with manuel settings
+                shooter.setShooterSpeed(shooterSpeed);
+                shooter.setHoodPosition(hoodPosition);
+            } else {
+                shooter.setShooterSpeed(0); //Turns off shooter flywheel
+                targetFound = false;
+            }
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
-        }
-
-        if (buttonPanel.getRawButton(7)) {
-            // Turns Shooter flywheel on considering a moving robot
-            limelight.setLedMode(LedMode.ON);
-            limelight.setCamMode(CamMode.VISION_PROCESSOR);
-            visionManager.updateFlywheelSpeed();
-        } else if (buttonPanel.getRawButton(6)) {
-            //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
-            limelight.setLedMode(LedMode.ON);
-            limelight.setCamMode(CamMode.VISION_PROCESSOR);
-            visionManager.updateFlywheelSpeedForStaticPose();
-        } else if (buttonPanel.getRawButton(5)) {
-            //Turn shooter flywheel on with manuel settings
-            shooter.setShooterSpeed(shooterSpeed);
-            shooter.setHoodPosition(hoodPosition);
-        } else {
-            shooter.setShooterSpeed(0); //Turns off shooter flywheel
-            targetFound = false;
         }
 
         if (xbox.getRawAxis(3) > 0.1) {
@@ -271,6 +303,11 @@ public class Robot extends TimedRobot {
 
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
+        }
+
+        if (buttonPanel.getRawButton(13)) {
+            visionManager.forceVisionOn(true);
+            visionManager.forceUpdatePose();
         }
 
         if ((shooter.getShooterState() == Shooter.ShooterState.OFF)) {

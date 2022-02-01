@@ -310,7 +310,9 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     /**
-     * Sets Speed of Shooter FlywheelWheel. Parameter should be in RPM.
+     * Sets Speed of Shooter FlywheelWheel.
+     *
+     * @param desiredShooterSpeed Desired Speed in RPM.
      */
     public void setShooterSpeed(double desiredShooterSpeed) {
         this.desiredShooterSpeed = desiredShooterSpeed;
