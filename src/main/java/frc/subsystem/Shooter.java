@@ -237,6 +237,7 @@ public final class Shooter extends AbstractSubsystem {
         hoodPID.setD(Constants.HOOD_D, 0);
         hoodPID.setFF(Constants.HOOD_F, 0);
         hoodPID.setIZone(Constants.HOOD_I_ZONE);
+        hoodPID.setOutputRange(-Constants.HOOD_MAX_OUTPUT, Constants.HOOD_MAX_OUTPUT);
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
     }
 
@@ -549,7 +550,7 @@ public final class Shooter extends AbstractSubsystem {
                 } else {
 
                     // Runs Motor at 30 percent to home
-                    hoodPID.setReference(Constants.HOMING_MOTOR__PERCENT_OUTPUT, CANSparkMax.ControlType.kDutyCycle);
+                    hoodPID.setReference(Constants.HOMING_MOTOR_PERCENT_OUTPUT, CANSparkMax.ControlType.kDutyCycle);
                 }
 
                 // Executes this if homing has been going on for the MAX allotted time

@@ -101,6 +101,7 @@ public final class Constants {
     //    public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.381, 0.381);
     //    public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(0.381, -0.381);
 
+    // 0.307975 is 12.125 in inches
     public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(0.307975, 0.307975);
     public static final Translation2d SWERVE_LEFT_BACK_LOCATION = new Translation2d(-0.307975, 0.307975);
     public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.307975, -0.307975);
@@ -185,12 +186,7 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    /**
-     * Timeout for shooter PIDs
-     */
-    public static final int SHOOTER_PID_TIMEOUT_MS = 50;
-
-    public static final double SHOOTER_P = 0;
+    public static final double SHOOTER_P = 5.0e-3;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
     public static final double SHOOTER_F = 0;
@@ -212,6 +208,7 @@ public final class Constants {
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600.0d / 2048.0d;
 
 
+    // Feeder wheel pidf is unused
     public static final double FEEDER_WHEEL_P = 0;
     public static final double FEEDER_WHEEL_I = 0;
     public static final double FEEDER_WHEEL_D = 0;
@@ -227,21 +224,15 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.5;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.1;
 
-    public static final double HOOD_P = 0;
+    public static final double HOOD_P = 0.1;
     public static final double HOOD_I = 0;
     public static final double HOOD_D = 0;
-
-    /**
-     * Hood Feed Forward for PID
-     */
     public static final double HOOD_F = 0;
-
-    /**
-     * Hood Integral Zone for PID
-     */
     public static final double HOOD_I_ZONE = 0;
+
+    public static final double HOOD_MAX_OUTPUT = 0.5;
 
     public static final int HOOD_CURRENT_LIMIT_AMPS = 20;
 
@@ -265,7 +256,7 @@ public final class Constants {
     /**
      * 30 Percent of motor power should be used when homing
      */
-    public static final double HOMING_MOTOR__PERCENT_OUTPUT = 0.30;
+    public static final double HOMING_MOTOR_PERCENT_OUTPUT = 0.30;
 
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
