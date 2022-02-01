@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -41,7 +42,14 @@ public final class Drive extends AbstractSubsystem {
         return instance;
     }
 
-    private final @NotNull PIDController turnPID;
+    private final ProfiledPIDController turnPID;
+
+    {
+        turnPID = new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)); //P=1.0 OR 0.8
+        turnPID.enableContinuousInput(-180, 180);
+        turnPID.setTolerance(Math.toRadians(Constants.MAX_TURN_ERROR), Math.toRadians(Constants.MAX_PID_STOP_SPEED));
+    }
+
     private DriveState driveState;
     Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
@@ -133,14 +141,11 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].setNeutralMode(NeutralMode.Coast);
             swerveMotors[i].setNeutralMode(NeutralMode.Coast);
             swerveMotors[i].setInverted(true);
+            swerveDriveMotors[i].configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_5Ms);
         }
 
         configMotors();
         driveState = DriveState.TELEOP;
-
-        turnPID = new PIDController(0.02, 0.01, 0.00, 0.02); //P=1.0 OR 0.8
-        turnPID.disableContinuousInput();
-        turnPID.setSetpoint(0);
         configBrake();
     }
 
@@ -227,11 +232,17 @@ public final class Drive extends AbstractSubsystem {
         synchronized (this) {
             driveState = DriveState.TELEOP;
         }
-
-        ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
-                Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                inputs.getRotation() * 6,
-                RobotTracker.getInstance().getGyroAngle());
+        ChassisSpeeds chassisSpeeds;
+        if (useFieldRelative) {
+            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
+                    Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
+                    inputs.getRotation() * 6,
+                    RobotTracker.getInstance().getGyroAngle());
+        } else {
+            chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
+                    Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
+                    inputs.getRotation() * 6);
+        }
 
         if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
             // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
@@ -410,6 +421,16 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
+     * Set the robot's rotation when driving a path. This is meant to be used in the auto builder. Code that wants to use this
+     * should use {@link Drive#setAutoRotation(Rotation2d)} instead.
+     *
+     * @param angle The angle to set the robot to
+     */
+    public void setAutoRotation(double angle) {
+        autoTargetHeading = Rotation2d.fromDegrees(angle);
+    }
+
+    /**
      * Should be a bit faster than {@link Drive#getSpeed()}
      *
      * @return The robot speed squared
@@ -420,13 +441,13 @@ public final class Drive extends AbstractSubsystem {
     }
 
     double autoStartTime;
-    private final HolonomicDriveController controller = new HolonomicDriveController(
+    private final HolonomicDriveController swerveAutoController = new HolonomicDriveController(
             new PIDController(1.5, 0, 0),
             new PIDController(1.5, 0, 0),
             new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)));
 
     {
-        controller.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
     }
 
 
@@ -444,12 +465,13 @@ public final class Drive extends AbstractSubsystem {
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
         Trajectory.State trackerPose = currentAutoTrajectory.sample(
-                Timer.getFPGATimestamp() - autoStartTime - Constants.SPARK_VELOCITY_MEASUREMENT_LATENCY);
+                Timer.getFPGATimestamp() - autoStartTime - Constants.DRIVE_VELOCITY_MEASUREMENT_LATENCY);
 
-        ChassisSpeeds adjustedSpeeds = controller.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(), goal,
+        ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(),
+                goal,
                 trackerPose, autoTargetHeading);
         swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
-        if (controller.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
+        if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;
             stopMovement();
         }
@@ -514,7 +536,7 @@ public final class Drive extends AbstractSubsystem {
      * Default method when the x and y velocity and the target heading are not passed
      */
     private void updateTurn() {
-        updateTurn(0, 0, wantedHeading);
+        updateTurn(0, 0, wantedHeading, false); // Field relative flag won't do anything since we're not moving
     }
 
     /**
@@ -522,20 +544,24 @@ public final class Drive extends AbstractSubsystem {
      * to face a target
      * <p>
      * xVelocity and yVelocity are in m/s
-     *
-     * @param xVelocity
-     * @param yVelocity
-     * @param targetHeading
      */
-    public void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading) {
-        double error = targetHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        double pidDeltaSpeed = turnPID.calculate(error);
+    public void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading, boolean useFieldRelative) {
+        turnPID.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
+                RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
+                targetHeading.getRadians());
+
         double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
 
-        if ((Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED) {
-            swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(0)));
+        if (turnPID.atGoal()) {
+            if (useFieldRelative) {
+                swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, Math.toRadians(0),
+                        RobotTracker.getInstance().getGyroAngle()));
+            } else {
+                swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(0)));
+            }
             isAiming = false;
 
             if (rotateAuto) {
@@ -544,10 +570,14 @@ public final class Drive extends AbstractSubsystem {
                     driveState = DriveState.DONE;
                 }
             }
-
         } else {
             isAiming = true;
-            swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
+            if (useFieldRelative) {
+                swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, Math.toRadians(deltaSpeed),
+                        RobotTracker.getInstance().getGyroAngle()));
+            } else {
+                swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
+            }
 
             if (curSpeed < 0.5) {
                 //Updates every 20ms
@@ -555,11 +585,11 @@ public final class Drive extends AbstractSubsystem {
             } else {
                 turnMinSpeed = 2;
             }
-            SmartDashboard.putNumber("Turn Error", error);
-            SmartDashboard.putNumber("Turn Actual Speed", curSpeed);
-            SmartDashboard.putNumber("Turn PID Command", pidDeltaSpeed);
-            SmartDashboard.putNumber("Turn Speed Command", deltaSpeed);
-            SmartDashboard.putNumber("Turn Min Speed", turnMinSpeed);
+            logData("Turn Position Error", turnPID.getPositionError());
+            logData("Turn Actual Speed", curSpeed);
+            logData("Turn PID Command", pidDeltaSpeed);
+            logData("Turn Speed Command", deltaSpeed);
+            logData("Turn Min Speed", turnMinSpeed);
         }
     }
 

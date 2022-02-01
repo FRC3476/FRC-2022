@@ -334,7 +334,7 @@ public final class Shooter extends AbstractSubsystem {
      *
      * @param shoot true to turn on, false to turn off
      */
-    public void shoot(boolean shoot) {
+    public void setFiring(boolean shoot) {
         if (shoot) {
             feederWheelState = FeederWheelState.FORWARD;
         } else {

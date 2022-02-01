@@ -110,8 +110,15 @@ public final class Constants {
     public static final double DRIVE_HIGH_SPEED_M = 7.26;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
 
+    /**
+     * Allowed Turn Error in degrees.
+     */
     public static final double MAX_TURN_ERROR = 0.85;
-    public static final double MAX_PID_STOP_SPEED = 5.2;
+
+    /**
+     * Allowed Turn Error in degrees.
+     */
+    public static final double MAX_PID_STOP_SPEED = Math.toRadians(5.2);
 
     // 2048 sensor units per revolution
     public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
@@ -397,7 +404,7 @@ public final class Constants {
     public static final double MAX_CLIMBER_EXTENSION = 11000;
 
     //Robot Tracker
-    public static final double SPARK_VELOCITY_MEASUREMENT_LATENCY = 0.112;
+    public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
     public static final int ROBOT_TRACKER_PERIOD = 10;
 
     // Intake Constants TODO: Need To Set

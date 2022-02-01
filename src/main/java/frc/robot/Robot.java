@@ -20,6 +20,8 @@ import frc.subsystem.*;
 import frc.utility.Controller;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
+import frc.utility.Limelight.CamMode;
+import frc.utility.Limelight.LedMode;
 import frc.utility.OrangeUtility;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,6 +69,7 @@ public class Robot extends TimedRobot {
     private final Intake intake = Intake.getInstance();
     private final Shooter shooter = Shooter.getInstance();
     private final Climber climber = Climber.getInstance();
+    private final VisionManager visionManager = VisionManager.getInstance();
 
     //Inputs
     private final Controller xbox = new Controller(0);
@@ -80,6 +83,7 @@ public class Robot extends TimedRobot {
     private double shooterSpeed = 4000;
     private boolean visionOn = true;
     private int shooterMode = 1;
+    private boolean targetFound = false;
 
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
@@ -94,6 +98,7 @@ public class Robot extends TimedRobot {
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
+        limelight.setLedMode(Limelight.LedMode.OFF);
     }
 
     /**
@@ -190,47 +195,53 @@ public class Robot extends TimedRobot {
             shooterMode = 2;
         } else if (buttonPanel.getRisingEdge(3)) {
             hoodPosition = 55;
-            shooterSpeed = 5000;//3250;,  5500
+            shooterSpeed = 5000;
             visionOn = false;
             shooterMode = 3;
         }
 
-        if (xbox.getRawAxis(2) > 0.5 || stick.getRawButton(1)) {
-            limelight.setLedMode(Limelight.LedMode.ON);
-            if (!visionOn || stick.getRawButton(1)) {
-                shooter.shoot(true);
+        if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1)) {
+            limelight.setLedMode(Limelight.LedMode.ON); //Turn on the limelight
+            limelight.setCamMode(Limelight.CamMode.VISION_PROCESSOR);
+
+            if (!visionOn || stick.getRawButton(1)) { //If vision is off, or we're requesting to do a no vision shot
+                shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
-                //TODO: Add vision off
+                doNormalDriving();
             } else {
-                //We want to do auto aiming (This should shoot by itself if no target is visble)
-                // TODO: add vision on
+                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
-            //Normal driving
-            if (useFieldRelative && drive.useFieldRelative) {
-                if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                    //Increase the deadzone so that we drive straight
-                    drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                            -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
-                } else {
-                    drive.swerveDriveFieldRelative(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                            -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
-                }
-            } else {
-                if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                    //Increase the deadzone so that we drive straight
-                    drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                            -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
-                } else {
-                    drive.swerveDrive(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                            -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
-                }
+            shooter.setFiring(false);
+            if (!buttonPanel.getRawButton(6)) { // We're not trying to run the flywheel.
+                limelight.setLedMode(Limelight.LedMode.OFF); //Turn off the limelight
+                limelight.setCamMode(Limelight.CamMode.DRIVER_CAMERA);
             }
+            doNormalDriving();
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
+        }
+
+        if (buttonPanel.getRawButton(7)) {
+            // Turns Shooter flywheel on considering a moving robot
+            limelight.setLedMode(LedMode.ON);
+            limelight.setCamMode(CamMode.VISION_PROCESSOR);
+            visionManager.updateFlywheelSpeed();
+        } else if (buttonPanel.getRawButton(6)) {
+            //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
+            limelight.setLedMode(LedMode.ON);
+            limelight.setCamMode(CamMode.VISION_PROCESSOR);
+            visionManager.updateFlywheelSpeedForStaticPose();
+        } else if (buttonPanel.getRawButton(5)) {
+            //Turn shooter flywheel on with manuel settings
+            shooter.setShooterSpeed(shooterSpeed);
+            shooter.setHoodPosition(hoodPosition);
+        } else {
+            shooter.setShooterSpeed(0); //Turns off shooter flywheel
+            targetFound = false;
         }
 
         if (xbox.getRawAxis(3) > 0.1) {
@@ -243,13 +254,16 @@ public class Robot extends TimedRobot {
             hopper.setHopperState(Hopper.HopperState.REVERSE);
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
+            if (!(xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1))) { // Only turn off the hopper if we're not shooting
+                hopper.setHopperState(Hopper.HopperState.OFF);
+            }
         }
-
 
         if (xbox.getRisingEdge(1)) {
             //Resets the current robot heading to zero. Useful if the heading drifts for some reason
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
+
 
         if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
             drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
@@ -259,6 +273,32 @@ public class Robot extends TimedRobot {
             useFieldRelative = !useFieldRelative;
         }
 
+        if ((shooter.getShooterState() == Shooter.ShooterState.OFF)) {
+            if (limelight.isConnected()) { // Simple status indicator that shows if the limelight is connected or not
+                blinkinLED.setColor(0.77);
+            } else {
+                blinkinLED.setColor(0.61);
+            }
+        }
+    }
+
+    private void doNormalDriving() {
+        ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+        if (useFieldRelative) {
+            drive.swerveDriveFieldRelative(controllerDriveInputs);
+        } else {
+            drive.swerveDrive(controllerDriveInputs);
+        }
+    }
+
+    private ControllerDriveInputs getControllerDriveInputs() {
+        if (xbox.getRawButton(Controller.XboxButtons.X)) {
+            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                    -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+        } else {
+            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                    -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+        }
     }
 
     /**

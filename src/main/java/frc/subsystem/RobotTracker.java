@@ -128,7 +128,7 @@ public final class RobotTracker extends AbstractSubsystem {
         previousAccelerometerData.add(0, Map.entry(time,
                 new Translation2d(gyroSensor.getWorldLinearAccelX(), gyroSensor.getWorldLinearAccelY()))); //Robot Centric
 
-        double currentOdometryTime = time - Constants.SPARK_VELOCITY_MEASUREMENT_LATENCY;
+        double currentOdometryTime = time - Constants.DRIVE_VELOCITY_MEASUREMENT_LATENCY;
         if (previousAbsolutePositions.get(previousAbsolutePositions.size() - 1).getKey() > currentOdometryTime &&
                 previousGyroRotations.get(previousGyroRotations.size() - 1).getKey() > currentOdometryTime) {
 
@@ -303,8 +303,8 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * Returns the last estimated position of the robot on the field.
      * <p>
-     * This method may have up to 110ms latency. Use {@link RobotTracker#getLatencyCompedPoseMeters} if you need to get the
-     * position at the current time.
+     * This method may have up to configured amount of latency. Use {@link RobotTracker#getLatencyCompedPoseMeters} if you need to
+     * get the position at the current time.
      *
      * @return The pose of the robot (x and y are in meters).
      */
@@ -316,7 +316,7 @@ public final class RobotTracker extends AbstractSubsystem {
      * Returns the position of the robot on the field.
      * <p>
      * This method returns the position of the robot at the current time. It integrates accelerometer data and gyroscope data to
-     * get the last 100ms of data.
+     * get the current pose.
      *
      * @return The pose of the robot (x and y are in meters).
      */
@@ -327,8 +327,8 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * Returns the last calculated velocity of the robot on the field.
      * <p>
-     * This method may have up to 110ms latency. Use {@link RobotTracker#getLatencyCompedChassisSpeeds} if you need to get the
-     * velocity
+     * This method may have up to configured amount of latency. Use {@link RobotTracker#getLatencyCompedChassisSpeeds} if you need
+     * to get the velocity
      *
      * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
      */
@@ -339,8 +339,7 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * Returns the current velocity of the robot on the field.
      * <p>
-     * This method gets uses the last 100ms of data from the accelerometer and gyroscope to calculate the velocity & angular
-     * acceleration.
+     * This method gets uses data from the accelerometer and gyroscope to compensate for the tracking latency.
      *
      * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
      */

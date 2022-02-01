@@ -41,7 +41,7 @@ public class VisionManager extends AbstractSubsystem {
     /**
      * @return the current translation of the robot based on the vision data
      */
-    public MutableTranslation2d getCurrentTranslation() {
+    private MutableTranslation2d getCurrentTranslation() {
         Rotation2d currentGyroAngle = RobotTracker.getInstance().getGyroAngle();
 
         double distanceToTarget = limelight.getDistance() + Constants.GOAL_RADIUS;
@@ -56,8 +56,8 @@ public class VisionManager extends AbstractSubsystem {
      * @return the current position of the robot based on a translation and some time. It adds the current velocity * time to
      * the translation.
      */
-    public MutableTranslation2d predictFutureTranslation(double predictAheadTime, MutableTranslation2d currentTranslation,
-                                                         Translation2d currentVelocity) {
+    private MutableTranslation2d predictFutureTranslation(double predictAheadTime, MutableTranslation2d currentTranslation,
+                                                          Translation2d currentVelocity) {
         return currentTranslation.plus(currentVelocity.times(predictAheadTime));
     }
 
@@ -67,7 +67,7 @@ public class VisionManager extends AbstractSubsystem {
      * @param angle angle of the hood (radians)
      * @return horizontal velocity needed to hit target
      */
-    public double getNeededHorizontalBallVelocity(double dist, double angle) {
+    private double getNeededHorizontalBallVelocity(double dist, double angle) {
         //@formatter:off
         return Math.sqrt((0.5 * Constants.GRAVITY * dist) / (Math.tan(angle) - ((Constants.GOAL_HEIGHT - Constants.SHOOTER_HEIGHT) / dist)));
         //@formatter:on
@@ -77,29 +77,44 @@ public class VisionManager extends AbstractSubsystem {
      * @param speed     wanted ejection velocity
      * @param hoodAngle angle of the hood
      */
-    public void getShooterRPM(double speed, double hoodAngle) {
-        
+    private void getShooterRPM(double speed, double hoodAngle) {
+
     }
-    
+
 
     @SuppressWarnings("NewMethodNamingConvention")
-    public MutableTranslation2d getVelocityCompensatedEjectionVector(Translation2d robotVelocityVector,
-                                                                     MutableTranslation2d wantedEjectionVector) {
+    private MutableTranslation2d getVelocityCompensatedEjectionVector(Translation2d robotVelocityVector,
+                                                                      MutableTranslation2d wantedEjectionVector) {
         return wantedEjectionVector.minus(robotVelocityVector);
     }
 
     /**
      * Adds a vision update to the robot tracker even if the calculated pose is too far from the expected pose.
      */
-    public void forceUpdatePose() {
-        robotTracker.addVisionMeasurement(
-                new Pose2d(getCurrentTranslation().getTranslation2d(), robotTracker.getLatencyCompedPoseMeters().getRotation()),
-                Timer.getFPGATimestamp());
+    private void forceUpdatePose() {
+        robotTracker.resetPosition(
+                new Pose2d(getCurrentTranslation().getTranslation2d(), robotTracker.getLatencyCompedPoseMeters().getRotation()));
     }
 
-    public void autoTurnRobotToTarget() {
+    public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         double degreeOffset = Limelight.getInstance().getHorizontalOffset();
-        drive.setRotation(robotTracker.getGyroAngle().rotateBy(Rotation2d.fromDegrees(-degreeOffset)));
+        drive.updateTurn(controllerDriveInputs.getX(), controllerDriveInputs.getY(),
+                robotTracker.getGyroAngle().rotateBy(Rotation2d.fromDegrees(-degreeOffset)), fieldRelative);
+    }
+
+
+    /**
+     * Calculates and sets the flywheel speed considering a static robot velocity
+     */
+    public void updateFlywheelSpeedForStaticPose() {
+
+    }
+
+    /**
+     * Calculates and sets the flywheel speed considering a moving robot
+     */
+    public void updateFlywheelSpeed() {
+
     }
 
     @Override
@@ -109,7 +124,7 @@ public class VisionManager extends AbstractSubsystem {
                 robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
             robotTracker.addVisionMeasurement(
                     new Pose2d(robotTranslation.getTranslation2d(), robotTracker.getLatencyCompedPoseMeters().getRotation()),
-                    Timer.getFPGATimestamp());
+                    Timer.getFPGATimestamp() - limelight.getLatency() - 0.011);
             logData("Using Vision Info", Boolean.TRUE);
         } else {
             logData("Using Vision Info", Boolean.FALSE);
