@@ -5,6 +5,7 @@ package frc.subsystem;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import edu.wpi.first.math.controller.PIDController;
@@ -144,9 +145,7 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_5Ms);
         }
 
-        configMotors();
         driveState = DriveState.TELEOP;
-        configBrake();
     }
 
     /**
@@ -155,6 +154,17 @@ public final class Drive extends AbstractSubsystem {
     private double getRelativeSwervePosition(int motorNum) {
         return (swerveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) *
                 Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR * 360;
+    }
+
+    /**
+     * Set the target position of the selected swerve motor
+     *
+     * @param motorNum the selected swerve motor
+     * @param position the target position in degrees (0-360)
+     */
+    private void setSwerveMotorPosition(int motorNum, double position) {
+        swerveMotors[motorNum].set(ControlMode.Position, ((position * Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) /
+                Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360);
     }
 
 
@@ -177,18 +187,6 @@ public final class Drive extends AbstractSubsystem {
         this.driveState = driveState;
     }
 
-    private void configBrake() {
-        //TODO
-    }
-
-    private void configCoast() {
-        //TODO
-    }
-
-    private void configAuto() {
-
-    }
-
     synchronized public void setTeleop() {
         driveState = DriveState.TELEOP;
     }
@@ -197,7 +195,7 @@ public final class Drive extends AbstractSubsystem {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
-                    (getSwerveDriveVelocity(i) / 60d) * Constants.SWERVE_METER_PER_ROTATION,
+                    (getSwerveDriveVelocity(i) / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
                     Rotation2d.fromDegrees(getWheelRotation(i)));
             swerveModuleState[i] = moduleState;
         }
@@ -205,7 +203,6 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void startHold() {
-        configBrake();
         driveState = DriveState.HOLD;
     }
 
@@ -298,10 +295,7 @@ public final class Drive extends AbstractSubsystem {
             if (Math.abs(angleDiff) < 5 || !rotate) {
                 swerveMotors[i].set(ControlMode.Velocity, 0);
             } else {
-                swerveMotors[i].set(ControlMode.Position,
-                        (((getRelativeSwervePosition(i) + angleDiff) / 360.0) *
-                                Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) *
-                                Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR);
+                setSwerveMotorPosition(i, getRelativeSwervePosition(i) + angleDiff);
             }
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
@@ -400,14 +394,9 @@ public final class Drive extends AbstractSubsystem {
     public void setMotorSpeed(int module, double velocity, double acceleration) {
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
-        swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
+        swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv);
         SmartDashboard.putNumber("Out Volts " + module, ffv);
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
-    }
-
-    private void configMotors() {
-        //TODO
-
     }
 
     /**
@@ -455,8 +444,6 @@ public final class Drive extends AbstractSubsystem {
         driveState = DriveState.RAMSETE;
         this.currentAutoTrajectory = trajectory;
         autoStartTime = Timer.getFPGATimestamp();
-        configAuto();
-        configCoast();
     }
 
     Trajectory currentAutoTrajectory;
@@ -519,7 +506,6 @@ public final class Drive extends AbstractSubsystem {
             driveState = DriveState.TURN;
             rotateAuto = true;
             isAiming = !isTurningDone();
-            configBrake();
         }
     }
 
@@ -566,7 +552,6 @@ public final class Drive extends AbstractSubsystem {
 
             if (rotateAuto) {
                 synchronized (this) {
-                    configBrake();
                     driveState = DriveState.DONE;
                 }
             }
@@ -687,6 +672,14 @@ public final class Drive extends AbstractSubsystem {
                 useFieldRelative = false;
                 DriverStation.reportError("Gyro disconnected, switching to non field relative drive for rest of match", false);
             }
+        }
+    }
+
+    public void setAbsoluteZeros() {
+        for (CANCoder swerveCanCoder : swerveCanCoders) {
+            System.out.println("Setting Zero " + swerveCanCoder.configGetMagnetOffset() + " -> 0");
+            swerveCanCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+            swerveCanCoder.configMagnetOffset(0);
         }
     }
 

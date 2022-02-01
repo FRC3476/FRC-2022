@@ -374,6 +374,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
+        if (buttonPanel.getRawButton(1) && buttonPanel.getRawButton(2) && buttonPanel.getRawButton(3)) {
+            drive.setAbsoluteZeros();
+        }
     }
 
     private void startSubsystems() {
