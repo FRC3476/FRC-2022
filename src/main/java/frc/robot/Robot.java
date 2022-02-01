@@ -19,6 +19,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.utility.*;
+import frc.utility.Controller.XboxButtons;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -316,6 +317,12 @@ public class Robot extends TimedRobot {
             } else {
                 blinkinLED.setColor(0.61);
             }
+        }
+
+        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            visionManager.adjustShooterHoodBias(-0.5);
+        } else if (xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
+            visionManager.adjustShooterHoodBias(0.5);
         }
     }
 

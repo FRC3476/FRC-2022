@@ -24,6 +24,21 @@ public final class VisionManager extends AbstractSubsystem {
     Shooter shooter = Shooter.getInstance();
 
     private final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
+    private BallPredictionMode ballPredictionMode;
+    private double shooterHoodAngleBias = 0;
+
+    {
+        logData("Shooter Angle Bias", shooterHoodAngleBias);
+    }
+
+    public void adjustShooterHoodBias(double amount) {
+        shooterHoodAngleBias += amount;
+        logData("Shooter Angle Bias", shooterHoodAngleBias);
+    }
+
+    public double getShooterHoodAngleBias() {
+        return shooterHoodAngleBias;
+    }
 
     public void setShooterConfig(ShooterConfig shooterConfig) {
         visionLookUpTable.setShooterConfig(shooterConfig);
@@ -37,7 +52,6 @@ public final class VisionManager extends AbstractSubsystem {
         return ballPredictionMode;
     }
 
-    private BallPredictionMode ballPredictionMode;
 
     private VisionManager() {
         super(Constants.VISION_MANAGER_PERIOD);
@@ -113,6 +127,8 @@ public final class VisionManager extends AbstractSubsystem {
 
     /**
      * Adds a vision update to the robot tracker even if the calculated pose is too far from the expected pose.
+     * <p>
+     * You need to call {@link #forceVisionOn(boolean)} before calling this method.
      */
     public void forceUpdatePose() {
         limelight.setCamMode(CamMode.VISION_PROCESSOR);
@@ -154,10 +170,10 @@ public final class VisionManager extends AbstractSubsystem {
             Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);
             distanceToTarget = relativeRobotPosition.getNorm();
         }
-        
+
         ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
         shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
-        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
     /**
