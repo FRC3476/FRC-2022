@@ -374,8 +374,28 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
+        xbox.update();
+        stick.update();
+        buttonPanel.update();
+
         if (buttonPanel.getRawButton(1) && buttonPanel.getRawButton(2) && buttonPanel.getRawButton(3)) {
             drive.setAbsoluteZeros();
+        }
+
+        if (buttonPanel.getRisingEdge(5)) {
+            intake.selfTest();
+        }
+
+        if (buttonPanel.getRisingEdge(6)) {
+            hopper.selfTest();
+        }
+
+        if (buttonPanel.getRisingEdge(7)) {
+            shooter.selfTest();
+        }
+
+        if (buttonPanel.getRisingEdge(8)) {
+            climber.selfTest();
         }
     }
 
