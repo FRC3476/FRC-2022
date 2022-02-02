@@ -131,6 +131,7 @@ public final class Drive extends AbstractSubsystem {
             swerveMotors[i].config_kD(0, Constants.SWERVE_DRIVE_D, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kI(0, Constants.SWERVE_DRIVE_I, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kF(0, Constants.SWERVE_DRIVE_F, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
+            swerveMotors[i].configClosedloopRamp(Constants.SWERVE_DRIVE_RAMP_RATE, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_IntegralZone(0, Constants.SWERVE_DRIVE_INTEGRAL_ZONE);
 
             // Sets current limits for motors
@@ -228,7 +229,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void doHold() {
-        setSwerveModuleStates(Constants.HOLD_MODULE_STATES);
+        setSwerveModuleStates(Constants.HOLD_MODULE_STATES, true);
     }
 
     public void swerveDrive(@NotNull ControllerDriveInputs inputs) {
@@ -261,16 +262,7 @@ public final class Drive extends AbstractSubsystem {
         swerveDrive(chassisSpeeds);
     }
 
-    double doubleMod(double x, double y) {
-        // x mod y behaving the same way as Math.floorMod but with doubles
-        return (x - Math.floor(x / y) * y);
-    }
-
     public void swerveDrive(ChassisSpeeds chassisSpeeds) {
-        swerveDrive(chassisSpeeds, 0);
-    }
-
-    public void swerveDrive(ChassisSpeeds chassisSpeeds, double acceleration) {
 
         // Limits max velocity change
         chassisSpeeds = limitAcceleration(chassisSpeeds);
@@ -286,23 +278,21 @@ public final class Drive extends AbstractSubsystem {
                 chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.DRIVE_HIGH_SPEED_M);
-        setSwerveModuleStates(moduleStates, rotate, acceleration);
+        setSwerveModuleStates(moduleStates, rotate);
     }
 
-    public void setSwerveModuleStates(SwerveModuleState[] states) {
-        setSwerveModuleStates(states, true, 0);
-    }
-
-    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, double acceleration) {
+    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate) {
         for (int i = 0; i < 4; i++) {
-            //            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
-            //                    Rotation2d.fromDegrees(getWheelRotation(i)));
+            SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
+                    Rotation2d.fromDegrees(getWheelRotation(i)));
             // TODO: flip the acceleration if we flip the module
-            SwerveModuleState targetState = moduleStates[i];
-            double targetAngle = targetState.angle.getDegrees();
+            double targetAngle = targetState.angle.getDegrees() % 360;
+            if (targetAngle < 0) { // Make sure the angle is positive
+                targetAngle += 360;
+            }
             double currentAngle = getWheelRotation(i); //swerveEncoders[i].getPosition();
 
-            double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
+            double angleDiff = getAngleDiff(targetAngle, currentAngle);
 
             if (Math.abs(angleDiff) < 0.1 || !rotate) {
                 swerveMotors[i].set(ControlMode.Velocity, 0);
@@ -312,12 +302,29 @@ public final class Drive extends AbstractSubsystem {
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, acceleration);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, 0);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getRelativeSwervePosition(i) + angleDiff);
             SmartDashboard.putNumber("Swerve Motor " + i + " Error", angleDiff);
         }
+    }
+
+    /**
+     * @param targetAngle  The angle we want to be at (0-360)
+     * @param currentAngle The current angle of the module (0-360)
+     * @return the shortest angle between the two angles
+     */
+    public double getAngleDiff(double targetAngle, double currentAngle) {
+        double angleDiff = targetAngle - currentAngle;
+        if (angleDiff > 180) {
+            angleDiff -= 360;
+        }
+
+        if (angleDiff < -180) {
+            angleDiff += 360;
+        }
+        return angleDiff;
     }
 
 
@@ -469,7 +476,7 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(RobotTracker.getInstance().getLastEstimatedPoseMeters(),
                 goal,
                 trackerPose, autoTargetHeading);
-        swerveDrive(adjustedSpeeds, goal.accelerationMetersPerSecondSq);
+        swerveDrive(adjustedSpeeds);
         if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
             driveState = DriveState.DONE;
             stopMovement();
@@ -621,7 +628,7 @@ public final class Drive extends AbstractSubsystem {
      * Returns the angle/position of the requested encoder module
      *
      * @param moduleNumber the module to set
-     * @return angle in degrees of the module
+     * @return angle in degrees of the module (0-360)
      */
     public double getWheelRotation(int moduleNumber) {
         if (useRelativeEncoderPosition) {
