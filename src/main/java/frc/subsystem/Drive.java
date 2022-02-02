@@ -258,12 +258,7 @@ public final class Drive extends AbstractSubsystem {
                     inputs.getRotation() * 6);
         }
 
-        if (chassisSpeeds.vxMetersPerSecond == 0 && chassisSpeeds.vyMetersPerSecond == 0 && chassisSpeeds.omegaRadiansPerSecond == 0) {
-            // We're not moving, so put the robot in a hold pose to prevent us from moving when pushed
-            doHold();
-        } else {
-            swerveDrive(chassisSpeeds);
-        }
+        swerveDrive(chassisSpeeds);
     }
 
     double doubleMod(double x, double y) {

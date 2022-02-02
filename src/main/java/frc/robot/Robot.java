@@ -338,10 +338,15 @@ public class Robot extends TimedRobot {
 
     private void doNormalDriving() {
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
-        if (useFieldRelative) {
-            drive.swerveDriveFieldRelative(controllerDriveInputs);
+        if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
+                && drive.getSpeedSquared() < 0.1) {
+            if (xbox.getRawButton(XboxButtons.Y)) drive.doHold();
         } else {
-            drive.swerveDrive(controllerDriveInputs);
+            if (useFieldRelative) {
+                drive.swerveDriveFieldRelative(controllerDriveInputs);
+            } else {
+                drive.swerveDrive(controllerDriveInputs);
+            }
         }
     }
 
