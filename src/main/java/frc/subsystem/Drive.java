@@ -57,6 +57,10 @@ public final class Drive extends AbstractSubsystem {
 
     public boolean useFieldRelative = true;
 
+    {
+        logData("Drive Field Relative Allowed", true);
+    }
+
     private boolean isAiming = false;
 
     private double lastLoopTime = 0;
@@ -145,7 +149,20 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_5Ms);
         }
 
+        useFieldRelative = true;
         driveState = DriveState.TELEOP;
+    }
+    
+    public void configCoast() {
+        for (LazyTalonFX swerveMotor : swerveMotors) {
+            swerveMotor.setNeutralMode(NeutralMode.Coast);
+        }
+    }
+
+    public void configBrake() {
+        for (LazyTalonFX swerveMotor : swerveMotors) {
+            swerveMotor.setNeutralMode(NeutralMode.Brake);
+        }
     }
 
     /**
@@ -292,7 +309,7 @@ public final class Drive extends AbstractSubsystem {
 
             double angleDiff = doubleMod((targetAngle - currentAngle) + 180, 360) - 180;
 
-            if (Math.abs(angleDiff) < 5 || !rotate) {
+            if (Math.abs(angleDiff) < 0.1 || !rotate) {
                 swerveMotors[i].set(ControlMode.Velocity, 0);
             } else {
                 setSwerveMotorPosition(i, getRelativeSwervePosition(i) + angleDiff);
@@ -617,7 +634,7 @@ public final class Drive extends AbstractSubsystem {
             if (relPos < 0) relPos += 360;
             return relPos;
         } else {
-            return swerveCanCoders[moduleNumber].getPosition();
+            return swerveCanCoders[moduleNumber].getAbsolutePosition();
         }
     }
 
@@ -634,7 +651,7 @@ public final class Drive extends AbstractSubsystem {
                 if (relPos < 0) relPos += 360;
                 positions[i] = relPos;
             } else {
-                positions[i] = swerveCanCoders[i].getPosition();
+                positions[i] = swerveCanCoders[i].getAbsolutePosition();
             }
         }
         return positions;
@@ -670,16 +687,18 @@ public final class Drive extends AbstractSubsystem {
         if (!RobotTracker.getInstance().getGyro().isConnected()) {
             if (useFieldRelative) {
                 useFieldRelative = false;
+                logData("Drive Field Relative Allowed", false);
                 DriverStation.reportError("Gyro disconnected, switching to non field relative drive for rest of match", false);
             }
         }
     }
 
     public void setAbsoluteZeros() {
-        for (CANCoder swerveCanCoder : swerveCanCoders) {
-            System.out.println("Setting Zero " + swerveCanCoder.configGetMagnetOffset() + " -> 0");
+        for (int i = 0; i < swerveCanCoders.length; i++) {
+            CANCoder swerveCanCoder = swerveCanCoders[i];
+            System.out.println(i + " Setting Zero " + swerveCanCoder.configGetMagnetOffset() + " -> 0");
             swerveCanCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
-            swerveCanCoder.configMagnetOffset(0);
+            swerveCanCoder.configMagnetOffset(-(swerveCanCoder.getAbsolutePosition() - swerveCanCoder.configGetMagnetOffset()));
         }
     }
 

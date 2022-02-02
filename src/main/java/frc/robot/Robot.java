@@ -95,6 +95,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+        SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
         autoChooser.addOption("My Auto", CUSTOM_AUTO);
         SmartDashboard.putData("Auto choices", autoChooser);
@@ -170,6 +171,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         enabled.setBoolean(true);
+        drive.configBrake();
         startSubsystems();
 
         if (networkAuto == null) {
@@ -203,6 +205,11 @@ public class Robot extends TimedRobot {
         killAuto();
         enabled.setBoolean(true);
         startSubsystems();
+        useFieldRelative = true;
+        SmartDashboard.putBoolean("Field Relative Enabled", true);
+        drive.useFieldRelative = true;
+        SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
+        drive.configBrake();
     }
 
     /**
@@ -305,6 +312,8 @@ public class Robot extends TimedRobot {
 
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
+            System.out.println("Field relative: " + useFieldRelative);
+            SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         }
 
         if (buttonPanel.getRawButton(13)) {
@@ -368,6 +377,7 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
         startSubsystems();
+        drive.configCoast();
     }
 
     /**
@@ -379,7 +389,7 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
-        if (buttonPanel.getRawButton(1) && buttonPanel.getRawButton(2) && buttonPanel.getRawButton(3)) {
+        if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
             drive.setAbsoluteZeros();
         }
 
