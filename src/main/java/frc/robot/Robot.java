@@ -164,6 +164,7 @@ public class Robot extends TimedRobot {
             limelight.takeSnapshots(limelightTakeSnapshots);
             System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
         }
+        SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
     }
 
     @Override

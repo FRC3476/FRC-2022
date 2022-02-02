@@ -3,10 +3,13 @@ package frc.utility.shooter.visionlookup;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.utility.Serializer;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public final class VisionLookUpTable {
     ShooterConfig shooterConfig;
@@ -22,7 +25,7 @@ public final class VisionLookUpTable {
         try {
             File shooterDataFile = new File(Filesystem.getDeployDirectory().getPath() + "/shooter/shooterconfig.json");
             shooterConfig = (ShooterConfig) Serializer.deserializeFromFile(shooterDataFile, ShooterConfig.class);
-            System.out.println("sucesfully loaded shooter config from the file");
+            System.out.println("Successfully loaded shooter config from the file");
         } catch (IOException e) {
             DriverStation.reportError("Failed to load shooter config from /shooter/shooterconfig.json. Using default values",
                     e.getStackTrace());
@@ -38,68 +41,49 @@ public final class VisionLookUpTable {
             shooterConfig.getShooterConfigs().add(new ShooterPreset(36, 6000, 228));
         }
 
-
-        //Tidal good
-        // lookUpTable.add(new ShooterPreset(47, 4000, 58));
-        // lookUpTable.add(new ShooterPreset(44, 4000, 73));
-        // lookUpTable.add(new ShooterPreset(45, 4000, 111));
-        // lookUpTable.add(new ShooterPreset(44, 4000, 124));
-        // lookUpTable.add(new ShooterPreset(33.5, 5400, 150));
-        // lookUpTable.add(new ShooterPreset(35, 5400, 164));
-        // lookUpTable.add(new ShooterPreset(36, 5600, 173));
-        // lookUpTable.add(new ShooterPreset(36, 5700, 212));
-        // lookUpTable.add(new ShooterPreset(36, 6000, 228));
-        //lookUpTable.add(new ShooterPreset(38.5, 5700, 223));
-
-
-        //Good Balls
-        // lookUpTable.add(new ShooterPreset(44, 4000, 58));
-        // lookUpTable.add(new ShooterPreset(41, 4000, 73));
-        // lookUpTable.add(new ShooterPreset(42, 4000, 111));
-        // lookUpTable.add(new ShooterPreset(41, 4000, 124));
-        // lookUpTable.add(new ShooterPreset(30.5, 5400, 150));
-        // lookUpTable.add(new ShooterPreset(33, 5600, 173));
-        // lookUpTable.add(new ShooterPreset(33, 5700, 212));
-
-
         Collections.sort(shooterConfig.getShooterConfigs());
     }
 
-    public ShooterPreset getShooterPreset(double distanceFromTarget) {
+    Comparator comparator = (o1, o2) -> {
+        ShooterPreset sp = (ShooterPreset) o1;
+        double d = (double) o2;
+        return Double.compare(sp.getDistance(), d);
+    };
 
-        if (distanceFromTarget <= shooterConfig.getShooterConfigs().get(0).getDistance()) {
-            return shooterConfig.getShooterConfigs().get(0);
+    private static final ShooterPreset DEFAULT_PRESET = new ShooterPreset(90, 0, 0);
+
+    public @NotNull ShooterPreset getShooterPreset(double distanceFromTarget) {
+        List<ShooterPreset> sortedShooterConfigs = shooterConfig.getShooterConfigs();
+
+        int index = Collections.binarySearch(sortedShooterConfigs, distanceFromTarget, comparator);
+        if (index < 0) { //Convert the binary search index into an actual index
+            index = -(index + 1);
         }
-
-        for (int i = 1; i < shooterConfig.getShooterConfigs().size(); i++) {
-            double dist = shooterConfig.getShooterConfigs().get(i).getDistance();
-
-            if (dist == distanceFromTarget) {
-                return shooterConfig.getShooterConfigs().get(i);
-            } else if (dist > distanceFromTarget) {
-
-                double percentIn = (distanceFromTarget - shooterConfig.getShooterConfigs().get(
-                        i - 1).getDistance()) / (shooterConfig.getShooterConfigs().get(
-                        i).getDistance() - shooterConfig.getShooterConfigs().get(i - 1).getDistance());
-                //System.out.println(percentIn + " " + (dist - lookUpTable.get(i-1).getDistance()) + " " + ( lookUpTable.get(i)
-                // .getDistance() - lookUpTable.get(i-1).getDistance())+ " " + distanceFromTarget);
-
-                return interpolateShooterPreset(shooterConfig.getShooterConfigs().get(i - 1),
-                        shooterConfig.getShooterConfigs().get(i), percentIn);
+        ShooterPreset interpolatedShooterPreset = DEFAULT_PRESET;
+        double percentIn;
+        if (!sortedShooterConfigs.isEmpty()) {
+            if (sortedShooterConfigs.get(0).getDistance() >= distanceFromTarget) {
+                interpolatedShooterPreset = sortedShooterConfigs.get(0);
+            } else if (sortedShooterConfigs.get(sortedShooterConfigs.size() - 1).getDistance() < distanceFromTarget) {
+                interpolatedShooterPreset = sortedShooterConfigs.get(sortedShooterConfigs.size() - 1);
+            } else {
+                //One of the above 2 if statements will true if there is only 1 element in the list
+                percentIn = (distanceFromTarget - sortedShooterConfigs.get(index - 1).getDistance()) /
+                        (sortedShooterConfigs.get(index).getDistance() - sortedShooterConfigs.get(index - 1).getDistance());
+                interpolatedShooterPreset = interpolateShooterPreset(sortedShooterConfigs.get(index - 1),
+                        sortedShooterConfigs.get(index), percentIn);
             }
         }
-
-        return shooterConfig.getShooterConfigs().get(shooterConfig.getShooterConfigs().size() - 1);
+        return interpolatedShooterPreset;
     }
-    //interpolate() is startValue + (endValue - startValue) * fraction
 
 
     private ShooterPreset interpolateShooterPreset(ShooterPreset startValue, ShooterPreset endValue, double percentIn) {
-        double flywheelSpeed =
-                startValue.getFlywheelSpeed() + (endValue.getFlywheelSpeed() - startValue.getFlywheelSpeed()) * percentIn;
-        double hoodPosition =
-                startValue.getHoodEjectAngle() + (endValue.getHoodEjectAngle() - startValue.getHoodEjectAngle()) * percentIn;
+        //@formatter:off
+        double flywheelSpeed = startValue.getFlywheelSpeed() + (endValue.getFlywheelSpeed() - startValue.getFlywheelSpeed()) * percentIn;
+        double hoodPosition = startValue.getHoodEjectAngle() + (endValue.getHoodEjectAngle() - startValue.getHoodEjectAngle()) * percentIn;
         double distance = startValue.getDistance() + (endValue.getDistance() - startValue.getDistance()) * percentIn;
+        //@formatter:on
 
         return new ShooterPreset(hoodPosition, flywheelSpeed, distance);
     }
