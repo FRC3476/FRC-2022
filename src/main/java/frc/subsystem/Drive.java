@@ -37,7 +37,7 @@ public final class Drive extends AbstractSubsystem {
 
     public boolean useRelativeEncoderPosition = false;
 
-    private static @NotNull Drive instance = new Drive();
+    private static final @NotNull Drive instance = new Drive();
 
     public static @NotNull Drive getInstance() {
         return instance;
@@ -55,7 +55,7 @@ public final class Drive extends AbstractSubsystem {
     Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
-    public boolean useFieldRelative = true;
+    public boolean useFieldRelative;
 
     {
         logData("Drive Field Relative Allowed", true);
