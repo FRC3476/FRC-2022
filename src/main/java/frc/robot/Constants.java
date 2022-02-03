@@ -14,7 +14,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz //22Hz
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
 
     /**
      * Relative position of the limelight from the center of the robot.
@@ -24,16 +24,6 @@ public final class Constants {
 
     //Drive Constants
     public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
-
-    //    public static final int DRIVE_LEFT_FRONT_ID = 10;
-    //    public static final int DRIVE_LEFT_BACK_ID = 11;
-    //    public static final int DRIVE_RIGHT_FRONT_ID = 12;
-    //    public static final int DRIVE_RIGHT_BACK_ID = 13;
-    //
-    //    public static final int DRIVE_LEFT_FRONT_SWERVE_ID = 14;
-    //    public static final int DRIVE_LEFT_BACK_SWERVE_ID = 15;
-    //    public static final int DRIVE_RIGHT_FRONT_SWERVE_ID = 16;
-    //    public static final int DRIVE_RIGHT_BACK_SWERVE_ID = 17;
 
     public static final int DRIVE_LEFT_FRONT_ID = 11;
     public static final int DRIVE_LEFT_BACK_ID = 12;
@@ -92,15 +82,10 @@ public final class Constants {
      */
     public static final SwerveModuleState[] HOLD_MODULE_STATES = {
             new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
             new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
-            new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
-            new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
+            new SwerveModuleState(0, Rotation2d.fromDegrees(45))
     };
-
-    //    public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(-0.381, 0.381);
-    //    public static final Translation2d SWERVE_LEFT_BACK_LOCATION = new Translation2d(-0.381, -0.381);
-    //    public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.381, 0.381);
-    //    public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(0.381, -0.381);
 
     // 0.307975 is 12.125 in inches
     public static final Translation2d SWERVE_LEFT_FRONT_LOCATION = new Translation2d(0.307975, 0.307975);
