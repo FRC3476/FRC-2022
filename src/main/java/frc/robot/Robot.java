@@ -91,6 +91,10 @@ public class Robot extends TimedRobot {
     private int shooterMode = 1;
     private boolean targetFound = false;
 
+    // Input Control
+    private double firstPressTime = 0;
+    private double lastPressTime = 0;
+
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
      */
@@ -336,6 +340,7 @@ public class Robot extends TimedRobot {
             visionManager.adjustShooterHoodBias(0.5);
         }
 
+        // Shouldn't these two be getRisingEdge?
         if (stick.getRawButton(9)) {
             climber.toggleLatch();
         }
@@ -367,6 +372,7 @@ public class Robot extends TimedRobot {
             climber.stopClimb();
         }
 
+        // Shouldn't this be getRisingEdge?
         if (buttonPanel.getRawButton(10)) {
             climber.setStepByStep(!climber.isStepByStep());
         }
@@ -431,7 +437,15 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
-            drive.setAbsoluteZeros();
+
+            // Makes sure that these two buttons are held down for one second before running process
+            if (firstPressTime == 0) {
+                firstPressTime = Timer.getFPGATimestamp();
+            } else if (Timer.getFPGATimestamp() - lastPressTime > Constants.MAX_TIME_NOT_HELD_SEC) {
+                firstPressTime = 0;
+            } else if (Timer.getFPGATimestamp() - firstPressTime > Constants.HELD_BUTTON_TIME_THRESHOLD_SEC) {
+                drive.setAbsoluteZeros();
+            }
         }
 
         if (buttonPanel.getRisingEdge(5)) {

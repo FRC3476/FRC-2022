@@ -8,7 +8,19 @@ import edu.wpi.first.math.util.Units;
 
 public final class Constants {
 
-    //Limelight 
+    // Input Constants
+    /**
+     * This is the max time in seconds that a driver can let go of a button that is supposed to be held and still have it count as
+     * holding the button
+     */
+    public static final double MAX_TIME_NOT_HELD_SEC = .100;
+
+    /**
+     * Time required in seconds for a button that is supposed to be held down to activate
+     */
+    public static final double HELD_BUTTON_TIME_THRESHOLD_SEC = 1;
+
+    //Limelight
     //Calibrate using https://www.desmos.com/calculator/n2dsvzsyhk
     public static final double CAMERA_TARGET_HEIGHT_OFFSET = 0; //TODO: CHANGE
     public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
