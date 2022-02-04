@@ -340,12 +340,11 @@ public class Robot extends TimedRobot {
             visionManager.adjustShooterHoodBias(0.5);
         }
 
-        // Shouldn't these two be getRisingEdge?
-        if (stick.getRawButton(9)) {
+        if (stick.getRisingEdge(9)) {
             climber.toggleLatch();
         }
 
-        if (stick.getRawButton(10)) {
+        if (stick.getRisingEdge(10)) {
             climber.toggleLatch();
         }
 
@@ -373,7 +372,7 @@ public class Robot extends TimedRobot {
         }
 
         // Shouldn't this be getRisingEdge?
-        if (buttonPanel.getRawButton(10)) {
+        if (buttonPanel.getRisingEdge(10)) {
             climber.setStepByStep(!climber.isStepByStep());
         }
     }
@@ -440,12 +439,19 @@ public class Robot extends TimedRobot {
 
             // Makes sure that these two buttons are held down for one second before running process
             if (firstPressTime == 0) {
+                // Initializes check
                 firstPressTime = Timer.getFPGATimestamp();
             } else if (Timer.getFPGATimestamp() - lastPressTime > Constants.MAX_TIME_NOT_HELD_SEC) {
+                // Checks to see if buttons have been let go for longer than max allowed time
                 firstPressTime = 0;
             } else if (Timer.getFPGATimestamp() - firstPressTime > Constants.HELD_BUTTON_TIME_THRESHOLD_SEC) {
+                // Checks to see if buttons have been held for required amount of time to run process
+                firstPressTime = 0;
                 drive.setAbsoluteZeros();
             }
+
+            // Updates last press time
+            lastPressTime = Timer.getFPGATimestamp();
         }
 
         if (buttonPanel.getRisingEdge(5)) {
