@@ -561,12 +561,7 @@ public final class Drive extends AbstractSubsystem {
 
 
         if (turnPID.atGoal()) {
-            if (useFieldRelative) {
-                swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, Math.toRadians(0),
-                        RobotTracker.getInstance().getGyroAngle()));
-            } else {
-                swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(0)));
-            }
+            doHold();
             isAiming = false;
 
             if (rotateAuto) {

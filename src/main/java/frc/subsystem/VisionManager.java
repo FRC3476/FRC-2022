@@ -149,13 +149,11 @@ public final class VisionManager extends AbstractSubsystem {
                     Constants.GOAL_POSITION);
             degreeOffset = Math.toDegrees(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
         }
-        if (drive.isAiming()) {
-            drive.updateTurn(controllerDriveInputs.getX(), controllerDriveInputs.getY(),
-                    robotTracker.getGyroAngle().rotateBy(Rotation2d.fromDegrees(-degreeOffset)), fieldRelative);
-        } else {
-            drive.doHold();
-            shooter.setFiring(limelight.isTargetVisible());
-        }
+
+        drive.updateTurn(controllerDriveInputs.getX(), controllerDriveInputs.getY(),
+                robotTracker.getGyroAngle().rotateBy(Rotation2d.fromDegrees(-degreeOffset)), fieldRelative);
+
+        shooter.setFiring(limelight.isTargetVisible());
     }
 
 
