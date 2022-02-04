@@ -4,6 +4,7 @@ package frc.utility;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
+import org.jetbrains.annotations.Contract;
 
 /**
  * This class stores the int sent back from the Driver Station and uses it to check for rising or falling edges
@@ -59,6 +60,7 @@ public class Controller extends Joystick {
      * @param button Joystick button ID
      * @return Falling edge state of the button
      */
+    @Contract(pure = true)
     public boolean getFallingEdge(int button) {
         boolean oldVal = getButtonState(button, oldButtons);
         boolean currentVal = getButtonState(button, currentButtons);
@@ -71,26 +73,29 @@ public class Controller extends Joystick {
      * @param button Joystick button ID
      * @return Rising edge state of the button
      */
+    @Contract(pure = true)
     public boolean getRisingEdge(int button) {
         boolean oldVal = getButtonState(button, oldButtons);
         boolean currentVal = getButtonState(button, currentButtons);
 		return !oldVal && currentVal;
     }
 
+    @Contract(pure = true)
     public boolean getRisingEdge(int axis, double threshold) {
         if (axis <= axisCount) {
             boolean oldVal = oldAxis[axis] > threshold;
             boolean currentVal = currentAxis[axis] > threshold;
-			return !oldVal && currentVal;
+            return !oldVal && currentVal;
         }
         return false;
     }
 
+    @Contract(pure = true)
     public boolean getFallingEdge(int axis, double threshold) {
         if (axis <= axisCount) {
             boolean oldVal = oldAxis[axis] > threshold;
             boolean currentVal = currentAxis[axis] > threshold;
-			return oldVal && !currentVal;
+            return oldVal && !currentVal;
         }
         return false;
     }
@@ -121,11 +126,13 @@ public class Controller extends Joystick {
     }
 
     @Override
+    @Contract(pure = true)
     public boolean getRawButton(int button) {
         return getButtonState(button, currentButtons);
     }
 
     @Override
+    @Contract(pure = true)
     public double getRawAxis(int axis) {
         try {
             if (axis <= axisCount && axis >= 0) {
@@ -138,6 +145,7 @@ public class Controller extends Joystick {
     }
 
     @Override
+    @Contract(pure = true)
     public int getPOV(int pov) {
         if (pov < povCount && pov >= 0) {
             return currentPOV[pov];
@@ -146,6 +154,7 @@ public class Controller extends Joystick {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
+    @Contract(pure = true)
     public int getAxesAsPOV(int x, int y, boolean xinv, boolean yinv) {
         try {
             if (x <= axisCount && x >= 0 && y <= axisCount && y >= 0) {

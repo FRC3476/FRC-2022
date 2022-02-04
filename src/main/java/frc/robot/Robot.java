@@ -18,6 +18,7 @@ import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
+import frc.subsystem.Climber.ClimbState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.shooter.visionlookup.ShooterConfig;
@@ -289,7 +290,7 @@ public class Robot extends TimedRobot {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
             hopper.setHopperState(Hopper.HopperState.ON);
-        } else if (buttonPanel.getRawButton(10)) {
+        } else if (buttonPanel.getRawButton(8)) {
             // Eject everything
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.REVERSE);
@@ -333,6 +334,41 @@ public class Robot extends TimedRobot {
             visionManager.adjustShooterHoodBias(-0.5);
         } else if (xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
             visionManager.adjustShooterHoodBias(0.5);
+        }
+
+        if (stick.getRawButton(9)) {
+            climber.toggleLatch();
+        }
+
+        if (stick.getRawButton(10)) {
+            climber.toggleLatch();
+        }
+
+        if (stick.getRawButton(11)) {
+            climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        } else if (stick.getRawButton(12)) {
+            climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        } else {
+            climber.setClimberMotor(0);
+        }
+
+        if (buttonPanel.getRisingEdge(11)) {
+            if (climber.getClimbState() == ClimbState.IDLE) {
+                climber.startClimb();
+            } else {
+                climber.resumeClimb();
+                climber.advanceStep();
+            }
+        } else if (!buttonPanel.getRawButton(11)) {
+            climber.pauseClimb();
+        }
+
+        if (buttonPanel.getRisingEdge(12)) {
+            climber.stopClimb();
+        }
+
+        if (buttonPanel.getRawButton(10)) {
+            climber.setStepByStep(!climber.isStepByStep());
         }
     }
 

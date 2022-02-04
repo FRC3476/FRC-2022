@@ -52,7 +52,7 @@ public class Climber extends AbstractSubsystem {
     private double gyroRollVelocity = 0;
     private double lastGyroRoll;
 
-    enum LatchState {
+    public enum LatchState {
         LATCHED, UNLATCHED
     }
 
@@ -60,7 +60,7 @@ public class Climber extends AbstractSubsystem {
         PIVOTED, INLINE
     }
 
-    enum BrakeState {
+    public enum BrakeState {
         BRAKING, FREE
     }
 
@@ -88,7 +88,7 @@ public class Climber extends AbstractSubsystem {
         return pivotSolenoid.get() ? PivotState.PIVOTED : PivotState.INLINE;
     }
 
-    enum ClimbState {
+    public enum ClimbState {
         IDLE((cl) -> {}, (cl) -> false, (cl) -> {}),
 
         /**
@@ -440,6 +440,10 @@ public class Climber extends AbstractSubsystem {
     @Override
     public void selfTest() {
 
+    }
+
+    public ClimbState getClimbState() {
+        return climbState;
     }
 
     @Override
