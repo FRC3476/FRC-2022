@@ -453,6 +453,13 @@ public class Climber extends AbstractSubsystem {
         logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
         logData("Climber Motor Current", climberMotor.getStatorCurrent());
 
+        logData("Elevator Arm Contact Switch A", elevatorArmContactSwitchA.get());
+        logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get());
+        logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get());
+        logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
+        logData("Pivoting Arm Contact Switch A", pivotingArmLatchedSwitchA.get());
+        logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get());
+
         logData("Pivot Solenoid State", getPivotState().toString());
         logData("Latch Solenoid State", getLatchState().toString());
         logData("Brake Solenoid State", getBrakeState().toString());
