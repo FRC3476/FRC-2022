@@ -8,6 +8,11 @@ import edu.wpi.first.math.util.Units;
 
 public final class Constants {
 
+    // Logging Period
+    /**
+     * Every subsystem will log one for every 20 update periods
+     */
+    public static final int DEFAULT_PERIODS_PER_LOG = 20;
     // Input Constants
     /**
      * This is the max time in seconds that a driver can let go of a button that is supposed to be held and still have it count as
@@ -173,11 +178,6 @@ public final class Constants {
     // Shooter Constants
 
     public static final int SHOOTER_PERIOD_MS = 20;
-
-    /**
-     * Amount of Shooter Periods that have to elapse before 1 logging period is called
-     */
-    public static final int SHOOTER_PERIODS_PER_LOG = 3;
 
     public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 50; // TODO: Get actual CAN ID for all shooter components
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 51;

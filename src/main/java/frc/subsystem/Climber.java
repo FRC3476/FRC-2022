@@ -250,7 +250,7 @@ public class Climber extends AbstractSubsystem {
 
 
     private Climber() {
-        super(Constants.CLIMBER_PERIOD, 5);
+        super(Constants.CLIMBER_PERIOD);
 
         climberMotor = new LazyTalonSRX(Constants.CLIMBER_MOTOR_ID);
         climberMotor2 = new LazyTalonSRX(Constants.CLIMBER_MOTOR_2_ID);
