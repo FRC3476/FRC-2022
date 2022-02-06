@@ -131,14 +131,14 @@ public final class Constants {
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
 
     /**
-     * Units are in Meters Per Second Squared
+     * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 5; // TODO: Need to tune at field
+    public static final double MAX_ACCELERATION = 30; // TODO: Need to tune at field
 
     /**
      * Units are in Radians per Second Squared 50 degrees (In radians) per second squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(50);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 6);
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values

@@ -245,7 +245,7 @@ public final class Drive extends AbstractSubsystem {
 
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                 Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                inputs.getRotation() * 2);
+                inputs.getRotation() * 15);
         swerveDrive(chassisSpeeds);
     }
 
@@ -257,12 +257,12 @@ public final class Drive extends AbstractSubsystem {
         if (useFieldRelative) {
             chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                     Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 10,
+                    inputs.getRotation() * 15,
                     RobotTracker.getInstance().getGyroAngle());
         } else {
             chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                     Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 10);
+                    inputs.getRotation() * 15);
         }
 
         swerveDrive(chassisSpeeds);
@@ -270,10 +270,8 @@ public final class Drive extends AbstractSubsystem {
 
     public void swerveDrive(ChassisSpeeds chassisSpeeds) {
 
-        // Limits max velocity change if robot is slowing down
-        if (isRobotSlowingDown()) {
-            chassisSpeeds = limitAcceleration(chassisSpeeds);
-        }
+        chassisSpeeds = limitAcceleration(chassisSpeeds);
+
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
@@ -335,6 +333,8 @@ public final class Drive extends AbstractSubsystem {
         return angleDiff;
     }
 
+    @NotNull ChassisSpeeds lastRequestedSpeed =
+            new ChassisSpeeds(0, 0, 0);
 
     /**
      * Puts limit on desired velocity, so it can be achieved with a reasonable acceleration
@@ -351,19 +351,14 @@ public final class Drive extends AbstractSubsystem {
         double maxVelocityChange = getMaxAllowedVelocityChange();
         double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
 
+        if (lastLoopTime - Timer.getFPGATimestamp() > 0.015) lastRequestedSpeed = commandedVelocity;
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
 
-        ChassisSpeeds actualVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
 
-        // Converts ChassisSpeeds to Translation2d
-        Translation2d actualVelocityVector = new Translation2d(actualVelocity.vxMetersPerSecond,
-                actualVelocity.vyMetersPerSecond);
-        Translation2d commandedVelocityVector = new Translation2d(commandedVelocity.vxMetersPerSecond,
-                commandedVelocity.vyMetersPerSecond);
-
-        // Computing difference between desired and actual velocities
-        Translation2d velocityVectorChange = commandedVelocityVector.minus(actualVelocityVector);
+        Translation2d velocityVectorChange = new Translation2d(
+                commandedVelocity.vxMetersPerSecond - lastRequestedSpeed.vxMetersPerSecond,
+                commandedVelocity.vyMetersPerSecond - lastRequestedSpeed.vyMetersPerSecond);
 
         // Convert from cartesian to polar coordinate system
         double velocityChangeMagnitudeSquared = (velocityVectorChange.getX() * velocityVectorChange.getX()) +
@@ -381,8 +376,12 @@ public final class Drive extends AbstractSubsystem {
                             Math.sin(velocityDiffAngle) * maxVelocityChange);
 
             // Compute limited velocity
-            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector);
+            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(new Translation2d(
+                    lastRequestedSpeed.vxMetersPerSecond, lastRequestedSpeed.vyMetersPerSecond
+            ));
 
+            // Does not limit acceleration if slowing down
+//            if (isRobotSlowingDown()) {
             // Convert to format compatible with serveDrive
             limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
                     commandedVelocity.omegaRadiansPerSecond);
@@ -390,13 +389,18 @@ public final class Drive extends AbstractSubsystem {
 
 
         // Checks if requested change in Angular Velocity is greater than allowed
-        if (Math.abs(commandedVelocity.omegaRadiansPerSecond - actualVelocity.omegaRadiansPerSecond) > maxAngularVelocityChange) {
+        if (Math.abs(
+                commandedVelocity.omegaRadiansPerSecond - lastRequestedSpeed.omegaRadiansPerSecond) > maxAngularVelocityChange) {
             // Adds the allowed velocity change to actual velocity, includes the sign of motion
             limitedVelocity.omegaRadiansPerSecond =
-                    Math.copySign(maxAngularVelocityChange, commandedVelocity.omegaRadiansPerSecond -
-                            actualVelocity.omegaRadiansPerSecond) + actualVelocity.omegaRadiansPerSecond;
+                    Math.copySign(maxAngularVelocityChange,
+                            commandedVelocity.omegaRadiansPerSecond - lastRequestedSpeed.omegaRadiansPerSecond) +
+                            lastRequestedSpeed.omegaRadiansPerSecond;
+        } else {
+            limitedVelocity.omegaRadiansPerSecond = commandedVelocity.omegaRadiansPerSecond;
         }
 
+        lastRequestedSpeed = limitedVelocity;
         return limitedVelocity;
     }
 
@@ -447,6 +451,8 @@ public final class Drive extends AbstractSubsystem {
                 * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
                 (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
                         RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
+
+        logData("Current Speed Squared", currentSpeedSquared);
 
         boolean isDecelerating = currentSpeedSquared < previousSpeedSquared;
 
@@ -668,6 +674,7 @@ public final class Drive extends AbstractSubsystem {
             logData("Drive Motor " + i + " Velocity", getSwerveDriveVelocity(i) / 60.0d);
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getStatorCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
+            logData("Is Robot Decelerating", isRobotSlowingDown());
         }
     }
 
