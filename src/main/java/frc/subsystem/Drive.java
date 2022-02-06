@@ -83,6 +83,9 @@ public final class Drive extends AbstractSubsystem {
 
     final CANCoder[] swerveCanCoders = new CANCoder[4];
 
+    private double previousSpeedSquared = 0;
+    private double currentSpeedSquared = 0;
+
     private Drive() {
         super(Constants.DRIVE_PERIOD);
 
@@ -264,8 +267,10 @@ public final class Drive extends AbstractSubsystem {
 
     public void swerveDrive(ChassisSpeeds chassisSpeeds) {
 
-        // Limits max velocity change
-        chassisSpeeds = limitAcceleration(chassisSpeeds);
+        // Limits max velocity change if robot is slowing down
+        if (isRobotSlowingDown()) {
+            chassisSpeeds = limitAcceleration(chassisSpeeds);
+        }
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
@@ -402,6 +407,35 @@ public final class Drive extends AbstractSubsystem {
         return Constants.MAX_ACCELERATION * (accelLimitPeriod);
     }
 
+    /**
+     * Checks to see if the robot is decelerating
+     *
+     * @return true if slowing down, false if not
+     */
+    boolean isRobotSlowingDown() {
+
+        // Initialized previous speed if this process has not run before
+        if (previousSpeedSquared == 0) {
+            previousSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
+                    * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
+                    (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
+                            RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
+
+            return false;
+        } else {
+            // Sets the last current speed to new previous speed
+            previousSpeedSquared = currentSpeedSquared;
+        }
+
+        // Updates the current speed stored to the real current speed
+        currentSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
+                * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
+                (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
+                        RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
+
+
+        return currentSpeedSquared < previousSpeedSquared;
+    }
 
     /**
      * Sets the motor voltage
