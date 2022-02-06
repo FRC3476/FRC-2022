@@ -349,6 +349,7 @@ public final class Drive extends AbstractSubsystem {
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
 
         double maxVelocityChange = getMaxAllowedVelocityChange();
+        double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
 
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
@@ -385,7 +386,15 @@ public final class Drive extends AbstractSubsystem {
             // Convert to format compatible with serveDrive
             limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
                     commandedVelocity.omegaRadiansPerSecond);
+        }
 
+
+        // Checks if requested change in Angular Velocity is greater than allowed
+        if (Math.abs(commandedVelocity.omegaRadiansPerSecond - actualVelocity.omegaRadiansPerSecond) > maxAngularVelocityChange) {
+            // Adds the allowed velocity change to actual velocity, includes the sign of motion
+            limitedVelocity.omegaRadiansPerSecond =
+                    Math.copySign(maxAngularVelocityChange, commandedVelocity.omegaRadiansPerSecond -
+                            actualVelocity.omegaRadiansPerSecond) + actualVelocity.omegaRadiansPerSecond;
         }
 
         return limitedVelocity;
@@ -408,6 +417,23 @@ public final class Drive extends AbstractSubsystem {
 
         // Multiplies by MAX_ACCELERATION to find the velocity over that period
         return Constants.MAX_ACCELERATION * (accelLimitPeriod);
+    }
+
+    /**
+     * Gets the Max change in velocity that can occur over the iteration period (20ms)
+     */
+    double getMaxAllowedAngularVelocityChange() {
+        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
+        // If iteration period is greater than allowed amount, iteration period = 50 ms
+        double accelLimitPeriod;
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
+            accelLimitPeriod = 0.050;
+        } else {
+            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
+        }
+
+        // Multiplies by MAX_ACCELERATION to find the velocity over that period
+        return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
     }
 
     /**

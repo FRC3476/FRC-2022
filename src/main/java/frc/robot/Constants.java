@@ -135,6 +135,11 @@ public final class Constants {
      */
     public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
 
+    /**
+     * Units are in Radians per Second Squared 50 degrees (In radians) per second squared
+     */
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(50);
+
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
     public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
