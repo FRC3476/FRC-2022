@@ -316,7 +316,7 @@ public final class Shooter extends AbstractSubsystem {
      * @param desiredShooterSpeed Desired Speed in RPM.
      */
     public void setShooterSpeed(double desiredShooterSpeed) {
-        this.desiredShooterSpeed = desiredShooterSpeed;
+        this.desiredShooterSpeed = desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR;
         if (desiredShooterSpeed == 0) {
             if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
                 nextState = ShooterState.OFF;
