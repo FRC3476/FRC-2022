@@ -342,7 +342,6 @@ public final class Drive extends AbstractSubsystem {
 
         double maxVelocityChange = getMaxAllowedVelocityChange();
         double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
-        double limitedAngularVelocity = 0;
 
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
@@ -376,13 +375,14 @@ public final class Drive extends AbstractSubsystem {
             // Compute limited velocity
             Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector);
 
-            limited = commandedVelocity.omegaRadiansPerSecond
-
-            getMaxAllowedAngularVelocityChange()
-
             // Convert to format compatible with serveDrive
             limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
                     commandedVelocity.omegaRadiansPerSecond);
+        }
+
+        // Checks if requested change in Angular Velocity is greater than allowed
+        if (Math.abs(commandedVelocity.omegaRadiansPerSecond - actualVelocity.omegaRadiansPerSecond) > maxAngularVelocityChange) {
+            limitedVelocity.omegaRadiansPerSecond = maxAngularVelocityChange;
         }
 
         return limitedVelocity;
