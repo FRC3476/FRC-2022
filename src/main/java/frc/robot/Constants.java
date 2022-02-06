@@ -133,7 +133,7 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared
      */
-    public static final double MAX_ACCELERATION = 15; // TODO: Need to tune at field
+    public static final double MAX_ACCELERATION = 5; // TODO: Need to tune at field
 
     /**
      * Units are in Radians per Second Squared 50 degrees (In radians) per second squared

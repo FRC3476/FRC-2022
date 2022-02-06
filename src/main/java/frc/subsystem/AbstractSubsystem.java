@@ -89,6 +89,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
             else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(entry.getKey(), (Double[]) obj);
             else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(entry.getKey(), (Boolean[]) obj);
             else if (cl.equals(String[].class)) SmartDashboard.putStringArray(entry.getKey(), (String[]) obj);
+            else SmartDashboard.putString(entry.getKey(), entry.getValue().toString());
             //@formatter:on
         }
     }
@@ -102,8 +103,11 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 update();
                 logInterval++;
                 if (logInterval >= loggingInterval) {
-                    logData();
-                    pushLog();
+//                    if (false) {
+//                        logData();
+//                        pushLog();
+//                    }
+
                     logInterval = 1;
                 }
             }

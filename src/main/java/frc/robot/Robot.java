@@ -268,22 +268,24 @@ public class Robot extends TimedRobot {
         }
 
         if (xbox.getRawAxis(3) > 0.1 || stick.getRawButton(2)) {
-            if (buttonPanel.getRawButton(7)) {
-                // Turns Shooter flywheel on considering a moving robot
-                visionManager.forceVisionOn(true);
-                visionManager.updateShooterState();
-            } else if (buttonPanel.getRawButton(6)) {
-                //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
-                visionManager.forceVisionOn(true);
-                visionManager.updateShooterStateStaticPose();
-            } else if (buttonPanel.getRawButton(5)) {
-                //Turn shooter flywheel on with manuel settings
-                shooter.setShooterSpeed(shooterSpeed);
-                shooter.setHoodPosition(hoodPosition);
-            } else {
-                shooter.setShooterSpeed(0); //Turns off shooter flywheel
-                targetFound = false;
-            }
+
+        }
+
+        if (buttonPanel.getRawButton(7)) {
+            // Turns Shooter flywheel on considering a moving robot
+            visionManager.forceVisionOn(true);
+            visionManager.updateShooterState();
+        } else if (buttonPanel.getRawButton(6)) {
+            //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
+            visionManager.forceVisionOn(true);
+            visionManager.updateShooterStateStaticPose();
+        } else if (buttonPanel.getRawButton(5)) {
+            //Turn shooter flywheel on with manuel settings
+            shooter.setShooterSpeed(shooterSpeed);
+            shooter.setHoodPosition(hoodPosition);
+        } else {
+            shooter.setShooterSpeed(0); //Turns off shooter flywheel
+            targetFound = false;
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
@@ -354,7 +356,7 @@ public class Robot extends TimedRobot {
         } else if (stick.getRawButton(12)) {
             climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         } else {
-            climber.setClimberMotor(0);
+            climber.setClimberMotor(0); //TODO this will break things
         }
 
         if (buttonPanel.getRisingEdge(11)) {
@@ -484,6 +486,7 @@ public class Robot extends TimedRobot {
         drive.start();
         intake.start();
         hopper.start();
+        shooter.start();
     }
 
     public synchronized void killAuto() {

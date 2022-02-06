@@ -86,7 +86,7 @@ public final class Drive extends AbstractSubsystem {
     private double previousSpeedSquared = 0;
 
     private Drive() {
-        super(Constants.DRIVE_PERIOD);
+        super(Constants.DRIVE_PERIOD, 5);
 
         final LazyTalonFX leftFrontTalon, leftBackTalon, rightFrontTalon, rightBackTalon;
         final CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;

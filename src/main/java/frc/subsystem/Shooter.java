@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.sensors.CANCoder;
@@ -208,6 +209,7 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelMaster.config_kD(0, Constants.SHOOTER_D);
         shooterWheelMaster.config_kF(0, Constants.SHOOTER_F);
         shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE);
+        shooterWheelMaster.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
                 Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
@@ -487,14 +489,15 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-                setShooterSpeed(0);
-                setHoodPosition(50); // Sets hood to the lowest possible position
+                shooterWheelMaster.set(ControlMode.PercentOutput, 0);
+                setHoodPosition(90); // Sets hood to the lowest possible position
                 feederWheel.set(ControlMode.PercentOutput, 0);
 
                 break;
 
             case ON:
-                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed); // Sets shooter motor to desired shooter speed
+                shooterWheelMaster.set(ControlMode.PercentOutput, 1);
+                //shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed); // Sets shooter motor to desired shooter
 
                 moveHoodMotor(); // Sets Motor to travel to desired hood angle
 
@@ -588,7 +591,8 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     private boolean isHoodStopped() {
-        return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
+        return true;
+        //return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
     }
 
     /**

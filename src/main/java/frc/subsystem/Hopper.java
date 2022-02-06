@@ -44,7 +44,7 @@ public class Hopper extends AbstractSubsystem {
     HopperState wantedHopperState = HopperState.OFF;
 
     private Hopper() {
-        super(Constants.HOPPER_PERIOD);
+        super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
