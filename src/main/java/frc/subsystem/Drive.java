@@ -167,6 +167,10 @@ public final class Drive extends AbstractSubsystem {
         for (LazyTalonFX swerveMotor : swerveMotors) {
             swerveMotor.setNeutralMode(NeutralMode.Brake);
         }
+
+        for (LazyTalonFX swerveDriveMotor : swerveDriveMotors) {
+            swerveDriveMotor.setNeutralMode(NeutralMode.Brake);
+        }
     }
 
     /**
@@ -254,12 +258,12 @@ public final class Drive extends AbstractSubsystem {
         if (useFieldRelative) {
             chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                     Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 6,
+                    inputs.getRotation() * 10,
                     RobotTracker.getInstance().getGyroAngle());
         } else {
             chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                     Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 6);
+                    inputs.getRotation() * 10);
         }
 
         swerveDrive(chassisSpeeds);
@@ -445,10 +449,10 @@ public final class Drive extends AbstractSubsystem {
      * @param acceleration The acceleration to use
      */
     public void setMotorSpeed(int module, double velocity, double acceleration) {
-        double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
+        //double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
-        swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv);
-        SmartDashboard.putNumber("Out Volts " + module, ffv);
+        swerveDriveMotors[module].set(ControlMode.PercentOutput, velocity / Constants.DRIVE_HIGH_SPEED_M);
+        SmartDashboard.putNumber("Out Volts " + module, velocity / Constants.DRIVE_HIGH_SPEED_M);
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
 
