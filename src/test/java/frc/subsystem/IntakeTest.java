@@ -4,6 +4,7 @@ import frc.robot.Constants;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -21,7 +22,7 @@ class IntakeTest {
         intake = Intake.getInstance();
     }
 
-    @Test
+    @Disabled("The check that this is testing has been overrided")
     public void intakeDoesNotRunWhenClosed() throws Exception {
         Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
@@ -37,7 +38,7 @@ class IntakeTest {
         assertEquals(0, intakeMotor.get(), DELTA);
     }
 
-    @Test
+    @Disabled("The check that this is testing has been overrided")
     public void intakeDoesNotRunReversedWhenClosed() throws Exception {
         Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
