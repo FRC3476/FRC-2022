@@ -341,6 +341,8 @@ public final class Drive extends AbstractSubsystem {
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
 
         double maxVelocityChange = getMaxAllowedVelocityChange();
+        double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
+        double limitedAngularVelocity = 0;
 
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
@@ -374,10 +376,13 @@ public final class Drive extends AbstractSubsystem {
             // Compute limited velocity
             Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(actualVelocityVector);
 
+            limited = commandedVelocity.omegaRadiansPerSecond
+
+            getMaxAllowedAngularVelocityChange()
+
             // Convert to format compatible with serveDrive
             limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
                     commandedVelocity.omegaRadiansPerSecond);
-
         }
 
         return limitedVelocity;
@@ -402,6 +407,22 @@ public final class Drive extends AbstractSubsystem {
         return Constants.MAX_ACCELERATION * (accelLimitPeriod);
     }
 
+    /**
+     * Gets the Max change in velocity thancan occur over the iteration period (20ms)
+     */
+    double getMaxAllowedAngularVelocityChange() {
+        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
+        // If iteration period is greater than allowed amount, iteration period = 50 ms
+        double accelLimitPeriod;
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
+            accelLimitPeriod = 0.050;
+        } else {
+            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
+        }
+
+        // Multiplies by MAX_ACCELERATION to find the velocity over that period
+        return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
+    }
 
     /**
      * Sets the motor voltage
