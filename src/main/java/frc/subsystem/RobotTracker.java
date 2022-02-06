@@ -42,7 +42,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
 
     private RobotTracker() {
-        super(Constants.ROBOT_TRACKER_PERIOD, 5);
+        super(Constants.ROBOT_TRACKER_PERIOD);
         gyroSensor = new AHRS(SPI.Port.kMXP, (byte) 100);
         gyroSensor.getRequestedUpdateRate();
         //@formatter:off

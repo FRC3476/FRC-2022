@@ -2,6 +2,7 @@ package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -30,7 +31,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     }
 
     public AbstractSubsystem(int period) {
-        this(period, 2);
+        this(period, Constants.DEFAULT_PERIODS_PER_LOG);
     }
 
     public abstract void selfTest();
