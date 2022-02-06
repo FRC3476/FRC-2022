@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -379,9 +380,15 @@ public class Robot extends TimedRobot {
 
     private void doNormalDriving() {
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+
+
         if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
-            if (xbox.getRawButton(XboxButtons.Y)) drive.doHold();
+            if (xbox.getRawButton(XboxButtons.Y)) {
+                drive.doHold();
+            } else {
+                drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
+            }
         } else {
             if (useFieldRelative) {
                 drive.swerveDriveFieldRelative(controllerDriveInputs);

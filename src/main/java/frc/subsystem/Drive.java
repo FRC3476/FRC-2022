@@ -83,6 +83,8 @@ public final class Drive extends AbstractSubsystem {
 
     final CANCoder[] swerveCanCoders = new CANCoder[4];
 
+    private double previousSpeedSquared = 0;
+
     private Drive() {
         super(Constants.DRIVE_PERIOD);
 
@@ -163,6 +165,10 @@ public final class Drive extends AbstractSubsystem {
     public void configBrake() {
         for (LazyTalonFX swerveMotor : swerveMotors) {
             swerveMotor.setNeutralMode(NeutralMode.Brake);
+        }
+
+        for (LazyTalonFX swerveDriveMotor : swerveDriveMotors) {
+            swerveDriveMotor.setNeutralMode(NeutralMode.Brake);
         }
     }
 
@@ -251,12 +257,12 @@ public final class Drive extends AbstractSubsystem {
         if (useFieldRelative) {
             chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                     Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 6,
+                    inputs.getRotation() * 10,
                     RobotTracker.getInstance().getGyroAngle());
         } else {
             chassisSpeeds = new ChassisSpeeds(Constants.DRIVE_HIGH_SPEED_M * inputs.getX(),
                     Constants.DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 6);
+                    inputs.getRotation() * 10);
         }
 
         swerveDrive(chassisSpeeds);
@@ -264,8 +270,10 @@ public final class Drive extends AbstractSubsystem {
 
     public void swerveDrive(ChassisSpeeds chassisSpeeds) {
 
-        // Limits max velocity change
-        chassisSpeeds = limitAcceleration(chassisSpeeds);
+        // Limits max velocity change if robot is slowing down
+        if (isRobotSlowingDown()) {
+            chassisSpeeds = limitAcceleration(chassisSpeeds);
+        }
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
@@ -408,7 +416,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     * Gets the Max change in velocity thancan occur over the iteration period (20ms)
+     * Gets the Max change in velocity that can occur over the iteration period (20ms)
      */
     double getMaxAllowedAngularVelocityChange() {
         // Gets the iteration period by subtracting the current time with the last time accelLimit was called
@@ -425,6 +433,26 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
+     * Checks to see if the robot is decelerating
+     *
+     * @return true if slowing down, false if not
+     */
+    boolean isRobotSlowingDown() {
+        // Updates the current speed stored to the real current speed
+        double currentSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
+                * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
+                (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
+                        RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
+
+        boolean isDecelerating = currentSpeedSquared < previousSpeedSquared;
+
+        // updates previous speed for next iteration
+        previousSpeedSquared = currentSpeedSquared;
+
+        return isDecelerating;
+    }
+
+    /**
      * Sets the motor voltage
      *
      * @param module       The module to set the voltage on
@@ -432,10 +460,10 @@ public final class Drive extends AbstractSubsystem {
      * @param acceleration The acceleration to use
      */
     public void setMotorSpeed(int module, double velocity, double acceleration) {
-        double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
+        //double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
-        swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv);
-        SmartDashboard.putNumber("Out Volts " + module, ffv);
+        swerveDriveMotors[module].set(ControlMode.PercentOutput, velocity / Constants.DRIVE_HIGH_SPEED_M);
+        SmartDashboard.putNumber("Out Volts " + module, velocity / Constants.DRIVE_HIGH_SPEED_M);
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
 
