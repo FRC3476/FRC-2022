@@ -388,9 +388,13 @@ public final class Drive extends AbstractSubsystem {
                     commandedVelocity.omegaRadiansPerSecond);
         }
 
+
         // Checks if requested change in Angular Velocity is greater than allowed
         if (Math.abs(commandedVelocity.omegaRadiansPerSecond - actualVelocity.omegaRadiansPerSecond) > maxAngularVelocityChange) {
-            limitedVelocity.omegaRadiansPerSecond = maxAngularVelocityChange;
+            // Adds the allowed velocity change to actual velocity, includes the sign of motion
+            limitedVelocity.omegaRadiansPerSecond =
+                    Math.copySign(maxAngularVelocityChange, commandedVelocity.omegaRadiansPerSecond -
+                            actualVelocity.omegaRadiansPerSecond) + actualVelocity.omegaRadiansPerSecond;
         }
 
         return limitedVelocity;
