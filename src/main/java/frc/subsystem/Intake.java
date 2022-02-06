@@ -103,7 +103,7 @@ public final class Intake extends AbstractSubsystem {
 
     @Override
     public void update() {
-        if (Timer.getFPGATimestamp() > allowIntakeRunTime && getIntakeSolState() == IntakeSolState.OPEN) {
+        if (Timer.getFPGATimestamp() > allowIntakeRunTime && getIntakeSolState() == IntakeSolState.OPEN || true) {
             setIntakeState(wantedIntakeState);
         } else {
             setIntakeState(IntakeState.OFF);
