@@ -84,7 +84,6 @@ public final class Drive extends AbstractSubsystem {
     final CANCoder[] swerveCanCoders = new CANCoder[4];
 
     private double previousSpeedSquared = 0;
-    private double currentSpeedSquared = 0;
 
     private Drive() {
         super(Constants.DRIVE_PERIOD);
@@ -417,28 +416,18 @@ public final class Drive extends AbstractSubsystem {
      * @return true if slowing down, false if not
      */
     boolean isRobotSlowingDown() {
-
-        // Initialized previous speed if this process has not run before
-        if (previousSpeedSquared == 0) {
-            previousSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
-                    * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
-                    (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
-                            RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
-
-            return false;
-        } else {
-            // Sets the last current speed to new previous speed
-            previousSpeedSquared = currentSpeedSquared;
-        }
-
         // Updates the current speed stored to the real current speed
-        currentSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
+        double currentSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
                 * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
                 (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
                         RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
 
+        boolean isDecelerating = currentSpeedSquared < previousSpeedSquared;
 
-        return currentSpeedSquared < previousSpeedSquared;
+        // updates previous speed for next iteration
+        previousSpeedSquared = currentSpeedSquared;
+
+        return isDecelerating;
     }
 
     /**
