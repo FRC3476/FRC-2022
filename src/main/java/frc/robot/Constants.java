@@ -57,7 +57,7 @@ public final class Constants {
     public static final int CAN_RIGHT_FRONT_ID = 21;
     public static final int CAN_RIGHT_BACK_ID = 22;
 
-    public static final double SWERVE_INCHES_PER_ROTATION = (3.0d / 5.0d) * Math.PI;
+    public static final double SWERVE_INCHES_PER_ROTATION = 12.5 * 0.976;
     public static final double SWERVE_METER_PER_ROTATION = Units.inchesToMeters(SWERVE_INCHES_PER_ROTATION);
     public static final double SWERVE_DRIVE_P = 0.1;
     public static final double SWERVE_DRIVE_D = 0.00;
@@ -80,10 +80,10 @@ public final class Constants {
      * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.153, 1.6, 0.18),
-            new SimpleMotorFeedforward(0.153, 1.6, 0.18),
-            new SimpleMotorFeedforward(0.153, 1.6, 0.18),
-            new SimpleMotorFeedforward(0.153, 1.6, 0.18)};
+            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
+            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
+            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
+            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518)};
 
 
     /**
@@ -102,6 +102,24 @@ public final class Constants {
             new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
             new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
             new SwerveModuleState(0, Rotation2d.fromDegrees(45))
+    };
+    /**
+     * What the module states should be set to when we start climbing. The wheels will be put in an X pattern to prevent the robot
+     * from moving.
+     * <p>
+     * 0 -> Left Front
+     * <p>
+     * 1 -> Left Back
+     * <p>
+     * 2 -> Right Front
+     * <p>
+     * 3 -> Right Back
+     */
+    public static final SwerveModuleState[] SWERVE_MODULE_STATE_FORWARD = {
+            new SwerveModuleState(0, Rotation2d.fromDegrees(90)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(90)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(90)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(90))
     };
 
     // 0.307975 is 12.125 in inches
@@ -138,12 +156,12 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 30; // TODO: Need to tune at field
+    public static final double MAX_ACCELERATION = 20; // TODO: Need to tune at field
 
     /**
      * Units are in Radians per Second Squared 50 degrees (In radians) per second squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 6);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 9);
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
@@ -168,13 +186,12 @@ public final class Constants {
     public static final double MAX_PREFER_SHOOTER_RPM = 4500;
 
 
-
     //Hopper Constants
     public static final int HOPPER_PERIOD = 200;
-    public static final double HOPPER_SPEED = 1;
+    public static final double HOPPER_SPEED = .5;
     public static final int HOPPER_MOTOR_ID = 30;
 
-    
+
     // Shooter Constants
 
     public static final int SHOOTER_PERIOD_MS = 20;
@@ -189,7 +206,7 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 5.0e-3;
+    public static final double SHOOTER_P = 5.0e-1;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
     public static final double SHOOTER_F = 0;
@@ -210,7 +227,7 @@ public final class Constants {
      */
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600.0d / 2048.0d;
 
-    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = 2048d / 600d;
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * 1;
 
     // Feeder wheel pidf is unused
     public static final double FEEDER_WHEEL_P = 0;
@@ -223,7 +240,7 @@ public final class Constants {
 
     public static final double FEEDER_CURRENT_LIMIT = 30;
     public static final double FEEDER_TRIGGER_THRESHOLD_CURRENT = 30;
-    public static final double FEEDER_TRIGGER_THRESHOLD_TIME = 0;
+    public static final double FEEDER_TRIGGER_THRESHOLD_TIME = 0.1;
 
     /**
      * The time that the feeder must be on before it is allowed to turn off

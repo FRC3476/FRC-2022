@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -55,7 +54,7 @@ public class Robot extends TimedRobot {
     NetworkTableEntry shooterConfigStatusEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatus");
     NetworkTableEntry shooterConfigStatusIdEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatusId");
 
-    NetworkAuto networkAuto;
+    NetworkAuto networkAuto = null;
     @Nullable String lastAutoPath = null;
     @Nullable String lastShooterConfig = null;
 
@@ -112,7 +111,6 @@ public class Robot extends TimedRobot {
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
-        SendableRegistry.disableLiveWindow(null);
     }
 
     /**
@@ -231,17 +229,17 @@ public class Robot extends TimedRobot {
 
         if (buttonPanel.getRisingEdge(1)) {
             hoodPosition = 25;
-            shooterSpeed = 5500;
+            shooterSpeed = 2000;
             visionOn = true;
             shooterMode = 1;
         } else if (buttonPanel.getRisingEdge(2)) {
             hoodPosition = 33;
             visionOn = true;
-            shooterSpeed = 5400;
+            shooterSpeed = 2000;
             shooterMode = 2;
         } else if (buttonPanel.getRisingEdge(3)) {
             hoodPosition = 55;
-            shooterSpeed = 5000;
+            shooterSpeed = 2000;
             visionOn = false;
             shooterMode = 3;
         }
@@ -266,11 +264,9 @@ public class Robot extends TimedRobot {
                 // We're not trying to run the flywheel and not trying to force update the pose
                 visionManager.forceVisionOn(false);
             }
-            doNormalDriving();
-        }
-
-        if (xbox.getRawAxis(3) > 0.1 || stick.getRawButton(2)) {
-
+            if (buttonPanel.getRawButton(11)) { // If we're climbing don't allow the robot to be driven
+                doNormalDriving();
+            }
         }
 
         if (buttonPanel.getRawButton(7)) {
@@ -370,6 +366,8 @@ public class Robot extends TimedRobot {
             }
         } else if (!buttonPanel.getRawButton(11)) {
             climber.pauseClimb();
+        } else {
+            drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
         }
 
         if (buttonPanel.getRisingEdge(12)) {
