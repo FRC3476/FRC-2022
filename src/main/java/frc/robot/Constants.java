@@ -413,7 +413,7 @@ public final class Constants {
     // Networking and Logging
 
     public static final String WEB_DASHBOARD_HOSTNAME = "";
-    public static final int WEB_DASHBOARD_PORT = 0;
+    public static final int WEB_DASHBOARD_PORT = 5801;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 200;
 }
