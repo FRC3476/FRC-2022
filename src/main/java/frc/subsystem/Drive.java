@@ -219,7 +219,7 @@ public final class Drive extends AbstractSubsystem {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
-                    (getSwerveDriveVelocity(i) / 60.0d) * Constants.SWERVE_METER_PER_ROTATION,
+                    ((getSwerveDriveVelocity(i) / 60) * Constants.SWERVE_METER_PER_ROTATION),
                     Rotation2d.fromDegrees(getWheelRotation(i)));
             swerveModuleState[i] = moduleState;
         }
@@ -291,6 +291,7 @@ public final class Drive extends AbstractSubsystem {
         for (int i = 0; i < 4; i++) {
             SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
                     Rotation2d.fromDegrees(getWheelRotation(i)));
+            //SwerveModuleState targetState = moduleStates[i];
             // TODO: flip the acceleration if we flip the module
             double targetAngle = targetState.angle.getDegrees() % 360;
             if (targetAngle < 0) { // Make sure the angle is positive
@@ -470,10 +471,10 @@ public final class Drive extends AbstractSubsystem {
      * @param acceleration The acceleration to use
      */
     public void setMotorSpeed(int module, double velocity, double acceleration) {
-        //double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
+        double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
         swerveDriveMotors[module].set(ControlMode.PercentOutput, velocity / Constants.DRIVE_HIGH_SPEED_M);
-        SmartDashboard.putNumber("Out Volts " + module, velocity / Constants.DRIVE_HIGH_SPEED_M);
+        SmartDashboard.putNumber("Out Volts " + module, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
 
