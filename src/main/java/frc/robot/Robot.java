@@ -353,8 +353,8 @@ public class Robot extends TimedRobot {
             climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         } else if (stick.getRawButton(12)) {
             climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else {
-            climber.setClimberMotor(0); //TODO this will break things
+        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
+            climber.setClimberMotor(0);
         }
 
         if (buttonPanel.getRisingEdge(11)) {
