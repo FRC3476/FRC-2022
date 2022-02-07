@@ -6,8 +6,10 @@
   "gearing numerator": 1.0,
   "gyro": "NavX",
   "gyro ctor": "SPI.kMXP",
-  "is drivetrain": true,
+  "is drivetrain": false,
   "motor controllers": [
+    "TalonFX",
+    "TalonFX",
     "TalonFX",
     "TalonFX"
   ],
@@ -19,9 +21,13 @@
   ],
   "primary motor ports": [
     11,
-    10
+    12,
+    13,
+    14
   ],
   "primary motors inverted": [
+    false,
+    false,
     false,
     false
   ],
@@ -32,9 +38,13 @@
   ],
   "secondary motor ports": [
     13,
-    12
+    12,
+    5,
+    7
   ],
   "secondary motors inverted": [
+    false,
+    false,
     false,
     false
   ],
