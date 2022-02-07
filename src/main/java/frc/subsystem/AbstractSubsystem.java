@@ -1,12 +1,10 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
@@ -16,6 +14,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
     public String subsystemName;
     Thread thisThread;
+
 
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
@@ -38,6 +37,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public abstract void logData();
 
+    public void logData(String key, Object value) {
+        Logger.getInstance().log(key, value);
+    }
+
     public void pause() {
         signal = ThreadSignal.PAUSED;
     }
@@ -58,56 +61,30 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
      * This function will be called repeatedly when the thread is alive. The period will be whatever you defined when creating the
      * object
      */
-    public void update() {
+    public void update() throws IOException {
 
-    }
-
-    private final Map<String, Object> logDataMap = new HashMap<>();
-
-
-    public void logData(String key, Object value) {
-        //SmartDashboard.putString(key, value.toString());
-        logDataMap.put(key, value);
     }
 
     int lastLength = 20;
 
-
-    public void pushLog() {
-        for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
-            Object obj = entry.getValue();
-            Class<?> cl = obj.getClass();
-
-            //@formatter:off
-            if (cl.equals(Integer.class)) SmartDashboard.putNumber(entry.getKey(), (int) obj);
-            else if (cl.equals(Double.class)) SmartDashboard.putNumber(entry.getKey(), (double) obj);
-            else if (cl.equals(Short.class)) SmartDashboard.putNumber(entry.getKey(), (short) obj);
-            else if (cl.equals(Long.class)) SmartDashboard.putNumber(entry.getKey(), (long) obj);
-            else if (cl.equals(Float.class)) SmartDashboard.putNumber(entry.getKey(), (float) obj);
-            else if (cl.equals(Byte.class)) SmartDashboard.putNumber(entry.getKey(), (byte) obj);
-            else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(entry.getKey(), (boolean) obj);
-            else if (cl.equals(String.class)) SmartDashboard.putString(entry.getKey(), (String) obj);
-            else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(entry.getKey(), (Double[]) obj);
-            else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(entry.getKey(), (Boolean[]) obj);
-            else if (cl.equals(String[].class)) SmartDashboard.putStringArray(entry.getKey(), (String[]) obj);
-            else SmartDashboard.putString(entry.getKey(), entry.getValue().toString());
-            //@formatter:on
-        }
-    }
-
     @Override
     @SuppressWarnings("BusyWait")
     public void run() {
+
         while (signal != ThreadSignal.DEAD) {
+
             double startTime = Timer.getFPGATimestamp();
             if (signal == ThreadSignal.ALIVE) {
-                update();
+                try {
+                    update();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 logInterval++;
                 if (logInterval >= loggingInterval) {
-//                    if (this.getClass().equals(Drive.class)) {
-//                        logData();
-//                        pushLog();
-//                    }
+                    if (this.getClass().equals(Drive.class)) {
+                        logData();
+                    }
 
                     logInterval = 1;
                 }
@@ -120,7 +97,6 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
             } catch (Exception e) {
                 System.out.println("Thread sleep failing " + subsystemName + " message: " + e.getMessage());
             }
-
         }
     }
 }

@@ -409,4 +409,11 @@ public final class Constants {
     public static final double INTAKE_MOTOR_SPEED = -1.0;
     public static final double INTAKE_OPEN_TIME = 0.3;
     public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 1; // Todo
+
+    // Networking and Logging
+
+    public static final String WEB_DASHBOARD_HOSTNAME = "";
+    public static final int WEB_DASHBOARD_PORT = 0;
+
+    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 200;
 }
