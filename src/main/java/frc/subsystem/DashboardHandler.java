@@ -28,7 +28,7 @@ public final class DashboardHandler extends AbstractSubsystem {
      * HashMap of IntetAdress to DashboardConnection
      */
     private final HashMap<InetAddress, DashboardConnection> dashboardConnections = new HashMap<>();
-    private static final Map<String, Object> LOG_DATA_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, String> LOG_DATA_MAP = new ConcurrentHashMap<>();
     private static final ReadWriteLock LOG_DATA_MAP_LOCK = new ReentrantReadWriteLock();
     private final HashMap<Character, PacketHandler> packetHandlerMap = new HashMap<>();
 
@@ -77,7 +77,7 @@ public final class DashboardHandler extends AbstractSubsystem {
         // ConcurrentHashMap is thread-safe and will handle the synchronization with multiple writes for us. We then only put a
         // write lock when reading it to prevent any other writes from happening while we're serializing.
         try {
-            LOG_DATA_MAP.put(key, value);
+            LOG_DATA_MAP.put(key, value.toString());
         } finally {
             LOG_DATA_MAP_LOCK.readLock().unlock();
         }
