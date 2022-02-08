@@ -104,8 +104,8 @@ public final class Constants {
             new SwerveModuleState(0, Rotation2d.fromDegrees(45))
     };
     /**
-     * What the module states should be set to when we start climbing. The wheels will be put in an X pattern to prevent the robot
-     * from moving.
+     * What the module states should be set to when we start climbing. All the wheels will face forward to make the robot easy to
+     * push once it is disabled.
      * <p>
      * 0 -> Left Front
      * <p>
