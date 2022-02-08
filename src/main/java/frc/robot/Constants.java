@@ -428,9 +428,7 @@ public final class Constants {
     public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 1; // Todo
 
     // Networking and Logging
-
-    public static final String WEB_DASHBOARD_HOSTNAME = "";
-    public static final int WEB_DASHBOARD_PORT = 5801;
+    public static final int WEB_DASHBOARD_PORT = 5802; //Limelight uses port 5800 & 5801
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 200;
 }

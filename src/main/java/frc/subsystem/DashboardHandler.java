@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static frc.robot.Constants.WEB_DASHBOARD_PORT;
+
 public final class DashboardHandler extends AbstractSubsystem {
 
     private @Nullable DatagramSocket receiveingSocket;
@@ -39,10 +41,10 @@ public final class DashboardHandler extends AbstractSubsystem {
                     dashboardConnections.get(address).keepAlive(); // Update the keepalive time
                 }
             } else {
-                // This dashboard hasn't been connected too yet. We should add it
+                // This dashboard hasn't been connected too yet. We should add it to the list of connected dashboards
                 try {
                     DatagramSocket socket = new DatagramSocket();
-                    socket.connect(address, 5802);
+                    socket.connect(address, WEB_DASHBOARD_PORT);
                     synchronized (dashboardConnections) {
                         dashboardConnections.put(address, new DashboardConnection(socket));
                     }
@@ -64,7 +66,7 @@ public final class DashboardHandler extends AbstractSubsystem {
         super(period);
 
         try {
-            receiveingSocket = new DatagramSocket(5802); //Limelight uses port 5800 & 5801
+            receiveingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
             receiveingSocket.setSoTimeout(10);
         } catch (SocketException e) {
             DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
