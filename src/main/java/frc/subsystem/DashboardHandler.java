@@ -21,7 +21,7 @@ import static frc.robot.Constants.WEB_DASHBOARD_PORT;
 
 public final class DashboardHandler extends AbstractSubsystem {
 
-    private @Nullable DatagramSocket receiveingSocket;
+    private @Nullable DatagramSocket receivingSocket;
     private double nextAllowedErrorTime = 0;
 
     /**
@@ -65,8 +65,8 @@ public final class DashboardHandler extends AbstractSubsystem {
         super(period);
 
         try {
-            receiveingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
-            receiveingSocket.setSoTimeout(5);
+            receivingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
+            receivingSocket.setSoTimeout(5);
         } catch (SocketException e) {
             DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
         }
@@ -113,9 +113,8 @@ public final class DashboardHandler extends AbstractSubsystem {
                 }
             }
         } catch (IOException e) {
-            if (nextAllowedErrorTime > Timer.getFPGATimestamp()) { // Don't spam the driver station
+            if (Timer.getFPGATimestamp() > nextAllowedErrorTime) { // Don't spam the driver station
                 DriverStation.reportError("Could not send data to web dashboard", false);
-            } else {
                 nextAllowedErrorTime = Timer.getFPGATimestamp() + 5;
             }
         }
@@ -124,13 +123,13 @@ public final class DashboardHandler extends AbstractSubsystem {
     byte[] receivedBytes = new byte[65535];
 
     private void handleDashboardPackets() {
-        if (receiveingSocket == null) return;
+        if (receivingSocket == null) return;
 
         for (int i = 0; i < 100; i++) { // Receive up to 100 packets at a time
             try {
                 DatagramPacket receivedPacket = new DatagramPacket(receivedBytes, receivedBytes.length);
                 try {
-                    receiveingSocket.receive(receivedPacket); // Will block for up to 5ms
+                    receivingSocket.receive(receivedPacket); // Will block for up to 5ms
                 } catch (SocketTimeoutException ignored) { // We don't care about timeouts
                     return;
                 }
