@@ -401,7 +401,8 @@ public final class Shooter extends AbstractSubsystem {
      * Checks if shooter is at target speed within a configurable allowed error.
      */
     public boolean isShooterAtTargetSpeed() {
-        return Math.abs(getShooterRPM() - getDesiredShooterSpeed()) < Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM;
+        return true;
+        //return Math.abs(getShooterRPM() - getDesiredShooterSpeed()) < Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM;
     }
 
     /**
@@ -496,8 +497,8 @@ public final class Shooter extends AbstractSubsystem {
                 break;
 
             case ON:
-                shooterWheelMaster.set(ControlMode.PercentOutput, 1);
-                //shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed); // Sets shooter motor to desired shooter
+                //shooterWheelMaster.set(ControlMode.PercentOutput, 1);
+                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed); // Sets shooter motor to desired shooter
 
                 moveHoodMotor(); // Sets Motor to travel to desired hood angle
 
