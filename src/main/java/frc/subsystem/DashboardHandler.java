@@ -2,7 +2,6 @@ package frc.subsystem;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
-import frc.utility.OrangeUtility;
 import frc.utility.Serializer;
 import frc.utility.Timer;
 import frc.utility.net.DashboardConnection;
@@ -67,7 +66,7 @@ public final class DashboardHandler extends AbstractSubsystem {
 
         try {
             receiveingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
-            receiveingSocket.setSoTimeout(10);
+            receiveingSocket.setSoTimeout(5);
         } catch (SocketException e) {
             DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
         }
@@ -123,34 +122,37 @@ public final class DashboardHandler extends AbstractSubsystem {
 
     byte[] receivedBytes = new byte[65535];
 
-    private void getDashboardConnections() {
+    private void handleDashboardPackets() {
         if (receiveingSocket == null) return;
 
-        try {
-            DatagramPacket receivedPacket = new DatagramPacket(receivedBytes, receivedBytes.length);
+        for (int i = 0; i < 100; i++) { // Receive up to 100 packets at a time
             try {
-                receiveingSocket.receive(receivedPacket); // blocking call
-            } catch (SocketTimeoutException e) { // We don't care about timeouts
+                DatagramPacket receivedPacket = new DatagramPacket(receivedBytes, receivedBytes.length);
+                try {
+                    receiveingSocket.receive(receivedPacket); // Will block for up to 5ms
+                } catch (SocketTimeoutException ignored) { // We don't care about timeouts
+                    return;
+                }
+                char packetType = (char) receivedPacket.getData()[0];
+
+                if (packetHandlerMap.containsKey(packetType)) { // Find a handler for this packet type and call it
+                    packetHandlerMap.get(packetType).handlePacket(receivedPacket);
+                } else {
+                    DriverStation.reportWarning("Received packet with unknown packet type: " + packetType, false);
+                }
+            } catch (IOException e) {
+                if (Timer.getFPGATimestamp() > nextAllowedErrorTime) { // Only report errors once per 5 second
+                    DriverStation.reportError("Encountered an error while receiving data from the web dashboard", false);
+                    nextAllowedErrorTime = Timer.getFPGATimestamp() + 5;
+                }
                 return;
             }
-            char packetType = (char) receivedPacket.getData()[0];
-
-            if (packetHandlerMap.containsKey(packetType)) { // Find a handler for this packet type and call it
-                packetHandlerMap.get(packetType).handlePacket(receivedPacket);
-            }
-        } catch (IOException e) {
-            if (Timer.getFPGATimestamp() > nextAllowedErrorTime) { // Only report errors once per 5 second
-                DriverStation.reportError("Encountered an error while receiving data from the web dashboard",
-                        false);
-                nextAllowedErrorTime = Timer.getFPGATimestamp() + 5;
-            }
         }
-        OrangeUtility.sleep(50); //Do we need this?
     }
 
     @Override
     public void update() {
-        getDashboardConnections();
+        handleDashboardPackets();
         pushLog();
     }
 

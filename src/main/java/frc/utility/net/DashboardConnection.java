@@ -13,11 +13,11 @@ public class DashboardConnection implements Closeable {
     }
 
     public DashboardConnection(DatagramSocket datagramSocket) {
-        this(datagramSocket, System.currentTimeMillis() + 3000);
+        this(datagramSocket, System.currentTimeMillis() + 10000);
     }
 
     public void keepAlive() {
-        timeoutTime = System.currentTimeMillis() + 3000;
+        timeoutTime = System.currentTimeMillis() + 10000;
     }
 
     @Override
