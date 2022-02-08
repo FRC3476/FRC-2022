@@ -15,18 +15,24 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class DashboardHandler extends AbstractSubsystem {
+
+    private @Nullable DatagramSocket receiveingSocket;
+    private double nextAllowedErrorTime = 0;
 
     /**
      * HashMap of IntetAdress to DashboardConnection
      */
     private final HashMap<InetAddress, DashboardConnection> dashboardConnections = new HashMap<>();
-
-    private final HashMap<Character, PacketHandler> packetHandlerHashMap = new HashMap<>();
+    private static final Map<String, Object> LOG_DATA_MAP = new ConcurrentHashMap<>();
+    private static final ReadWriteLock LOG_DATA_MAP_LOCK = new ReentrantReadWriteLock();
+    private final HashMap<Character, PacketHandler> packetHandlerMap = new HashMap<>();
 
     {
-        packetHandlerHashMap.put('k', packet -> {
+        packetHandlerMap.put('k', packet -> {
             InetAddress address = packet.getAddress();
             if (dashboardConnections.containsKey(address)) {
                 synchronized (dashboardConnections) {
@@ -47,17 +53,12 @@ public final class DashboardHandler extends AbstractSubsystem {
         });
     }
 
-    private static final Map<String, Object> LOG_DATA_MAP = new ConcurrentHashMap<>();
-
     private static DashboardHandler instance = new DashboardHandler(Constants.WEB_DASHBOARD_SEND_PERIOD_MS);
-
-    private @Nullable DatagramSocket receiveingSocket;
 
     public static DashboardHandler getInstance() {
         return instance;
     }
 
-    double nextAllowedErrorTime = 0;
 
     private DashboardHandler(int period) {
         super(period);
@@ -69,19 +70,28 @@ public final class DashboardHandler extends AbstractSubsystem {
             DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
         }
     }
-
     public void log(String key, Object value) {
-        synchronized (LOG_DATA_MAP) {
+        LOG_DATA_MAP_LOCK.readLock().lock();
+        // We're adding a read lock here because there can only be one writer, but there can be many readers. The
+        // ConcurrentHashMap is thread-safe and will handle the synchronization with multiple writes for us. We then only put a
+        // write lock when reading it to prevent any other writes from happening while we're serializing.
+        try {
             LOG_DATA_MAP.put(key, value);
+        } finally {
+            LOG_DATA_MAP_LOCK.readLock().unlock();
         }
     }
 
     public void pushLog() {
         try {
             String json;
-            synchronized (LOG_DATA_MAP) {
+            LOG_DATA_MAP_LOCK.writeLock().lock(); // Ensure that no other writes happen while we're serializing
+            try {
                 json = Serializer.serializeToString(LOG_DATA_MAP);
+            } finally {
+                LOG_DATA_MAP_LOCK.writeLock().unlock();
             }
+
             synchronized (dashboardConnections) {
                 Iterator<DashboardConnection> iterator = dashboardConnections.values().iterator();
                 while (iterator.hasNext()) {
@@ -123,8 +133,8 @@ public final class DashboardHandler extends AbstractSubsystem {
             }
             char packetType = (char) receivedPacket.getData()[0];
 
-            if (packetHandlerHashMap.containsKey(packetType)) { // Find a handler for this packet type and call it
-                packetHandlerHashMap.get(packetType).handlePacket(receivedPacket);
+            if (packetHandlerMap.containsKey(packetType)) { // Find a handler for this packet type and call it
+                packetHandlerMap.get(packetType).handlePacket(receivedPacket);
             }
         } catch (IOException e) {
             if (Timer.getFPGATimestamp() > nextAllowedErrorTime) { // Only report errors once per 5 second
@@ -138,6 +148,7 @@ public final class DashboardHandler extends AbstractSubsystem {
 
     @Override
     public void update() {
+        getDashboardConnections();
         pushLog();
     }
 
