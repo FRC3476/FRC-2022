@@ -4,8 +4,6 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final int period;
@@ -61,7 +59,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
      * This function will be called repeatedly when the thread is alive. The period will be whatever you defined when creating the
      * object
      */
-    public void update() throws IOException {
+    public void update() {
 
     }
 
@@ -70,23 +68,15 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     @Override
     @SuppressWarnings("BusyWait")
     public void run() {
-
         while (signal != ThreadSignal.DEAD) {
-
             double startTime = Timer.getFPGATimestamp();
             if (signal == ThreadSignal.ALIVE) {
-                try {
-                    update();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                logInterval++;
-                if (logInterval >= loggingInterval) {
-                    if (this.getClass().equals(Drive.class)) {
-                        logData();
-                    }
+                update();
 
-                    logInterval = 1;
+                logInterval++;
+                if (logInterval > loggingInterval) {
+                    logData();
+                    logInterval = 0;
                 }
             }
             double executionTimeMS = (Timer.getFPGATimestamp() - startTime) * 1000;
