@@ -368,19 +368,19 @@ public final class RobotTracker extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        SmartDashboard.putNumber("Last Estimated Robot Pose X", getLastEstimatedPoseMeters().getX());
-        SmartDashboard.putNumber("Last Estimated Robot Pose Y", getLastEstimatedPoseMeters().getY());
-        SmartDashboard.putNumber("Last Estimated Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getDegrees());
-        SmartDashboard.putNumber("Last Estimated Robot Velocity X", getLastChassisSpeeds().vxMetersPerSecond);
-        SmartDashboard.putNumber("Last Estimated Robot Velocity Y", getLastChassisSpeeds().vyMetersPerSecond);
-        SmartDashboard.putNumber("Last Estimated Robot Velocity Theta", getLastChassisSpeeds().omegaRadiansPerSecond);
+        logData("Last Estimated Robot Pose X", getLastEstimatedPoseMeters().getX());
+        logData("Last Estimated Robot Pose Y", getLastEstimatedPoseMeters().getY());
+        logData("Last Estimated Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getDegrees());
+        logData("Last Estimated Robot Velocity X", getLastChassisSpeeds().vxMetersPerSecond);
+        logData("Last Estimated Robot Velocity Y", getLastChassisSpeeds().vyMetersPerSecond);
+        logData("Last Estimated Robot Velocity Theta", getLastChassisSpeeds().omegaRadiansPerSecond);
 
-//        SmartDashboard.putNumber("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());
-//        SmartDashboard.putNumber("Latency Comped Robot Pose Y", getLatencyCompedPoseMeters().getX());
-//        SmartDashboard.putNumber("Latency Comped Robot Pose Angle", getLatencyCompedPoseMeters().getRotation().getDegrees());
-//        SmartDashboard.putNumber("Latency Comped Robot Velocity X", getLatencyCompedChassisSpeeds().vxMetersPerSecond);
-//        SmartDashboard.putNumber("Latency Comped Robot Velocity Y", getLatencyCompedChassisSpeeds().vyMetersPerSecond);
-//        SmartDashboard.putNumber("Latency Comped Robot Velocity Theta", getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+//        logData("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());
+//        logData("Latency Comped Robot Pose Y", getLatencyCompedPoseMeters().getX());
+//        logData("Latency Comped Robot Pose Angle", getLatencyCompedPoseMeters().getRotation().getDegrees());
+//        logData("Latency Comped Robot Velocity X", getLatencyCompedChassisSpeeds().vxMetersPerSecond);
+//        logData("Latency Comped Robot Velocity Y", getLatencyCompedChassisSpeeds().vyMetersPerSecond);
+//        logData("Latency Comped Robot Velocity Theta", getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
 
         SmartDashboard.putNumber("Timestamp", currentOdometryTime);
     }

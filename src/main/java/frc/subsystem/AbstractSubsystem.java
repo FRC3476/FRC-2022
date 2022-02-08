@@ -38,7 +38,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     public abstract void logData();
 
     public void logData(String key, Object value) {
-        Logger.getInstance().log(key, value);
+        DashboardHandler.getInstance().log(subsystemName + ' ' + key, value);
     }
 
     public void pause() {
