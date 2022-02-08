@@ -106,6 +106,7 @@ public final class DashboardHandler extends AbstractSubsystem {
                         try {
                             entry.datagramSocket.send(new DatagramPacket(bytes, bytes.length));
                         } catch (PortUnreachableException e) {
+                            entry.close();
                             iterator.remove(); // Remove the connection if it's unreachable
                         }
                     }
