@@ -60,6 +60,9 @@ public final class Shooter extends AbstractSubsystem {
     // Negative 1 used for a check to see if homingStartTime has been initialized in HOMING case
     private double homingStartTime = -1;
 
+    // Makes it so feeder can run when not at proper hood and or flywheel speed
+    private boolean feederChecksDisabled = false;
+
     // Declarations of Modes and States
 
     /**
@@ -468,6 +471,21 @@ public final class Shooter extends AbstractSubsystem {
                 CANSparkMax.ControlType.kPosition);
     }
 
+    public boolean isHoodStopped() {
+        return true;
+        // TODO: Make this work as intended instead of just returning true
+        // return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
+    }
+
+    public void disableFeederChecks() {
+        feederChecksDisabled = true;
+    }
+
+    public void enableFeederChecks() {
+        feederChecksDisabled = false;
+    }
+
+
     /**
      * Update Method for Shooter.
      * <p>
@@ -503,8 +521,9 @@ public final class Shooter extends AbstractSubsystem {
                 moveHoodMotor(); // Sets Motor to travel to desired hood angle
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
-                // is at target speed
-                if ((feederWheelState == FeederWheelState.FORWARD) && isHoodStopped() && isShooterAtTargetSpeed()) {
+                // is at target speed. Will also enable if feeder wheel is enabled forward and checks are disabled
+                if (((feederWheelState == FeederWheelState.FORWARD) && isHoodStopped() && isShooterAtTargetSpeed())
+                        || (feederWheelState == FeederWheelState.FORWARD) && feederChecksDisabled) {
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
@@ -589,11 +608,6 @@ public final class Shooter extends AbstractSubsystem {
 
                 break;
         }
-    }
-
-    private boolean isHoodStopped() {
-        return true;
-        //return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
     }
 
     /**
