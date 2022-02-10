@@ -87,8 +87,8 @@ public class Robot extends TimedRobot {
     //Control loop states
     boolean limelightTakeSnapshots;
     private double hoodPosition = 55;
-    private double shooterSpeed = 4000;
-    private boolean visionOn = true;
+    private double shooterSpeed = 2000;
+    private boolean visionOn = false;
     private int shooterMode = 1;
     private boolean targetFound = false;
 
@@ -230,16 +230,16 @@ public class Robot extends TimedRobot {
         if (buttonPanel.getRisingEdge(1)) {
             hoodPosition = 25;
             shooterSpeed = 2000;
-            visionOn = true;
+            visionOn = false;
             shooterMode = 1;
         } else if (buttonPanel.getRisingEdge(2)) {
             hoodPosition = 33;
-            visionOn = true;
-            shooterSpeed = 2000;
+            visionOn = false;
+            shooterSpeed = 3000;
             shooterMode = 2;
         } else if (buttonPanel.getRisingEdge(3)) {
             hoodPosition = 55;
-            shooterSpeed = 2000;
+            shooterSpeed = 4000;
             visionOn = false;
             shooterMode = 3;
         }
