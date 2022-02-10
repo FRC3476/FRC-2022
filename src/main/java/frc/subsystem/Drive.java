@@ -634,7 +634,7 @@ public final class Drive extends AbstractSubsystem {
                 swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, Math.toRadians(deltaSpeed),
                         RobotTracker.getInstance().getGyroAngle()));
             } else {
-                swerveDrive(new ChassisSpeeds(0, 0, Math.toRadians(deltaSpeed)));
+                swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(deltaSpeed)));
             }
 
             if (curSpeed < 0.5) {

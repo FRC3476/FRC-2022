@@ -177,8 +177,20 @@ public class Robot extends TimedRobot {
             limelight.takeSnapshots(limelightTakeSnapshots);
             System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
         }
+
+        // Feeder wheel will not check for shooter speed and hood angle to be correct before
+        // enabling when stick button 2 is held down
+        if (stick.getRisingEdge(2)) {
+            shooter.disableFeederChecks();
+        }
+
+        if (stick.getFallingEdge(2)) {
+            shooter.enableFeederChecks();
+        }
+
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
     }
+
 
     @Override
     public void autonomousInit() {
