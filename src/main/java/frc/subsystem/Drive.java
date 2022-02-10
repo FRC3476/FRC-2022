@@ -334,7 +334,7 @@ public final class Drive extends AbstractSubsystem {
         return angleDiff;
     }
 
-    @NotNull ChassisSpeeds lastRequestedSpeed =
+    @NotNull ChassisSpeeds lastRequestedVelocity =
             new ChassisSpeeds(0, 0, 0);
 
     /**
@@ -352,19 +352,19 @@ public final class Drive extends AbstractSubsystem {
         double maxVelocityChange = getMaxAllowedVelocityChange();
         double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
 
-        if (lastLoopTime - Timer.getFPGATimestamp() > 0.015) lastRequestedSpeed = commandedVelocity;
+        if (lastLoopTime - Timer.getFPGATimestamp() > 0.150) lastRequestedVelocity = commandedVelocity;
         // Sets the last call of the method to the current time
         lastLoopTime = Timer.getFPGATimestamp();
 
 
         Translation2d velocityVectorChange = new Translation2d(
-                commandedVelocity.vxMetersPerSecond - lastRequestedSpeed.vxMetersPerSecond,
-                commandedVelocity.vyMetersPerSecond - lastRequestedSpeed.vyMetersPerSecond);
+                commandedVelocity.vxMetersPerSecond - lastRequestedVelocity.vxMetersPerSecond,
+                commandedVelocity.vyMetersPerSecond - lastRequestedVelocity.vyMetersPerSecond);
 
         // Convert from cartesian to polar coordinate system
         double velocityChangeMagnitudeSquared = (velocityVectorChange.getX() * velocityVectorChange.getX()) +
                 (velocityVectorChange.getY() * velocityVectorChange.getY());
-        double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX()); // remove
+        double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX());
 
         ChassisSpeeds limitedVelocity = commandedVelocity;
 
@@ -377,12 +377,11 @@ public final class Drive extends AbstractSubsystem {
                             Math.sin(velocityDiffAngle) * maxVelocityChange);
 
             // Compute limited velocity
-            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(new Translation2d(
-                    lastRequestedSpeed.vxMetersPerSecond, lastRequestedSpeed.vyMetersPerSecond
-            ));
+            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(
+                    new Translation2d(lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond)
+            );
 
-            // Does not limit acceleration if slowing down
-//            if (isRobotSlowingDown()) {
+
             // Convert to format compatible with serveDrive
             limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
                     commandedVelocity.omegaRadiansPerSecond);
@@ -390,18 +389,18 @@ public final class Drive extends AbstractSubsystem {
 
 
         // Checks if requested change in Angular Velocity is greater than allowed
-        if (Math.abs(
-                commandedVelocity.omegaRadiansPerSecond - lastRequestedSpeed.omegaRadiansPerSecond) > maxAngularVelocityChange) {
+        if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond)
+                > maxAngularVelocityChange) {
             // Adds the allowed velocity change to actual velocity, includes the sign of motion
             limitedVelocity.omegaRadiansPerSecond =
                     Math.copySign(maxAngularVelocityChange,
-                            commandedVelocity.omegaRadiansPerSecond - lastRequestedSpeed.omegaRadiansPerSecond) +
-                            lastRequestedSpeed.omegaRadiansPerSecond;
+                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond) +
+                            lastRequestedVelocity.omegaRadiansPerSecond;
         } else {
             limitedVelocity.omegaRadiansPerSecond = commandedVelocity.omegaRadiansPerSecond;
         }
 
-        lastRequestedSpeed = limitedVelocity;
+        lastRequestedVelocity = limitedVelocity; // save our current commanded velocity to be used in next iteration
         return limitedVelocity;
     }
 
