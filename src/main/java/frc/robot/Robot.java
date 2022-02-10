@@ -122,6 +122,12 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        if (DriverStation.isTeleopEnabled()) {
+            xbox.update();
+            stick.update();
+            buttonPanel.update();
+        }
+
         //Listen changes in the network auto
         if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
             lastAutoPath = autoPath.getString(null);
