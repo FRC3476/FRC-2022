@@ -40,7 +40,7 @@ public final class Constants {
     /**
      * Relative position of the limelight from the center of the robot.
      */
-    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.5, 0.5); //TODO: CHANGE
+    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
     public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
 
     //Drive Constants
