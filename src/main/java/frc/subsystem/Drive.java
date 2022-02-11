@@ -441,28 +441,6 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     * Checks to see if the robot is decelerating
-     *
-     * @return true if slowing down, false if not
-     */
-    boolean isRobotSlowingDown() {
-        // Updates the current speed stored to the real current speed
-        double currentSpeedSquared = (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond
-                * RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vxMetersPerSecond) +
-                (RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond *
-                        RobotTracker.getInstance().getLatencyCompedChassisSpeeds().vyMetersPerSecond);
-
-        logData("Current Speed Squared", currentSpeedSquared);
-
-        boolean isDecelerating = currentSpeedSquared < previousSpeedSquared;
-
-        // updates previous speed for next iteration
-        previousSpeedSquared = currentSpeedSquared;
-
-        return isDecelerating;
-    }
-
-    /**
      * Sets the motor voltage
      *
      * @param module       The module to set the voltage on
@@ -600,7 +578,9 @@ public final class Drive extends AbstractSubsystem {
      * Default method when the x and y velocity and the target heading are not passed
      */
     private void updateTurn() {
-        updateTurn(0, 0, wantedHeading, false); // Field relative flag won't do anything since we're not moving
+        updateTurn(new ControllerDriveInputs(0, 0, 0), wantedHeading, false); // Field relative flag won't do anything since
+        // we're
+        // not moving
     }
 
     /**
@@ -608,8 +588,13 @@ public final class Drive extends AbstractSubsystem {
      * to face a target
      * <p>
      * xVelocity and yVelocity are in m/s
+     *
+     * @param controllerDriveInputs The x and y velocity of the robot (rotation is ignored)
+     * @param targetHeading         The target heading the robot should face
+     * @param useFieldRelative      Whether the target heading is field relative or robot relative
      */
-    public void updateTurn(double xVelocity, double yVelocity, @NotNull Rotation2d targetHeading, boolean useFieldRelative) {
+    public void updateTurn(ControllerDriveInputs controllerDriveInputs, @NotNull Rotation2d targetHeading,
+                           boolean useFieldRelative) {
         turnPID.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
                 RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
@@ -631,10 +616,13 @@ public final class Drive extends AbstractSubsystem {
         } else {
             isAiming = true;
             if (useFieldRelative) {
-                swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, Math.toRadians(deltaSpeed),
+                swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                        controllerDriveInputs.getX(), controllerDriveInputs.getY(),
+                        Math.toRadians(deltaSpeed),
                         RobotTracker.getInstance().getGyroAngle()));
             } else {
-                swerveDrive(new ChassisSpeeds(xVelocity, yVelocity, Math.toRadians(deltaSpeed)));
+                swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX(), controllerDriveInputs.getY(),
+                        Math.toRadians(deltaSpeed)));
             }
 
             if (curSpeed < 0.5) {
@@ -674,7 +662,6 @@ public final class Drive extends AbstractSubsystem {
             logData("Drive Motor " + i + " Velocity", getSwerveDriveVelocity(i) / 60.0d);
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getStatorCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
-            logData("Is Robot Decelerating", isRobotSlowingDown());
         }
     }
 
