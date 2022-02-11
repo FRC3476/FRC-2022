@@ -2,6 +2,8 @@
 
 package frc.utility;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import frc.utility.geometry.MutableTranslation2d;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -271,5 +273,18 @@ public class OrangeUtility {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Returns the speed of the given entity in m/s.
+     *
+     * @return the speed of the given entity in m/s
+     */
+    public static double getSpeed(ChassisSpeeds speeds) {
+        return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    }
+
+    public static MutableTranslation2d getTranslation2d(ChassisSpeeds speeds) {
+        return new MutableTranslation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
 }

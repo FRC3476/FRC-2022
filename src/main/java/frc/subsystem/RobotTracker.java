@@ -11,7 +11,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.Timer;
 import org.jetbrains.annotations.NotNull;
@@ -106,7 +105,7 @@ public final class RobotTracker extends AbstractSubsystem {
     }
 
     private final List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
-    private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(20);
+    private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(102); // 1s of data at 10ms per
     private final Queue<Map.Entry<Double, Pose2d>> deferredVisionUpdates = new ArrayDeque<>(20);
     List<Map.Entry<Double, Translation2d>> previousAccelerometerData = new ArrayList<>(20);
 
@@ -124,6 +123,9 @@ public final class RobotTracker extends AbstractSubsystem {
 
 
         updateOdometry(time, gyroSensor.getRotation2d(), drive.getSwerveModuleStates());
+
+        previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
+        previousGyroRotations.subList(100, previousGyroRotations.size()).clear(); // Clear old data
 
         synchronized (this) {
             latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
@@ -251,7 +253,7 @@ public final class RobotTracker extends AbstractSubsystem {
      * @param time the time of the measurement
      * @return the state of the gyro at the specified time
      */
-    private Rotation2d getGyroRotation(double time) {
+    public Rotation2d getGyroRotation(double time) {
         return getPositionOnListForTime(previousGyroRotations, time);
     }
 
@@ -374,7 +376,7 @@ public final class RobotTracker extends AbstractSubsystem {
         logData("Last Estimated Robot Velocity X", getLastChassisSpeeds().vxMetersPerSecond);
         logData("Last Estimated Robot Velocity Y", getLastChassisSpeeds().vyMetersPerSecond);
         logData("Last Estimated Robot Velocity Theta", getLastChassisSpeeds().omegaRadiansPerSecond);
-
+        
 //        logData("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());
 //        logData("Latency Comped Robot Pose Y", getLatencyCompedPoseMeters().getX());
 //        logData("Latency Comped Robot Pose Angle", getLatencyCompedPoseMeters().getRotation().getDegrees());
@@ -382,7 +384,7 @@ public final class RobotTracker extends AbstractSubsystem {
 //        logData("Latency Comped Robot Velocity Y", getLatencyCompedChassisSpeeds().vyMetersPerSecond);
 //        logData("Latency Comped Robot Velocity Theta", getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
 
-        SmartDashboard.putNumber("Timestamp", currentOdometryTime);
+        logData("Timestamp", currentOdometryTime);
     }
 
     @Override

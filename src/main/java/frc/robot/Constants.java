@@ -34,9 +34,13 @@ public final class Constants {
     public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
 
     /**
+     * Max speed of the robot while shooter (m/s)
+     */
+    public static final double MAX_SHOOT_SPEED = 0.1;
+    /**
      * Relative position of the limelight from the center of the robot.
      */
-    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.5, 0.5); //TODO: CHANGE
+    public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
     public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
 
     //Drive Constants
@@ -156,15 +160,15 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 20; // TODO: Need to tune at field
+    public static final double MAX_ACCELERATION = 20;
 
     /**
-     * Units are in Radians per Second Squared 50 degrees (In radians) per second squared
+     * Units are in Radians per Second Squared
      */
     public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 9);
 
     //field/Vision Manager constants
-    public static final Translation2d GOAL_POSITION = new Translation2d(1, 1); //TODO: get actual values
+    public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
     public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
     /**
      * The distance to the center of the goal to the vision tape.
