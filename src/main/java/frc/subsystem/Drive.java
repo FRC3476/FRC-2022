@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 public final class Drive extends AbstractSubsystem {
 
     public enum DriveState {
-        TELEOP, TURN, HOLD, DONE, RAMSETE
+        TELEOP, TURN, HOLD, DONE, RAMSETE, STOP
     }
 
     public boolean useRelativeEncoderPosition = false;
@@ -564,6 +564,8 @@ public final class Drive extends AbstractSubsystem {
             case RAMSETE:
                 updateRamsete();
                 break;
+            case STOP:
+                swerveDrive(new ChassisSpeeds(0, 0, 0));
         }
 
     }
@@ -655,7 +657,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     synchronized public void stopMovement() {
-        swerveDrive(new ChassisSpeeds(0, 0, 0));
+        setDriveState(DriveState.STOP);
     }
 
     synchronized public boolean isFinished() {
