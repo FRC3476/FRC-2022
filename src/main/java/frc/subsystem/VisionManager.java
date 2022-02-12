@@ -88,13 +88,17 @@ public final class VisionManager extends AbstractSubsystem {
         }
 
         updateShooterState(); // TODO: this call will be doubled if the operator is also trying to turn the flywheel on.
-        MutableTranslation2d relativeRobotPosition = predictTranslationAtZeroVelocity(
-                robotTracker.getLatencyCompedChassisSpeeds(),
-                robotTracker.getLatencyCompedPoseMeters().getTranslation()).minus(Constants.GOAL_POSITION);
-        Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
+        Rotation2d targetRotation = getPredictedRotationTarget();
         drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
 
         shooter.setFiring(!drive.isAiming());
+    }
+
+    public Rotation2d getPredictedRotationTarget() {
+        MutableTranslation2d relativeRobotPosition = predictTranslationAtZeroVelocity(
+                robotTracker.getLatencyCompedChassisSpeeds(),
+                robotTracker.getLatencyCompedPoseMeters().getTranslation()).minus(Constants.GOAL_POSITION);
+        return new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
     }
 
     /**
