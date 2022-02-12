@@ -9,6 +9,7 @@ import frc.auton.guiauto.serialization.AbstractAutonomousStep;
 import frc.auton.guiauto.serialization.Autonomous;
 import frc.auton.guiauto.serialization.TrajectoryAutonomousStep;
 import frc.auton.guiauto.serialization.command.SendableScript;
+import frc.subsystem.Drive;
 import frc.subsystem.RobotTracker;
 import frc.utility.Serializer;
 
@@ -84,6 +85,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         }
 
         System.out.println("finished: " + Timer.getFPGATimestamp());
+        Drive.getInstance().stopMovement();
 
         synchronized (this) {
             done = true;

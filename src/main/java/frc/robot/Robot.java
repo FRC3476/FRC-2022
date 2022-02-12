@@ -87,10 +87,8 @@ public class Robot extends TimedRobot {
     //Control loop states
     boolean limelightTakeSnapshots;
     private double hoodPosition = 55;
-    private double shooterSpeed = 4000;
-    private boolean visionOn = true;
-    private int shooterMode = 1;
-    private boolean targetFound = false;
+    private double shooterSpeed = 2000;
+    private boolean visionOn = false;
 
     // Input Control
     private double firstPressTime = 0;
@@ -122,6 +120,12 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        if (DriverStation.isTeleopEnabled()) {
+            xbox.update();
+            stick.update();
+            buttonPanel.update();
+        }
+
         //Listen changes in the network auto
         if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
             lastAutoPath = autoPath.getString(null);
@@ -171,8 +175,20 @@ public class Robot extends TimedRobot {
             limelight.takeSnapshots(limelightTakeSnapshots);
             System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
         }
+
+        // Feeder wheel will not check for shooter speed and hood angle to be correct before
+        // enabling when stick button 2 is held down
+        if (stick.getRisingEdge(2)) {
+            shooter.disableFeederChecks();
+        }
+
+        if (stick.getFallingEdge(2)) {
+            shooter.enableFeederChecks();
+        }
+
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
     }
+
 
     @Override
     public void autonomousInit() {
@@ -218,6 +234,10 @@ public class Robot extends TimedRobot {
         drive.configBrake();
     }
 
+    private final Object driverForcingVisionOn = new Object();
+    private final Object buttonPanelForcingVisionOn = new Object();
+    private final Object resettingPoseVisionOn = new Object();
+
     /**
      * This function is called periodically during operator control.
      */
@@ -230,60 +250,51 @@ public class Robot extends TimedRobot {
         if (buttonPanel.getRisingEdge(1)) {
             hoodPosition = 25;
             shooterSpeed = 2000;
-            visionOn = true;
-            shooterMode = 1;
+            visionOn = false;
         } else if (buttonPanel.getRisingEdge(2)) {
             hoodPosition = 33;
-            visionOn = true;
-            shooterSpeed = 2000;
-            shooterMode = 2;
+            visionOn = false;
+            shooterSpeed = 3000;
         } else if (buttonPanel.getRisingEdge(3)) {
             hoodPosition = 55;
-            shooterSpeed = 2000;
+            shooterSpeed = 4000;
             visionOn = false;
-            shooterMode = 3;
         }
 
         if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1)) {
-            visionManager.forceVisionOn(true);
+            visionManager.forceVisionOn(driverForcingVisionOn);
 
             if (!visionOn || stick.getRawButton(1)) { //If vision is off, or we're requesting to do a no vision shot
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
             } else {
-                if (buttonPanel.getRawButton(5)) {
-                    visionManager.shootAndMove(getControllerDriveInputs());
-                } else {
-                    visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
-                }
+                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             shooter.setFiring(false);
-            if (!buttonPanel.getRawButton(6) && !buttonPanel.getRawButton(13)) {
-                // We're not trying to run the flywheel and not trying to force update the pose
-                visionManager.forceVisionOn(false);
-            }
-            if (buttonPanel.getRawButton(11)) { // If we're climbing don't allow the robot to be driven
+            visionManager.unForceVisionOn(driverForcingVisionOn);
+            if (!buttonPanel.getRawButton(11)) { // If we're climbing don't allow the robot to be driven
                 doNormalDriving();
             }
         }
 
         if (buttonPanel.getRawButton(7)) {
             // Turns Shooter flywheel on considering a moving robot
-            visionManager.forceVisionOn(true);
+            visionManager.forceVisionOn(buttonPanelForcingVisionOn);
             visionManager.updateShooterState();
         } else if (buttonPanel.getRawButton(6)) {
             //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
-            visionManager.forceVisionOn(true);
+            visionManager.forceVisionOn(buttonPanelForcingVisionOn);
             visionManager.updateShooterStateStaticPose();
         } else if (buttonPanel.getRawButton(5)) {
             //Turn shooter flywheel on with manuel settings
+            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
             shooter.setShooterSpeed(shooterSpeed);
             shooter.setHoodPosition(hoodPosition);
         } else {
+            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
             shooter.setShooterSpeed(0); //Turns off shooter flywheel
-            targetFound = false;
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
@@ -323,8 +334,10 @@ public class Robot extends TimedRobot {
         }
 
         if (buttonPanel.getRawButton(13)) {
-            visionManager.forceVisionOn(true);
+            visionManager.forceVisionOn(resettingPoseVisionOn);
             visionManager.forceUpdatePose();
+        } else {
+            visionManager.unForceVisionOn(resettingPoseVisionOn);
         }
 
         if ((shooter.getShooterState() == Shooter.ShooterState.OFF)) {
@@ -357,6 +370,10 @@ public class Robot extends TimedRobot {
             climber.setClimberMotor(0);
         }
 
+        if (stick.getRisingEdge(13)) {
+            climber.forceAdvanceStep();
+        }
+
         if (buttonPanel.getRisingEdge(11)) {
             if (climber.getClimbState() == ClimbState.IDLE) {
                 climber.startClimb();
@@ -364,9 +381,9 @@ public class Robot extends TimedRobot {
                 climber.resumeClimb();
                 climber.advanceStep();
             }
-        } else if (!buttonPanel.getRawButton(11)) {
+        } else if (buttonPanel.getFallingEdge(11)) {
             climber.pauseClimb();
-        } else {
+        } else if (buttonPanel.getRawButton(11)) {
             drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
         }
 
@@ -374,7 +391,6 @@ public class Robot extends TimedRobot {
             climber.stopClimb();
         }
 
-        // Shouldn't this be getRisingEdge?
         if (buttonPanel.getRisingEdge(10)) {
             climber.setStepByStep(!climber.isStepByStep());
         }
