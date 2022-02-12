@@ -506,7 +506,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Tells the robot to start aiming while driving the auto path
      */
-    private boolean isAutoAiming;
+    private boolean isAutoAiming = false;
 
     public void setAutoAiming(boolean autoAiming) {
         isAutoAiming = autoAiming;
