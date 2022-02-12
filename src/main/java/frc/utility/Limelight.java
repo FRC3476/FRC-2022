@@ -112,7 +112,7 @@ public class Limelight {
      * @return Whether the limelight has any valid targets
      */
     public boolean isTargetVisible() {
-        return limelightTable.getEntry("tv").getDouble(0) == 1;
+        return limelightTable.getEntry("tv").getDouble(0) == 1 && isConnected();
     }
 
     double lastUpdate = 0;
