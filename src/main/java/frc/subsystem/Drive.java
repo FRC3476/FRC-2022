@@ -594,9 +594,8 @@ public final class Drive extends AbstractSubsystem {
      * Default method when the x and y velocity and the target heading are not passed
      */
     private void updateTurn() {
-        updateTurn(new ControllerDriveInputs(0, 0, 0), wantedHeading, false); // Field relative flag won't do anything since
-        // we're
-        // not moving
+        updateTurn(new ControllerDriveInputs(0, 0, 0), wantedHeading, false);
+        // Field relative flag won't do anything since we're not moving
     }
 
     /**
