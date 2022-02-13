@@ -2,6 +2,7 @@ package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -264,6 +265,8 @@ public class Climber extends AbstractSubsystem {
         climberMotor.configPeakOutputForward(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         climberMotor.configPeakOutputReverse(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         climberMotor.setNeutralMode(NeutralMode.Brake);
+        climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
+                Constants.CLIMBER_CURRENT_LIMIT, 0));
 
         elevatorArmContactSwitchA = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
         elevatorArmContactSwitchB = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
@@ -452,6 +455,8 @@ public class Climber extends AbstractSubsystem {
         logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
         logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
         logData("Climber Motor Current", climberMotor.getStatorCurrent());
+        logData("Climber Motor 2 Current", climberMotor2.getStatorCurrent());
+        logData("Climber Motor Current Limit", Constants.CLIMBER_CURRENT_LIMIT);
 
         logData("Elevator Arm Contact Switch A", elevatorArmContactSwitchA.get());
         logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get());
