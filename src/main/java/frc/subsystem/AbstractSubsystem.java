@@ -104,11 +104,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 update();
                 logInterval++;
                 if (logInterval >= loggingInterval) {
-//                    if (this.getClass().equals(Drive.class)) {
-//                        logData();
-//                        pushLog();
-//                    }
 
+                    logData();
+                    pushLog();
+                    
                     logInterval = 1;
                 }
             }

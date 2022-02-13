@@ -244,6 +244,8 @@ public final class Shooter extends AbstractSubsystem {
         hoodPID.setIZone(Constants.HOOD_I_ZONE);
         hoodPID.setOutputRange(-Constants.HOOD_MAX_OUTPUT, Constants.HOOD_MAX_OUTPUT);
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
+        hoodMotor.setInverted(true);
+        hoodAbsoluteEncoder.configSensorDirection(true);
     }
 
     /**
@@ -263,10 +265,10 @@ public final class Shooter extends AbstractSubsystem {
             hoodAngle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET;
 
             // Checks if Absolute Encoder is reading outside expected range
-            if (hoodAngle > 90.5 || hoodAngle < 49.5) {
-                DriverStation.reportWarning("Hood position reading values over MAX expected.\n" +
-                        "Should switch to home relative", false);
-            }
+//            if (hoodAngle > 90.5 || hoodAngle < 49.5) {
+//                DriverStation.reportWarning("Hood position reading values over MAX expected.\n" +
+//                        "Should switch to home relative", false);
+//            }
         } else {
             // If using Relative Encoder
             hoodAngle = hoodRelativeEncoder.getPosition();
@@ -277,8 +279,13 @@ public final class Shooter extends AbstractSubsystem {
 
     // Raw degree measurement from Absolute Encoder, The angle may need an offset
     private double getHoodAbsoluteEncoderValue() {
-        return hoodAbsoluteEncoder.getAbsolutePosition() * 360;
+        return hoodAbsoluteEncoder.getAbsolutePosition();
     }
+
+    private double getHoodRelativeAngle() {
+        return hoodRelativeEncoder.getPosition();
+    }
+
 
     /**
      * Sets ShooterState to HOMING.
@@ -676,6 +683,7 @@ public final class Shooter extends AbstractSubsystem {
     public void logData() {
         logData("Shooter Flywheel Speed", getShooterRPM());
         logData("Hood Angle", getHoodAngle());
+        logData("Relative Hood Angle", getHoodRelativeAngle());
         logData("Desired Shooter Speed", getDesiredShooterSpeed());
         logData("Desired Hood Angle", getDesiredHoodAngle());
         logData("Feeder Wheel State", getFeederWheelState());
