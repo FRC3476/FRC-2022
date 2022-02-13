@@ -13,6 +13,8 @@ import frc.utility.controllers.LazyTalonSRX;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
+
 public class Climber extends AbstractSubsystem {
     private static Climber instance = new Climber();
 
@@ -449,6 +451,7 @@ public class Climber extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
+        logData("Climber Motor Postion IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
         logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
         logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
         logData("Climber Motor Current", climberMotor.getStatorCurrent());

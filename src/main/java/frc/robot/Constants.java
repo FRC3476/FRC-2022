@@ -359,7 +359,7 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_KD = 0.0;
     public static final double CLIMBER_MOTOR_IZONE = 10;
     public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
-    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1.0;
+    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 0.1;
     public static final int CLIMBER_MOTOR_MAX_ERROR = 5;
 
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
@@ -375,6 +375,8 @@ public final class Constants {
     public static final int PIVOT_SOLENOID_ID = 2;
     public static final int BRAKE_SOLENOID_ID = 3;
 
+
+    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 8.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
     /**
      * The height to go to once the drivers request the climber to deploy
      */
@@ -383,12 +385,12 @@ public final class Constants {
     /**
      * If the elevator arm is below this height and going down, the climb will abort
      */
-    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 50;
+    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 50 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is above this height and going down, the climb will abort
      */
-    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 12000;
+    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 12000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
@@ -413,12 +415,12 @@ public final class Constants {
     /**
      * The max safe height for the elevator arm during the swinging part of the climb
      */
-    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 10000;
+    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 10000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
      */
-    public static final double MAX_CLIMBER_EXTENSION = 11000;
+    public static final double MAX_CLIMBER_EXTENSION = 11000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     //Robot Tracker
     public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
