@@ -362,6 +362,8 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_MAX_OUTPUT = 0.1;
     public static final int CLIMBER_MOTOR_MAX_ERROR = 5;
 
+    public static final int CLIMBER_CURRENT_LIMIT = 30;
+
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 1;
 

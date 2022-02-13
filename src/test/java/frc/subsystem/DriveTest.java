@@ -62,7 +62,11 @@ public class DriveTest {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
         Timer.setTime(55.1);
+
         drive.stopMovement();
+
+        drive.update();
+        
         for (int i = 0; i < drive.swerveMotors.length; i++) {
             assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
         }
