@@ -32,6 +32,7 @@ public final class Constants {
 
     // Vision Manager
     public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
+    public static final double SHOOT_TIME_PER_BALL = 0.2; // For Auto
 
     /**
      * Max speed of the robot while shooter (m/s)

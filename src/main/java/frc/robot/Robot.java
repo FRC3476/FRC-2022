@@ -370,6 +370,10 @@ public class Robot extends TimedRobot {
             climber.setClimberMotor(0);
         }
 
+        if (stick.getRisingEdge(13)) {
+            climber.forceAdvanceStep();
+        }
+
         if (buttonPanel.getRisingEdge(11)) {
             if (climber.getClimbState() == ClimbState.IDLE) {
                 climber.startClimb();
@@ -377,9 +381,9 @@ public class Robot extends TimedRobot {
                 climber.resumeClimb();
                 climber.advanceStep();
             }
-        } else if (!buttonPanel.getRawButton(11)) {
+        } else if (buttonPanel.getFallingEdge(11)) {
             climber.pauseClimb();
-        } else {
+        } else if (buttonPanel.getRawButton(11)) {
             drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
         }
 
@@ -387,7 +391,6 @@ public class Robot extends TimedRobot {
             climber.stopClimb();
         }
 
-        // Shouldn't this be getRisingEdge?
         if (buttonPanel.getRisingEdge(10)) {
             climber.setStepByStep(!climber.isStepByStep());
         }

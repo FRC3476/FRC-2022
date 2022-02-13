@@ -84,17 +84,21 @@ public final class VisionManager extends AbstractSubsystem {
             // that uses pure vision data to calculate the turn
             autoTurnRobotToTarget(controllerDriveInputs, useFieldRelative);
             updateShooterStateStaticPose(); // TODO: this call will be doubled if the operator is also trying to turn the flywheel on.
-            return;
-        }
 
-        updateShooterState(); // TODO: this call will be doubled if the operator is also trying to turn the flywheel on.
+            shooter.setFiring(!drive.isAiming() && !limelight.isTargetVisible());
+        } else {
+            updateShooterState(); // TODO: this call will be doubled if the operator is also trying to turn the flywheel on.
+            Rotation2d targetRotation = getPredictedRotationTarget();
+            drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
+            shooter.setFiring(!drive.isAiming());
+        }
+    }
+
+    public Rotation2d getPredictedRotationTarget() {
         MutableTranslation2d relativeRobotPosition = predictTranslationAtZeroVelocity(
                 robotTracker.getLatencyCompedChassisSpeeds(),
                 robotTracker.getLatencyCompedPoseMeters().getTranslation()).minus(Constants.GOAL_POSITION);
-        Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
-        drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
-
-        shooter.setFiring(!drive.isAiming());
+        return new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
     }
 
     /**
@@ -323,6 +327,29 @@ public final class VisionManager extends AbstractSubsystem {
             limelight.setLedMode(LedMode.ON);
             logData("Using Vision Info", "Not pointing at target");
         }
+    }
+
+
+    /**
+     * For auto use only
+     */
+    @SuppressWarnings("unused")
+    public void shootBalls(int numBalls) {
+        forceVisionOn(this);
+        shootAndMove(new ControllerDriveInputs(0, 0, 0), true);
+        updateShooterState();
+        while (!drive.isAiming() && !shooter.isHoodAtTargetAngle() && !shooter.isShooterAtTargetSpeed()) {
+            updateShooterState();
+            shootAndMove(new ControllerDriveInputs(0, 0, 0), true);
+        }
+        double shootUntilTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
+
+        shooter.setFiring(true);
+        while (Timer.getFPGATimestamp() < shootUntilTime) {
+            Thread.onSpinWait();
+        }
+        shooter.setFiring(false);
+        shooter.setShooterSpeed(0);
     }
 
 

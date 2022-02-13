@@ -3,7 +3,6 @@ package frc.auton.guiauto.serialization;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.Trajectory.State;
 import frc.auton.TemplateAuto;
@@ -98,6 +97,6 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
             scriptsToExecuteByTime.clear();
             scriptsToExecuteByPercent.clear();
         }
-        Drive.getInstance().swerveDrive(new ChassisSpeeds(0, 0, 0));
+        Drive.getInstance().stopMovement();
     }
 }
