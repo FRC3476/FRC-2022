@@ -5,7 +5,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import frc.robot.Constants;
 import frc.utility.Timer;
@@ -15,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
+import static frc.robot.Robot.pneumaticHub;
 
 public class Climber extends AbstractSubsystem {
     private static Climber instance = new Climber();
@@ -278,9 +278,12 @@ public class Climber extends AbstractSubsystem {
         pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
         pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
 
-        latchSolenoid = new Solenoid(PneumaticsModuleType.REVPH, Constants.LATCH_SOLENOID_ID); //TODO config solenoid type.
-        pivotSolenoid = new Solenoid(PneumaticsModuleType.REVPH, Constants.PIVOT_SOLENOID_ID); //TODO config solenoid type.
-        brakeSolenoid = new Solenoid(PneumaticsModuleType.REVPH, Constants.BRAKE_SOLENOID_ID); //TODO config solenoid type.
+        latchSolenoid = pneumaticHub.makeSolenoid(Constants.LATCH_SOLENOID_ID);
+        pivotSolenoid = pneumaticHub.makeSolenoid(Constants.PIVOT_SOLENOID_ID);
+        brakeSolenoid = pneumaticHub.makeSolenoid(Constants.BRAKE_SOLENOID_ID);
+
+        climberMotor.setInverted(true);
+        climberMotor2.setInverted(true);
     }
 
     /**
@@ -420,7 +423,7 @@ public class Climber extends AbstractSubsystem {
     public void setClimberMotor(double percentOutput) {
         isPaused = true;
         climbState = ClimbState.IDLE;
-        setBrakeState(Math.abs(percentOutput) < 1.0E-6 ? BrakeState.BRAKING : BrakeState.FREE);
+        setBrakeState(Math.abs(percentOutput) < 1.0E-2 ? BrakeState.BRAKING : BrakeState.FREE);
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
     }
     

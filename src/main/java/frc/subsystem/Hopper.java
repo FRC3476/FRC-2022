@@ -13,7 +13,7 @@ public class Hopper extends AbstractSubsystem {
     public static Hopper instance = new Hopper();
     LazyCANSparkMax hopperMotor;
     private final ColorSensorV3 topBall = new ColorSensorV3(I2C.Port.kMXP);
-    private final ColorSensorV3 bottomBall = new ColorSensorV3(I2C.Port.kOnboard);
+    //private final ColorSensorV3 bottomBall = new ColorSensorV3(Port.kMXP);
 
     private boolean topBallDetected = false;
     private boolean bottomBallDetected = false;
@@ -52,17 +52,17 @@ public class Hopper extends AbstractSubsystem {
 
     public void checkBallColor() {
         Color detectedColorTop = topBall.getColor();
-        Color detectedColorBottom = bottomBall.getColor();
+        //Color detectedColorBottom = bottomBall.getColor();
 
         logData("Top Ball Red", detectedColorTop.red);
         logData("Top Ball Green", detectedColorTop.green);
         logData("Top Ball Blue", detectedColorTop.blue);
         logData("Top Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
 
-        logData("Bottom Red", detectedColorBottom.red);
-        logData("Bottom Green", detectedColorBottom.green);
-        logData("Bottom Blue", detectedColorBottom.blue);
-        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
+//        logData("Bottom Red", detectedColorBottom.red);
+//        logData("Bottom Green", detectedColorBottom.green);
+//        logData("Bottom Blue", detectedColorBottom.blue);
+//        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
 
         if (colorMatcher.matchClosestColor(detectedColorTop).color == redTarget) {
             logData("Top Ball Color", "Red");
@@ -75,16 +75,16 @@ public class Hopper extends AbstractSubsystem {
             topBallDetected = false;
         }
 
-        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
-            logData("Bottom Ball Color", "Red");
-            bottomBallDetected = true;
-        } else if (colorMatcher.matchClosestColor(detectedColorBottom).color == blueTarget) {
-            logData("Bottom Ball Color", "Blue");
-            bottomBallDetected = true;
-        } else {
-            logData("Bottom Ball Color", "No Ball Detected");
-            bottomBallDetected = false;
-        }
+//        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
+//            logData("Bottom Ball Color", "Red");
+//            bottomBallDetected = true;
+//        } else if (colorMatcher.matchClosestColor(detectedColorBottom).color == blueTarget) {
+//            logData("Bottom Ball Color", "Blue");
+//            bottomBallDetected = true;
+//        } else {
+//            logData("Bottom Ball Color", "No Ball Detected");
+//            bottomBallDetected = false;
+//        }
     }
 
     public void numberOfBalls() {

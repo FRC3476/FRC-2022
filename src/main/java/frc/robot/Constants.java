@@ -374,9 +374,9 @@ public final class Constants {
     public static final int PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL = 4;
     public static final int PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL = 5;
 
-    public static final int LATCH_SOLENOID_ID = 2;
-    public static final int PIVOT_SOLENOID_ID = 3;
-    public static final int BRAKE_SOLENOID_ID = 4;
+    public static final int LATCH_SOLENOID_ID = 1;
+    public static final int PIVOT_SOLENOID_ID = 0;
+    public static final int BRAKE_SOLENOID_ID = 2;
 
 
     public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 8.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
@@ -431,7 +431,7 @@ public final class Constants {
 
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
-    public static final int SOLENOID_CHANNEL = 1;
+    public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = -0.5;
     public static final double INTAKE_OPEN_TIME = 0.3;

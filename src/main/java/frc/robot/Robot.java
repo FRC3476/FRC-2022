@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -96,8 +95,6 @@ public class Robot extends TimedRobot {
     private double firstPressTime = 0;
     private double lastPressTime = 0;
 
-    Compressor phCompressor;
-
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
      */
@@ -131,7 +128,6 @@ public class Robot extends TimedRobot {
             xbox.update();
             stick.update();
             buttonPanel.update();
-            SmartDashboard.putBoolean("Compressor Enabled", phCompressor.enabled());
         }
 
         //Listen changes in the network auto
@@ -184,8 +180,6 @@ public class Robot extends TimedRobot {
             System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
         }
 
-        System.out.println(pneumaticHub.getCompressor());
-
         // Feeder wheel will not check for shooter speed and hood angle to be correct before
         // enabling when stick button 2 is held down
         if (stick.getRisingEdge(2)) {
@@ -229,7 +223,7 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
     }
 
-    PneumaticHub pneumaticHub = new PneumaticHub(3);
+    public static PneumaticHub pneumaticHub = new PneumaticHub(3);
 
     /**
      * This function is called once when teleop is enabled.
@@ -245,7 +239,6 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
         drive.configBrake();
 
-        phCompressor.enableDigital();
         pneumaticHub.enableCompressorDigital();
     }
 
@@ -376,7 +369,7 @@ public class Robot extends TimedRobot {
         }
 
         if (stick.getRisingEdge(10)) {
-            climber.toggleLatch();
+            climber.togglePivot();
         }
 
         if (stick.getRawButton(11)) {

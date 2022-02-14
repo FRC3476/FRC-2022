@@ -1,13 +1,14 @@
 package frc.subsystem;
 
 import com.revrobotics.CANSparkMaxLowLevel;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
+
+import static frc.robot.Robot.pneumaticHub;
 
 public final class Intake extends AbstractSubsystem {
 
@@ -24,7 +25,7 @@ public final class Intake extends AbstractSubsystem {
 
     private Intake() {
         super(Constants.INTAKE_PERIOD);
-        intakeSol = new Solenoid(PneumaticsModuleType.REVPH, Constants.SOLENOID_CHANNEL);
+        intakeSol = pneumaticHub.makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
         intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
     }
 
@@ -63,6 +64,7 @@ public final class Intake extends AbstractSubsystem {
     }
 
     public void setIntakeSolState(IntakeSolState intakeSolState) {
+        SmartDashboard.putString("Intake State", intakeSolState.toString());
         switch (intakeSolState) {
             case OPEN:
                 if (getIntakeSolState() == IntakeSolState.CLOSE) {
