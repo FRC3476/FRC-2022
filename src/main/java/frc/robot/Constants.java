@@ -161,12 +161,12 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 20;
+    public static final double MAX_ACCELERATION = 30;
 
     /**
      * Units are in Radians per Second Squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 9);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 27);
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
