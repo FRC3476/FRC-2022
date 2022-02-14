@@ -55,7 +55,7 @@ public class Climber extends AbstractSubsystem {
     private double gyroRollVelocity = 0;
     private double lastGyroRoll;
 
-    public enum LatchState {
+    public enum ClawState {
         LATCHED, UNLATCHED
     }
 
@@ -71,8 +71,8 @@ public class Climber extends AbstractSubsystem {
         brakeSolenoid.set(brakeState == BrakeState.FREE);
     }
 
-    public void setLatchState(LatchState latchState) {
-        latchSolenoid.set(latchState == LatchState.UNLATCHED);
+    public void setClawState(ClawState clawState) {
+        latchSolenoid.set(clawState == ClawState.UNLATCHED);
     }
 
     public void setPivotState(PivotState pivotState) {
@@ -83,8 +83,8 @@ public class Climber extends AbstractSubsystem {
         return brakeSolenoid.get() ? BrakeState.BRAKING : BrakeState.FREE;
     }
 
-    public LatchState getLatchState() {
-        return latchSolenoid.get() ? LatchState.UNLATCHED : LatchState.LATCHED;
+    public ClawState getClawState() {
+        return latchSolenoid.get() ? ClawState.UNLATCHED : ClawState.LATCHED;
     }
 
     public PivotState getPivotState() {
@@ -105,7 +105,7 @@ public class Climber extends AbstractSubsystem {
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
                 (cl) -> {
                     cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-                    cl.setLatchState(LatchState.UNLATCHED);
+                    cl.setClawState(ClawState.UNLATCHED);
                 },
                 (cl) -> cl.pivotingArmContactSwitchA.get() && cl.pivotingArmContactSwitchB.get(),
                 (cl) -> cl.stopClimberMotor()
@@ -115,7 +115,7 @@ public class Climber extends AbstractSubsystem {
          * Extends the solenoid to latch the pivoting arm onto the bar. Waits until the latch switch is pressed.
          */
         LATCH_PIVOT_ARM(
-                (cl) -> cl.setLatchState(LatchState.LATCHED),
+                (cl) -> cl.setClawState(ClawState.LATCHED),
                 (cl) -> cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get(),
                 (cl) -> {}
         ),
@@ -212,7 +212,7 @@ public class Climber extends AbstractSubsystem {
          */
         UNLATCH_PIVOT_ARM(
                 (cl) -> {
-                    cl.setLatchState(LatchState.UNLATCHED);
+                    cl.setClawState(ClawState.UNLATCHED);
                     cl.data = Timer.getFPGATimestamp();
                 },
                 (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
@@ -344,7 +344,7 @@ public class Climber extends AbstractSubsystem {
     public synchronized void deployClimb() {
         climberMotor.set(ControlMode.Position, Constants.CLIMBER_DEPLOY_HEIGHT); // TODO: Change position
         setBrakeState(BrakeState.FREE);
-        setLatchState(LatchState.UNLATCHED);
+        setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
     }
 
@@ -426,14 +426,14 @@ public class Climber extends AbstractSubsystem {
         setBrakeState(Math.abs(percentOutput) < 1.0E-2 ? BrakeState.BRAKING : BrakeState.FREE);
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
     }
-    
+
     /**
      * Toggles the latch that is on the pivot arm.
      */
-    public void toggleLatch() {
+    public void toggleClaw() {
         isPaused = true;
         climbState = ClimbState.IDLE;
-        latchSolenoid.set(!latchSolenoid.get());
+        setClawState(getClawState() == ClawState.UNLATCHED ? ClawState.LATCHED : ClawState.UNLATCHED);
     }
 
     /**
@@ -442,7 +442,7 @@ public class Climber extends AbstractSubsystem {
     public void togglePivot() {
         isPaused = true;
         climbState = ClimbState.IDLE;
-        pivotSolenoid.set(!pivotSolenoid.get());
+        setPivotState(getPivotState() == PivotState.INLINE ? PivotState.PIVOTED : PivotState.INLINE);
     }
 
     @Override
@@ -472,7 +472,7 @@ public class Climber extends AbstractSubsystem {
         logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get());
 
         logData("Pivot Solenoid State", getPivotState().toString());
-        logData("Latch Solenoid State", getLatchState().toString());
+        logData("Latch Solenoid State", getClawState().toString());
         logData("Brake Solenoid State", getBrakeState().toString());
 
         logData("Gyro Pitch", RobotTracker.getInstance().getGyro().getPitch());

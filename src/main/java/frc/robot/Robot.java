@@ -365,7 +365,7 @@ public class Robot extends TimedRobot {
         }
 
         if (stick.getRisingEdge(9)) {
-            climber.toggleLatch();
+            climber.toggleClaw();
         }
 
         if (stick.getRisingEdge(10)) {
