@@ -265,7 +265,7 @@ public class Climber extends AbstractSubsystem {
         climberMotor.config_IntegralZone(0, Constants.CLIMBER_MOTOR_IZONE);
         climberMotor.configMaxIntegralAccumulator(0, Constants.CLIMBER_MOTOR_MAX_IACCUMULATOR);
         climberMotor.configPeakOutputForward(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        climberMotor.configPeakOutputReverse(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        climberMotor.configPeakOutputReverse(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         climberMotor.setNeutralMode(NeutralMode.Brake);
         climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
                 Constants.CLIMBER_CURRENT_LIMIT, 0));
@@ -278,9 +278,9 @@ public class Climber extends AbstractSubsystem {
         pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
         pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
 
-        latchSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.LATCH_SOLENOID_ID); //TODO config solenoid type.
-        pivotSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.PIVOT_SOLENOID_ID); //TODO config solenoid type.
-        brakeSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.BRAKE_SOLENOID_ID); //TODO config solenoid type.
+        latchSolenoid = new Solenoid(PneumaticsModuleType.REVPH, Constants.LATCH_SOLENOID_ID); //TODO config solenoid type.
+        pivotSolenoid = new Solenoid(PneumaticsModuleType.REVPH, Constants.PIVOT_SOLENOID_ID); //TODO config solenoid type.
+        brakeSolenoid = new Solenoid(PneumaticsModuleType.REVPH, Constants.BRAKE_SOLENOID_ID); //TODO config solenoid type.
     }
 
     /**
