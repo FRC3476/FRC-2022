@@ -529,7 +529,10 @@ public final class Shooter extends AbstractSubsystem {
                 shooterWheelMaster.set(ControlMode.Velocity,
                         desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
 //                shooterWheelMaster.set(ControlMode.PercentOutput, 0.5);
-                moveHoodMotor(); // Sets Motor to travel to desired hood angle
+
+                if (!isHoodAtTargetAngle()) {
+                    moveHoodMotor(); // Sets Motor to travel to desired hood angle
+                }
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
                 // is at target speed. Will also enable if feeder wheel is enabled forward and checks are disabled

@@ -289,7 +289,7 @@ public final class Constants {
      * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
      * degrees of the hood
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = 0.2;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
 
     /**
      * If hood speed is under this value, hood has stopped
