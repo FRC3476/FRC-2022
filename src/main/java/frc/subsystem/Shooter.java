@@ -519,7 +519,11 @@ public final class Shooter extends AbstractSubsystem {
             case OFF:
                 shooterWheelMaster.set(ControlMode.PercentOutput, 0);
                 setHoodPosition(90); // Sets hood to the lowest possible position
-                moveHoodMotor();
+
+                if (!isHoodAtTargetAngle()) {
+                    moveHoodMotor();
+                }
+                
                 feederWheel.set(ControlMode.PercentOutput, 0);
 
                 break;
