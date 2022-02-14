@@ -259,14 +259,14 @@ public class Robot extends TimedRobot {
         if (buttonPanel.getRisingEdge(1)) {
             hoodPosition = 80;
             shooterSpeed = 2000;
-            visionOn = false;
+            visionOn = true;
         } else if (buttonPanel.getRisingEdge(2)) {
             hoodPosition = 70;
-            visionOn = false;
+            visionOn = true;
             shooterSpeed = 3000;
         } else if (buttonPanel.getRisingEdge(3)) {
-            hoodPosition = 60;
-            shooterSpeed = 4000;
+            hoodPosition = 76;
+            shooterSpeed = 2500;
             visionOn = false;
         }
 
@@ -288,22 +288,24 @@ public class Robot extends TimedRobot {
             }
         }
 
-        if (buttonPanel.getRawButton(7)) {
-            // Turns Shooter flywheel on considering a moving robot
-            visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-            visionManager.updateShooterState();
-        } else if (buttonPanel.getRawButton(6)) {
-            //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
-            visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-            visionManager.updateShooterStateStaticPose();
-        } else if (buttonPanel.getRawButton(5)) {
-            //Turn shooter flywheel on with manuel settings
-            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-            shooter.setShooterSpeed(shooterSpeed);
-            shooter.setHoodPosition(hoodPosition);
-        } else {
-            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-            shooter.setShooterSpeed(0); //Turns off shooter flywheel
+        if (!(xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1))) {
+            if (buttonPanel.getRawButton(7)) {
+                // Turns Shooter flywheel on considering a moving robot
+                visionManager.forceVisionOn(buttonPanelForcingVisionOn);
+                visionManager.updateShooterState();
+            } else if (buttonPanel.getRawButton(6)) {
+                //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
+                visionManager.forceVisionOn(buttonPanelForcingVisionOn);
+                visionManager.updateShooterStateStaticPose();
+            } else if (buttonPanel.getRawButton(5)) {
+                //Turn shooter flywheel on with manuel settings
+                visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
+                shooter.setShooterSpeed(shooterSpeed);
+                shooter.setHoodPosition(hoodPosition);
+            } else {
+                visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
+                shooter.setShooterSpeed(0); //Turns off shooter flywheel
+            }
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
