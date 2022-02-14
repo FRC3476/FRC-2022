@@ -10,9 +10,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -96,8 +94,6 @@ public class Robot extends TimedRobot {
     private double firstPressTime = 0;
     private double lastPressTime = 0;
 
-    Compressor pcmCompressor;
-
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
      */
@@ -113,8 +109,6 @@ public class Robot extends TimedRobot {
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
-        pcmCompressor = new Compressor(1, PneumaticsModuleType.REVPH);
-        pcmCompressor.enableDigital();
     }
 
     /**
@@ -130,7 +124,6 @@ public class Robot extends TimedRobot {
             xbox.update();
             stick.update();
             buttonPanel.update();
-            SmartDashboard.putBoolean("Compressor Enabled", pcmCompressor.enabled());
         }
 
         //Listen changes in the network auto
@@ -239,8 +232,6 @@ public class Robot extends TimedRobot {
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
         drive.configBrake();
-
-        pcmCompressor.enableDigital();
     }
 
     private final Object driverForcingVisionOn = new Object();
