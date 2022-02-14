@@ -72,13 +72,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *                              source or sync the epochs.
      */
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        synchronized (deferredVisionUpdates) {
-            if (timestampSeconds > currentOdometryTime) {
-                swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
-            } else {
-                deferredVisionUpdates.add(Map.entry(timestampSeconds, visionRobotPoseMeters));
-            }
-        }
+        swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
     }
 
     public void calibrateGyro() {
@@ -125,7 +119,9 @@ public final class RobotTracker extends AbstractSubsystem {
         updateOdometry(time, gyroSensor.getRotation2d(), drive.getSwerveModuleStates());
 
         previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
-        previousGyroRotations.subList(100, previousGyroRotations.size()).clear(); // Clear old data
+        if (previousGyroRotations.size() > 100) {
+            previousGyroRotations.subList(100, previousGyroRotations.size()).clear(); // Clear old data
+        }
 
         synchronized (this) {
             latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();

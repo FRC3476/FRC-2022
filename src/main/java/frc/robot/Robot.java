@@ -342,7 +342,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         }
 
-        if (buttonPanel.getRawButton(13)) {
+        if (stick.getRawButton(4)) {
             visionManager.forceVisionOn(resettingPoseVisionOn);
             visionManager.forceUpdatePose();
         } else {

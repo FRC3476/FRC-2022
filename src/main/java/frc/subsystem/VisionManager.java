@@ -108,7 +108,7 @@ public final class VisionManager extends AbstractSubsystem {
     private MutableTranslation2d getCurrentTranslation() {
         Rotation2d currentGyroAngle = getLatencyCompedLimelightRotation();
 
-        double distanceToTarget = limelight.getDistance() + Constants.GOAL_RADIUS;
+        double distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS;
         double angleToTarget = 180 + currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
         return new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
                 distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
@@ -230,7 +230,7 @@ public final class VisionManager extends AbstractSubsystem {
 
         double distanceToTarget;
         if (limelight.isTargetVisible()) {
-            distanceToTarget = limelight.getDistance() + Constants.GOAL_RADIUS;
+            distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS;
         } else {
             Pose2d currentPose = robotTracker.getLatencyCompedPoseMeters();
             Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);

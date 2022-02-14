@@ -213,6 +213,9 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelMaster.config_kF(0, Constants.SHOOTER_F);
         shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE);
         shooterWheelMaster.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+        shooterWheelMaster.configPeakOutputForward(1);
+        shooterWheelMaster.configPeakOutputReverse(0);
+        shooterWheelMaster.configVoltageCompSaturation(9);
 
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
                 Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
@@ -328,7 +331,7 @@ public final class Shooter extends AbstractSubsystem {
      * @param desiredShooterSpeed Desired Speed in RPM.
      */
     public void setShooterSpeed(double desiredShooterSpeed) {
-        this.desiredShooterSpeed = desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR;
+        this.desiredShooterSpeed = desiredShooterSpeed;
         if (desiredShooterSpeed == 0) {
             if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
                 nextState = ShooterState.OFF;
@@ -395,7 +398,7 @@ public final class Shooter extends AbstractSubsystem {
      */
     public double getShooterRPM() {
         // Convert Falcon 500 encoder units for velocity into RPM
-        return shooterWheelMaster.getSelectedSensorVelocity() * Constants.FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER;
+        return shooterWheelMaster.getSelectedSensorVelocity() / Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR;
     }
 
     /**
@@ -411,8 +414,7 @@ public final class Shooter extends AbstractSubsystem {
      * Checks if shooter is at target speed within a configurable allowed error.
      */
     public boolean isShooterAtTargetSpeed() {
-        return true;
-        //return Math.abs(getShooterRPM() - getDesiredShooterSpeed()) < Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM;
+        return Math.abs(getShooterRPM() - getDesiredShooterSpeed()) < Constants.ALLOWED_SHOOTER_SPEED_ERROR_RPM;
     }
 
     /**
@@ -517,14 +519,16 @@ public final class Shooter extends AbstractSubsystem {
             case OFF:
                 shooterWheelMaster.set(ControlMode.PercentOutput, 0);
                 setHoodPosition(90); // Sets hood to the lowest possible position
+                moveHoodMotor();
                 feederWheel.set(ControlMode.PercentOutput, 0);
 
                 break;
 
             case ON:
                 //shooterWheelMaster.set(ControlMode.PercentOutput, 1);
-                shooterWheelMaster.set(ControlMode.Velocity, desiredShooterSpeed); // Sets shooter motor to desired shooter
-
+                shooterWheelMaster.set(ControlMode.Velocity,
+                        desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
+//                shooterWheelMaster.set(ControlMode.PercentOutput, 0.5);
                 moveHoodMotor(); // Sets Motor to travel to desired hood angle
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
@@ -682,6 +686,7 @@ public final class Shooter extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Shooter Flywheel Speed", getShooterRPM());
+        logData("Shooter Native Flywheel SPeed", getDesiredShooterSpeed() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR);
         logData("Hood Angle", getHoodAngle());
         logData("Relative Hood Angle", getHoodRelativeAngle());
         logData("Desired Shooter Speed", getDesiredShooterSpeed());

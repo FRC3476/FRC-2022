@@ -27,8 +27,8 @@ public final class Constants {
 
     //Limelight
     //Calibrate using https://www.desmos.com/calculator/n2dsvzsyhk
-    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 0; //TODO: CHANGE
-    public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
+    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 60.58; //TODO: CHANGE
+    public static final double CAMERA_Y_ANGLE = 39.3164; //TODO: CHANGE
 
     // Vision Manager
     public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
@@ -212,10 +212,10 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 5.0e-1;
+    public static final double SHOOTER_P = 1.0e-3; //0.00074361;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
-    public static final double SHOOTER_F = 0;
+    public static final double SHOOTER_F = 0.00006375 * 1023;
     public static final double SHOOTER_I_ZONE = 0;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -233,13 +233,13 @@ public final class Constants {
      */
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600.0d / 2048.0d;
 
-    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * 1;
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (1.0 / 1.5);
 
     // Feeder wheel pidf is unused
-    public static final double FEEDER_WHEEL_P = 0;
+    public static final double FEEDER_WHEEL_P = 0.0025003;
     public static final double FEEDER_WHEEL_I = 0;
     public static final double FEEDER_WHEEL_D = 0;
-    public static final double FEEDER_WHEEL_F = 0;
+    public static final double FEEDER_WHEEL_F = 0.11376 * 1023 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
     public static final double FEEDER_WHEEL_I_ZONE = 0;
 
     public static final double FEEDER_WHEEL_SPEED = 1.0;

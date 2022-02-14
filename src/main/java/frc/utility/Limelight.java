@@ -1,5 +1,6 @@
 package frc.utility;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -103,6 +104,7 @@ public class Limelight {
         limelightGuiTable.getEntry("forceledon").addListener(event -> {
             if (event.getEntry().getBoolean(false)) {
                 limelight.setLedMode(LedMode.ON);
+                limelight.setCamMode(CamMode.VISION_PROCESSOR);
             }
         }, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
@@ -172,7 +174,11 @@ public class Limelight {
      * Sets limelight’s operation mode
      */
     public void setCamMode(@NotNull CamMode camMode) {
-        limelightTable.getEntry("camMode").setNumber(camMode.i);
+        if (limelightGuiTable.getEntry("forceledon").getBoolean(false)) {
+            limelightTable.getEntry("camMode").setNumber(0);
+        } else {
+            limelightTable.getEntry("camMode").setNumber(camMode.i);
+        }
     }
 
     /**
@@ -205,7 +211,22 @@ public class Limelight {
     }
 
     /**
-     * @return Distance from the limelight to the target in cm
+     * @return Distance from the limelight to the target in Meters
+     * @see <a href="https://docs.limelightvision.io/en/latest/cs_estimating_distance.html">Limelight Docs: Estimating
+     * Distance</a>
+     */
+    public double getDistanceM() {
+        if (isTargetVisible()) {
+            return Units.inchesToMeters((Constants.CAMERA_TARGET_HEIGHT_OFFSET) / Math.tan(
+                    Math.toRadians(Constants.CAMERA_Y_ANGLE + getVerticalOffset())));
+        } else {
+            return 0;
+        }
+    }
+
+
+    /**
+     * @return Distance from the limelight to the target in IN
      * @see <a href="https://docs.limelightvision.io/en/latest/cs_estimating_distance.html">Limelight Docs: Estimating
      * Distance</a>
      */
