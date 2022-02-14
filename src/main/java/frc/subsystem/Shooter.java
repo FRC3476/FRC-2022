@@ -249,6 +249,8 @@ public final class Shooter extends AbstractSubsystem {
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
         hoodMotor.setInverted(true);
         hoodAbsoluteEncoder.configSensorDirection(true);
+
+        hoodMotor.burnFlash();
     }
 
     /**
@@ -523,7 +525,7 @@ public final class Shooter extends AbstractSubsystem {
                 if (!isHoodAtTargetAngle()) {
                     moveHoodMotor();
                 }
-                
+
                 feederWheel.set(ControlMode.PercentOutput, 0);
 
                 break;
