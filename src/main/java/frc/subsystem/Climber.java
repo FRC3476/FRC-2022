@@ -5,7 +5,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import frc.robot.Constants;
 import frc.utility.Timer;
@@ -13,6 +12,9 @@ import frc.utility.controllers.LazyTalonSRX;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
+import static frc.utility.Pneumatics.getPneumaticsHub;
 
 public class Climber extends AbstractSubsystem {
     private static Climber instance = new Climber();
@@ -53,7 +55,7 @@ public class Climber extends AbstractSubsystem {
     private double gyroRollVelocity = 0;
     private double lastGyroRoll;
 
-    public enum LatchState {
+    public enum ClawState {
         LATCHED, UNLATCHED
     }
 
@@ -69,8 +71,8 @@ public class Climber extends AbstractSubsystem {
         brakeSolenoid.set(brakeState == BrakeState.FREE);
     }
 
-    public void setLatchState(LatchState latchState) {
-        latchSolenoid.set(latchState == LatchState.UNLATCHED);
+    public void setClawState(ClawState clawState) {
+        latchSolenoid.set(clawState == ClawState.UNLATCHED);
     }
 
     public void setPivotState(PivotState pivotState) {
@@ -81,8 +83,8 @@ public class Climber extends AbstractSubsystem {
         return brakeSolenoid.get() ? BrakeState.BRAKING : BrakeState.FREE;
     }
 
-    public LatchState getLatchState() {
-        return latchSolenoid.get() ? LatchState.UNLATCHED : LatchState.LATCHED;
+    public ClawState getClawState() {
+        return latchSolenoid.get() ? ClawState.UNLATCHED : ClawState.LATCHED;
     }
 
     public PivotState getPivotState() {
@@ -103,7 +105,7 @@ public class Climber extends AbstractSubsystem {
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
                 (cl) -> {
                     cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-                    cl.setLatchState(LatchState.UNLATCHED);
+                    cl.setClawState(ClawState.UNLATCHED);
                 },
                 (cl) -> cl.pivotingArmContactSwitchA.get() && cl.pivotingArmContactSwitchB.get(),
                 (cl) -> cl.stopClimberMotor()
@@ -113,7 +115,7 @@ public class Climber extends AbstractSubsystem {
          * Extends the solenoid to latch the pivoting arm onto the bar. Waits until the latch switch is pressed.
          */
         LATCH_PIVOT_ARM(
-                (cl) -> cl.setLatchState(LatchState.LATCHED),
+                (cl) -> cl.setClawState(ClawState.LATCHED),
                 (cl) -> cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get(),
                 (cl) -> {}
         ),
@@ -210,7 +212,7 @@ public class Climber extends AbstractSubsystem {
          */
         UNLATCH_PIVOT_ARM(
                 (cl) -> {
-                    cl.setLatchState(LatchState.UNLATCHED);
+                    cl.setClawState(ClawState.UNLATCHED);
                     cl.data = Timer.getFPGATimestamp();
                 },
                 (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
@@ -263,7 +265,7 @@ public class Climber extends AbstractSubsystem {
         climberMotor.config_IntegralZone(0, Constants.CLIMBER_MOTOR_IZONE);
         climberMotor.configMaxIntegralAccumulator(0, Constants.CLIMBER_MOTOR_MAX_IACCUMULATOR);
         climberMotor.configPeakOutputForward(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        climberMotor.configPeakOutputReverse(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        climberMotor.configPeakOutputReverse(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         climberMotor.setNeutralMode(NeutralMode.Brake);
         climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
                 Constants.CLIMBER_CURRENT_LIMIT, 0));
@@ -276,9 +278,12 @@ public class Climber extends AbstractSubsystem {
         pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
         pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
 
-        latchSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.LATCH_SOLENOID_ID); //TODO config solenoid type.
-        pivotSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.PIVOT_SOLENOID_ID); //TODO config solenoid type.
-        brakeSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, Constants.BRAKE_SOLENOID_ID); //TODO config solenoid type.
+        latchSolenoid = getPneumaticsHub().makeSolenoid(Constants.LATCH_SOLENOID_ID);
+        pivotSolenoid = getPneumaticsHub().makeSolenoid(Constants.PIVOT_SOLENOID_ID);
+        brakeSolenoid = getPneumaticsHub().makeSolenoid(Constants.BRAKE_SOLENOID_ID);
+
+        climberMotor.setInverted(true);
+        climberMotor2.setInverted(true);
     }
 
     /**
@@ -339,7 +344,7 @@ public class Climber extends AbstractSubsystem {
     public synchronized void deployClimb() {
         climberMotor.set(ControlMode.Position, Constants.CLIMBER_DEPLOY_HEIGHT); // TODO: Change position
         setBrakeState(BrakeState.FREE);
-        setLatchState(LatchState.UNLATCHED);
+        setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
     }
 
@@ -418,17 +423,17 @@ public class Climber extends AbstractSubsystem {
     public void setClimberMotor(double percentOutput) {
         isPaused = true;
         climbState = ClimbState.IDLE;
-        setBrakeState(Math.abs(percentOutput) < 1.0E-6 ? BrakeState.BRAKING : BrakeState.FREE);
+        setBrakeState(Math.abs(percentOutput) < 1.0E-2 ? BrakeState.BRAKING : BrakeState.FREE);
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
     }
-    
+
     /**
      * Toggles the latch that is on the pivot arm.
      */
-    public void toggleLatch() {
+    public void toggleClaw() {
         isPaused = true;
         climbState = ClimbState.IDLE;
-        latchSolenoid.set(!latchSolenoid.get());
+        setClawState(getClawState() == ClawState.UNLATCHED ? ClawState.LATCHED : ClawState.UNLATCHED);
     }
 
     /**
@@ -437,7 +442,7 @@ public class Climber extends AbstractSubsystem {
     public void togglePivot() {
         isPaused = true;
         climbState = ClimbState.IDLE;
-        pivotSolenoid.set(!pivotSolenoid.get());
+        setPivotState(getPivotState() == PivotState.INLINE ? PivotState.PIVOTED : PivotState.INLINE);
     }
 
     @Override
@@ -452,6 +457,7 @@ public class Climber extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
+        logData("Climber Motor Postion IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
         logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
         logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
         logData("Climber Motor Current", climberMotor.getStatorCurrent());
@@ -466,7 +472,7 @@ public class Climber extends AbstractSubsystem {
         logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get());
 
         logData("Pivot Solenoid State", getPivotState().toString());
-        logData("Latch Solenoid State", getLatchState().toString());
+        logData("Latch Solenoid State", getClawState().toString());
         logData("Brake Solenoid State", getBrakeState().toString());
 
         logData("Gyro Pitch", RobotTracker.getInstance().getGyro().getPitch());

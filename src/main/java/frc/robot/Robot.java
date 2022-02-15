@@ -85,7 +85,7 @@ public class Robot extends TimedRobot {
 
 
     //Control loop states
-    boolean limelightTakeSnapshots;
+    boolean limelightTakeSnapshots = false;
     private double hoodPosition = 55;
     private double shooterSpeed = 2000;
     private boolean visionOn = false;
@@ -109,6 +109,9 @@ public class Robot extends TimedRobot {
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
+
+        //phCompressor = new Compressor(1, PneumaticsModuleType.REVPH);
+        //phCompressor.enableDigital();
     }
 
     /**
@@ -248,16 +251,16 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         if (buttonPanel.getRisingEdge(1)) {
-            hoodPosition = 25;
+            hoodPosition = 80;
             shooterSpeed = 2000;
-            visionOn = false;
+            visionOn = true;
         } else if (buttonPanel.getRisingEdge(2)) {
-            hoodPosition = 33;
-            visionOn = false;
+            hoodPosition = 70;
+            visionOn = true;
             shooterSpeed = 3000;
         } else if (buttonPanel.getRisingEdge(3)) {
-            hoodPosition = 55;
-            shooterSpeed = 4000;
+            hoodPosition = 76;
+            shooterSpeed = 2500;
             visionOn = false;
         }
 
@@ -279,22 +282,24 @@ public class Robot extends TimedRobot {
             }
         }
 
-        if (buttonPanel.getRawButton(7)) {
-            // Turns Shooter flywheel on considering a moving robot
-            visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-            visionManager.updateShooterState();
-        } else if (buttonPanel.getRawButton(6)) {
-            //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
-            visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-            visionManager.updateShooterStateStaticPose();
-        } else if (buttonPanel.getRawButton(5)) {
-            //Turn shooter flywheel on with manuel settings
-            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-            shooter.setShooterSpeed(shooterSpeed);
-            shooter.setHoodPosition(hoodPosition);
-        } else {
-            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-            shooter.setShooterSpeed(0); //Turns off shooter flywheel
+        if (!(xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1))) {
+            if (buttonPanel.getRawButton(7)) {
+                // Turns Shooter flywheel on considering a moving robot
+                visionManager.forceVisionOn(buttonPanelForcingVisionOn);
+                visionManager.updateShooterState();
+            } else if (buttonPanel.getRawButton(6)) {
+                //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
+                visionManager.forceVisionOn(buttonPanelForcingVisionOn);
+                visionManager.updateShooterStateStaticPose();
+            } else if (buttonPanel.getRawButton(5)) {
+                //Turn shooter flywheel on with manuel settings
+                visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
+                shooter.setShooterSpeed(shooterSpeed);
+                shooter.setHoodPosition(hoodPosition);
+            } else {
+                visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
+                shooter.setShooterSpeed(0); //Turns off shooter flywheel
+            }
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
@@ -333,7 +338,7 @@ public class Robot extends TimedRobot {
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         }
 
-        if (buttonPanel.getRawButton(13)) {
+        if (stick.getRawButton(4)) {
             visionManager.forceVisionOn(resettingPoseVisionOn);
             visionManager.forceUpdatePose();
         } else {
@@ -355,18 +360,20 @@ public class Robot extends TimedRobot {
         }
 
         if (stick.getRisingEdge(9)) {
-            climber.toggleLatch();
+            climber.toggleClaw();
         }
 
         if (stick.getRisingEdge(10)) {
-            climber.toggleLatch();
+            climber.togglePivot();
         }
 
         if (stick.getRawButton(11)) {
+            System.out.println("going up");
             climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         } else if (stick.getRawButton(12)) {
+            System.out.println("going down");
             climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
+        } else if (climber.getClimbState() == ClimbState.IDLE) {
             climber.setClimberMotor(0);
         }
 

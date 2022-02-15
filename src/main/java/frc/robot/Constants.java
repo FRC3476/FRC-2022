@@ -27,8 +27,8 @@ public final class Constants {
 
     //Limelight
     //Calibrate using https://www.desmos.com/calculator/n2dsvzsyhk
-    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 0; //TODO: CHANGE
-    public static final double CAMERA_Y_ANGLE = 0; //TODO: CHANGE
+    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 60.58; //TODO: CHANGE
+    public static final double CAMERA_Y_ANGLE = 39.3164; //TODO: CHANGE
 
     // Vision Manager
     public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
@@ -161,12 +161,12 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 20;
+    public static final double MAX_ACCELERATION = 30;
 
     /**
      * Units are in Radians per Second Squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 9);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 27);
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
@@ -205,16 +205,17 @@ public final class Constants {
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 51;
     public static final int FEEDER_WHEEL_CAN_ID = 52;
     public static final int HOOD_MOTOR_CAN_ID = 53;
+    public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 54; // Todo
 
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 5.0e-1;
+    public static final double SHOOTER_P = 1.0e-3; //0.00074361;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
-    public static final double SHOOTER_F = 0;
+    public static final double SHOOTER_F = 0.00006375 * 1023;
     public static final double SHOOTER_I_ZONE = 0;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -232,13 +233,13 @@ public final class Constants {
      */
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600.0d / 2048.0d;
 
-    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * 1;
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (1.0 / 1.5);
 
     // Feeder wheel pidf is unused
-    public static final double FEEDER_WHEEL_P = 0;
+    public static final double FEEDER_WHEEL_P = 0.0025003;
     public static final double FEEDER_WHEEL_I = 0;
     public static final double FEEDER_WHEEL_D = 0;
-    public static final double FEEDER_WHEEL_F = 0;
+    public static final double FEEDER_WHEEL_F = 0.11376 * 1023 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
     public static final double FEEDER_WHEEL_I_ZONE = 0;
 
     public static final double FEEDER_WHEEL_SPEED = 1.0;
@@ -267,7 +268,7 @@ public final class Constants {
     /**
      * Offset for the absolute encoder on hood in order to make angle between 50 and 90
      */
-    public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = 0; // TODO: Find proper offset
+    public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = -266.8 + 90; // TODO: Find proper offset
 
     /**
      * Amount of degrees the hood turns per NEO550 rotation
@@ -288,7 +289,7 @@ public final class Constants {
      * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
      * degrees of the hood
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = 0.2;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
 
     /**
      * If hood speed is under this value, hood has stopped
@@ -351,7 +352,7 @@ public final class Constants {
     //Climber Constants
     public static final int CLIMBER_PERIOD = 50;
     public static final int CLIMBER_MOTOR_ID = 25;
-    public static final int CLIMBER_MOTOR_2_ID = 25;
+    public static final int CLIMBER_MOTOR_2_ID = 26;
 
     public static final double CLIMBER_MOTOR_KF = 0.0;
     public static final double CLIMBER_MOTOR_KP = 0.1;
@@ -359,7 +360,7 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_KD = 0.0;
     public static final double CLIMBER_MOTOR_IZONE = 10;
     public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
-    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1.0;
+    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 0.3;
     public static final int CLIMBER_MOTOR_MAX_ERROR = 5;
 
     public static final int CLIMBER_CURRENT_LIMIT = 30;
@@ -374,9 +375,11 @@ public final class Constants {
     public static final int PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL = 5;
 
     public static final int LATCH_SOLENOID_ID = 1;
-    public static final int PIVOT_SOLENOID_ID = 2;
-    public static final int BRAKE_SOLENOID_ID = 3;
+    public static final int PIVOT_SOLENOID_ID = 0;
+    public static final int BRAKE_SOLENOID_ID = 2;
 
+
+    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 8.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
     /**
      * The height to go to once the drivers request the climber to deploy
      */
@@ -385,12 +388,12 @@ public final class Constants {
     /**
      * If the elevator arm is below this height and going down, the climb will abort
      */
-    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 50;
+    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 50 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is above this height and going down, the climb will abort
      */
-    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 12000;
+    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 12000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
@@ -415,12 +418,12 @@ public final class Constants {
     /**
      * The max safe height for the elevator arm during the swinging part of the climb
      */
-    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 10000;
+    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 10000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
      */
-    public static final double MAX_CLIMBER_EXTENSION = 11000;
+    public static final double MAX_CLIMBER_EXTENSION = 11000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     //Robot Tracker
     public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
@@ -428,11 +431,10 @@ public final class Constants {
 
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
-    public static final int SOLENOID_CHANNEL = 0;
+    public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
-    public static final double INTAKE_MOTOR_SPEED = -1.0;
+    public static final double INTAKE_MOTOR_SPEED = -0.5;
     public static final double INTAKE_OPEN_TIME = 0.3;
-    public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 1; // Todo
 
     // Networking and Logging
     public static final int WEB_DASHBOARD_PORT = 5802; //Limelight uses port 5800 & 5801

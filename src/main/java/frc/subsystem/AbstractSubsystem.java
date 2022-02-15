@@ -72,7 +72,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
             double startTime = Timer.getFPGATimestamp();
             if (signal == ThreadSignal.ALIVE) {
                 update();
-
+                
                 logInterval++;
                 if (logInterval > loggingInterval) {
                     logData();

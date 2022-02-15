@@ -4,12 +4,10 @@
   "encoding": false,
   "gearing denominator": 1.0,
   "gearing numerator": 1.0,
-  "gyro": "NavX",
-  "gyro ctor": "SPI.kMXP",
+  "gyro": "Analog Gyro",
+  "gyro ctor": "0",
   "is drivetrain": false,
   "motor controllers": [
-    "TalonFX",
-    "TalonFX",
     "TalonFX",
     "TalonFX"
   ],
@@ -20,16 +18,12 @@
     1
   ],
   "primary motor ports": [
-    11,
-    12,
-    13,
-    14
+    50,
+    51
   ],
   "primary motors inverted": [
     false,
-    false,
-    false,
-    false
+    true
   ],
   "secondary encoder inverted": false,
   "secondary encoder ports": [
@@ -37,14 +31,10 @@
     3
   ],
   "secondary motor ports": [
-    13,
-    12,
-    5,
-    7
+    2,
+    3
   ],
   "secondary motors inverted": [
-    false,
-    false,
     false,
     false
   ],

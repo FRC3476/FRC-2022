@@ -16,6 +16,7 @@ import frc.utility.Timer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 @SuppressWarnings("unused")
 public final class RobotTracker extends AbstractSubsystem {
@@ -72,13 +73,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *                              source or sync the epochs.
      */
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        synchronized (deferredVisionUpdates) {
-            if (timestampSeconds > currentOdometryTime) {
-                swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
-            } else {
-                deferredVisionUpdates.add(Map.entry(timestampSeconds, visionRobotPoseMeters));
-            }
-        }
+        swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
     }
 
     public void calibrateGyro() {
@@ -124,10 +119,13 @@ public final class RobotTracker extends AbstractSubsystem {
 
         updateOdometry(time, gyroSensor.getRotation2d(), drive.getSwerveModuleStates());
 
-        previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
-        previousGyroRotations.subList(100, previousGyroRotations.size()).clear(); // Clear old data
-
         synchronized (this) {
+            previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
+            if (previousGyroRotations.size() > 100) {
+                previousGyroRotations.subList(100, previousGyroRotations.size()).clear(); // Clear old data
+            }
+
+
             latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
             latencyCompensatedPose = latestEstimatedPose;
 
@@ -138,6 +136,7 @@ public final class RobotTracker extends AbstractSubsystem {
             latencyCompensatedChassisSpeeds = latestChassisSpeeds;
             currentOdometryTime = Timer.getFPGATimestamp();
         }
+
         // Store sensor data for later. New data is always at the front of the list.
 //        previousAbsolutePositions.add(0, Map.entry(time, drive.getWheelRotations()));
 //        previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
@@ -235,17 +234,9 @@ public final class RobotTracker extends AbstractSubsystem {
         );
     }
 
-    private final Comparator comparator = (o1, o2) -> Double.compare(((Map.Entry<Double, ?>) o1).getKey(), (double) o2);
+    private final Comparator<Map.Entry<Double, Rotation2d>> comparator = Comparator.comparingDouble(Entry::getKey);
 
-    /**
-     * Will also delete the vision measurements that are older than the current time.
-     *
-     * @param time the time of the measurement
-     * @return the state of the absolute encoders at the specified time
-     */
-    private double[] getAbsolutePositions(double time) {
-        return getPositionOnListForTime(previousAbsolutePositions, time);
-    }
+    Rotation2d zero = new Rotation2d();
 
     /**
      * Will also delete the gyro measurements that are older than the current time.
@@ -253,32 +244,28 @@ public final class RobotTracker extends AbstractSubsystem {
      * @param time the time of the measurement
      * @return the state of the gyro at the specified time
      */
-    public Rotation2d getGyroRotation(double time) {
-        return getPositionOnListForTime(previousGyroRotations, time);
-    }
+    public synchronized Rotation2d getGyroRotation(double time) {
+        List<Map.Entry<Double, Rotation2d>> list = previousGyroRotations;
 
-    /**
-     * Will also delete entries on the list that are past the specified time.
-     *
-     * @param list the list to search
-     * @param time the time to search for
-     * @return the index of the value
-     */
-    private <T> T getPositionOnListForTime(List<Map.Entry<Double, T>> list, double time) {
-        if (list.isEmpty()) {
-            throw new IllegalStateException("Provided list is empty");
-        } else if (list.get(0).getKey() < time) {
-            throw new IllegalArgumentException("Time is not in this list");
-        } else if (list.get(list.size() - 1).getKey() > time) {
-            throw new IllegalArgumentException("Time is too far in the past");
-        }
+//        if (list.isEmpty()) {
+//            System.out.println(list);
+//            throw new IllegalStateException("Provided list is empty");
+//        } else if (list.get(0).getKey() < time) {
+//            System.out.println(list);
+//            throw new IllegalArgumentException("Time is not in this list");
+//        } else if (list.get(list.size() - 1).getKey() > time) {
+//            System.out.println(list);
+//            throw new IllegalArgumentException("Time is too far in the past");
+//        }
 
-        int index = Collections.binarySearch(list, time, comparator);
+        int index = (int) ((Timer.getFPGATimestamp() - time) / 10.0d);
         if (index < 0) index = -index - 1;
 
+        if (list.isEmpty() || list.size() > index) return getGyroAngle();
+
         // Remove all entries that are past the time
-        if (list.size() > index + 2) {
-            list.subList(index + 2, list.size()).clear();
+        if (list.size() > index + 10) {
+            list.subList(index + 10, list.size()).clear();
         }
 
         return list.get(index).getValue();
