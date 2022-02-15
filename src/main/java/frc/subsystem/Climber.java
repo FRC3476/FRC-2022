@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
-import static frc.robot.Robot.pneumaticHub;
+import static frc.utility.Pneumatics.getPneumaticsHub;
 
 public class Climber extends AbstractSubsystem {
     private static Climber instance = new Climber();
@@ -278,9 +278,9 @@ public class Climber extends AbstractSubsystem {
         pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
         pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
 
-        latchSolenoid = pneumaticHub.makeSolenoid(Constants.LATCH_SOLENOID_ID);
-        pivotSolenoid = pneumaticHub.makeSolenoid(Constants.PIVOT_SOLENOID_ID);
-        brakeSolenoid = pneumaticHub.makeSolenoid(Constants.BRAKE_SOLENOID_ID);
+        latchSolenoid = getPneumaticsHub().makeSolenoid(Constants.LATCH_SOLENOID_ID);
+        pivotSolenoid = getPneumaticsHub().makeSolenoid(Constants.PIVOT_SOLENOID_ID);
+        brakeSolenoid = getPneumaticsHub().makeSolenoid(Constants.BRAKE_SOLENOID_ID);
 
         climberMotor.setInverted(true);
         climberMotor2.setInverted(true);

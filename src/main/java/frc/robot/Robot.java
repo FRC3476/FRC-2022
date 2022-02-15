@@ -11,7 +11,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PneumaticHub;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -86,7 +85,7 @@ public class Robot extends TimedRobot {
 
 
     //Control loop states
-    boolean limelightTakeSnapshots;
+    boolean limelightTakeSnapshots = false;
     private double hoodPosition = 55;
     private double shooterSpeed = 2000;
     private boolean visionOn = false;
@@ -223,8 +222,6 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
     }
 
-    public static PneumaticHub pneumaticHub = new PneumaticHub(3);
-
     /**
      * This function is called once when teleop is enabled.
      */
@@ -238,8 +235,6 @@ public class Robot extends TimedRobot {
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
         drive.configBrake();
-
-        pneumaticHub.enableCompressorDigital();
     }
 
     private final Object driverForcingVisionOn = new Object();

@@ -8,7 +8,7 @@ import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 
-import static frc.robot.Robot.pneumaticHub;
+import static frc.utility.Pneumatics.getPneumaticsHub;
 
 public final class Intake extends AbstractSubsystem {
 
@@ -25,7 +25,7 @@ public final class Intake extends AbstractSubsystem {
 
     private Intake() {
         super(Constants.INTAKE_PERIOD);
-        intakeSol = pneumaticHub.makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
+        intakeSol = getPneumaticsHub().makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
         intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
     }
 
