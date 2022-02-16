@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -24,9 +25,13 @@ public final class Intake extends AbstractSubsystem {
     }
 
     private Intake() {
-        super(Constants.INTAKE_PERIOD);
+        super(Constants.INTAKE_PERIOD, 2);
         intakeSol = getPneumaticsHub().makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
         intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+        intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        intakeMotor.setControlFramePeriodMs(25);
     }
 
     @Override

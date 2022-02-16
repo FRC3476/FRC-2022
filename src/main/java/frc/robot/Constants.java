@@ -45,7 +45,7 @@ public final class Constants {
     public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
 
     //Drive Constants
-    public static final int DRIVE_PERIOD = 20; // TODO: APPEND UNITS
+    public static final int DRIVE_PERIOD = 20;
 
     public static final int DRIVE_LEFT_FRONT_ID = 11;
     public static final int DRIVE_LEFT_BACK_ID = 12;
@@ -199,7 +199,7 @@ public final class Constants {
 
     // Shooter Constants
 
-    public static final int SHOOTER_PERIOD_MS = 20;
+    public static final int SHOOTER_PERIOD_MS = 50;
 
     public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 50; // TODO: Get actual CAN ID for all shooter components
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 51;
@@ -427,7 +427,7 @@ public final class Constants {
 
     //Robot Tracker
     public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
-    public static final int ROBOT_TRACKER_PERIOD = 10;
+    public static final int ROBOT_TRACKER_PERIOD = 20;
 
     // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;

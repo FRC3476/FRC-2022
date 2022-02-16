@@ -1,13 +1,12 @@
 package frc.subsystem;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.*;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -224,6 +223,20 @@ public final class Shooter extends AbstractSubsystem {
 
         shooterWheelMaster.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_10Ms);
 
+        shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
+        shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 25); // Default is 10ms
+        shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        shooterWheelMaster.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        shooterWheelMaster.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        shooterWheelMaster.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
+
+        shooterWheelSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
+        shooterWheelSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 100); // Default is 10ms
+        shooterWheelSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        shooterWheelSlave.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        shooterWheelSlave.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        shooterWheelSlave.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
+
         // Turns off brake mode for shooter flywheel
         shooterWheelMaster.setNeutralMode(NeutralMode.Coast);
         shooterWheelSlave.setNeutralMode(NeutralMode.Coast);
@@ -235,9 +248,15 @@ public final class Shooter extends AbstractSubsystem {
         feederWheel.config_kD(0, Constants.FEEDER_WHEEL_D);
         feederWheel.config_kF(0, Constants.FEEDER_WHEEL_F);
         feederWheel.config_IntegralZone(0, Constants.FEEDER_WHEEL_I_ZONE);
-
-        shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.FEEDER_CURRENT_LIMIT,
+        feederWheel.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.FEEDER_CURRENT_LIMIT,
                 Constants.FEEDER_TRIGGER_THRESHOLD_CURRENT, Constants.FEEDER_TRIGGER_THRESHOLD_TIME));
+
+        feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 200); // Default is 10ms
+        feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 200); // Default is 10ms
+        feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        feederWheel.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        feederWheel.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        feederWheel.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
 
         hoodPID = hoodMotor.getPIDController();
         hoodPID.setP(Constants.HOOD_P, 0);
@@ -248,6 +267,13 @@ public final class Shooter extends AbstractSubsystem {
         hoodPID.setOutputRange(-Constants.HOOD_MAX_OUTPUT, Constants.HOOD_MAX_OUTPUT);
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
         hoodMotor.setInverted(true);
+        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 25);
+        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        hoodMotor.setControlFramePeriodMs(25);
+
+        hoodAbsoluteEncoder.setStatusFramePeriod(CANCoderStatusFrame.VbatAndFaults, 200);
+        hoodAbsoluteEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 25);
         hoodAbsoluteEncoder.configSensorDirection(true);
 
         hoodMotor.burnFlash();
