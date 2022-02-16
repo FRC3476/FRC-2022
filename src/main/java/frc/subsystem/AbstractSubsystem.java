@@ -117,7 +117,8 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                     Thread.sleep((long) (period - executionTimeMS));
                 }
             } catch (Exception e) {
-                System.out.println("Thread sleep failing " + subsystemName + " message: " + e.getMessage());
+                System.out.println("Thread interrupted " + subsystemName + " message: " + e.getMessage());
+                return;
             }
 
         }
