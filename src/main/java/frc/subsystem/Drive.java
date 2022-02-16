@@ -50,8 +50,8 @@ public final class Drive extends AbstractSubsystem {
     private final ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(20, 0, 0, new TrapezoidProfile.Constraints(100, 100)); //P=1.0 OR 0.8
-        turnPID.enableContinuousInput(-180, 180);
+        turnPID = new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)); //P=1.0 OR 0.8
+        turnPID.enableContinuousInput(-Math.PI, Math.PI);
         turnPID.setTolerance(Math.toRadians(Constants.MAX_TURN_ERROR), Math.toRadians(Constants.MAX_PID_STOP_SPEED));
     }
 
@@ -499,7 +499,7 @@ public final class Drive extends AbstractSubsystem {
     private final HolonomicDriveController swerveAutoController = new HolonomicDriveController(
             new PIDController(1.5, 0, 0),
             new PIDController(1.5, 0, 0),
-            turnPID);
+            new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)));
 
     {
         swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
@@ -526,8 +526,6 @@ public final class Drive extends AbstractSubsystem {
 
     private void updateRamsete() {
         Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
-        Trajectory.State trackerPose = currentAutoTrajectory.sample(
-                Timer.getFPGATimestamp() - autoStartTime - Constants.DRIVE_VELOCITY_MEASUREMENT_LATENCY);
 
         Rotation2d targetHeading = autoTargetHeading;
         if (isAutoAiming) {
@@ -537,7 +535,6 @@ public final class Drive extends AbstractSubsystem {
         ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
                 RobotTracker.getInstance().getLastEstimatedPoseMeters(),
                 goal,
-                trackerPose,
                 targetHeading);
 
         swerveDrive(adjustedSpeeds);
@@ -628,37 +625,36 @@ public final class Drive extends AbstractSubsystem {
         if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
 
         if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
-            turnPID.reset(RobotTracker.getInstance().getGyroAngle().getDegrees(),
-                    Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond));
+            turnPID.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
+                    RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         }
+
         lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getDegrees(),
-                targetHeading.getDegrees());
+        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
+                targetHeading.getRadians());
 
         System.out.println("turning: " + turnPID.getPositionError() + " delta speed: " + pidDeltaSpeed);
-        double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
-        double deltaSpeed = Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
+        double curSpeed = RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond;
+        double deltaSpeed = pidDeltaSpeed; //Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
+        if (useFieldRelative) {
+            swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M, controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
+                    Math.toRadians(deltaSpeed),
+                    RobotTracker.getInstance().getGyroAngle()));
+        } else {
+            swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
+                    Math.toRadians(deltaSpeed)));
+        }
 
         if (turnPID.atGoal()) {
-            doHold();
             isAiming = false;
-
             if (rotateAuto) {
                 setDriveState(DriveState.DONE);
             }
         } else {
             isAiming = true;
-            if (useFieldRelative) {
-                swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                        controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M, controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                        Math.toRadians(deltaSpeed),
-                        RobotTracker.getInstance().getGyroAngle()));
-            } else {
-                swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M,
-                        controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                        Math.toRadians(deltaSpeed)));
-            }
 
             if (curSpeed < 0.5) {
                 //Updates every 20ms
