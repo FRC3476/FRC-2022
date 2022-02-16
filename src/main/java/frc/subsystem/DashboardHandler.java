@@ -6,10 +6,12 @@ import frc.utility.Serializer;
 import frc.utility.Timer;
 import frc.utility.net.DashboardConnection;
 import frc.utility.net.PacketHandler;
+import frc.utility.net.SendableLog;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -88,7 +90,8 @@ public final class DashboardHandler extends AbstractSubsystem {
             String json;
             LOG_DATA_MAP_LOCK.writeLock().lock(); // Ensure that no other writes happen while we're serializing
             try {
-                json = Serializer.serializeToString(LOG_DATA_MAP);
+                SendableLog log = new SendableLog(LOG_DATA_MAP);
+                json = 'd' + Serializer.serializeToString(log);
             } finally {
                 LOG_DATA_MAP_LOCK.writeLock().unlock();
             }
@@ -102,7 +105,7 @@ public final class DashboardHandler extends AbstractSubsystem {
                         entry.close();
                         iterator.remove();
                     } else {
-                        byte[] bytes = json.getBytes();
+                        byte[] bytes = json.getBytes(StandardCharsets.ISO_8859_1);
                         try {
                             entry.datagramSocket.send(new DatagramPacket(bytes, bytes.length));
                         } catch (PortUnreachableException e) {
