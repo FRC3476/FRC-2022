@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.wpilibj.I2C;
@@ -46,6 +47,11 @@ public class Hopper extends AbstractSubsystem {
     private Hopper() {
         super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+        hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        hopperMotor.setControlFramePeriodMs(25);
+
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
     }

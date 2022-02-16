@@ -4,9 +4,11 @@ package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -152,6 +154,13 @@ public final class Drive extends AbstractSubsystem {
             swerveMotors[i].setNeutralMode(NeutralMode.Coast);
             swerveMotors[i].setInverted(true);
             swerveDriveMotors[i].configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_5Ms);
+            swerveDriveMotors[i].setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 50);
+            swerveDriveMotors[i].setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 20);
+            swerveMotors[i].setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 50);
+            swerveMotors[i].setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 20);
+
+            swerveCanCoders[i].setStatusFramePeriod(CANCoderStatusFrame.VbatAndFaults, 200);
+            swerveCanCoders[i].setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
         }
 
         useFieldRelative = true;

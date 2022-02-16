@@ -1,8 +1,6 @@
 package frc.subsystem;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.*;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -269,6 +267,20 @@ public class Climber extends AbstractSubsystem {
         climberMotor.setNeutralMode(NeutralMode.Brake);
         climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
                 Constants.CLIMBER_CURRENT_LIMIT, 0));
+
+        climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
+        climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 25); // Default is 10ms
+        climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        climberMotor.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        climberMotor.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        climberMotor.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
+
+        climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
+        climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 100); // Default is 10ms
+        climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        climberMotor2.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        climberMotor2.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        climberMotor2.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
 
         elevatorArmContactSwitchA = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
         elevatorArmContactSwitchB = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
