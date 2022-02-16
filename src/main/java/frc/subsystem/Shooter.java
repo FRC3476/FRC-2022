@@ -223,7 +223,7 @@ public final class Shooter extends AbstractSubsystem {
 
         shooterWheelMaster.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_10Ms);
 
-        shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
+        shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 20); // Default is 10ms
         shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 25); // Default is 10ms
         shooterWheelMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
         shooterWheelMaster.setControlFramePeriod(ControlFrame.Control_3_General, 25);
