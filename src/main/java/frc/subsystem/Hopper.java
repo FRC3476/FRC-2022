@@ -9,13 +9,14 @@ import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.controllers.LazyCANSparkMax;
+import org.jetbrains.annotations.NotNull;
 
 import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 
-public class Hopper extends AbstractSubsystem {
-    public static Hopper instance = new Hopper();
-    LazyCANSparkMax hopperMotor;
-    private final ColorSensorV3 topBall;
+public final class Hopper extends AbstractSubsystem {
+    public static @NotNull Hopper INSTANCE = new Hopper();
+    private final @NotNull LazyCANSparkMax hopperMotor;
+    private final @NotNull ColorSensorV3 topBall;
     //private final ColorSensorV3 bottomBall = new ColorSensorV3(Port.kMXP);
 
     private boolean topBallDetected = false;
@@ -37,7 +38,7 @@ public class Hopper extends AbstractSubsystem {
     private final Color redTarget = new Color(0.38, 0.41, 0.2);
 
     public static Hopper getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public enum HopperState {
@@ -148,6 +149,6 @@ public class Hopper extends AbstractSubsystem {
     @Override
     public void close() throws Exception {
         setHopperState(HopperState.OFF);
-        instance = new Hopper();
+        INSTANCE = new Hopper();
     }
 }

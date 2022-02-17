@@ -11,10 +11,11 @@ public final class BlinkinLED extends AbstractSubsystem {
     }
 
 
-    @NotNull Spark spark = new Spark(0);
+    @NotNull final Spark spark;
 
     private BlinkinLED() {
         super(-1);
+        spark = new Spark(0);
     }
 
     public void setColor(double color) {

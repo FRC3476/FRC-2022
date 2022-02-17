@@ -61,7 +61,7 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
      */
     public MutableRotation2d(double x, double y) {
         double magnitude = Math.hypot(x, y);
-        if (magnitude > 1e-6) {
+        if (magnitude > 1.0e-6) {
             sin = y / magnitude;
             cos = x / magnitude;
         } else {
@@ -263,7 +263,7 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
      */
     public MutableRotation2d set(double x, double y) {
         double magnitude = Math.hypot(x, y);
-        if (magnitude > 1e-6) {
+        if (magnitude > 1.0e-6) {
             sin = y / magnitude;
             cos = x / magnitude;
         } else {
@@ -290,10 +290,10 @@ public class MutableRotation2d implements Interpolatable<MutableRotation2d> {
     public boolean equals(Object obj) {
         if (obj instanceof MutableRotation2d) {
             var other = (MutableRotation2d) obj;
-            return Math.hypot(cos - other.cos, sin - other.sin) < 1E-9;
+            return Math.hypot(cos - other.cos, sin - other.sin) < 1.0E-9;
         } else if (obj instanceof Rotation2d) {
             var other = (Rotation2d) obj;
-            return Math.hypot(cos - other.getCos(), sin - other.getSin()) < 1E-9;
+            return Math.hypot(cos - other.getCos(), sin - other.getSin()) < 1.0E-9;
         }
         return false;
     }

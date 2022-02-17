@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OrangeUtility {
+public final class OrangeUtility {
 
     /**
      * Extracts the double value from a string.

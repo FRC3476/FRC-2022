@@ -15,6 +15,7 @@ import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -22,12 +23,12 @@ import static frc.utility.OrangeUtility.getSpeed;
 import static frc.utility.OrangeUtility.getTranslation2d;
 
 public final class VisionManager extends AbstractSubsystem {
-    private static VisionManager instance = new VisionManager();
+    private static final @NotNull VisionManager instance = new VisionManager();
 
-    RobotTracker robotTracker = RobotTracker.getInstance();
-    Limelight limelight = Limelight.getInstance();
-    Drive drive = Drive.getInstance();
-    Shooter shooter = Shooter.getInstance();
+    private final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
+    private final @NotNull Limelight limelight = Limelight.getInstance();
+    private final @NotNull Drive drive = Drive.getInstance();
+    private final @NotNull Shooter shooter = Shooter.getInstance();
 
     private final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
     private double shooterHoodAngleBias = 0;
@@ -53,7 +54,7 @@ public final class VisionManager extends AbstractSubsystem {
         super(Constants.VISION_MANAGER_PERIOD);
     }
 
-    public static VisionManager getInstance() {
+    public static @NotNull VisionManager getInstance() {
         return instance;
     }
 
@@ -151,7 +152,6 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
 
-    @SuppressWarnings("NewMethodNamingConvention")
     @Contract(pure = true)
     private MutableTranslation2d getVelocityCompensatedEjectionVector(Translation2d robotVelocityVector,
                                                                       MutableTranslation2d wantedEjectionVector) {
@@ -272,8 +272,7 @@ public final class VisionManager extends AbstractSubsystem {
         double angleToTarget = Math.atan2(goalTranslationOffset.getY(), goalTranslationOffset.getX());
 
 
-        if (false && (isVisionForcedOn() || Math.abs(
-                angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
+        if ((isVisionForcedOn() || Math.abs(angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
             limelight.setLedMode(LedMode.ON);
 
             if (limelight.isTargetVisible()) {

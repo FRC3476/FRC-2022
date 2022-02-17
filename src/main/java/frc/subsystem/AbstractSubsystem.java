@@ -14,7 +14,6 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     public @NotNull String subsystemName;
     private @Nullable Thread thisThread;
 
-
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
     }
@@ -63,7 +62,6 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     public void update() {
 
     }
-
     int lastLength = 20;
 
     @Override

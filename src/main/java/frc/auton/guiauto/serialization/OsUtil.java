@@ -2,7 +2,7 @@ package frc.auton.guiauto.serialization;
 
 import org.jetbrains.annotations.Nullable;
 
-public class OsUtil {
+public final class OsUtil {
     private static final String OS = System.getProperty("os.name").toLowerCase();
 
     static public boolean isAndroid = System.getProperty("java.runtime.name").contains("Android");
@@ -11,8 +11,10 @@ public class OsUtil {
     static public boolean isLinux = !isAndroid && OS.contains("linux");
     static public boolean isIos = !isAndroid && (!(isWindows || isLinux || isMac)) || OS.startsWith("ios");
 
-    static public boolean isARM = System.getProperty("os.arch").startsWith("arm") || System.getProperty("os.arch").startsWith("aarch64");
-    static public boolean is64Bit = System.getProperty("os.arch").contains("64") || System.getProperty("os.arch").startsWith("armv8");
+    static public boolean isARM = System.getProperty("os.arch").startsWith("arm") || System.getProperty("os.arch").startsWith(
+            "aarch64");
+    static public boolean is64Bit = System.getProperty("os.arch").contains("64") || System.getProperty("os.arch").startsWith(
+            "armv8");
 
     public static boolean isGwt = false;
 
@@ -20,8 +22,7 @@ public class OsUtil {
         try {
             Class.forName("com.google.gwt.core.client.GWT");
             isGwt = true;
-        }
-        catch(Exception ignored) { /* IGNORED */ }
+        } catch (Exception ignored) { /* IGNORED */ }
 
         boolean isMOEiOS = "iOS".equals(System.getProperty("moe.platform.name"));
         if (isMOEiOS || (!isAndroid && !isWindows && !isLinux && !isMac)) {
@@ -39,7 +40,7 @@ public class OsUtil {
     }
 
     public static @Nullable String getUserConfigDirectory(@Nullable String applicationName) {
-        String CONFIG_HOME = null;
+        String CONFIG_HOME;
 
         if ((CONFIG_HOME = System.getenv("XDG_CONFIG_HOME")) == null) {
             if (isLinux || isAndroid) {
@@ -71,31 +72,27 @@ public class OsUtil {
     }
 
     public static @Nullable String getUserDataDirectory(@Nullable String applicationName) {
-        String DATA_HOME = null;
+        String dataHome;
 
-        if ((DATA_HOME = System.getenv("XDG_DATA_HOME")) == null) {
+        if ((dataHome = System.getenv("XDG_DATA_HOME")) == null) {
             if (isLinux || isAndroid) {
-                DATA_HOME = System.getProperty("user.home") + "/.local/share";
-            } else if (isMac)
-            {
-                DATA_HOME = System.getProperty("user.home")+"/Library/Application Support";
-            }
-            else if(isIos)
-            {
-                DATA_HOME = System.getProperty("user.home")+"/Documents";
+                dataHome = System.getProperty("user.home") + "/.local/share";
+            } else if (isMac) {
+                dataHome = System.getProperty("user.home") + "/Library/Application Support";
+            } else if (isIos) {
+                dataHome = System.getProperty("user.home") + "/Documents";
             }
             else if(isWindows)
             {
-                if((DATA_HOME = System.getenv("APPDATA"))==null)
-                {
-                    DATA_HOME = System.getProperty("user.home")+"/Local Settings/Application Data";
+                if ((dataHome = System.getenv("APPDATA")) == null) {
+                    dataHome = System.getProperty("user.home") + "/Local Settings/Application Data";
                 }
             }
         }
 
-        if(applicationName==null || DATA_HOME==null) return DATA_HOME;
+        if (applicationName == null || dataHome == null) return dataHome;
 
-        return DATA_HOME+"/"+applicationName;
+        return dataHome + "/" + applicationName;
     }
 
 }

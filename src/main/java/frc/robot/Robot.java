@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as described in the
@@ -43,22 +45,25 @@ public class Robot extends TimedRobot {
     public boolean useFieldRelative = false;
 
     //GUI
-    NetworkTableInstance instance = NetworkTableInstance.getDefault();
-    NetworkTable autoDataTable = instance.getTable("autodata");
-    NetworkTableEntry autoPath = autoDataTable.getEntry("autoPath");
-    NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
-    NetworkTableEntry pathProcessingStatusEntry = autoDataTable.getEntry("processing");
-    NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
+    final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
+    final @NotNull NetworkTable autoDataTable = instance.getTable("autodata");
+    final @NotNull NetworkTableEntry autoPath = autoDataTable.getEntry("autoPath");
+    final @NotNull NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
+    final @NotNull NetworkTableEntry pathProcessingStatusEntry = autoDataTable.getEntry("processing");
+    final @NotNull NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
 
-    NetworkTableEntry shooterConfigEntry = instance.getTable("limelightgui").getEntry("shooterconfig");
-    NetworkTableEntry shooterConfigStatusEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatus");
-    NetworkTableEntry shooterConfigStatusIdEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatusId");
+    final @NotNull NetworkTableEntry shooterConfigEntry = instance.getTable("limelightgui").getEntry("shooterconfig");
+    final @NotNull NetworkTableEntry shooterConfigStatusEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatus");
+    final @NotNull NetworkTableEntry shooterConfigStatusIdEntry = instance.getTable("limelightgui").getEntry(
+            "shooterconfigStatusId");
 
+    private final @NotNull Lock networkAutoLock = new ReentrantLock();
     NetworkAuto networkAuto = null;
+
     @Nullable String lastAutoPath = null;
     @Nullable String lastShooterConfig = null;
 
-    @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
+    final @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
 
     //Auto
     @Nullable TemplateAuto selectedAuto;
@@ -137,8 +142,13 @@ public class Robot extends TimedRobot {
                 //Set networktable entries for the gui notifications
                 pathProcessingStatusEntry.setDouble(1);
                 pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                networkAutoLock.lock();
+                try {
+                    networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
+                } finally {
+                    networkAutoLock.unlock();
+                }
 
-                networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
                 // ready to be run
                 System.out.println("done parsing autonomous");
                 //Set networktable entries for the gui notifications
@@ -194,19 +204,25 @@ public class Robot extends TimedRobot {
 
 
     @Override
-    public void autonomousInit() {
+    public synchronized void autonomousInit() {
         enabled.setBoolean(true);
         drive.configBrake();
         startSubsystems();
 
-        if (networkAuto == null) {
-            System.out.println("Using normal autos");
-            selectedAuto = null; //TODO put an actual auto here
-            //TODO put autos here
-        } else {
-            System.out.println("Using autos from network tables");
-            selectedAuto = networkAuto;
+        networkAutoLock.lock();
+        try {
+            if (networkAuto == null) {
+                System.out.println("Using normal autos");
+                selectedAuto = null; //TODO put an actual auto here
+                //TODO put autos here
+            } else {
+                System.out.println("Using autos from network tables");
+                selectedAuto = networkAuto;
+            }
+        } finally {
+            networkAutoLock.unlock();
         }
+
         //Since autonomous objects can be reused they need to be reset them before we can reuse them again 
         selectedAuto.reset();
 
@@ -544,13 +560,8 @@ public class Robot extends TimedRobot {
 
     public synchronized void killAuto() {
         if (selectedAuto != null) {
-            selectedAuto.killSwitch();
-        }
-
-        if (selectedAuto != null) {
-            //auto.interrupt();
-            //while(!auto.isInterrupted());
             assert autoThread != null;
+            selectedAuto.killSwitch();
             while (autoThread.getState() != Thread.State.TERMINATED) OrangeUtility.sleep(10);
 
             drive.stopMovement();
