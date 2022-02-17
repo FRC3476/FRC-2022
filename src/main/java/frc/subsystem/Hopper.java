@@ -15,7 +15,7 @@ import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 public class Hopper extends AbstractSubsystem {
     public static Hopper instance = new Hopper();
     LazyCANSparkMax hopperMotor;
-    private final ColorSensorV3 topBall = new ColorSensorV3(I2C.Port.kMXP);
+    private final ColorSensorV3 topBall;
     //private final ColorSensorV3 bottomBall = new ColorSensorV3(Port.kMXP);
 
     private boolean topBallDetected = false;
@@ -58,6 +58,7 @@ public class Hopper extends AbstractSubsystem {
 
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
+        topBall = new ColorSensorV3(I2C.Port.kMXP);
     }
 
     public void checkBallColor() {
