@@ -120,9 +120,9 @@ public final class RobotTracker extends AbstractSubsystem {
         updateOdometry(time, gyroSensor.getRotation2d(), drive.getSwerveModuleStates());
 
         synchronized (this) {
-            previousGyroRotations.add(0, Map.entry(time, gyroSensor.getRotation2d()));
+            previousGyroRotations.add(Map.entry(time, gyroSensor.getRotation2d()));
             if (previousGyroRotations.size() > 100) {
-                previousGyroRotations.subList(100, previousGyroRotations.size()).clear(); // Clear old data
+                previousGyroRotations.subList(0, previousGyroRotations.size() - 100).clear(); // Clear old data
             }
 
 
@@ -258,15 +258,10 @@ public final class RobotTracker extends AbstractSubsystem {
 //            throw new IllegalArgumentException("Time is too far in the past");
 //        }
 
-        int index = (int) ((Timer.getFPGATimestamp() - time) / 10.0d);
-        if (index < 0) index = -index - 1;
-
-        if (list.isEmpty() || list.size() > index) return getGyroAngle();
-
-        // Remove all entries that are past the time
-        if (list.size() > index + 10) {
-            list.subList(index + 10, list.size()).clear();
-        }
+        //int index = list.size() - ((int) ((Timer.getFPGATimestamp() - time) / 20.0));
+        int index = Collections.binarySearch(list, Map.entry(time, zero), comparator);
+        //if (index < 0) index = -index - 1;
+        if (list.isEmpty() || index > list.size() || index < 0) return getGyroAngle();
 
         return list.get(index).getValue();
     }
