@@ -1,12 +1,14 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.Serializer;
 import frc.utility.Timer;
 import frc.utility.net.DashboardConnection;
 import frc.utility.net.PacketHandler;
 import frc.utility.net.SendableLog;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -56,9 +58,9 @@ public final class DashboardHandler extends AbstractSubsystem {
         });
     }
 
-    private static final DashboardHandler INSTANCE = new DashboardHandler(Constants.WEB_DASHBOARD_SEND_PERIOD_MS);
+    private static final @NotNull DashboardHandler INSTANCE = new DashboardHandler(Constants.WEB_DASHBOARD_SEND_PERIOD_MS);
 
-    public static DashboardHandler getInstance() {
+    public static @NotNull DashboardHandler getInstance() {
         return INSTANCE;
     }
 
@@ -73,7 +75,29 @@ public final class DashboardHandler extends AbstractSubsystem {
             DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
         }
     }
-    public void log(String key, Object value) {
+
+    public void log(@NotNull String key, @NotNull Object value) {
+        log(key, value, false);
+    }
+
+    public void log(@NotNull String key, @NotNull Object value, boolean logToNetworkTables) {
+        if (logToNetworkTables) {
+            //@formatter:off
+            Class<?> cl = value.getClass();
+            if (cl.equals(Integer.class)) SmartDashboard.putNumber(key, (int) value);
+            else if (cl.equals(Double.class)) SmartDashboard.putNumber(key, (double) value);
+            else if (cl.equals(Short.class)) SmartDashboard.putNumber(key, (short) value);
+            else if (cl.equals(Long.class)) SmartDashboard.putNumber(key, (long) value);
+            else if (cl.equals(Float.class)) SmartDashboard.putNumber(key, (float) value);
+            else if (cl.equals(Byte.class)) SmartDashboard.putNumber(key, (byte) value);
+            else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(key, (boolean) value);
+            else if (cl.equals(String.class)) SmartDashboard.putString(key, (String) value);
+            else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(key, (Double[]) value);
+            else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(key, (Boolean[]) value);
+            else if (cl.equals(String[].class)) SmartDashboard.putStringArray(key, (String[]) value);
+            else SmartDashboard.putString(key, value.toString());
+            //@formatter:on
+        }
         LOG_DATA_MAP_LOCK.readLock().lock();
         // We're adding a read lock here because there can only be one writer, but there can be many readers. The
         // ConcurrentHashMap is thread-safe and will handle the synchronization with multiple writes for us. We then only put a
