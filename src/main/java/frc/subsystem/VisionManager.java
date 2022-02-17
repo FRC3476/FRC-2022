@@ -7,7 +7,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
-import frc.utility.Limelight.CamMode;
 import frc.utility.Limelight.LedMode;
 import frc.utility.MathUtil;
 import frc.utility.Timer;
@@ -31,7 +30,6 @@ public final class VisionManager extends AbstractSubsystem {
     Shooter shooter = Shooter.getInstance();
 
     private final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
-    private BallPredictionMode ballPredictionMode = BallPredictionMode.VELOCITY_COMPENSATED;
     private double shooterHoodAngleBias = 0;
 
     {
@@ -50,15 +48,6 @@ public final class VisionManager extends AbstractSubsystem {
     public void setShooterConfig(ShooterConfig shooterConfig) {
         visionLookUpTable.setShooterConfig(shooterConfig);
     }
-
-    public enum BallPredictionMode {
-        VELOCITY_COMPENSATED, STATIC_POSE
-    }
-
-    public BallPredictionMode getBallPredictionMode() {
-        return ballPredictionMode;
-    }
-
 
     private VisionManager() {
         super(Constants.VISION_MANAGER_PERIOD);
@@ -79,20 +68,9 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
-        if (ballPredictionMode == BallPredictionMode.STATIC_POSE || true) {
-            // System.out.println("hereyeay");
-            // STATIC_POSE prediction mode doesn't use the robot tracker so if we're using it, we want to use the turn method
-            // that uses pure vision data to calculate the turn
-            autoTurnRobotToTarget(controllerDriveInputs, useFieldRelative);
-            updateShooterStateStaticPose(); // TODO: this call will be doubled if the operator is also trying to turn the flywheel on.
-
-            shooter.setFiring(!drive.isAiming() && !limelight.isTargetVisible());
-        } else {
-            updateShooterState(); // TODO: this call will be doubled if the operator is also trying to turn the flywheel on.
-            Rotation2d targetRotation = getPredictedRotationTarget();
-            drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
-            shooter.setFiring(!drive.isAiming());
-        }
+        Rotation2d targetRotation = getPredictedRotationTarget();
+        drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
+        shooter.setFiring(!drive.isAiming());
     }
 
     public Rotation2d getPredictedRotationTarget() {
@@ -186,7 +164,6 @@ public final class VisionManager extends AbstractSubsystem {
      * You need to call {@link #forceVisionOn(Object)} before calling this method.
      */
     public void forceUpdatePose() {
-        limelight.setCamMode(CamMode.VISION_PROCESSOR);
         limelight.setLedMode(LedMode.ON);
         if (limelight.isTargetVisible()) {
             robotTracker.addVisionMeasurement(new Pose2d(getCurrentTranslation().getTranslation2d(),
@@ -206,8 +183,7 @@ public final class VisionManager extends AbstractSubsystem {
             Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
                     .minus(Constants.GOAL_POSITION);
             Rotation2d targetRotation = robotTracker.getGyroAngle();//new Rotation2d(Math.atan2(relativeRobotPosition.getY(),
-            // relativeRobotPosition.getX
-            // ()));
+            // relativeRobotPosition.get()));
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         }
 
@@ -230,8 +206,6 @@ public final class VisionManager extends AbstractSubsystem {
      * Calculates and sets the flywheel speed considering a static robot velocity
      */
     public void updateShooterStateStaticPose() {
-        ballPredictionMode = BallPredictionMode.STATIC_POSE;
-
         double distanceToTarget;
         if (limelight.isTargetVisible()) {
             distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS;
@@ -250,16 +224,13 @@ public final class VisionManager extends AbstractSubsystem {
      * Calculates and sets the flywheel speed considering a moving robot
      */
     public void updateShooterState() {
-        updateShooterStateStaticPose();
-//        ballPredictionMode = BallPredictionMode.VELOCITY_COMPENSATED;
-//
-//        MutableTranslation2d predictedPose = predictTranslationAtZeroVelocity(robotTracker.getLatencyCompedChassisSpeeds(),
-//                robotTracker.getLatencyCompedPoseMeters().getTranslation());
-//        double distanceToTarget = predictedPose.minus(Constants.GOAL_POSITION).getNorm();
-//
-//        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
-//        shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
-//        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+        MutableTranslation2d predictedPose = predictTranslationAtZeroVelocity(robotTracker.getLatencyCompedChassisSpeeds(),
+                robotTracker.getLatencyCompedPoseMeters().getTranslation());
+        double distanceToTarget = predictedPose.minus(Constants.GOAL_POSITION).getNorm();
+
+        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
+        shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
+        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
     private final ArrayList<Object> forceVisionOn = new ArrayList<>(5);
@@ -272,7 +243,6 @@ public final class VisionManager extends AbstractSubsystem {
      */
     public void forceVisionOn(Object source) {
         forceVisionOn.add(source);
-        limelight.setCamMode(CamMode.VISION_PROCESSOR);
         limelight.setLedMode(LedMode.ON);
     }
 
@@ -284,7 +254,6 @@ public final class VisionManager extends AbstractSubsystem {
     public void unForceVisionOn(Object source) {
         forceVisionOn.remove(source);
         if (forceVisionOn.isEmpty()) {
-            limelight.setCamMode(CamMode.DRIVER_CAMERA);
             limelight.setLedMode(LedMode.OFF);
         }
     }
@@ -305,7 +274,6 @@ public final class VisionManager extends AbstractSubsystem {
 
         if (false && (isVisionForcedOn() || Math.abs(
                 angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
-            limelight.setCamMode(CamMode.VISION_PROCESSOR);
             limelight.setLedMode(LedMode.ON);
 
             if (limelight.isTargetVisible()) {
@@ -329,7 +297,6 @@ public final class VisionManager extends AbstractSubsystem {
                 logData("Using Vision Info", "No target visible");
             }
         } else {
-            limelight.setCamMode(CamMode.VISION_PROCESSOR);
             limelight.setLedMode(LedMode.ON);
             logData("Using Vision Info", "Not pointing at target");
         }

@@ -10,10 +10,12 @@ import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.controllers.LazyCANSparkMax;
 
+import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
+
 public class Hopper extends AbstractSubsystem {
     public static Hopper instance = new Hopper();
     LazyCANSparkMax hopperMotor;
-    private final ColorSensorV3 topBall = new ColorSensorV3(I2C.Port.kMXP);
+    private final ColorSensorV3 topBall;
     //private final ColorSensorV3 bottomBall = new ColorSensorV3(Port.kMXP);
 
     private boolean topBallDetected = false;
@@ -47,6 +49,8 @@ public class Hopper extends AbstractSubsystem {
     private Hopper() {
         super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
+        
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
@@ -54,6 +58,7 @@ public class Hopper extends AbstractSubsystem {
 
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
+        topBall = new ColorSensorV3(I2C.Port.kMXP);
     }
 
     public void checkBallColor() {

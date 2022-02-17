@@ -267,7 +267,7 @@ public class Climber extends AbstractSubsystem {
         climberMotor.setNeutralMode(NeutralMode.Brake);
         climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
                 Constants.CLIMBER_CURRENT_LIMIT, 0));
-
+        
         climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
         climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 25); // Default is 10ms
         climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
