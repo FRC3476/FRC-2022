@@ -287,8 +287,7 @@ public final class Constants {
     public static final double HOMING_MOTOR_PERCENT_OUTPUT = 0.30;
 
     /**
-     * Allowed error when comparing Hood angle to a desired angle Units are in rotations of the motor. 1 Rotation is 3.69230
-     * degrees of the hood
+     * Allowed error when comparing Hood angle to a desired angle Units are in degrees
      */
     public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
 
