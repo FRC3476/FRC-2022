@@ -76,8 +76,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
                     try {
                         //noinspection BusyWait
                         Thread.sleep(1);
-                    } catch (InterruptedException ignored) {
-                    }
+                    } catch (InterruptedException ignored) {}
                 }
             }
             Drive.getInstance().stopMovement();

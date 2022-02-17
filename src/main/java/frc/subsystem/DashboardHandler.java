@@ -56,10 +56,10 @@ public final class DashboardHandler extends AbstractSubsystem {
         });
     }
 
-    private static DashboardHandler instance = new DashboardHandler(Constants.WEB_DASHBOARD_SEND_PERIOD_MS);
+    private static final DashboardHandler INSTANCE = new DashboardHandler(Constants.WEB_DASHBOARD_SEND_PERIOD_MS);
 
     public static DashboardHandler getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
 
