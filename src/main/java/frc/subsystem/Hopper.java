@@ -10,6 +10,8 @@ import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.controllers.LazyCANSparkMax;
 
+import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
+
 public class Hopper extends AbstractSubsystem {
     public static Hopper instance = new Hopper();
     LazyCANSparkMax hopperMotor;
@@ -47,6 +49,8 @@ public class Hopper extends AbstractSubsystem {
     private Hopper() {
         super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+        hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
+
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
