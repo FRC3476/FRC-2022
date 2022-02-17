@@ -3,6 +3,7 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
@@ -10,8 +11,8 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final int loggingInterval;
     private int logInterval;
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
-    public String subsystemName;
-    Thread thisThread;
+    public @NotNull String subsystemName;
+    private @Nullable Thread thisThread;
 
 
     public enum ThreadSignal {
@@ -35,8 +36,8 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public abstract void logData();
 
-    public void logData(String key, Object value) {
-        DashboardHandler.getInstance().log(subsystemName + ' ' + key, value);
+    public void logData(@NotNull String key, @NotNull Object value) {
+        DashboardHandler.getInstance().log(key, value);
     }
 
     public void pause() {
@@ -49,7 +50,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public void start() {
         signal = ThreadSignal.ALIVE;
-        if (thisThread == null || !thisThread.isAlive()) {
+        if ((thisThread == null || !thisThread.isAlive()) && this.period > 0) {
             thisThread = new Thread(this);
             thisThread.start();
         }
