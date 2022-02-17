@@ -7,7 +7,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
-import frc.utility.Limelight.CamMode;
 import frc.utility.Limelight.LedMode;
 import frc.utility.MathUtil;
 import frc.utility.Timer;
@@ -165,7 +164,6 @@ public final class VisionManager extends AbstractSubsystem {
      * You need to call {@link #forceVisionOn(Object)} before calling this method.
      */
     public void forceUpdatePose() {
-        limelight.setCamMode(CamMode.VISION_PROCESSOR);
         limelight.setLedMode(LedMode.ON);
         if (limelight.isTargetVisible()) {
             robotTracker.addVisionMeasurement(new Pose2d(getCurrentTranslation().getTranslation2d(),
@@ -185,8 +183,7 @@ public final class VisionManager extends AbstractSubsystem {
             Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
                     .minus(Constants.GOAL_POSITION);
             Rotation2d targetRotation = robotTracker.getGyroAngle();//new Rotation2d(Math.atan2(relativeRobotPosition.getY(),
-            // relativeRobotPosition.getX
-            // ()));
+            // relativeRobotPosition.get()));
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         }
 
@@ -246,7 +243,6 @@ public final class VisionManager extends AbstractSubsystem {
      */
     public void forceVisionOn(Object source) {
         forceVisionOn.add(source);
-        limelight.setCamMode(CamMode.VISION_PROCESSOR);
         limelight.setLedMode(LedMode.ON);
     }
 
@@ -258,7 +254,6 @@ public final class VisionManager extends AbstractSubsystem {
     public void unForceVisionOn(Object source) {
         forceVisionOn.remove(source);
         if (forceVisionOn.isEmpty()) {
-            limelight.setCamMode(CamMode.DRIVER_CAMERA);
             limelight.setLedMode(LedMode.OFF);
         }
     }
@@ -279,7 +274,6 @@ public final class VisionManager extends AbstractSubsystem {
 
         if (false && (isVisionForcedOn() || Math.abs(
                 angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
-            limelight.setCamMode(CamMode.VISION_PROCESSOR);
             limelight.setLedMode(LedMode.ON);
 
             if (limelight.isTargetVisible()) {
@@ -303,7 +297,6 @@ public final class VisionManager extends AbstractSubsystem {
                 logData("Using Vision Info", "No target visible");
             }
         } else {
-            limelight.setCamMode(CamMode.VISION_PROCESSOR);
             limelight.setLedMode(LedMode.ON);
             logData("Using Vision Info", "Not pointing at target");
         }

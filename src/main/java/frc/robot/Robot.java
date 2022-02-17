@@ -261,7 +261,7 @@ public class Robot extends TimedRobot {
                 if (shooterControlState == ShooterControlState.VELOCITY_COMPENSATED) {
                     visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
                 } else {
-                    visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative); //
+                    visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
                 }
             }
         } else {
