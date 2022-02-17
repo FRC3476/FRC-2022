@@ -509,9 +509,7 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     public boolean isHoodStopped() {
-        return true;
-        // TODO: Make this work as intended instead of just returning true
-        // return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
+        return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
     }
 
     public void disableFeederChecks() {

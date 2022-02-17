@@ -30,6 +30,9 @@ import frc.utility.wpimodified.HolonomicDriveController;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import static frc.robot.Constants.DRIVE_HIGH_SPEED_M;
 
 
@@ -41,13 +44,13 @@ public final class Drive extends AbstractSubsystem {
 
     public boolean useRelativeEncoderPosition = false;
 
-    private static final @NotNull Drive instance = new Drive();
+    private static final @NotNull Drive INSTANCE = new Drive();
 
     public static @NotNull Drive getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
-    private final ProfiledPIDController turnPID;
+    private final @NotNull ProfiledPIDController turnPID;
 
     {
         turnPID = new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)); //P=1.0 OR 0.8
@@ -55,8 +58,8 @@ public final class Drive extends AbstractSubsystem {
         turnPID.setTolerance(Math.toRadians(Constants.MAX_TURN_ERROR), Math.toRadians(Constants.MAX_PID_STOP_SPEED));
     }
 
-    private DriveState driveState;
-    Rotation2d wantedHeading = new Rotation2d();
+    private @NotNull DriveState driveState;
+    volatile Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
     public boolean useFieldRelative;
@@ -69,32 +72,34 @@ public final class Drive extends AbstractSubsystem {
 
     private double lastLoopTime = 0;
 
-    private final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(Constants.SWERVE_LEFT_FRONT_LOCATION,
-            Constants.SWERVE_LEFT_BACK_LOCATION, Constants.SWERVE_RIGHT_FRONT_LOCATION, Constants.SWERVE_RIGHT_BACK_LOCATION);
+    private @NotNull final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+            Constants.SWERVE_LEFT_FRONT_LOCATION,
+            Constants.SWERVE_LEFT_BACK_LOCATION,
+            Constants.SWERVE_RIGHT_FRONT_LOCATION,
+            Constants.SWERVE_RIGHT_BACK_LOCATION
+    );
     /**
      * Motors that turn the wheels around. Uses Falcon500s
      */
-    final LazyTalonFX[] swerveMotors = new LazyTalonFX[4];
+    final @NotNull LazyTalonFX[] swerveMotors = new LazyTalonFX[4];
 
     /**
      * Motors that are driving the robot around and causing it to move
      */
-    final LazyTalonFX[] swerveDriveMotors = new LazyTalonFX[4];
+    final @NotNull LazyTalonFX[] swerveDriveMotors = new LazyTalonFX[4];
 
     /**
      * Absolute Encoders for the motors that turn the wheel
      */
 
-    final CANCoder[] swerveCanCoders = new CANCoder[4];
-
-    private double previousSpeedSquared = 0;
+    final @NotNull CANCoder[] swerveCanCoders = new CANCoder[4];
 
     private Drive() {
         super(Constants.DRIVE_PERIOD, 5);
 
-        final LazyTalonFX leftFrontTalon, leftBackTalon, rightFrontTalon, rightBackTalon;
-        final CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;
-        final LazyTalonFX leftFrontTalonSwerve, leftBackTalonSwerve, rightFrontTalonSwerve, rightBackTalonSwerve;
+        final @NotNull LazyTalonFX leftFrontTalon, leftBackTalon, rightFrontTalon, rightBackTalon;
+        final @NotNull CANCoder leftFrontCanCoder, leftBackCanCoder, rightFrontCanCoder, rightBackCanCoder;
+        final @NotNull LazyTalonFX leftFrontTalonSwerve, leftBackTalonSwerve, rightFrontTalonSwerve, rightBackTalonSwerve;
         // Swerve Drive Motors
         leftFrontTalon = new LazyTalonFX(Constants.DRIVE_LEFT_FRONT_ID);
         leftBackTalon = new LazyTalonFX(Constants.DRIVE_LEFT_BACK_ID);
@@ -164,7 +169,9 @@ public final class Drive extends AbstractSubsystem {
         }
 
         useFieldRelative = true;
-        driveState = DriveState.TELEOP;
+        synchronized (this) {
+            driveState = DriveState.TELEOP;
+        }
     }
     
     public void configCoast() {
@@ -203,6 +210,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
+    @SuppressWarnings("unused")
     private double getSwerveDrivePosition(int motorNum) {
         return (swerveDriveMotors[motorNum].getSelectedSensorPosition() / Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
     }
@@ -218,7 +226,7 @@ public final class Drive extends AbstractSubsystem {
         return swerveKinematics;
     }
 
-    public synchronized void setDriveState(DriveState driveState) {
+    public synchronized void setDriveState(@NotNull DriveState driveState) {
         this.driveState = driveState;
     }
 
@@ -237,7 +245,7 @@ public final class Drive extends AbstractSubsystem {
         return swerveModuleState;
     }
 
-    public void startHold() {
+    public synchronized void startHold() {
         driveState = DriveState.HOLD;
     }
 
@@ -505,14 +513,22 @@ public final class Drive extends AbstractSubsystem {
         swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
     }
 
-    public synchronized void setAutoPath(Trajectory trajectory) {
-        driveState = DriveState.RAMSETE;
-        this.currentAutoTrajectory = trajectory;
-        autoStartTime = Timer.getFPGATimestamp();
+    public void setAutoPath(Trajectory trajectory) {
+        currentAutoTrajectoryLock.lock();
+        try {
+            synchronized (this) {
+                driveState = DriveState.RAMSETE;
+            }
+            this.currentAutoTrajectory = trajectory;
+            autoStartTime = Timer.getFPGATimestamp();
+        } finally {
+            currentAutoTrajectoryLock.unlock();
+        }
     }
 
     Trajectory currentAutoTrajectory;
-    Rotation2d autoTargetHeading;
+    final Lock currentAutoTrajectoryLock = new ReentrantLock();
+    volatile Rotation2d autoTargetHeading;
 
     /**
      * Tells the robot to start aiming while driving the auto path
@@ -525,26 +541,31 @@ public final class Drive extends AbstractSubsystem {
 
 
     private void updateRamsete() {
-        Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
+        currentAutoTrajectoryLock.lock();
+        try {
+            Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
 
-        Rotation2d targetHeading = autoTargetHeading;
-        if (isAutoAiming) {
-            targetHeading = VisionManager.getInstance().getPredictedRotationTarget();
-        }
+            Rotation2d targetHeading = autoTargetHeading;
+            if (isAutoAiming) {
+                targetHeading = VisionManager.getInstance().getPredictedRotationTarget();
+            }
 
-        ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
-                RobotTracker.getInstance().getLastEstimatedPoseMeters(),
-                goal,
-                targetHeading);
+            ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
+                    RobotTracker.getInstance().getLastEstimatedPoseMeters(),
+                    goal,
+                    targetHeading);
 
-        swerveDrive(adjustedSpeeds);
-        if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
-            setDriveState(DriveState.DONE);
-            stopMovement();
+            swerveDrive(adjustedSpeeds);
+            if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
+                setDriveState(DriveState.DONE);
+                stopMovement();
+            }
+        } finally {
+            currentAutoTrajectoryLock.unlock();
         }
     }
 
-    public synchronized void setAutoRotation(@NotNull Rotation2d rotation) {
+    public void setAutoRotation(@NotNull Rotation2d rotation) {
         autoTargetHeading = rotation;
         System.out.println("new rotation" + rotation.getDegrees());
     }
@@ -575,20 +596,17 @@ public final class Drive extends AbstractSubsystem {
             case STOP:
                 swerveDrive(new ChassisSpeeds(0, 0, 0));
         }
-
     }
 
     synchronized public boolean isAiming() {
         return isAiming;
     }
 
-    public void setRotation(Rotation2d angle) {
-        synchronized (this) {
-            wantedHeading = angle;
-            driveState = DriveState.TURN;
-            rotateAuto = true;
-            isAiming = !isTurningDone();
-        }
+    public synchronized void setRotation(Rotation2d angle) {
+        wantedHeading = angle;
+        driveState = DriveState.TURN;
+        rotateAuto = true;
+        isAiming = !isTurningDone();
     }
 
 
@@ -622,7 +640,9 @@ public final class Drive extends AbstractSubsystem {
      */
     public void updateTurn(ControllerDriveInputs controllerDriveInputs, @NotNull Rotation2d targetHeading,
                            boolean useFieldRelative) {
-        if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
+        synchronized (this) {
+            if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
+        }
 
         if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
             turnPID.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
@@ -649,13 +669,16 @@ public final class Drive extends AbstractSubsystem {
         }
 
         if (turnPID.atGoal()) {
-            isAiming = false;
-            if (rotateAuto) {
-                setDriveState(DriveState.DONE);
+            synchronized (this) {
+                isAiming = false;
+                if (rotateAuto) {
+                    this.driveState = DriveState.DONE;
+                }
             }
         } else {
-            isAiming = true;
-
+            synchronized (this) {
+                isAiming = true;
+            }
             if (curSpeed < 0.5) {
                 //Updates every 20ms
                 turnMinSpeed = Math.min(turnMinSpeed + 0.1, 6);

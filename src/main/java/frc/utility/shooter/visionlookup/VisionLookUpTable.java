@@ -44,7 +44,7 @@ public final class VisionLookUpTable {
         Collections.sort(shooterConfig.getShooterConfigs());
     }
 
-    Comparator comparator = (o1, o2) -> {
+    final @NotNull Comparator comparator = (o1, o2) -> {
         ShooterPreset sp = (ShooterPreset) o1;
         double d = (double) o2;
         return Double.compare(sp.getDistance(), d);

@@ -238,11 +238,11 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof edu.wpi.first.math.geometry.Translation2d) {
-            return Math.abs(((edu.wpi.first.math.geometry.Translation2d) obj).getX() - m_x) < 1E-9
-                    && Math.abs(((edu.wpi.first.math.geometry.Translation2d) obj).getY() - m_y) < 1E-9;
+            return Math.abs(((edu.wpi.first.math.geometry.Translation2d) obj).getX() - m_x) < 1.0E-9
+                    && Math.abs(((edu.wpi.first.math.geometry.Translation2d) obj).getY() - m_y) < 1.0E-9;
         } else if (obj instanceof MutableTranslation2d) {
-            return Math.abs(((MutableTranslation2d) obj).getX() - m_x) < 1E-9
-                    && Math.abs(((MutableTranslation2d) obj).getY() - m_y) < 1E-9;
+            return Math.abs(((MutableTranslation2d) obj).getX() - m_x) < 1.0E-9
+                    && Math.abs(((MutableTranslation2d) obj).getY() - m_y) < 1.0E-9;
         }
         return false;
     }

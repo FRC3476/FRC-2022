@@ -165,7 +165,7 @@ public class Controller extends Joystick {
                 if (val < 0) val += 360;
                 return val;
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        } catch (ArrayIndexOutOfBoundsException e) { //noinspection ProhibitedExceptionCaught
             System.out.println("Axes out of bounds " + x + " " + y + "/" + axisCount);
         }
         return -1;

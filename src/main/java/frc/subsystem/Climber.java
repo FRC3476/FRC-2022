@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Solenoid;
 import frc.robot.Constants;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonSRX;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -14,31 +15,31 @@ import java.util.function.Function;
 import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
 import static frc.utility.Pneumatics.getPneumaticsHub;
 
-public class Climber extends AbstractSubsystem {
-    private static Climber instance = new Climber();
+public final class Climber extends AbstractSubsystem {
+    private static final Climber INSTANCE = new Climber();
 
     public static Climber getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
-    private final LazyTalonSRX climberMotor;
-    private final LazyTalonSRX climberMotor2;
+    private final @NotNull LazyTalonSRX climberMotor;
+    private final @NotNull LazyTalonSRX climberMotor2;
 
-    private final DigitalInput elevatorArmContactSwitchA;
-    private final DigitalInput elevatorArmContactSwitchB;
+    private final @NotNull DigitalInput elevatorArmContactSwitchA;
+    private final @NotNull DigitalInput elevatorArmContactSwitchB;
 
-    private final DigitalInput pivotingArmContactSwitchA;
-    private final DigitalInput pivotingArmContactSwitchB;
-    private final DigitalInput pivotingArmLatchedSwitchA;
-    private final DigitalInput pivotingArmLatchedSwitchB;
+    private final @NotNull DigitalInput pivotingArmContactSwitchA;
+    private final @NotNull DigitalInput pivotingArmContactSwitchB;
+    private final @NotNull DigitalInput pivotingArmLatchedSwitchA;
+    private final @NotNull DigitalInput pivotingArmLatchedSwitchB;
 
-    private final Solenoid latchSolenoid;
-    private final Solenoid pivotSolenoid;
-    private final Solenoid brakeSolenoid;
+    private final @NotNull Solenoid latchSolenoid;
+    private final @NotNull Solenoid pivotSolenoid;
+    private final @NotNull Solenoid brakeSolenoid;
 
     private double data;
 
-    ClimbState climbState = ClimbState.IDLE;
+    private @NotNull ClimbState climbState = ClimbState.IDLE;
     private boolean isPaused = false;
     private double pausedClimberSetpoint;
     private ControlMode pausedClimberMode;
@@ -462,14 +463,14 @@ public class Climber extends AbstractSubsystem {
 
     }
 
-    public ClimbState getClimbState() {
+    public @NotNull ClimbState getClimbState() {
         return climbState;
     }
 
     @Override
     public void logData() {
         logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
-        logData("Climber Motor Postion IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
+        logData("Climber Motor Position IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
         logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
         logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
         logData("Climber Motor Current", climberMotor.getStatorCurrent());

@@ -11,14 +11,14 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This class is used to get data from the limelight network tables
  */
-public class Limelight {
-    NetworkTable limelightTable;
-    NetworkTable limelightGuiTable;
+public final class Limelight {
+    final @NotNull NetworkTable limelightTable;
+    final @NotNull NetworkTable limelightGuiTable;
 
-    private static final Limelight limelight = new Limelight();
+    private static final Limelight INSTANCE = new Limelight();
 
     public static @NotNull Limelight getInstance() {
-        return limelight;
+        return INSTANCE;
     }
 
     /**
@@ -97,14 +97,13 @@ public class Limelight {
         limelightGuiTable.getEntry("CameraTargetHeightOffset").setDouble(Constants.CAMERA_TARGET_HEIGHT_OFFSET);
         limelightGuiTable.getEntry("CameraYAngle").setDouble(Constants.CAMERA_Y_ANGLE);
 
-        limelightTable.getEntry("tl").addListener(event -> {
-            lastUpdate = Timer.getFPGATimestamp();
-        }, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+        limelightTable.getEntry("tl").addListener(event -> lastUpdate = Timer.getFPGATimestamp(),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         limelightGuiTable.getEntry("forceledon").addListener(event -> {
             if (event.getEntry().getBoolean(false)) {
-                limelight.setLedMode(LedMode.ON);
-                limelight.setCamMode(CamMode.VISION_PROCESSOR);
+                INSTANCE.setLedMode(LedMode.ON);
+                INSTANCE.setCamMode(CamMode.VISION_PROCESSOR);
             }
         }, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }

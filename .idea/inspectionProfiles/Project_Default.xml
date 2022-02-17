@@ -136,7 +136,7 @@
       <extension name="InstanceMethodNamingConvention" enabled="true">
         <option name="m_regex" value="[a-z][A-Za-z\d]*" />
         <option name="m_minLength" value="1" />
-        <option name="m_maxLength" value="32" />
+        <option name="m_maxLength" value="64" />
       </extension>
       <extension name="JUnit3MethodNamingConvention" enabled="true">
         <option name="m_regex" value="test[A-Za-z_\d]*" />
@@ -151,12 +151,12 @@
       <extension name="NativeMethodNamingConvention" enabled="true">
         <option name="m_regex" value="[a-z][A-Za-z\d]*" />
         <option name="m_minLength" value="1" />
-        <option name="m_maxLength" value="32" />
+        <option name="m_maxLength" value="64" />
       </extension>
       <extension name="StaticMethodNamingConvention" enabled="true">
         <option name="m_regex" value="[a-z][A-Za-z\d]*" />
         <option name="m_minLength" value="1" />
-        <option name="m_maxLength" value="32" />
+        <option name="m_maxLength" value="64" />
       </extension>
       <extension name="TestNGMethodNamingConvention" enabled="true">
         <option name="m_regex" value="[a-z][A-Za-z_\d]*" />

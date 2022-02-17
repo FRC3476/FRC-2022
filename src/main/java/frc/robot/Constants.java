@@ -18,7 +18,7 @@ public final class Constants {
      * This is the max time in seconds that a driver can let go of a button that is supposed to be held and still have it count as
      * holding the button
      */
-    public static final double MAX_TIME_NOT_HELD_SEC = .100;
+    public static final double MAX_TIME_NOT_HELD_SEC = 0.100;
 
     /**
      * Time required in seconds for a button that is supposed to be held down to activate
