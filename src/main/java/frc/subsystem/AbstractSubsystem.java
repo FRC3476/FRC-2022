@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +15,8 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final int loggingInterval;
     private int logInterval;
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
-    public String subsystemName;
-    Thread thisThread;
+    public @NotNull String subsystemName;
+    private @Nullable Thread thisThread;
 
     public enum ThreadSignal {
         ALIVE, PAUSED, DEAD
@@ -48,7 +49,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public void start() {
         signal = ThreadSignal.ALIVE;
-        if (thisThread == null || !thisThread.isAlive()) {
+        if ((thisThread == null || !thisThread.isAlive()) && this.period > 0) {
             thisThread = new Thread(this);
             thisThread.start();
         }
@@ -65,7 +66,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final Map<String, Object> logDataMap = new HashMap<>();
 
 
-    public void logData(String key, Object value) {
+    public void logData(@NotNull String key, @NotNull Object value) {
         //SmartDashboard.putString(key, value.toString());
         logDataMap.put(key, value);
     }
