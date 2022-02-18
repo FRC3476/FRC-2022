@@ -276,7 +276,7 @@ public final class VisionManager extends AbstractSubsystem {
         double angleToTarget = Math.atan2(goalTranslationOffset.getY(), goalTranslationOffset.getX());
 
 
-        if (false && (isVisionForcedOn() || Math.abs(
+        if ((isVisionForcedOn() || Math.abs(
                 angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
             forceVisionOn(updateLoopSource);
 
@@ -287,7 +287,7 @@ public final class VisionManager extends AbstractSubsystem {
                         robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
 
                     Pose2d visionPose = new Pose2d(robotTranslation.getTranslation2d(), getLatencyCompedLimelightRotation());
-                    robotTracker.addVisionMeasurement(visionPose, getLimelightTime());
+                    //robotTracker.addVisionMeasurement(visionPose, getLimelightTime());
 
                     logData("Vision Pose X", visionPose.getX());
                     logData("Vision Pose Y", visionPose.getY());
