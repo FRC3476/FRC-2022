@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
+import frc.subsystem.Drive.DriveState;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
@@ -69,9 +70,10 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
-        Rotation2d targetRotation = getPredictedRotationTarget();
-        drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
-        shooter.setFiring(!drive.isAiming());
+        autoTurnRobotToTarget(controllerDriveInputs, useFieldRelative);
+//        Rotation2d targetRotation = getPredictedRotationTarget();
+//        drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
+//        shooter.setFiring(!drive.isAiming());
     }
 
     public Rotation2d getPredictedRotationTarget() {
@@ -182,8 +184,7 @@ public final class VisionManager extends AbstractSubsystem {
             //Use best guess if no target is visible
             Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
                     .minus(Constants.GOAL_POSITION);
-            Rotation2d targetRotation = robotTracker.getGyroAngle();//new Rotation2d(Math.atan2(relativeRobotPosition.getY(),
-            // relativeRobotPosition.get()));
+            Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         }
 
@@ -224,13 +225,14 @@ public final class VisionManager extends AbstractSubsystem {
      * Calculates and sets the flywheel speed considering a moving robot
      */
     public void updateShooterState() {
-        MutableTranslation2d predictedPose = predictTranslationAtZeroVelocity(robotTracker.getLatencyCompedChassisSpeeds(),
-                robotTracker.getLatencyCompedPoseMeters().getTranslation());
-        double distanceToTarget = predictedPose.minus(Constants.GOAL_POSITION).getNorm();
-
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
-        shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
-        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+        updateShooterStateStaticPose();
+//        MutableTranslation2d predictedPose = predictTranslationAtZeroVelocity(robotTracker.getLatencyCompedChassisSpeeds(),
+//                robotTracker.getLatencyCompedPoseMeters().getTranslation());
+//        double distanceToTarget = predictedPose.minus(Constants.GOAL_POSITION).getNorm();
+//
+//        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
+//        shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
+//        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
     private final ArrayList<Object> forceVisionOn = new ArrayList<>(5);
@@ -262,6 +264,8 @@ public final class VisionManager extends AbstractSubsystem {
         return !forceVisionOn.isEmpty();
     }
 
+    private final Object updateLoopSource = new Object();
+
     @Override
     public void update() {
         Pose2d robotTrackerPose = robotTracker.getLatencyCompedPoseMeters();
@@ -272,8 +276,9 @@ public final class VisionManager extends AbstractSubsystem {
         double angleToTarget = Math.atan2(goalTranslationOffset.getY(), goalTranslationOffset.getX());
 
 
-        if ((isVisionForcedOn() || Math.abs(angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
-            limelight.setLedMode(LedMode.ON);
+        if (false && (isVisionForcedOn() || Math.abs(
+                angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
+            forceVisionOn(updateLoopSource);
 
             if (limelight.isTargetVisible()) {
                 MutableTranslation2d robotTranslation = getCurrentTranslation();
@@ -296,32 +301,93 @@ public final class VisionManager extends AbstractSubsystem {
                 logData("Using Vision Info", "No target visible");
             }
         } else {
-            limelight.setLedMode(LedMode.ON);
+            unForceVisionOn(updateLoopSource);
             logData("Using Vision Info", "Not pointing at target");
         }
     }
 
 
+    private static final ControllerDriveInputs CONTROLLER_DRIVE_NO_MOVEMENT = new ControllerDriveInputs(0, 0, 0);
+
+    public volatile boolean killAuto = false;
+
     /**
      * For auto use only
      */
     @SuppressWarnings("unused")
-    public void shootBalls(int numBalls) {
+    public void shootBalls(double numBalls) {
         forceVisionOn(this);
-        shootAndMove(new ControllerDriveInputs(0, 0, 0), true);
+        if (drive.driveState == DriveState.RAMSETE) {
+            drive.setAutoAiming(true);
+        } else {
+            autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+        }
         updateShooterState();
-        while (!drive.isAiming() && !shooter.isHoodAtTargetAngle() && !shooter.isShooterAtTargetSpeed()) {
+
+        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > 0.1) && !killAuto) {
+            if (drive.driveState == DriveState.RAMSETE) {
+                drive.setAutoAiming(true);
+            } else {
+                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+            }
             updateShooterState();
-            shootAndMove(new ControllerDriveInputs(0, 0, 0), true);
+            Thread.yield();
         }
         double shootUntilTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
 
         shooter.setFiring(true);
-        while (Timer.getFPGATimestamp() < shootUntilTime) {
-            Thread.onSpinWait();
+        while (Timer.getFPGATimestamp() < shootUntilTime && !killAuto) {
+            if (drive.driveState == DriveState.RAMSETE) {
+                drive.setAutoAiming(true);
+            } else {
+                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+            }
+            updateShooterState();
+            Thread.yield();
         }
+        unForceVisionOn(this);
         shooter.setFiring(false);
         shooter.setShooterSpeed(0);
+        drive.setAutoAiming(false);
+    }
+
+    /**
+     * For auto use only
+     */
+    @SuppressWarnings("unused")
+    public void shootBalls(double numBalls, double flywheelSpeed, double ejectionAngle) {
+        forceVisionOn(this);
+        if (drive.driveState == DriveState.RAMSETE) {
+            drive.setAutoAiming(true);
+        } else {
+            autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+        }
+        shooter.setShooterSpeed(flywheelSpeed);
+        shooter.setHoodPosition(ejectionAngle);
+
+        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > 0.1) && !killAuto) {
+            if (drive.driveState == DriveState.RAMSETE) {
+                drive.setAutoAiming(true);
+            } else {
+                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+            }
+            Thread.yield();
+        }
+        double shootUntilTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
+
+        shooter.setFiring(true);
+        while (Timer.getFPGATimestamp() < shootUntilTime && !killAuto) {
+            if (drive.driveState == DriveState.RAMSETE) {
+                drive.setAutoAiming(true);
+            } else {
+                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+            }
+            Thread.yield();
+        }
+        unForceVisionOn(this);
+        shooter.setFiring(false);
+        shooter.setShooterSpeed(0);
+        drive.setAutoAiming(false);
     }
 
 

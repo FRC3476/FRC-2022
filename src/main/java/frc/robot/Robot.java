@@ -225,6 +225,7 @@ public class Robot extends TimedRobot {
 
         //Since autonomous objects can be reused they need to be reset them before we can reuse them again 
         selectedAuto.reset();
+        visionManager.killAuto = false;
 
         //We then create a new thread to run the auto and run it
         autoThread = new Thread(selectedAuto);
@@ -564,6 +565,7 @@ public class Robot extends TimedRobot {
             selectedAuto.killSwitch();
             while (autoThread.getState() != Thread.State.TERMINATED) OrangeUtility.sleep(10);
 
+            visionManager.killAuto = true;
             drive.stopMovement();
             drive.setTeleop();
         }

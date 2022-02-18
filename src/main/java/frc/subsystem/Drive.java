@@ -58,7 +58,7 @@ public final class Drive extends AbstractSubsystem {
         turnPID.setTolerance(Math.toRadians(Constants.MAX_TURN_ERROR), Math.toRadians(Constants.MAX_PID_STOP_SPEED));
     }
 
-    private @NotNull DriveState driveState;
+    public @NotNull DriveState driveState;
     volatile Rotation2d wantedHeading = new Rotation2d();
     boolean rotateAuto = false;
 
@@ -520,6 +520,7 @@ public final class Drive extends AbstractSubsystem {
                 driveState = DriveState.RAMSETE;
             }
             this.currentAutoTrajectory = trajectory;
+            this.isAutoAiming = false;
             autoStartTime = Timer.getFPGATimestamp();
         } finally {
             currentAutoTrajectoryLock.unlock();
@@ -533,7 +534,7 @@ public final class Drive extends AbstractSubsystem {
     /**
      * Tells the robot to start aiming while driving the auto path
      */
-    private boolean isAutoAiming = false;
+    private volatile boolean isAutoAiming = false;
 
     public void setAutoAiming(boolean autoAiming) {
         isAutoAiming = autoAiming;
