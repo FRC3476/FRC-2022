@@ -425,6 +425,11 @@ public final class Constants {
      */
     public static final double MAX_CLIMBER_EXTENSION = 11000 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
+    /**
+     * How long only one of the sensor switches can be closed for before the climb will pause
+     */
+    public static final double MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME = 0.1;
+
     //Robot Tracker
     public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
     public static final int ROBOT_TRACKER_PERIOD = 20;

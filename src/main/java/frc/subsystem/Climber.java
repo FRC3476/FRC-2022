@@ -106,7 +106,7 @@ public final class Climber extends AbstractSubsystem {
                     cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
                     cl.setClawState(ClawState.UNLATCHED);
                 },
-                (cl) -> cl.pivotingArmContactSwitchA.get() && cl.pivotingArmContactSwitchB.get(),
+                (cl) -> cl.isPivotArmContactingBar(),
                 (cl) -> cl.stopClimberMotor()
         ),
 
@@ -202,7 +202,7 @@ public final class Climber extends AbstractSubsystem {
          */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
                 (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT),
-                (cl) -> cl.elevatorArmContactSwitchA.get() && cl.elevatorArmContactSwitchB.get(),
+                (cl) -> cl.isElevatorArmContactingBar(),
                 (cl) -> cl.stopClimberMotor()
         ),
 
@@ -214,8 +214,13 @@ public final class Climber extends AbstractSubsystem {
                     cl.setClawState(ClawState.UNLATCHED);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
-                        && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get(),
+                (cl) -> {
+                    if (cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get()) {
+                        cl.data = Timer.getFPGATimestamp();
+                    }
+                    return Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
+                            && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get();
+                },
                 (cl) -> {}
         );
 
@@ -248,6 +253,50 @@ public final class Climber extends AbstractSubsystem {
          * The action to perform when the state is exited.
          */
         final Consumer<Climber> endAction;
+    }
+
+    double otherPivotingArmMustContactByTime = Double.MAX_VALUE;
+
+    /**
+     * Will pause the climb if it detects that only one pivot arm is in contact with the bar for some time.
+     *
+     * @return true if both pivot arms are in contact with the bar
+     */
+    private boolean isPivotArmContactingBar() {
+        if (pivotingArmContactSwitchA.get() || pivotingArmContactSwitchB.get()) {
+            if (otherPivotingArmMustContactByTime > Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME) {
+                otherPivotingArmMustContactByTime = Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME;
+            } else if (Timer.getFPGATimestamp() > otherPivotingArmMustContactByTime) {
+                pauseClimb();
+            }
+        } else if (pivotingArmContactSwitchA.get() && pivotingArmContactSwitchB.get()) {
+            return true;
+        } else {
+            otherPivotingArmMustContactByTime = Double.MAX_VALUE;
+        }
+        return false;
+    }
+
+    double otherElevatorArmMustContactByTime = Double.MAX_VALUE;
+
+    /**
+     * Will pause the climb if it detects that only one pivot arm is in contact with the bar for some time.
+     *
+     * @return true if both pivot arms are in contact with the bar
+     */
+    private boolean isElevatorArmContactingBar() {
+        if (elevatorArmContactSwitchA.get() || elevatorArmContactSwitchB.get()) {
+            if (otherElevatorArmMustContactByTime > Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME) {
+                otherElevatorArmMustContactByTime = Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME;
+            } else if (Timer.getFPGATimestamp() > otherElevatorArmMustContactByTime) {
+                pauseClimb();
+            }
+        } else if (elevatorArmContactSwitchA.get() && elevatorArmContactSwitchB.get()) {
+            return true;
+        } else {
+            otherElevatorArmMustContactByTime = Double.MAX_VALUE;
+        }
+        return false;
     }
 
 
@@ -349,6 +398,7 @@ public final class Climber extends AbstractSubsystem {
         isPaused = false;
         setBrakeState(BrakeState.FREE);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
+        otherPivotingArmMustContactByTime = Double.MAX_VALUE;
     }
 
     /**
