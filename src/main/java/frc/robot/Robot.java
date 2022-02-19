@@ -557,6 +557,7 @@ public class Robot extends TimedRobot {
         intake.start();
         hopper.start();
         shooter.start();
+        climber.start();
     }
 
     public synchronized void killAuto() {
