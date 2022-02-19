@@ -421,6 +421,8 @@ public class Robot extends TimedRobot {
             shooterControlState = ShooterControlState.MANUAL;
         }
 
+        SmartDashboard.putString("Shooter Control State", shooterControlState.toString());
+
         if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1) ||// Trying to shoot
                 buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
                 || buttonPanel.getRawButton(5)) // Trying to turn flywheel on

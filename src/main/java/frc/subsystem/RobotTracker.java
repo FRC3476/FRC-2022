@@ -258,10 +258,12 @@ public final class RobotTracker extends AbstractSubsystem {
 //            throw new IllegalArgumentException("Time is too far in the past");
 //        }
 
-        //int index = list.size() - ((int) ((Timer.getFPGATimestamp() - time) / 20.0));
+        //int index = list.size() - ((int) ((Timer.getFPGATimestamp() - time) * 50));
         int index = Collections.binarySearch(list, Map.entry(time, zero), comparator);
-        //if (index < 0) index = -index - 1;
-        if (list.isEmpty() || index > list.size() || index < 0) return getGyroAngle();
+        if (index < 0) index = -index - 1;
+
+        if (index >= list.size()) return list.get(list.size() - 1).getValue();
+        //if (index - 1 > list.size() || index < 0) return getGyroAngle();
 
         return list.get(index).getValue();
     }

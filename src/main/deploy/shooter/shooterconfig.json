@@ -1,0 +1,19 @@
+{
+  "shooterConfigs" : [ {
+    "hoodEjectAngle" : 65.0,
+    "flywheelSpeed" : 2700.0,
+    "distance" : 106.0
+  }, {
+    "hoodEjectAngle" : 65.0,
+    "flywheelSpeed" : 3000.0,
+    "distance" : 133.0
+  }, {
+    "hoodEjectAngle" : 65.0,
+    "flywheelSpeed" : 3000.0,
+    "distance" : 144.0
+  }, {
+    "hoodEjectAngle" : 65.0,
+    "flywheelSpeed" : 3000.0,
+    "distance" : 157.0
+  } ]
+}
