@@ -316,11 +316,6 @@ public class Robot extends TimedRobot {
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
-
-        if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
-            drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
-        }
-
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
@@ -465,7 +460,12 @@ public class Robot extends TimedRobot {
             }
         } else {
             if (useFieldRelative) {
-                drive.swerveDriveFieldRelative(controllerDriveInputs);
+                if (xbox.getRawButton(XboxButtons.BACK)) {
+                    double angle = Math.atan2(controllerDriveInputs.getY(), controllerDriveInputs.getX());
+                    drive.updateTurn(controllerDriveInputs, new Rotation2d(angle), true);
+                } else {
+                    drive.swerveDriveFieldRelative(controllerDriveInputs);
+                }
             } else {
                 drive.swerveDrive(controllerDriveInputs);
             }
