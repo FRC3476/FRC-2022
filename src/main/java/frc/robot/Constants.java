@@ -85,10 +85,10 @@ public final class Constants {
      * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518)};
+            new SimpleMotorFeedforward(0.67763, 2.7731, 0.55827),
+            new SimpleMotorFeedforward(0.67763, 2.7731, 0.55827),
+            new SimpleMotorFeedforward(0.67763, 2.7731, 0.55827),
+            new SimpleMotorFeedforward(0.67763, 2.7731, 0.55827)};
 
 
     /**
