@@ -274,7 +274,7 @@ public final class Constants {
     /**
      * Amount of degrees the hood turns per NEO550 rotation
      */
-    public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
+    public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 1 / 3.69230;
 
     /**
      * Maximum allowed time homing should take in seconds
@@ -292,7 +292,7 @@ public final class Constants {
     public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
 
     /**
-     * If hood speed is under this value, hood has stopped
+     * If _ speed is under this value, hood has stopped
      */
     public static final double HOOD_HAS_STOPPED_REFERENCE = 1.0e-3;
 
