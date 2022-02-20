@@ -388,12 +388,15 @@ public final class Constants {
     /**
      * If the elevator arm is below this height and going down, the climb will abort
      */
-    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 50 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = -.5 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is above this height and going down, the climb will abort
      */
-    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 12000 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 28.125 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
 
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
@@ -418,12 +421,22 @@ public final class Constants {
     /**
      * The max safe height for the elevator arm during the swinging part of the climb
      */
-    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 10000 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 17.3475 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
      */
-    public static final double MAX_CLIMBER_EXTENSION = 11000 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MAX_CLIMBER_EXTENSION = 27.75 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    /**
+     *
+     */
+    public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    /**
+     *
+     */
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 155816 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
