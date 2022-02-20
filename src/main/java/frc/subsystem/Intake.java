@@ -31,6 +31,7 @@ public final class Intake extends AbstractSubsystem {
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        intakeMotor.setSmartCurrentLimit(20);
         intakeMotor.setControlFramePeriodMs(25);
     }
 
@@ -47,6 +48,7 @@ public final class Intake extends AbstractSubsystem {
     @Override
     public void logData() {
         SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotor.get());
+        SmartDashboard.putNumber("Intake Current", intakeMotor.getOutputCurrent());
         SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
     }
 

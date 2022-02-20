@@ -27,8 +27,8 @@ public final class Constants {
 
     //Limelight
     //Calibrate using https://www.desmos.com/calculator/n2dsvzsyhk
-    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 60.58; //TODO: CHANGE
-    public static final double CAMERA_Y_ANGLE = 39.3164; //TODO: CHANGE
+    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 57.6925; //TODO: CHANGE
+    public static final double CAMERA_Y_ANGLE = 37.1129; //TODO: CHANGE
 
     // Vision Manager
     public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
@@ -85,10 +85,10 @@ public final class Constants {
      * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518),
-            new SimpleMotorFeedforward(0.63898, 0.0093357, 0.0014518)};
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827)};
 
 
     /**
@@ -134,13 +134,13 @@ public final class Constants {
     public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(-0.307975, -0.307975);
 
 
-    public static final double DRIVE_HIGH_SPEED_M = 7.26;
+    public static final double DRIVE_HIGH_SPEED_M = 3.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
 
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_TURN_ERROR = 0.85;
+    public static final double MAX_TURN_ERROR = 1;
 
     /**
      * Allowed Turn Error in degrees.
@@ -161,7 +161,7 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 30;
+    public static final double MAX_ACCELERATION = 20;
 
     /**
      * Units are in Radians per Second Squared
@@ -195,7 +195,7 @@ public final class Constants {
     public static final int HOPPER_PERIOD = 200;
     public static final double HOPPER_SPEED = 1;
     public static final int HOPPER_MOTOR_ID = 30;
-    public static final int HOPPER_CURRENT_LIMIT = 10;
+    public static final int HOPPER_CURRENT_LIMIT = 25;
 
 
     // Shooter Constants
@@ -213,10 +213,10 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 1.0e-3; //0.00074361;
+    public static final double SHOOTER_P = 1.0e-1; //0.00074361;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
-    public static final double SHOOTER_F = 0.00006375 * 1023;
+    public static final double SHOOTER_F = 0.00006 * 1023;
     public static final double SHOOTER_I_ZONE = 0;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -226,7 +226,7 @@ public final class Constants {
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 200;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 300;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
@@ -252,13 +252,13 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.1;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.5;
 
-    public static final double HOOD_P = 0.1;
-    public static final double HOOD_I = 0;
+    public static final double HOOD_P = 0.01;
+    public static final double HOOD_I = 0.0005;
     public static final double HOOD_D = 0;
     public static final double HOOD_F = 0;
-    public static final double HOOD_I_ZONE = 0;
+    public static final double HOOD_I_ZONE = 2.5;
 
     public static final double HOOD_MAX_OUTPUT = 0.5;
 
@@ -292,7 +292,7 @@ public final class Constants {
     public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
 
     /**
-     * If hood speed is under this value, hood has stopped
+     * If _ speed is under this value, hood has stopped
      */
     public static final double HOOD_HAS_STOPPED_REFERENCE = 1.0e-3;
 
@@ -438,7 +438,7 @@ public final class Constants {
     public static final int INTAKE_PERIOD = 50;
     public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
-    public static final double INTAKE_MOTOR_SPEED = -0.5;
+    public static final double INTAKE_MOTOR_SPEED = -1;
     public static final double INTAKE_OPEN_TIME = 0.3;
 
     // Networking and Logging

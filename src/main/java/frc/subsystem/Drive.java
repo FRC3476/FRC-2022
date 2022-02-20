@@ -53,7 +53,7 @@ public final class Drive extends AbstractSubsystem {
     private final @NotNull ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)); //P=1.0 OR 0.8
+        turnPID = new ProfiledPIDController(13, 0, 0, new TrapezoidProfile.Constraints(6, 10)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
         turnPID.setTolerance(Math.toRadians(Constants.MAX_TURN_ERROR), Math.toRadians(Constants.MAX_PID_STOP_SPEED));
     }
@@ -264,7 +264,7 @@ public final class Drive extends AbstractSubsystem {
 
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(DRIVE_HIGH_SPEED_M * inputs.getX(),
                 DRIVE_HIGH_SPEED_M * inputs.getY(),
-                inputs.getRotation() * 15);
+                inputs.getRotation() * 7);
         swerveDrive(chassisSpeeds);
     }
 
@@ -275,12 +275,12 @@ public final class Drive extends AbstractSubsystem {
         if (useFieldRelative) {
             chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(DRIVE_HIGH_SPEED_M * inputs.getX(),
                     DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 15,
+                    inputs.getRotation() * 7,
                     RobotTracker.getInstance().getGyroAngle());
         } else {
             chassisSpeeds = new ChassisSpeeds(DRIVE_HIGH_SPEED_M * inputs.getX(),
                     DRIVE_HIGH_SPEED_M * inputs.getY(),
-                    inputs.getRotation() * 15);
+                    inputs.getRotation() * 7);
         }
 
         swerveDrive(chassisSpeeds);
@@ -468,7 +468,7 @@ public final class Drive extends AbstractSubsystem {
     public void setMotorSpeed(int module, double velocity, double acceleration) {
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
-        swerveDriveMotors[module].set(ControlMode.PercentOutput, velocity / DRIVE_HIGH_SPEED_M);
+        swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
         SmartDashboard.putNumber("Out Volts " + module, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
@@ -654,19 +654,20 @@ public final class Drive extends AbstractSubsystem {
         double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
                 targetHeading.getRadians());
 
-        System.out.println("turning: " + turnPID.getPositionError() + " delta speed: " + pidDeltaSpeed);
+        System.out.println(
+                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
         double curSpeed = RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond;
         double deltaSpeed = pidDeltaSpeed; //Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
         if (useFieldRelative) {
             swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
                     controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M, controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                    Math.toRadians(deltaSpeed),
+                    deltaSpeed,
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
             swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M,
                     controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                    Math.toRadians(deltaSpeed)));
+                    deltaSpeed));
         }
 
         if (turnPID.atGoal()) {

@@ -1,0 +1,42 @@
+{
+  "counts per rotation": 2048.0,
+  "encoder type": "Built-in",
+  "encoding": false,
+  "gearing denominator": 1.0,
+  "gearing numerator": 8.14,
+  "gyro": "NavX",
+  "gyro ctor": "SPI (MXP)",
+  "is drivetrain": true,
+  "motor controllers": [
+    "TalonFX",
+    "TalonFX"
+  ],
+  "number of samples per average": 1,
+  "primary encoder inverted": false,
+  "primary encoder ports": [
+    0,
+    1
+  ],
+  "primary motor ports": [
+    11,
+    12
+  ],
+  "primary motors inverted": [
+    false,
+    false
+  ],
+  "secondary encoder inverted": false,
+  "secondary encoder ports": [
+    2,
+    3
+  ],
+  "secondary motor ports": [
+    13,
+    14
+  ],
+  "secondary motors inverted": [
+    false,
+    false
+  ],
+  "velocity measurement period": 100
+}

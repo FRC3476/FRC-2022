@@ -291,7 +291,7 @@ public class Robot extends TimedRobot {
 
         runShooter();
 
-        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
+        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
         }
@@ -314,11 +314,6 @@ public class Robot extends TimedRobot {
         if (xbox.getRisingEdge(1)) {
             //Resets the current robot heading to zero. Useful if the heading drifts for some reason
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
-        }
-
-
-        if (xbox.getRisingEdge(Controller.XboxButtons.BACK)) {
-            drive.useRelativeEncoderPosition = !drive.useRelativeEncoderPosition;
         }
 
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
@@ -421,6 +416,8 @@ public class Robot extends TimedRobot {
             shooterControlState = ShooterControlState.MANUAL;
         }
 
+        SmartDashboard.putString("Shooter Control State", shooterControlState.toString());
+
         if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1) ||// Trying to shoot
                 buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
                 || buttonPanel.getRawButton(5)) // Trying to turn flywheel on
@@ -463,7 +460,12 @@ public class Robot extends TimedRobot {
             }
         } else {
             if (useFieldRelative) {
-                drive.swerveDriveFieldRelative(controllerDriveInputs);
+                if (xbox.getRawButton(XboxButtons.BACK)) {
+                    double angle = Math.atan2(controllerDriveInputs.getY(), controllerDriveInputs.getX());
+                    drive.updateTurn(controllerDriveInputs, new Rotation2d(angle), true);
+                } else {
+                    drive.swerveDriveFieldRelative(controllerDriveInputs);
+                }
             } else {
                 drive.swerveDrive(controllerDriveInputs);
             }
@@ -557,6 +559,7 @@ public class Robot extends TimedRobot {
         intake.start();
         hopper.start();
         shooter.start();
+        climber.start();
     }
 
     public synchronized void killAuto() {

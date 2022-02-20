@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
@@ -143,7 +144,7 @@ public final class Hopper extends AbstractSubsystem {
 
     @Override
     public void logData() {
-
+        SmartDashboard.putNumber("Hopper Motor Current", hopperMotor.getOutputCurrent());
     }
 
     @Override

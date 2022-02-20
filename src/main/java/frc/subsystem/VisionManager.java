@@ -4,8 +4,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.subsystem.Drive.DriveState;
+import frc.subsystem.Hopper.HopperState;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
@@ -177,18 +179,20 @@ public final class VisionManager extends AbstractSubsystem {
         double degreeOffset;
         if (limelight.isTargetVisible()) {
             degreeOffset = Limelight.getInstance().getHorizontalOffset();
-            Rotation2d targetRotation = getLatencyCompedLimelightRotation().rotateBy(Rotation2d.fromDegrees(-degreeOffset));
+            Rotation2d targetRotation = robotTracker.getLatencyCompedPoseMeters().getRotation().rotateBy(
+                    Rotation2d.fromDegrees(-degreeOffset));
             System.out.println("target Heading: " + targetRotation.getDegrees());
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         } else {
-            //Use best guess if no target is visible
-            Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
-                    .minus(Constants.GOAL_POSITION);
-            Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
-            drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
+//            //Use best guess if no target is visible
+//            Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
+//                    .minus(Constants.GOAL_POSITION);
+//            Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
+//            drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         }
 
         shooter.setFiring(limelight.isTargetVisible() && !drive.isAiming());
+        Hopper.getInstance().setHopperState(HopperState.ON);
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {
@@ -216,7 +220,7 @@ public final class VisionManager extends AbstractSubsystem {
             distanceToTarget = relativeRobotPosition.getNorm();
         }
 
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
+        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
         shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
         shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
