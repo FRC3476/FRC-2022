@@ -263,6 +263,7 @@ public final class Constants {
     public static final double HOOD_MAX_OUTPUT = 0.5;
 
     public static final int HOOD_CURRENT_LIMIT_AMPS = 20;
+    public static final double SHOOTER_HOMING_CURRENT_LIMIT = 10;
 
     // Hood Constants
 
