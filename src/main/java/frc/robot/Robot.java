@@ -244,8 +244,8 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
-        if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1)) {
-            if (!autoAimRobot || stick.getRawButton(1)) { //If vision is off, or we're requesting to do a no vision shot
+        if (xbox.getRawAxis(2) > 0.1) {
+            if (!autoAimRobot) { //If vision is off
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
@@ -277,18 +277,22 @@ public class Robot extends TimedRobot {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
             hopper.setHopperState(Hopper.HopperState.ON);
+        } else if (stick.getRawButton(1)) {
+            // Sets intake to eject without controlling hopper
+            intake.setWantedIntakeState(Intake.IntakeState.EJECT);
+            hopper.setHopperState(Hopper.HopperState.OFF);
         } else if (buttonPanel.getRawButton(8)) {
             // Eject everything
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.REVERSE);
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!(xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1))) { // Only turn off the hopper if we're not shooting
+            if (!(xbox.getRawAxis(2) > 0.1)) { // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
         }
 
-        if (xbox.getRisingEdge(1)) {
+        if (xbox.getRisingEdge(XboxButtons.A)) {
             //Resets the current robot heading to zero. Useful if the heading drifts for some reason
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
@@ -416,8 +420,7 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putString("Shooter Control State", shooterControlState.toString());
 
-        if (xbox.getRawAxis(2) > 0.1 || stick.getRawButton(1) ||// Trying to shoot
-                buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
+        if (xbox.getRawAxis(2) > 0.1 || buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
                 || buttonPanel.getRawButton(5)) // Trying to turn flywheel on
         {
             // We want the flywheel to be on
