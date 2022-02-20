@@ -192,7 +192,11 @@ public final class VisionManager extends AbstractSubsystem {
         }
 
         shooter.setFiring(limelight.isTargetVisible() && !drive.isAiming());
-        Hopper.getInstance().setHopperState(HopperState.ON);
+        if (limelight.isTargetVisible() && !drive.isAiming() && shooter.isShooterAtTargetSpeed() && shooter.isHoodAtTargetAngle()) {
+            Hopper.getInstance().setHopperState(HopperState.ON);
+        } else {
+            Hopper.getInstance().setHopperState(HopperState.OFF);
+        }
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {

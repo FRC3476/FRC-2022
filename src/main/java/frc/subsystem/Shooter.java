@@ -721,17 +721,17 @@ public final class Shooter extends AbstractSubsystem {
      */
     @Override
     public void logData() {
-        logData("Shooter Flywheel Speed", getShooterRPM());
-        logData("Shooter Native Flywheel SPeed", getDesiredShooterSpeed() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR);
-        logData("Hood Angle", getHoodAngle());
-        logData("Relative Hood Angle", getHoodRelativeAngle());
+        logData("Shooter Flywheel Speed", getShooterRPM(), true);
+        logData("Shooter Native Flywheel Speed", getDesiredShooterSpeed() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR, true);
+        logData("Hood Angle", getHoodAngle(), true);
+        logData("Relative Hood Angle", getHoodRelativeAngle(), true);
         logData("Desired Shooter Speed", getDesiredShooterSpeed());
         logData("Desired Hood Angle", getDesiredHoodAngle());
         logData("Feeder Wheel State", getFeederWheelState());
         logData("Home Switch State", getHomeSwitchState());
         logData("Hood Positioning Mode", getHoodPositionMode());
-        logData("Is Hood at Target Angle?", isHoodAtTargetAngle());
-        logData("Is Shooter at Target Speed?", isShooterAtTargetSpeed());
+        logData("Is Hood at Target Angle?", isHoodAtTargetAngle(), true);
+        logData("Is Shooter at Target Speed?", isShooterAtTargetSpeed(), true);
         logData("Shooter State", getShooterState());
         logData("Shooter Flywheel Speed Error", getDesiredShooterSpeed() - getShooterRPM());
         logData("Hood Position Error", getDesiredHoodAngle() - getHoodAngle());

@@ -39,6 +39,10 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
         DashboardHandler.getInstance().log(key, value);
     }
 
+    public void logData(@NotNull String key, @NotNull Object value, boolean logToNetworkTables) {
+        DashboardHandler.getInstance().log(key, value, logToNetworkTables);
+    }
+
     public void pause() {
         signal = ThreadSignal.PAUSED;
     }
