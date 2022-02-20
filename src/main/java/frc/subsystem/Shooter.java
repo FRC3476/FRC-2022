@@ -271,8 +271,8 @@ public final class Shooter extends AbstractSubsystem {
         hoodMotor.setSmartCurrentLimit(Constants.HOOD_CURRENT_LIMIT_AMPS);
         hoodMotor.setInverted(true);
         hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
-        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 25);
-        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 200);
+        hoodMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 25);
         hoodMotor.setControlFramePeriodMs(25);
 
         hoodAbsoluteEncoder.setStatusFramePeriod(CANCoderStatusFrame.VbatAndFaults, 200);
