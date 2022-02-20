@@ -379,11 +379,11 @@ public final class Constants {
     public static final int BRAKE_SOLENOID_ID = 2;
 
 
-    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 8.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
+    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
     /**
      * The height to go to once the drivers request the climber to deploy
      */
-    public static final double CLIMBER_DEPLOY_HEIGHT = 10000;
+    public static final double CLIMBER_DEPLOY_HEIGHT = 23.45625 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is below this height and going down, the climb will abort
@@ -429,14 +429,14 @@ public final class Constants {
     public static final double MAX_CLIMBER_EXTENSION = 27.75 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     *
+     * Length to grab onto mid bar
      */
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     *
+     * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 155816 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 26.331 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause

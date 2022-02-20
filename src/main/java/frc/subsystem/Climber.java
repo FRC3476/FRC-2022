@@ -480,7 +480,7 @@ public final class Climber extends AbstractSubsystem {
      * Sets the climber in the correct state to initiate a climb and moves the elevator arm to the up above the high bar.
      */
     public synchronized void deployClimb() {
-        climberMotor.set(ControlMode.Position, Constants.CLIMBER_DEPLOY_HEIGHT); // TODO: Change position
+        climberMotor.set(ControlMode.Position, Constants.CLIMBER_DEPLOY_HEIGHT);
         setBrakeState(BrakeState.FREE);
         setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
@@ -624,18 +624,18 @@ public final class Climber extends AbstractSubsystem {
         logData("Pivoting Arm Contact Switch A", pivotingArmLatchedSwitchA.get(), true);
         logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get(), true);
 
-        logData("Pivot Solenoid State", getPivotState().toString());
-        logData("Latch Solenoid State", getClawState().toString());
-        logData("Brake Solenoid State", getBrakeState().toString());
+        logData("Pivot Solenoid State", getPivotState().toString(), true);
+        logData("Latch Solenoid State", getClawState().toString(), true);
+        logData("Brake Solenoid State", getBrakeState().toString(), true);
 
-        logData("Gyro Pitch", RobotTracker.getInstance().getGyro().getPitch());
-        logData("Gyro Pitch Velocity", gyroPitchVelocity);
-        logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll());
-        logData("Gyro Roll Velocity", gyroRollVelocity);
+        logData("Gyro Pitch", RobotTracker.getInstance().getGyro().getPitch(), true);
+        logData("Gyro Pitch Velocity", gyroPitchVelocity, true);
+        logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll(), true);
+        logData("Gyro Roll Velocity", gyroRollVelocity, true);
 
-        logData("Climber Is Paused", isPaused);
-        logData("Climber Is Step By Step", stepByStep);
-        logData("Current State", climbStatePair.toString());
+        logData("Climber Is Paused", isPaused, true);
+        logData("Climber Is Step By Step", stepByStep, true);
+        logData("Current State", climbStatePair.toString(), true);
     }
 
     @Override
