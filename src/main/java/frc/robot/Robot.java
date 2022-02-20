@@ -291,7 +291,7 @@ public class Robot extends TimedRobot {
 
         runShooter();
 
-        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(7)) {
+        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
         }

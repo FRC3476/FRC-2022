@@ -47,7 +47,6 @@ public final class Shooter extends AbstractSubsystem {
     private SparkMaxPIDController hoodPID;
     private final RelativeEncoder hoodRelativeEncoder;
 
-    // REV Through Bore Encoder Initialization
     private final CANCoder hoodAbsoluteEncoder;
 
     // Home Switch Initialization
@@ -198,7 +197,11 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelSlave.setInverted(true);
         shooterWheelMaster.setInverted(false);
 
+        feederWheel.setNeutralMode(NeutralMode.Brake);
+
         configPID();
+
+        hoodRelativeEncoder.setPosition(hoodAbsoluteEncoder.getPosition());
     }
 
     private void configPID() {

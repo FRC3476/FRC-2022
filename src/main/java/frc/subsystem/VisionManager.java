@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
@@ -219,7 +220,7 @@ public final class VisionManager extends AbstractSubsystem {
             distanceToTarget = relativeRobotPosition.getNorm();
         }
 
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
+        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
         shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
         shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }

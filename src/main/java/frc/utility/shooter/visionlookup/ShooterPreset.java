@@ -8,6 +8,15 @@ public class ShooterPreset implements Comparable<ShooterPreset> {
     private double flywheelSpeed;
     private double distance;
 
+    @Override
+    public String toString() {
+        return "ShooterPreset{" +
+                "hoodEjectAngle=" + hoodEjectAngle +
+                ", flywheelSpeed=" + flywheelSpeed +
+                ", distance=" + distance +
+                '}';
+    }
+
     @JsonCreator
     public ShooterPreset(@JsonProperty(required = true, value = "hoodEjectAngle") double hoodEjectAngle,
                          @JsonProperty(required = true, value = "flywheelSpeed") double flywheelSpeed,
@@ -47,5 +56,10 @@ public class ShooterPreset implements Comparable<ShooterPreset> {
     @Override
     public int compareTo(ShooterPreset a) {
         return Double.compare(this.getDistance(), a.getDistance());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ShooterPreset && compareTo((ShooterPreset) obj) == 0;
     }
 }

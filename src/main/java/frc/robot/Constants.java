@@ -140,7 +140,7 @@ public final class Constants {
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_TURN_ERROR = 0.85;
+    public static final double MAX_TURN_ERROR = 1;
 
     /**
      * Allowed Turn Error in degrees.
@@ -213,10 +213,10 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 1.0e-3; //0.00074361;
+    public static final double SHOOTER_P = 1.0e-1; //0.00074361;
     public static final double SHOOTER_I = 0;
     public static final double SHOOTER_D = 0;
-    public static final double SHOOTER_F = 0.00006375 * 1023;
+    public static final double SHOOTER_F = 0.00006 * 1023;
     public static final double SHOOTER_I_ZONE = 0;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -254,7 +254,7 @@ public final class Constants {
      */
     public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.5;
 
-    public static final double HOOD_P = 0.03;
+    public static final double HOOD_P = 0.01;
     public static final double HOOD_I = 0.0005;
     public static final double HOOD_D = 0;
     public static final double HOOD_F = 0;
@@ -438,6 +438,6 @@ public final class Constants {
     public static final int INTAKE_PERIOD = 50;
     public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
-    public static final double INTAKE_MOTOR_SPEED = -0.5;
+    public static final double INTAKE_MOTOR_SPEED = -1;
     public static final double INTAKE_OPEN_TIME = 0.3;
 }

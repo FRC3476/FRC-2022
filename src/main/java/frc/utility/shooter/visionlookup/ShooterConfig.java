@@ -21,4 +21,11 @@ public class ShooterConfig {
     public @NotNull List<ShooterPreset> getShooterConfigs() {
         return shooterConfigs;
     }
+
+    @Override
+    public String toString() {
+        return "ShooterConfig{" +
+                "shooterConfigs=" + shooterConfigs +
+                '}';
+    }
 }

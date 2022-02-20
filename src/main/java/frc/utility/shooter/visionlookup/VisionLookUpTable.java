@@ -55,7 +55,8 @@ public final class VisionLookUpTable {
     public @NotNull ShooterPreset getShooterPreset(double distanceFromTarget) {
         List<ShooterPreset> sortedShooterConfigs = shooterConfig.getShooterConfigs();
 
-        int index = Collections.binarySearch(sortedShooterConfigs, distanceFromTarget, comparator);
+        int index = Collections.binarySearch(sortedShooterConfigs, new ShooterPreset(0, 0, distanceFromTarget));
+        System.out.println("got index: " + index + " for distance " + distanceFromTarget);
         if (index < 0) { //Convert the binary search index into an actual index
             index = -(index + 1);
         }
@@ -94,6 +95,8 @@ public final class VisionLookUpTable {
      * @param shooterConfig a sorted shooter config
      */
     public void setShooterConfig(ShooterConfig shooterConfig) {
+        System.out.println(shooterConfig);
+        Collections.sort(shooterConfig.getShooterConfigs());
         this.shooterConfig = shooterConfig;
     }
 }
