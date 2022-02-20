@@ -128,11 +128,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        if (DriverStation.isTeleopEnabled()) {
-            xbox.update();
-            stick.update();
-            buttonPanel.update();
-        }
 
         //Listen changes in the network auto
         if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
@@ -182,24 +177,7 @@ public class Robot extends TimedRobot {
             });
         }
 
-        //TODO: Debug why this does not work
-        if (buttonPanel.getRisingEdge(9)) {
-            limelightTakeSnapshots = !limelightTakeSnapshots;
-            limelight.takeSnapshots(limelightTakeSnapshots);
-            System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
-        }
-
-        // Feeder wheel will not check for shooter speed and hood angle to be correct before
-        // enabling when stick button 2 is held down
-        if (stick.getRisingEdge(2)) {
-            shooter.disableFeederChecks();
-        }
-
-        if (stick.getFallingEdge(2)) {
-            shooter.enableFeederChecks();
-        }
-
-        SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
+        DashboardHandler.getInstance().log("Match Timestamp", DriverStation.getMatchTime(), true);
     }
 
 
@@ -388,6 +366,23 @@ public class Robot extends TimedRobot {
 
         if (stick.getRisingEdge(3)) {
             climber.deployClimb();
+        }
+
+        //TODO: Debug why this does not work
+        if (buttonPanel.getRisingEdge(9)) {
+            limelightTakeSnapshots = !limelightTakeSnapshots;
+            limelight.takeSnapshots(limelightTakeSnapshots);
+            System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
+        }
+
+        // Feeder wheel will not check for shooter speed and hood angle to be correct before
+        // enabling when stick button 2 is held down
+        if (stick.getRisingEdge(2)) {
+            shooter.disableFeederChecks();
+        }
+
+        if (stick.getFallingEdge(2)) {
+            shooter.enableFeederChecks();
         }
     }
 
