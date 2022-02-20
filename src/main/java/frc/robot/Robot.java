@@ -19,7 +19,7 @@ import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
-import frc.subsystem.Climber.ClimbState;
+import frc.subsystem.Climber.ClimbStatePair;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.shooter.visionlookup.ShooterConfig;
@@ -357,16 +357,16 @@ public class Robot extends TimedRobot {
         } else if (stick.getRawButton(12)) {
             System.out.println("going down");
             climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (climber.getClimbState() == ClimbState.IDLE) {
+        } else if (climber.getClimbStatePair() == ClimbStatePair.IDLE) {
             climber.setClimberMotor(0);
         }
 
-        if (stick.getRisingEdge(13)) {
+        if (stick.getRisingEdge(7) && stick.getRawButton(8)) {
             climber.forceAdvanceStep();
         }
 
         if (buttonPanel.getRisingEdge(11)) {
-            if (climber.getClimbState() == ClimbState.IDLE) {
+            if (climber.getClimbStatePair() == ClimbStatePair.IDLE) {
                 climber.startClimb();
             } else {
                 climber.resumeClimb();
