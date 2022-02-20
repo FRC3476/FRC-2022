@@ -20,6 +20,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbStatePair;
+import frc.subsystem.Shooter.HoodPositionMode;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.shooter.visionlookup.ShooterConfig;
@@ -114,6 +115,8 @@ public class Robot extends TimedRobot {
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
+        shooter.homeHood();
+        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
 
         //phCompressor = new Compressor(1, PneumaticsModuleType.REVPH);
         //phCompressor.enableDigital();
