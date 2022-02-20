@@ -357,7 +357,7 @@ public class Robot extends TimedRobot {
         } else if (stick.getRawButton(12)) {
             System.out.println("going down");
             climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (climber.getClimbStatePair() == ClimbStatePair.IDLE) {
+        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
             climber.setClimberMotor(0);
         }
 
@@ -384,6 +384,10 @@ public class Robot extends TimedRobot {
 
         if (buttonPanel.getRisingEdge(10)) {
             climber.setStepByStep(!climber.isStepByStep());
+        }
+
+        if (stick.getRisingEdge(3)) {
+            climber.deployClimb();
         }
     }
 

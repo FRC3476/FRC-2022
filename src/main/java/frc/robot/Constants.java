@@ -429,14 +429,14 @@ public final class Constants {
     public static final double MAX_CLIMBER_EXTENSION = 27.75 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     *
+     * Length to grab onto mid bar
      */
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     *
+     * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 155816 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 26.331 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
