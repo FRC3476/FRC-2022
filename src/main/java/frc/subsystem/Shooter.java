@@ -594,26 +594,27 @@ public final class Shooter extends AbstractSubsystem {
                 //noinspection FloatingPointEquality
                 if (homingStartTime == -1) {
                     // Records start of homing time, with current time being the same as the start time
-                    homingStartTime = Timer.getFPGATimestamp();
-
-                    // Sends Homing start message to console
-                    System.out.println("Homing Starting At: " + homingStartTime);
+                    if (DriverStation.isEnabled()) {
+                        homingStartTime = Timer.getFPGATimestamp();
+                        System.out.println("Homing Starting At: " + homingStartTime);
+                    } else {
+                        return;
+                    }
                 }
 
                 // Executes this if home switch is pressed
-                if (getHomeSwitchState() == HomeSwitchState.PRESSED) {
-
+                if (getHomeSwitchState() == HomeSwitchState.PRESSED || hoodMotor.getOutputCurrent() > Constants.SHOOTER_HOMING_CURRENT_LIMIT) {
+                    hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle); // Stop the hood motor
                     // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
                     hoodRelativeEncoder.setPosition(90);
-                    // Sets current to zero if home switch is pressed
-                    hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle);
 
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
                     shooterState = nextState;
 
                     // Sends Homing start message to console
-                    System.out.println("Homing Finished Successfully At: " + Timer.getFPGATimestamp());
+                    System.out.println("Homing Finished Successfully At: " + Timer.getFPGATimestamp() +
+                            (hoodMotor.getOutputCurrent() > 10 ? " (Hood Motor Current Exceeded)" : ""));
 
                     // Resets Homing Start Time
                     homingStartTime = -1;
@@ -627,20 +628,13 @@ public final class Shooter extends AbstractSubsystem {
                 if (Timer.getFPGATimestamp() - homingStartTime > Constants.MAX_HOMING_TIME_S) {
                     // Sets motor speed to zero if max time is exceeded
                     hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle);
-
                     // Sets current position as the 90 degree mark
                     hoodRelativeEncoder.setPosition(90);
 
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);
-
-                    // Turns homing off and sets it to the next queued state, OFF if no state queued
                     shooterState = nextState;
-
-                    // Sends Homing start message to console
                     System.out.println("Homing Failed At: " + Timer.getFPGATimestamp());
-
-                    // Resets Homing Start Time
                     homingStartTime = -1;
                 }
 
