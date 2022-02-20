@@ -176,7 +176,7 @@ public class Robot extends TimedRobot {
             });
         }
 
-        DashboardHandler.getInstance().log("Match Timestamp", DriverStation.getMatchTime(), true);
+        SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
     }
 
 
