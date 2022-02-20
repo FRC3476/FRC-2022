@@ -379,21 +379,21 @@ public final class Constants {
     public static final int BRAKE_SOLENOID_ID = 2;
 
 
-    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 8.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
+    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
     /**
      * The height to go to once the drivers request the climber to deploy
      */
-    public static final double CLIMBER_DEPLOY_HEIGHT = 10000;
+    public static final double CLIMBER_DEPLOY_HEIGHT = 23.45625 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is below this height and going down, the climb will abort
      */
-    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 50 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MIN_CLIMBER_ELEVATOR_HEIGHT = 17.3475 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is above this height and going down, the climb will abort
      */
-    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 12000 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 27.75 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
