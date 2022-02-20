@@ -560,6 +560,7 @@ public class Robot extends TimedRobot {
         hopper.start();
         shooter.start();
         climber.start();
+        DashboardHandler.getInstance().start();
     }
 
     public synchronized void killAuto() {

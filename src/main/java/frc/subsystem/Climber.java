@@ -609,20 +609,20 @@ public final class Climber extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
-        logData("Climber Motor Position IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
-        logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
-        logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
-        logData("Climber Motor Current", climberMotor.getStatorCurrent());
-        logData("Climber Motor 2 Current", climberMotor2.getStatorCurrent());
-        logData("Climber Motor Current Limit", Constants.CLIMBER_CURRENT_LIMIT);
+        logData("Climber Motor Position", climberMotor.getSelectedSensorPosition(), true);
+        logData("Climber Motor Position IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH, true);
+        logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity(), true);
+        logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent(), true);
+        logData("Climber Motor Current", climberMotor.getStatorCurrent(), true);
+        logData("Climber Motor 2 Current", climberMotor2.getStatorCurrent(), true);
+        logData("Climber Motor Current Limit", Constants.CLIMBER_CURRENT_LIMIT, true);
 
-        logData("Elevator Arm Contact Switch A", elevatorArmContactSwitchA.get());
-        logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get());
-        logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get());
-        logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
-        logData("Pivoting Arm Contact Switch A", pivotingArmLatchedSwitchA.get());
-        logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get());
+        logData("Elevator Arm Contact Switch A", elevatorArmContactSwitchA.get(), true);
+        logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get(), true);
+        logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get(), true);
+        logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get(), true);
+        logData("Pivoting Arm Contact Switch A", pivotingArmLatchedSwitchA.get(), true);
+        logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get(), true);
 
         logData("Pivot Solenoid State", getPivotState().toString());
         logData("Latch Solenoid State", getClawState().toString());

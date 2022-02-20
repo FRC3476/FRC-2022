@@ -38,6 +38,7 @@ public final class DashboardHandler extends AbstractSubsystem {
 
     {
         packetHandlerMap.put('k', packet -> {
+            System.out.println("Received k packet from " + packet.getAddress());
             InetAddress address = packet.getAddress();
             if (dashboardConnections.containsKey(address)) {
                 synchronized (dashboardConnections) {
@@ -124,15 +125,21 @@ public final class DashboardHandler extends AbstractSubsystem {
                 Iterator<DashboardConnection> iterator = dashboardConnections.values().iterator();
                 while (iterator.hasNext()) {
                     DashboardConnection entry = iterator.next();
-                    if (entry.timeoutTime > Timer.getFPGATimestamp()) {
+                    if (Timer.getFPGATimestamp() > entry.timeoutTime) {
                         // If we haven't received a keepalive in a while, remove the connection
                         entry.close();
                         iterator.remove();
+                        System.out.println("closing packet: " + entry.datagramSocket.getInetAddress() + " timed out");
                     } else {
                         byte[] bytes = json.getBytes(StandardCharsets.ISO_8859_1);
                         try {
-                            entry.datagramSocket.send(new DatagramPacket(bytes, bytes.length));
+                            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+
+                            entry.datagramSocket.send(packet);
+                            System.out.println(
+                                    "sending packet of " + packet.getLength() + " length to " + entry.datagramSocket.getInetAddress());
                         } catch (PortUnreachableException e) {
+                            System.out.println("closing packet: " + entry.datagramSocket.getInetAddress() + " got an error");
                             entry.close();
                             iterator.remove(); // Remove the connection if it's unreachable
                         }
