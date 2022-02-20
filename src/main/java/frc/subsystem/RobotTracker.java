@@ -116,8 +116,8 @@ public final class RobotTracker extends AbstractSubsystem {
     public void update() {
         double time = WPIUtilJNI.now() * 1.0e-6; // seconds
 
-
-        updateOdometry(time, gyroSensor.getRotation2d(), drive.getSwerveModuleStates());
+        Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
+        updateOdometry(time, rawGyroSensor, drive.getSwerveModuleStates());
 
         synchronized (this) {
             previousGyroRotations.add(Map.entry(time, gyroSensor.getRotation2d()));
@@ -127,6 +127,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
 
             latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
+            gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
             latencyCompensatedPose = latestEstimatedPose;
 
             latestChassisSpeeds = getRotatedSpeeds(
