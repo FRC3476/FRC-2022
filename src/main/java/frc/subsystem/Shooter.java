@@ -339,9 +339,9 @@ public final class Shooter extends AbstractSubsystem {
      * <p>
      * Includes two options, ABSOLUTE_ENCODER and RELATIVE_TO_HOME.
      * <p>
-     * ABSOLUTE_ENCODER uses the absolute encoder that has a 1:1 ratio with the hood angle.
+     * ABSOLUTE_ENCODER uses the absolute encoder to correct the built-in encoder in the neo.
      * <p>
-     * RELATIVE_TO_HOME uses the built-in NEO550 relative encoder which is not 1:1 with hood angle.
+     * RELATIVE_TO_HOME only uses the built-in encoder in the neo.
      * <p>
      * Switching to relative mode expects hood to be homed already.
      */
