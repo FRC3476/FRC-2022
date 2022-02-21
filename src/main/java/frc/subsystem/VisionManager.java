@@ -290,33 +290,30 @@ public final class VisionManager extends AbstractSubsystem {
         double angleToTarget = Math.atan2(goalTranslationOffset.getY(), goalTranslationOffset.getX());
 
 
-        if ((isVisionForcedOn() || Math.abs(
-                angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50))) {
+        if (Math.abs(angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50)) {
             forceVisionOn(updateLoopSource);
-
-            if (limelight.isTargetVisible()) {
-                MutableTranslation2d robotTranslation = getCurrentTranslation();
-
-                if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
-                        robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-
-                    Pose2d visionPose = new Pose2d(robotTranslation.getTranslation2d(), getLatencyCompedLimelightRotation());
-                    //robotTracker.addVisionMeasurement(visionPose, getLimelightTime());
-
-                    logData("Vision Pose X", visionPose.getX());
-                    logData("Vision Pose Y", visionPose.getY());
-                    logData("Vision Pose Angle", visionPose.getRotation().getDegrees());
-                    logData("Vision Pose Time", getLimelightTime());
-                    logData("Using Vision Info", "Using Vision Info");
-                } else {
-                    logData("Using Vision Info", "Position is too far from expected");
-                }
-            } else {
-                logData("Using Vision Info", "No target visible");
-            }
         } else {
             unForceVisionOn(updateLoopSource);
-            logData("Using Vision Info", "Not pointing at target");
+        }
+
+        if (limelight.isTargetVisible()) {
+            MutableTranslation2d robotTranslation = getCurrentTranslation();
+
+            Pose2d visionPose = new Pose2d(robotTranslation.getTranslation2d(), getLatencyCompedLimelightRotation());
+            logData("Vision Pose X", visionPose.getX());
+            logData("Vision Pose Y", visionPose.getY());
+            logData("Vision Pose Angle", visionPose.getRotation().getDegrees());
+            logData("Vision Pose Time", getLimelightTime());
+
+            if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
+                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
+                //robotTracker.addVisionMeasurement(visionPose, getLimelightTime());
+                logData("Using Vision Info", "Using Vision Info");
+            } else {
+                logData("Using Vision Info", "Position is too far from expected");
+            }
+        } else {
+            logData("Using Vision Info", "No target visible");
         }
     }
 
