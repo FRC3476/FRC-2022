@@ -18,14 +18,14 @@ public final class Intake extends AbstractSubsystem {
     private final Solenoid intakeSol;
     private final LazyCANSparkMax intakeMotor;
 
-    private double allowIntakeRunTime = 0;
+    private double allowIntakeRunTime = Double.MAX_VALUE;
 
     public static Intake getInstance() {
         return instance;
     }
 
     private Intake() {
-        super(Constants.INTAKE_PERIOD, 2);
+        super(Constants.INTAKE_PERIOD, 4);
         intakeSol = getPneumaticsHub().makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
         intakeMotor = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
@@ -70,7 +70,8 @@ public final class Intake extends AbstractSubsystem {
         OPEN, CLOSE
     }
 
-    public void setIntakeSolState(IntakeSolState intakeSolState) {
+
+    public synchronized void setIntakeSolState(IntakeSolState intakeSolState) {
         SmartDashboard.putString("Intake State", intakeSolState.toString());
         switch (intakeSolState) {
             case OPEN:
@@ -81,6 +82,7 @@ public final class Intake extends AbstractSubsystem {
                 break;
             case CLOSE:
                 intakeSol.set(false);
+                allowIntakeRunTime = Double.MAX_VALUE;
         }
     }
 
@@ -90,7 +92,7 @@ public final class Intake extends AbstractSubsystem {
 
     IntakeState wantedIntakeState = IntakeState.OFF;
 
-    public void setWantedIntakeState(IntakeState intakeState) {
+    public synchronized void setWantedIntakeState(IntakeState intakeState) {
         wantedIntakeState = intakeState;
     }
 
@@ -111,8 +113,8 @@ public final class Intake extends AbstractSubsystem {
     }
 
     @Override
-    public void update() {
-        if (Timer.getFPGATimestamp() > allowIntakeRunTime && getIntakeSolState() == IntakeSolState.OPEN) {
+    public synchronized void update() {
+        if (Timer.getFPGATimestamp() > allowIntakeRunTime) {
             setIntakeState(wantedIntakeState);
         } else {
             setIntakeState(IntakeState.OFF);
