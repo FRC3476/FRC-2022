@@ -171,18 +171,23 @@ public final class Constants {
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
     public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
+
+    public static final double GOAL_RADIUS_IN = 24.0;
     /**
      * The distance to the center of the goal to the vision tape.
      */
-    public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
-
-    public static final double REAL_GOAL_RADIUS_METERS = .61;
-    public static final double REAL_GOAL_RADIUS_IN = 24d;
+    public static final double GOAL_RADIUS = Units.inchesToMeters(GOAL_RADIUS_IN);
 
     /**
-     * This GOAL RADIUS is used to calculate the turn error, it is 75 percent less that the regular GOAL RADIUS (IN METERS)
+     * This GOAL RADIUS is used to calculate the turn error
      */
-    public static final double GOAL_RADIUS_TURN_ERROR_M = .61 * .75;
+    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 0.75;
+
+    /**
+     * Maximum speed of the robot when shooting the ball. (Only applies when doing the static shot) Units are in Meters per Second
+     * Squared
+     */
+    public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(0.1, 2);
 
     public static final double GRAVITY = 9.80665;
 
@@ -456,7 +461,6 @@ public final class Constants {
     public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
     public static final int ROBOT_TRACKER_PERIOD = 20;
 
-    // Intake Constants TODO: Need To Set
     public static final int INTAKE_PERIOD = 50;
     public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
