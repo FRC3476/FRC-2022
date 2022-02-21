@@ -226,7 +226,7 @@ public final class Constants {
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 300;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 100;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
@@ -252,7 +252,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.5;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.2;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;

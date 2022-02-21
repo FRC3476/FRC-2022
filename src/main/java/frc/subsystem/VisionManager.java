@@ -179,9 +179,9 @@ public final class VisionManager extends AbstractSubsystem {
         double degreeOffset;
         if (limelight.isTargetVisible()) {
             degreeOffset = Limelight.getInstance().getHorizontalOffset();
-            Rotation2d targetRotation = robotTracker.getLatencyCompedPoseMeters().getRotation().rotateBy(
-                    Rotation2d.fromDegrees(-degreeOffset));
-            System.out.println("target Heading: " + targetRotation.getDegrees());
+            Rotation2d targetRotation = robotTracker.getGyroAngle().minus(
+                    Rotation2d.fromDegrees(degreeOffset));
+            //System.out.println("target Heading: " + targetRotation.getDegrees());
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         } else {
 //            //Use best guess if no target is visible
@@ -189,6 +189,7 @@ public final class VisionManager extends AbstractSubsystem {
 //                    .minus(Constants.GOAL_POSITION);
 //            Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
 //            drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
+            drive.swerveDriveFieldRelative(controllerDriveInputs);
         }
 
         shooter.setFiring(limelight.isTargetVisible() && !drive.isAiming());

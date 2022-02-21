@@ -178,7 +178,7 @@ public final class Shooter extends AbstractSubsystem {
     private Shooter() {
         // TODO: May have to invert direction of motors
         // Sets update method's iteration
-        super(Constants.SHOOTER_PERIOD_MS);
+        super(Constants.SHOOTER_PERIOD_MS, 1);
 
         // Sets hood position mode, can be either using absolute encoder or be relative to home switch
         hoodPositionMode = HoodPositionMode.ABSOLUTE_ENCODER;

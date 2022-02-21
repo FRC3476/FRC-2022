@@ -650,12 +650,13 @@ public final class Drive extends AbstractSubsystem {
                     RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
         }
 
+
         lastTurnUpdate = Timer.getFPGATimestamp();
         double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
                 targetHeading.getRadians());
 
-        System.out.println(
-                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
+//        System.out.println(
+//                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
         double curSpeed = RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond;
         double deltaSpeed = pidDeltaSpeed; //Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
