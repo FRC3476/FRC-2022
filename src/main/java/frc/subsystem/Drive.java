@@ -458,6 +458,11 @@ public final class Drive extends AbstractSubsystem {
         return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
     }
 
+    public void setTurnError(double turnErrorDegrees) {
+        turnPID.setTolerance(Math.toRadians(turnErrorDegrees),
+                Math.toRadians(Constants.MAX_PID_STOP_SPEED));
+    }
+
     /**
      * Sets the motor voltage
      *
