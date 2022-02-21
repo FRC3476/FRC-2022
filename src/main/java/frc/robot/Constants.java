@@ -435,7 +435,7 @@ public final class Constants {
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
      */
-    public static final double MAX_CLIMBER_EXTENSION = 27.75 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MAX_CLIMBER_EXTENSION = 26 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * Length to grab onto mid bar
