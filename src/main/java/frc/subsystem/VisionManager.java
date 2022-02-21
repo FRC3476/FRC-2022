@@ -200,8 +200,9 @@ public final class VisionManager extends AbstractSubsystem {
             drive.swerveDriveFieldRelative(controllerDriveInputs);
         }
 
-        shooter.setFiring(limelight.isTargetVisible() && !drive.isAiming());
-        Hopper.getInstance().setHopperState(HopperState.ON);
+        shooter.setFiring(limelight.isTargetVisible() && !drive.isAiming()
+                && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
+        Hopper.getInstance().setHopperState(shooter.isFiring() ? HopperState.ON : HopperState.OFF);
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {

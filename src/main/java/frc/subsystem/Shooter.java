@@ -61,6 +61,16 @@ public final class Shooter extends AbstractSubsystem {
     // Makes it so feeder can run when not at proper hood and or flywheel speed
     private boolean feederChecksDisabled = false;
 
+    /**
+     * @return true when the shooter will be firing.
+     */
+    public boolean isFiring() {
+        return shooterState == ShooterState.ON &&
+                ((feederWheelState == FeederWheelState.FORWARD)
+                        && ((isHoodStopped() && isShooterAtTargetSpeed()) || feederChecksDisabled)
+                        || Timer.getFPGATimestamp() < forceFeederOnTime);
+    }
+
     // Declarations of Modes and States
 
     /**
@@ -568,8 +578,7 @@ public final class Shooter extends AbstractSubsystem {
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
                 // is at target speed. Will also enable if feeder wheel is enabled forward and checks are disabled
-                if (((feederWheelState == FeederWheelState.FORWARD) && isHoodStopped() && isShooterAtTargetSpeed())
-                        || (feederWheelState == FeederWheelState.FORWARD) && feederChecksDisabled) {
+                if ((feederWheelState == FeederWheelState.FORWARD) && ((isHoodStopped() && isShooterAtTargetSpeed()) || feederChecksDisabled)) {
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
