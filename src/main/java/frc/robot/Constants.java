@@ -154,7 +154,7 @@ public final class Constants {
 
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
-    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
+    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
 
