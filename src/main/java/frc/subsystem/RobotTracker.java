@@ -18,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.Map.Entry;
 
-@SuppressWarnings("unused")
 public final class RobotTracker extends AbstractSubsystem {
 
     private final @NotNull AHRS gyroSensor;
@@ -263,10 +262,10 @@ public final class RobotTracker extends AbstractSubsystem {
         int index = Collections.binarySearch(list, Map.entry(time, zero), comparator);
         if (index < 0) index = -index - 1;
 
-        if (index >= list.size()) return list.get(list.size() - 1).getValue();
+        if (index >= list.size()) return list.get(list.size() - 1).getValue().plus(gyroOffset);
         //if (index - 1 > list.size() || index < 0) return getGyroAngle();
 
-        return list.get(index).getValue();
+        return list.get(index).getValue().plus(gyroOffset);
     }
 
 
@@ -296,7 +295,7 @@ public final class RobotTracker extends AbstractSubsystem {
     }
 
     synchronized public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle) {
-        gyroOffset = gyroAngle.unaryMinus().rotateBy(pose.getRotation());
+        gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
         swerveDriveOdometry.resetPosition(pose, gyroAngle);
     }
 
@@ -382,7 +381,7 @@ public final class RobotTracker extends AbstractSubsystem {
      * @return The gyro angle offset so that it lines up with the robot tracker rotation.
      */
     public synchronized Rotation2d getGyroAngle() {
-        return gyroSensor.getRotation2d().rotateBy(gyroOffset);
+        return gyroSensor.getRotation2d().plus(gyroOffset);
     }
 
     public void resetGyro() {
