@@ -176,6 +176,14 @@ public final class Constants {
      */
     public static final double GOAL_RADIUS = 0.5; //TODO: get actual value
 
+    public static final double REAL_GOAL_RADIUS_METERS = .61;
+    public static final double REAL_GOAL_RADIUS_IN = 24d;
+
+    /**
+     * This GOAL RADIUS is used to calculate the turn error, it is 75 percent less that the regular GOAL RADIUS (IN METERS)
+     */
+    public static final double GOAL_RADIUS_TURN_ERROR_M = .61 * .75;
+
     public static final double GRAVITY = 9.80665;
 
     /**
