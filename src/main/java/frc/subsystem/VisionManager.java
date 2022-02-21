@@ -99,6 +99,12 @@ public final class VisionManager extends AbstractSubsystem {
                 .minus(Constants.LIMELIGHT_CENTER_OFFSET.rotateBy(currentGyroAngle)).plus(Constants.GOAL_POSITION);
     }
 
+    /**
+     * @return Allowed turn error in degrees
+     */
+    public double getAllowedTurnError() {
+        return Math.toDegrees(Math.atan(limelight.getDistanceM() / Constants.GOAL_RADIUS_TURN_ERROR_M));
+    }
 
     /*
      * @return the current position of the robot based on a translation and some time. It adds the current velocity * time to
@@ -182,6 +188,7 @@ public final class VisionManager extends AbstractSubsystem {
             Rotation2d targetRotation = robotTracker.getLatencyCompedPoseMeters().getRotation().rotateBy(
                     Rotation2d.fromDegrees(-degreeOffset));
             System.out.println("target Heading: " + targetRotation.getDegrees());
+            drive.setTurnError(getAllowedTurnError());
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         } else {
 //            //Use best guess if no target is visible
