@@ -33,7 +33,7 @@ public final class VisionManager extends AbstractSubsystem {
     private final @NotNull Drive drive = Drive.getInstance();
     private final @NotNull Shooter shooter = Shooter.getInstance();
 
-    private final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
+    public final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
     private double shooterHoodAngleBias = 0;
 
     {
@@ -93,17 +93,20 @@ public final class VisionManager extends AbstractSubsystem {
         Rotation2d currentGyroAngle = getLatencyCompedLimelightRotation();
 
         double distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS;
-        double angleToTarget = 180 + currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
+        double angleToTarget = currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
         return new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
                 distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
                 .minus(Constants.LIMELIGHT_CENTER_OFFSET.rotateBy(currentGyroAngle)).plus(Constants.GOAL_POSITION);
     }
 
     /**
-     * @return Allowed turn error in degrees
+     * @return Allowed turn error in radians
      */
     public double getAllowedTurnError() {
-        return Math.toDegrees(Math.atan(limelight.getDistanceM() / Constants.GOAL_RADIUS_TURN_ERROR_M));
+//        logData("Max Turn Error", Math.tan(limelight.getDistanceM() / Constants.GOAL_RADIUS_TURN_ERROR_M));
+//        return Math.tan(limelight.getDistanceM() / Constants.GOAL_RADIUS_TURN_ERROR_M);
+
+        return 2;
     }
 
     /*
@@ -181,14 +184,15 @@ public final class VisionManager extends AbstractSubsystem {
         }
     }
 
+    double bypassAimCheckUntil = 0;
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         double degreeOffset;
+        logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
+        logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
         if (limelight.isTargetVisible()) {
             degreeOffset = Limelight.getInstance().getHorizontalOffset();
             Rotation2d targetRotation = robotTracker.getGyroAngle().minus(
                     Rotation2d.fromDegrees(degreeOffset));
-            //System.out.println("target Heading: " + targetRotation.getDegrees());
-            System.out.println("target Heading: " + targetRotation.getDegrees());
             drive.setTurnError(getAllowedTurnError());
             drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
         } else {
@@ -200,9 +204,17 @@ public final class VisionManager extends AbstractSubsystem {
             drive.swerveDriveFieldRelative(controllerDriveInputs);
         }
 
-        shooter.setFiring(limelight.isTargetVisible() && !drive.isAiming()
-                && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
-        Hopper.getInstance().setHopperState(shooter.isFiring() ? HopperState.ON : HopperState.OFF);
+        if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
+            bypassAimCheckUntil = 0;
+        }
+        if (limelight.isTargetVisible() && (!drive.isAiming() || Timer.getFPGATimestamp() < bypassAimCheckUntil)
+                && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
+            bypassAimCheckUntil = Timer.getFPGATimestamp() + 0.1;
+            shooter.setFiring(true);
+        } else {
+            bypassAimCheckUntil = 0;
+        }
+        Hopper.getInstance().setHopperState(HopperState.ON);
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {

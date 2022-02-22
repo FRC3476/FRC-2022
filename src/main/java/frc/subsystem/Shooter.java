@@ -120,6 +120,8 @@ public final class Shooter extends AbstractSubsystem {
          * Feeder Wheel is OFF.
          */
         OFF,
+
+        REVERSE
     }
 
     private FeederWheelState feederWheelState = FeederWheelState.OFF;
@@ -227,6 +229,7 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelMaster.configPeakOutputForward(1);
         shooterWheelMaster.configPeakOutputReverse(0);
         shooterWheelMaster.configVoltageCompSaturation(9);
+        shooterWheelSlave.configVoltageCompSaturation(9);
 
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
                 Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
@@ -400,6 +403,10 @@ public final class Shooter extends AbstractSubsystem {
         }
     }
 
+    public void reverseShooterWheel() {
+        feederWheelState = FeederWheelState.REVERSE;
+    }
+
     /**
      * Gets the state of the Feeder Wheel.
      * <p>
@@ -524,12 +531,12 @@ public final class Shooter extends AbstractSubsystem {
         return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
     }
 
-    public void disableFeederChecks() {
-        feederChecksDisabled = true;
+    public void setFeederChecksDisabled(boolean feederChecksDisabled) {
+        this.feederChecksDisabled = feederChecksDisabled;
     }
 
-    public void enableFeederChecks() {
-        feederChecksDisabled = false;
+    public boolean isFeederChecksDisabled() {
+        return feederChecksDisabled;
     }
 
 
@@ -562,7 +569,11 @@ public final class Shooter extends AbstractSubsystem {
                     moveHoodMotor();
                 }
 
-                feederWheel.set(ControlMode.PercentOutput, 0);
+                if (feederWheelState == FeederWheelState.REVERSE) {
+                    feederWheel.set(ControlMode.PercentOutput, -Constants.FEEDER_WHEEL_SPEED);
+                } else {
+                    feederWheel.set(ControlMode.PercentOutput, 0);
+                }
 
                 break;
 

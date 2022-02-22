@@ -53,9 +53,9 @@ public final class Drive extends AbstractSubsystem {
     private final @NotNull ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(13, 0, 0, new TrapezoidProfile.Constraints(6, 10)); //P=1.0 OR 0.8
+        turnPID = new ProfiledPIDController(16, 0, 0.1, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
-        turnPID.setTolerance(Math.toRadians(Constants.MAX_TURN_ERROR), Math.toRadians(Constants.MAX_PID_STOP_SPEED));
+        turnPID.setTolerance(Math.toRadians(10));
     }
 
     public @NotNull DriveState driveState;
@@ -458,9 +458,8 @@ public final class Drive extends AbstractSubsystem {
         return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
     }
 
-    public void setTurnError(double turnErrorDegrees) {
-        turnPID.setTolerance(Math.toRadians(turnErrorDegrees),
-                Math.toRadians(Constants.MAX_PID_STOP_SPEED));
+    public void setTurnError(double turnErrorRadians) {
+        turnPID.setTolerance(turnErrorRadians, Math.toRadians(Constants.MAX_PID_STOP_SPEED));
     }
 
     /**
@@ -676,7 +675,7 @@ public final class Drive extends AbstractSubsystem {
                     deltaSpeed));
         }
 
-        if (turnPID.atGoal()) {
+        if (turnPID.getPositionError() < Constants.MAX_TURN_ERROR) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {

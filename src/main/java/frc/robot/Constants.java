@@ -31,7 +31,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 37.1129; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
+    public static final int VISION_MANAGER_PERIOD = 50; //22Hz
     public static final double SHOOT_TIME_PER_BALL = 0.2; // For Auto
 
     /**
@@ -140,12 +140,12 @@ public final class Constants {
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_TURN_ERROR = 1;
+    public static final double MAX_TURN_ERROR = 1.5;
 
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_PID_STOP_SPEED = Math.toRadians(5.2);
+    public static final double MAX_PID_STOP_SPEED = 100;
 
     // 2048 sensor units per revolution
     public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
@@ -181,7 +181,7 @@ public final class Constants {
     /**
      * This GOAL RADIUS is used to calculate the turn error
      */
-    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 0.75;
+    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
 
     /**
      * Maximum speed of the robot when shooting the ball. (Only applies when doing the static shot) Units are in Meters per Second
@@ -226,11 +226,11 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 1.0e-1; //0.00074361;
-    public static final double SHOOTER_I = 0;
+    public static final double SHOOTER_P = 3.0e-3; //0.00074361;
+    public static final double SHOOTER_I = 0.001;
     public static final double SHOOTER_D = 0;
-    public static final double SHOOTER_F = 0.00006 * 1023;
-    public static final double SHOOTER_I_ZONE = 0;
+    public static final double SHOOTER_F = 0.0000690 * 1023;
+    public static final double SHOOTER_I_ZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 40;
@@ -239,7 +239,7 @@ public final class Constants {
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 100;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 300;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
@@ -265,7 +265,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.2;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.08;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;
@@ -303,7 +303,7 @@ public final class Constants {
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in degrees
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 2;
 
     /**
      * If _ speed is under this value, hood has stopped

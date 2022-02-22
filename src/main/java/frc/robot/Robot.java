@@ -23,6 +23,7 @@ import frc.subsystem.Climber.ClimbStatePair;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.shooter.visionlookup.ShooterConfig;
+import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -91,9 +92,8 @@ public class Robot extends TimedRobot {
 
     //Control loop states
     boolean limelightTakeSnapshots = false;
-    private double hoodPosition = 55;
-    private double shooterSpeed = 2000;
-    private boolean autoAimRobot = false;
+    private ShooterPreset shooterPreset = VisionManager.getInstance().visionLookUpTable.getShooterPreset(36);
+    private boolean autoAimRobot = true;
 
     // Input Control
     private double firstPressTime = 0;
@@ -285,6 +285,7 @@ public class Robot extends TimedRobot {
             // Eject everything
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.REVERSE);
+            shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
             if (!(xbox.getRawAxis(2) > 0.1)) { // Only turn off the hopper if we're not shooting
@@ -318,11 +319,11 @@ public class Robot extends TimedRobot {
             }
         }
 
-        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
-            visionManager.adjustShooterHoodBias(-0.5);
-        } else if (xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
-            visionManager.adjustShooterHoodBias(0.5);
-        }
+//        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
+//            visionManager.adjustShooterHoodBias(-0.5);
+//        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {
+//            visionManager.adjustShooterHoodBias(0.5);
+//        }
 
         if (stick.getRisingEdge(9)) {
             climber.toggleClaw();
@@ -381,11 +382,7 @@ public class Robot extends TimedRobot {
         // Feeder wheel will not check for shooter speed and hood angle to be correct before
         // enabling when stick button 2 is held down
         if (stick.getRisingEdge(2)) {
-            shooter.disableFeederChecks();
-        }
-
-        if (stick.getFallingEdge(2)) {
-            shooter.enableFeederChecks();
+            shooter.setFeederChecksDisabled(!shooter.isFeederChecksDisabled());
         }
     }
 
@@ -397,16 +394,13 @@ public class Robot extends TimedRobot {
 
     private void runShooter() {
         if (buttonPanel.getRisingEdge(1)) {
-            hoodPosition = 80;
-            shooterSpeed = 2000;
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(300);
             autoAimRobot = true;
         } else if (buttonPanel.getRisingEdge(2)) {
-            hoodPosition = 70;
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(100);
             autoAimRobot = true;
-            shooterSpeed = 3000;
         } else if (buttonPanel.getRisingEdge(3)) {
-            hoodPosition = 76;
-            shooterSpeed = 2500;
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(36);
             autoAimRobot = false;
         }
 
@@ -438,8 +432,8 @@ public class Robot extends TimedRobot {
                 case MANUAL:
                     //Turn shooter flywheel on with manuel settings
                     visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-                    shooter.setShooterSpeed(shooterSpeed);
-                    shooter.setHoodPosition(hoodPosition);
+                    shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                    shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
                     break;
             }
         } else {
@@ -561,6 +555,7 @@ public class Robot extends TimedRobot {
         hopper.start();
         shooter.start();
         climber.start();
+        visionManager.start();
     }
 
     public synchronized void killAuto() {
