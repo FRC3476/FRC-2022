@@ -433,12 +433,12 @@ public class Robot extends TimedRobot {
                     //Turn shooter flywheel on with manuel settings
                     visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
                     shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
-                    shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
+                    shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                     break;
             }
         } else {
             visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-            shooter.setShooterSpeed(0); //Turns off shooter flywheel
+            shooter.setSpeed(0); //Turns off shooter flywheel
         }
     }
 

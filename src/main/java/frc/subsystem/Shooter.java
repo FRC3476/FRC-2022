@@ -373,7 +373,7 @@ public final class Shooter extends AbstractSubsystem {
      *
      * @param desiredShooterSpeed Desired Speed in RPM.
      */
-    public void setShooterSpeed(double desiredShooterSpeed) {
+    public void setSpeed(double desiredShooterSpeed) {
         this.desiredShooterSpeed = desiredShooterSpeed;
         if (desiredShooterSpeed == 0) {
             if (shooterState == ShooterState.HOMING || shooterState == ShooterState.TEST) {
@@ -683,13 +683,13 @@ public final class Shooter extends AbstractSubsystem {
         System.out.println("Shooter Test Starting At: " + Timer.getFPGATimestamp());
 
         // Sets shooter to test speed
-        setShooterSpeed(Constants.SHOOTER_TEST_SPEED_RPM);
+        setSpeed(Constants.SHOOTER_TEST_SPEED_RPM);
 
         // Waits 5 seconds
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
         // Turns shooter off
-        setShooterSpeed(Constants.SHOOTER_TEST_SPEED_RPM);
+        setSpeed(Constants.SHOOTER_TEST_SPEED_RPM);
 
         // Prints out start of test time
         System.out.println("Feeder Test Starting At: " + Timer.getFPGATimestamp());

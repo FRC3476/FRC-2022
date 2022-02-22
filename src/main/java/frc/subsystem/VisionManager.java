@@ -243,7 +243,7 @@ public final class VisionManager extends AbstractSubsystem {
         }
 
         ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
-        shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
+        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
         shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
@@ -257,7 +257,7 @@ public final class VisionManager extends AbstractSubsystem {
 //        double distanceToTarget = predictedPose.minus(Constants.GOAL_POSITION).getNorm();
 //
 //        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
-//        shooter.setShooterSpeed(shooterPreset.getFlywheelSpeed());
+//        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
 //        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
@@ -370,7 +370,7 @@ public final class VisionManager extends AbstractSubsystem {
         }
         unForceVisionOn(this);
         shooter.setFiring(false);
-        shooter.setShooterSpeed(0);
+        shooter.setSpeed(0);
         drive.setAutoAiming(false);
     }
 
@@ -385,7 +385,7 @@ public final class VisionManager extends AbstractSubsystem {
         } else {
             autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
         }
-        shooter.setShooterSpeed(flywheelSpeed);
+        shooter.setSpeed(flywheelSpeed);
         shooter.setHoodPosition(ejectionAngle);
 
         while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > 0.1) && !killAuto) {
@@ -409,7 +409,7 @@ public final class VisionManager extends AbstractSubsystem {
         }
         unForceVisionOn(this);
         shooter.setFiring(false);
-        shooter.setShooterSpeed(0);
+        shooter.setSpeed(0);
         drive.setAutoAiming(false);
     }
 
