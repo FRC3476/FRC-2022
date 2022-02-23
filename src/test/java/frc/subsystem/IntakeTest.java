@@ -66,7 +66,7 @@ class IntakeTest {
         intakeMotorField.setAccessible(true);
         LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
 
-        assertEquals(-Constants.INTAKE_MOTOR_SPEED, intakeMotor.get(), DELTA);
+        assertEquals(0, intakeMotor.get(), DELTA);
     }
 
     @Test
