@@ -345,13 +345,18 @@
     } ]
   }, {
     "type" : "script",
-    "script" : "# We set it to shoot 20 so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 20",
+    "script" : "Intake.setWantedIntakeState OFF\n# We set it to shoot 20 so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 20",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
       "delayType" : "NONE",
       "delay" : 0.0,
       "commands" : [ {
+        "methodName" : "frc.subsystem.Intake.setWantedIntakeState",
+        "args" : [ "OFF" ],
+        "argTypes" : [ "frc.subsystem.Intake$IntakeState" ],
+        "reflection" : true
+      }, {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
         "args" : [ "20" ],
         "argTypes" : [ "double" ],
