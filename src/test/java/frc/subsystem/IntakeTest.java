@@ -4,7 +4,6 @@ import frc.robot.Constants;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -22,7 +21,6 @@ class IntakeTest {
         intake = Intake.getInstance();
     }
 
-    @Disabled("The check that this is testing has been overrided")
     public void intakeDoesNotRunWhenClosed() throws Exception {
         Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
@@ -38,7 +36,6 @@ class IntakeTest {
         assertEquals(0, intakeMotor.get(), DELTA);
     }
 
-    @Disabled("The check that this is testing has been overrided")
     public void intakeDoesNotRunReversedWhenClosed() throws Exception {
         Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
@@ -55,18 +52,20 @@ class IntakeTest {
 
     @Test
     public void intakeDoesRunReversedWhenOpen() throws Exception {
-        Timer.setTime(0);
+        reset();
+        Timer.setTime(1000);
         intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
         intake.update();
-        Timer.setTime(0.5);
+        Timer.setTime(1001);
         intake.setWantedIntakeState(Intake.IntakeState.EJECT);
+        intake.update();
         intake.update();
 
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
         intakeMotorField.setAccessible(true);
         LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
 
-        assertEquals(0, intakeMotor.get(), DELTA);
+        assertEquals(-Constants.INTAKE_MOTOR_SPEED, intakeMotor.get(), DELTA);
     }
 
     @Test

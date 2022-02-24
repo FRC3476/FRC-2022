@@ -75,7 +75,7 @@ public final class Intake extends AbstractSubsystem {
         SmartDashboard.putString("Intake State", intakeSolState.toString());
         switch (intakeSolState) {
             case OPEN:
-                if (getIntakeSolState() == IntakeSolState.CLOSE) {
+                if (Timer.getFPGATimestamp() + Constants.INTAKE_OPEN_TIME < allowIntakeRunTime) {
                     allowIntakeRunTime = Timer.getFPGATimestamp() + Constants.INTAKE_OPEN_TIME;
                 }
                 intakeSol.set(true);
