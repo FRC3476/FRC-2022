@@ -1,10 +1,10 @@
 {
   "scriptMethods" : [ "print", "sleep" ],
-  "selectedAuto" : "5ball.json",
+  "selectedAuto" : "C:\\Users\\varun\\Documents\\GitHub\\FRC-2022\\src\\main\\deploy\\autos\\shootandmovelower.json",
   "selectedShooterConfig" : "shooterconfig.json",
   "teamNumber" : 3476,
-  "robotLength" : 0.93345,
-  "robotWidth" : 0.93345,
+  "robotLength" : 0.9398,
+  "robotWidth" : 0.9398,
   "pointScaleFactor" : 159.96748,
   "originX" : -601.0,
   "originY" : -1080.0,
@@ -34,7 +34,7 @@
       "maxSpeedMetersPerSecond" : 3.0
     } ]
   },
-  "networkTablesEnabled" : true,
+  "networkTablesEnabled" : false,
   "robotCodeDataFile" : "robotCodeData.json",
   "useReflection" : true,
   "isHolonomic" : true,

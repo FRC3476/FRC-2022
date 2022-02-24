@@ -2600,7 +2600,7 @@
     } ],
     "reversed" : false,
     "color" : 34.352936,
-    "closed" : false,
+    "closed" : true,
     "velocityStart" : 0.0,
     "velocityEnd" : 0.0,
     "constraints" : [ ]

@@ -1,0 +1,278 @@
+{
+  "autonomousSteps" : [ {
+    "type" : "script",
+    "script" : "Intake.setIntakeSolState OPEN\nIntake.setWantedIntakeState INTAKE",
+    "closed" : false,
+    "valid" : true,
+    "sendableScript" : {
+      "delayType" : "NONE",
+      "delay" : 0.0,
+      "commands" : [ {
+        "methodName" : "frc.subsystem.Intake.setIntakeSolState",
+        "args" : [ "OPEN" ],
+        "argTypes" : [ "frc.subsystem.Intake$IntakeSolState" ],
+        "reflection" : true
+      }, {
+        "methodName" : "frc.subsystem.Intake.setWantedIntakeState",
+        "args" : [ "INTAKE" ],
+        "argTypes" : [ "frc.subsystem.Intake$IntakeState" ],
+        "reflection" : true
+      } ]
+    }
+  }, {
+    "type" : "trajectory",
+    "states" : [ {
+      "time" : 0.0,
+      "velocity" : 0.0,
+      "acceleration" : 1.9999999999999991,
+      "pose" : {
+        "translation" : {
+          "x" : 6.1293768882751465,
+          "y" : 1.0937262773513794
+        },
+        "rotation" : {
+          "radians" : 2.4178655244299407
+        }
+      },
+      "curvature" : -0.0
+    }, {
+      "time" : 0.34563090364937865,
+      "velocity" : 0.691261807298757,
+      "acceleration" : 0.36820612243943035,
+      "pose" : {
+        "translation" : {
+          "x" : 6.039832933133312,
+          "y" : 1.1728005721164436
+        },
+        "rotation" : {
+          "radians" : 2.4188661222915147
+        }
+      },
+      "curvature" : 0.016170206682890393
+    }, {
+      "time" : 0.505156205162814,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.953521900824853,
+          "y" : 1.248734396573127
+        },
+        "rotation" : {
+          "radians" : 2.421541979797038
+        }
+      },
+      "curvature" : 0.030450081591621263
+    }, {
+      "time" : 0.6483600872493364,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.872645808643483,
+          "y" : 1.3194057707361253
+        },
+        "rotation" : {
+          "radians" : 2.425578221515037
+        }
+      },
+      "curvature" : 0.04502590737459782
+    }, {
+      "time" : 0.7792686655762568,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.7984173321165144,
+          "y" : 1.3836687243310735
+        },
+        "rotation" : {
+          "radians" : 2.4307241237438153
+        }
+      },
+      "curvature" : 0.0600060109366173
+    }, {
+      "time" : 0.897232142062162,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.73120861570942,
+          "y" : 1.441204719088887
+        },
+        "rotation" : {
+          "radians" : 2.4366289699674737
+        }
+      },
+      "curvature" : 0.07301717751827581
+    }, {
+      "time" : 1.0028905858689698,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.670700083530392,
+          "y" : 1.4923740710401034
+        },
+        "rotation" : {
+          "radians" : 2.4426948958416403
+        }
+      },
+      "curvature" : 0.07817295798613068
+    }, {
+      "time" : 1.0978926009274188,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.616029250034899,
+          "y" : 1.5380673728092233
+        },
+        "rotation" : {
+          "radians" : 2.4479820248657616
+        }
+      },
+      "curvature" : 0.06643730103174102
+    }, {
+      "time" : 1.1846142467364353,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.5659395307302475,
+          "y" : 1.579556915909052
+        },
+        "rotation" : {
+          "radians" : 2.451289177659248
+        }
+      },
+      "curvature" : 0.0306254547005519
+    }, {
+      "time" : 1.344680549100372,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.47339946620923,
+          "y" : 1.6560309203596262
+        },
+        "rotation" : {
+          "radians" : 2.4483349873720086
+        }
+      },
+      "curvature" : -0.08137220384957028
+    }, {
+      "time" : 1.5060523096646328,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.380800041835755,
+          "y" : 1.7339624414453283
+        },
+        "rotation" : {
+          "radians" : 2.4348659894059415
+        }
+      },
+      "curvature" : -0.12111408476726515
+    }, {
+      "time" : 1.5929623673861637,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
+      "pose" : {
+        "translation" : {
+          "x" : 5.331390412228302,
+          "y" : 1.7764765855853284
+        },
+        "rotation" : {
+          "radians" : 2.4274640669714516
+        }
+      },
+      "curvature" : -0.1033861913273497
+    }, {
+      "time" : 1.6855246078426271,
+      "velocity" : 0.75,
+      "acceleration" : -1.7605426270634943,
+      "pose" : {
+        "translation" : {
+          "x" : 5.27907971139939,
+          "y" : 1.822116045270377
+        },
+        "rotation" : {
+          "radians" : 2.4212714249565357
+        }
+      },
+      "curvature" : -0.0741717032791636
+    }, {
+      "time" : 1.7983385642018888,
+      "velocity" : 0.5513862209018392,
+      "acceleration" : -2.0000000000000004,
+      "pose" : {
+        "translation" : {
+          "x" : 5.22401936194683,
+          "y" : 1.870664828472968
+        },
+        "rotation" : {
+          "radians" : 2.417064034912011
+        }
+      },
+      "curvature" : -0.04008864282831396
+    }, {
+      "time" : 2.0740316746528085,
+      "velocity" : 0.0,
+      "acceleration" : -2.0000000000000004,
+      "pose" : {
+        "translation" : {
+          "x" : 5.167157173156738,
+          "y" : 1.9211000204086304
+        },
+        "rotation" : {
+          "radians" : 2.4154850346736763
+        }
+      },
+      "curvature" : -0.0
+    } ],
+    "pointList" : [ {
+      "x" : [ 6.1293768882751465, -1.4423890113830566, 0.0 ],
+      "y" : [ 1.0937262773513794, 1.27461576461792, 0.0 ]
+    }, {
+      "x" : [ 5.167157173156738, -0.9154930114746094, 0.0 ],
+      "y" : [ 1.9211000204086304, 0.812895655632019, 0.0 ]
+    } ],
+    "rotations" : [ {
+      "time" : 0.0,
+      "rotation" : {
+        "radians" : 2.37094272169677
+      }
+    }, {
+      "time" : 1.9499999564141035,
+      "rotation" : {
+        "radians" : 2.370942522371697
+      }
+    } ],
+    "reversed" : false,
+    "color" : 209.88235,
+    "closed" : false,
+    "velocityStart" : 0.0,
+    "velocityEnd" : 0.0,
+    "constraints" : [ {
+      "type" : "MaxVelocityConstraint",
+      "maxVelocity" : 0.75
+    } ]
+  }, {
+    "type" : "script",
+    "script" : "# We set it to shoot 20 so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 20",
+    "closed" : false,
+    "valid" : true,
+    "sendableScript" : {
+      "delayType" : "NONE",
+      "delay" : 0.0,
+      "commands" : [ {
+        "methodName" : "frc.subsystem.VisionManager.shootBalls",
+        "args" : [ "20" ],
+        "argTypes" : [ "double" ],
+        "reflection" : true
+      } ]
+    }
+  } ]
+}
