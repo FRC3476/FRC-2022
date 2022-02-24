@@ -328,6 +328,38 @@ public final class Climber extends AbstractSubsystem {
 
         ClimbState automatic;
         ClimbState stepbystep;
+
+        @Override
+        public String toString() {
+            String returnValue = "";
+            if (this == ClimbStatePair.IDLE) {
+                returnValue = "IDLE";
+            } else if (this == ClimbStatePair.START_CLIMB) {
+                returnValue = "START_CLIMB";
+            } else if (this == ClimbStatePair.CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR) {
+                returnValue = "CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR";
+            } else if (this == ClimbStatePair.EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH) {
+                returnValue = "EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH";
+            } else if (this == ClimbStatePair.UNLATCH_PIVOT_ARM) {
+                returnValue = "UNLATCH_PIVOT_ARM";
+            } else if (this == ClimbStatePair.LATCH_PIVOT_ARM) {
+                returnValue = "LATCH_PIVOT_ARM";
+            } else if (this == ClimbStatePair.LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT) {
+                returnValue = "LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT";
+            } else if (this == ClimbStatePair.MOVE_WEIGHT_TO_PIVOT_ARM) {
+                returnValue = "MOVE_WEIGHT_TO_PIVOT_ARM)";
+            } else if (this == ClimbStatePair.PIVOT_PIVOT_ARM) {
+                returnValue = "PIVOT_PIVOT_ARM";
+            } else if (this == ClimbStatePair.UNPIVOT_PIVOT_ARM) {
+                returnValue = "UNPIVOT_PIVOT_ARM";
+            } else if (this == ClimbStatePair.WAIT_FOR_SWING_STOP) {
+                returnValue = "WAIT_FOR_SWING_STOP";
+            } else if (this == ClimbStatePair.WAIT_TILL_EXTENSION_IS_SAFE) {
+                returnValue = "WAIT_TILL_EXTENSION_IS_SAFE";
+            }
+
+            return returnValue;
+        }
     }
 
     double otherPivotingArmMustContactByTime = Double.MAX_VALUE;
@@ -635,7 +667,13 @@ public final class Climber extends AbstractSubsystem {
 
         logData("Climber Is Paused", isPaused);
         logData("Climber Is Step By Step", stepByStep);
-        logData("Current State", climbStatePair.toString());
+        logData("Current Climber State", climbStatePair.toString());
+
+        if (stepByStep) {
+            logData("Current Climber WaitCondition", climbStatePair.stepbystep.waitCondition.apply(this));
+        } else {
+            logData("Current Climber WaitCondition", climbStatePair.automatic.waitCondition.apply(this));
+        }
     }
 
     @Override

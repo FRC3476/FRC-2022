@@ -22,4 +22,12 @@ public class ClimberTest {
         System.out.println("Time: " + (Timer.getFPGATimestamp() - time));
         //OrangeUtility.sleep(1000);
     }
+
+    @Disabled
+    void waitConditionLogTest() {
+        frc.utility.Timer.setTime(1000);
+        System.out.println("test\n");
+        System.out.println(Climber.getInstance().getClimbStatePair());
+        System.out.println(Climber.getInstance().getClimbStatePair().stepbystep.waitCondition.apply(Climber.getInstance()));
+    }
 }
