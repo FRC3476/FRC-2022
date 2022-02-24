@@ -178,6 +178,10 @@ public final class Drive extends AbstractSubsystem {
         for (LazyTalonFX swerveMotor : swerveMotors) {
             swerveMotor.setNeutralMode(NeutralMode.Coast);
         }
+
+        for (LazyTalonFX swerveDriveMotor : swerveDriveMotors) {
+            swerveDriveMotor.setNeutralMode(NeutralMode.Coast);
+        }
     }
 
     public void configBrake() {

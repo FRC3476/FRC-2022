@@ -183,7 +183,7 @@ public class Robot extends TimedRobot {
     @Override
     public synchronized void autonomousInit() {
         enabled.setBoolean(true);
-        drive.configBrake();
+        drive.configCoast();
         startSubsystems();
 
         networkAutoLock.lock();
@@ -228,7 +228,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
-        drive.configBrake();
+        drive.configCoast();
     }
 
     private final Object driverForcingVisionOn = new Object();
