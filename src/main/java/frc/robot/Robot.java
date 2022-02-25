@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.auton.TemplateAuto;
+import frc.auton.*;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
@@ -30,8 +30,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -69,8 +71,20 @@ public class Robot extends TimedRobot {
     //Auto
     @Nullable TemplateAuto selectedAuto;
     @Nullable Thread autoThread;
-    private static final String DEFAULT_AUTO = "Default";
-    private static final String CUSTOM_AUTO = "My Auto";
+
+    ShootAndMoveHigh shootAndMoveHigh;
+    ShootAndMoveMid shootAndMoveMid;
+    ShootAndMoveLow shootAndMoveLow;
+    FourBall fourBall;
+    FiveBall fiveBall;
+    SixBall sixBall;
+    private static final String SHOOT_AND_MOVE_HIGH = "Shoot and Move High";
+    private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
+    private static final String SHOOT_AND_MOVE_LOW = "Shoot and Move Low";
+    private static final String FOUR_BALL = "Four Ball";
+    private static final String FIVE_BALL = "Five Ball";
+    private static final String SIX_BALL = "Six Ball";
+
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
     //Subsystems
@@ -105,8 +119,12 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
-        autoChooser.setDefaultOption("Default Auto", DEFAULT_AUTO);
-        autoChooser.addOption("My Auto", CUSTOM_AUTO);
+        autoChooser.setDefaultOption(SHOOT_AND_MOVE_HIGH, SHOOT_AND_MOVE_HIGH);
+        autoChooser.addOption(SHOOT_AND_MOVE_MID, SHOOT_AND_MOVE_MID);
+        autoChooser.addOption(SHOOT_AND_MOVE_LOW, SHOOT_AND_MOVE_LOW);
+        autoChooser.addOption(FOUR_BALL, FOUR_BALL);
+        autoChooser.addOption(FIVE_BALL, FIVE_BALL);
+        autoChooser.addOption(SIX_BALL, SIX_BALL);
         SmartDashboard.putData("Auto choices", autoChooser);
 
         startSubsystems();
@@ -114,8 +132,33 @@ public class Robot extends TimedRobot {
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
+
+
+        // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
+        // the autos
+        CompletableFuture.runAsync(() -> shootAndMoveHigh = new ShootAndMoveHigh()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> shootAndMoveLow = new ShootAndMoveLow()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fourBall = new FourBall()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
+
+        while (loadingAutos) {
+            Thread.onSpinWait();
+        }
+
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
+    }
+
+
+    AtomicInteger loadedAutos = new AtomicInteger(0);
+    volatile boolean loadingAutos = true;
+
+    public void incrementLoadedAutos() {
+        if (loadedAutos.incrementAndGet() == 6) {
+            loadingAutos = false;
+        }
     }
 
     /**
@@ -190,8 +233,27 @@ public class Robot extends TimedRobot {
         try {
             if (networkAuto == null) {
                 System.out.println("Using normal autos");
-                selectedAuto = null; //TODO put an actual auto here
-                //TODO put autos here
+                String auto = autoChooser.getSelected();
+                switch (auto) {
+                    case SHOOT_AND_MOVE_HIGH:
+                        selectedAuto = shootAndMoveHigh;
+                        break;
+                    case SHOOT_AND_MOVE_MID:
+                        selectedAuto = shootAndMoveMid;
+                        break;
+                    case FOUR_BALL:
+                        selectedAuto = fourBall;
+                        break;
+                    case FIVE_BALL:
+                        selectedAuto = fiveBall;
+                        break;
+                    case SIX_BALL:
+                        selectedAuto = sixBall;
+                        break;
+                    default:
+                        selectedAuto = shootAndMoveLow;
+                        break;
+                }
             } else {
                 System.out.println("Using autos from network tables");
                 selectedAuto = networkAuto;
@@ -200,6 +262,7 @@ public class Robot extends TimedRobot {
             networkAutoLock.unlock();
         }
 
+        assert selectedAuto != null;
         //Since autonomous objects can be reused they need to be reset them before we can reuse them again 
         selectedAuto.reset();
         visionManager.killAuto = false;
