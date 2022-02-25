@@ -122,48 +122,74 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public enum ClimbStatePair {
-        IDLE(new ClimbState((cl) -> {}, (cl) -> false, (cl) -> {}),
-                new ClimbState((cl) -> {}, (cl) -> false, (cl) -> {})
+        IDLE(
+                new ClimbState(
+                        (cl) -> {},
+                        (cl) -> false,
+                        (cl) -> {}
+                ),
+
+                new ClimbState(
+                        (cl) -> {},
+                        (cl) -> false,
+                        (cl) -> {}
+                )
         ),
 
         /**
          * Will immediately transition to the next state to start the climb sequence.
          */
-        START_CLIMB(new ClimbState((cl) -> {}, (cl) -> true, (cl) -> {}),
-                new ClimbState((cl) -> {}, (cl) -> false, (cl) -> {})
+        START_CLIMB(
+                new ClimbState(
+                        (cl) -> {},
+                        (cl) -> true,
+                        (cl) -> {}
+                ),
+
+                new ClimbState(
+                        (cl) -> {},
+                        (cl) -> true,
+                        (cl) -> {})
         ),
 
         /**
          * Lowers the elevator arm until the contact switch is pressed on the bar.
          */
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
-                new ClimbState((cl) -> {
-                    cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-                    cl.setClawState(ClawState.UNLATCHED);
-                },
+                new ClimbState(
+                        (cl) -> {
+                            cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+                            cl.setClawState(ClawState.UNLATCHED);
+                        },
                         Climber::isPivotArmContactingBar,
                         Climber::stopClimberMotor
                 ),
 
-                new ClimbState((cl) -> {
-                    cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
-                    cl.setClawState(ClawState.UNLATCHED);
-                },
+                new ClimbState(
+                        (cl) -> {
+                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
+                            cl.setClawState(ClawState.UNLATCHED);
+                        },
                         (cl) -> false,
-                        Climber::stopClimberMotor)
+                        Climber::stopClimberMotor
+                )
         ),
 
         /**
          * Extends the solenoid to latch the pivoting arm onto the bar. Waits until the latch switch is pressed.
          */
         LATCH_PIVOT_ARM(
-                new ClimbState((cl) -> cl.setClawState(ClawState.LATCHED),
+                new ClimbState(
+                        (cl) -> cl.setClawState(ClawState.LATCHED),
                         (cl) -> cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get(),
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> cl.setClawState(ClawState.LATCHED),
+                new ClimbState(
+                        (cl) -> cl.setClawState(ClawState.LATCHED),
                         (cl) -> false,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
@@ -171,22 +197,22 @@ public final class Climber extends AbstractSubsystem {
          * supporting the robot.
          */
         MOVE_WEIGHT_TO_PIVOT_ARM(
-                new ClimbState((cl) -> {
-                    //position when it is considered "unlatched"
-                    cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
-                    cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
-                },
+                new ClimbState(
+                        (cl) -> {
+                            //position when it is considered "unlatched"
+                            cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
+                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
+                        },
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
                                 !cl.elevatorArmContactSwitchA.get() && !cl.elevatorArmContactSwitchB.get(),
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> {
-                    //position when it is considered "unlatched"
-                    cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
-                    cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
-                },
+                new ClimbState(
+                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT),
                         (cl) -> false,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
@@ -194,36 +220,41 @@ public final class Climber extends AbstractSubsystem {
          * motor has fully extended to it's maximum safe position.
          */
         PIVOT_PIVOT_ARM(
-                new ClimbState((cl) -> {
-                    cl.setPivotState(PivotState.PIVOTED);
-                    cl.data = Timer.getFPGATimestamp();
-                },
+                new ClimbState(
+                        (cl) -> {
+                            cl.setPivotState(PivotState.PIVOTED);
+                            cl.data = Timer.getFPGATimestamp();
+                        },
                         (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION
                                 && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> {
-                    cl.setPivotState(PivotState.PIVOTED);
-                    cl.data = Timer.getFPGATimestamp();
-                },
+                new ClimbState(
+                        (cl) -> cl.setPivotState(PivotState.PIVOTED),
                         (cl) -> true,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
          * Uses the gyro to wait until the robot is swinging towards the field
          */
         WAIT_TILL_EXTENSION_IS_SAFE(
-                new ClimbState((cl) -> {},
+                new ClimbState(
+                        (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
                             return gyro.getPitch() < 0 && cl.gyroPitchVelocity < 0; // TODO: tune these values
                         },
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> {},
+                new ClimbState(
+                        (cl) -> {},
                         (cl) -> false,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
@@ -231,95 +262,111 @@ public final class Climber extends AbstractSubsystem {
          * towards the bars.
          */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
-                new ClimbState((cl) -> {
-                    cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION);
-                },
+                new ClimbState(
+                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION),
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> {
-                    cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION);
-                },
+                new ClimbState(
+                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION),
                         (cl) -> false,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
          * Unpivot the elevator arm so elevator arm is pulled onto the next bar
          */
         UNPIVOT_PIVOT_ARM(
-                new ClimbState((cl) -> {
-                    cl.setPivotState(PivotState.INLINE);
-                    cl.data = Timer.getFPGATimestamp();
-                },
+                new ClimbState(
+                        (cl) -> {
+                            cl.setPivotState(PivotState.INLINE);
+                            cl.data = Timer.getFPGATimestamp();
+                        },
                         //TODO: Change the time
                         (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_UNPIVOT_DURATION,
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> {
-                    cl.setPivotState(PivotState.INLINE);
-                    cl.data = Timer.getFPGATimestamp();
-                },
-                        //TODO: Change the time
+                new ClimbState(
+                        (cl) -> {
+                            cl.setPivotState(PivotState.INLINE);
+                            cl.data = Timer.getFPGATimestamp();
+                        },
                         (cl) -> true,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
          * Waits for the gyro to report that the robot has stopped swinging.
          */
         WAIT_FOR_SWING_STOP(
-                new ClimbState((cl) -> {},
+                new ClimbState(
+                        (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
                             return Math.abs(gyro.getPitch() - 20) < 4 && Math.abs(
                                     cl.gyroPitchVelocity) < 0.1; //TODO: Tune these values
                         },
-                        (cl) -> {}),
+                        (cl) -> {}
+                ),
 
-                new ClimbState((cl) -> {},
+                new ClimbState(
+                        (cl) -> {},
                         (cl) -> false,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         ),
 
         /**
          * Retracts the elevator arm to until it contacts the bar.
          */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
-                new ClimbState((cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT),
+                new ClimbState(
+                        (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT),
                         Climber::isElevatorArmContactingBar,
-                        Climber::stopClimberMotor),
+                        Climber::stopClimberMotor
+                ),
 
-                new ClimbState((cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION),
+                new ClimbState(
+                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION),
                         (cl) -> false,
-                        Climber::stopClimberMotor)
+                        Climber::stopClimberMotor
+                )
         ),
 
         /**
          * Unlatches the pivot arm so that the robot is supported by the elevator arm.
          */
-        UNLATCH_PIVOT_ARM(new ClimbState(
-                (cl) -> {
-                    cl.setClawState(ClawState.UNLATCHED);
-                    cl.data = Timer.getFPGATimestamp();
-                },
-                (cl) -> {
-                    if (cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get()) {
-                        cl.data = Timer.getFPGATimestamp();
-                    }
-                    return Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
-                            && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get();
-                },
-                (cl) -> {}),
+        UNLATCH_PIVOT_ARM(
+                new ClimbState(
+                        (cl) -> {
+                            cl.setClawState(ClawState.UNLATCHED);
+                            cl.data = Timer.getFPGATimestamp();
+                        },
+                        (cl) -> {
+                            if (cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get()) {
+                                cl.data = Timer.getFPGATimestamp();
+                            }
+                            return Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
+                                    && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get();
+                        },
+                        (cl) -> {}
+                ),
+
                 new ClimbState(
                         (cl) -> {
                             cl.setClawState(ClawState.UNLATCHED);
                             cl.data = Timer.getFPGATimestamp();
                         },
                         (cl) -> false,
-                        (cl) -> {})
+                        (cl) -> {}
+                )
         );
 
+        
         ClimbStatePair(ClimbState automatic, ClimbState stepByStep) {
             this.automatic = automatic;
             this.stepByStep = stepByStep;
