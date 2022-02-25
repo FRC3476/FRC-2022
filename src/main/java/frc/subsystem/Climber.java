@@ -141,8 +141,8 @@ public final class Climber extends AbstractSubsystem {
                     cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
                     cl.setClawState(ClawState.UNLATCHED);
                 },
-                        (cl) -> cl.isPivotArmContactingBar(),
-                        (cl) -> cl.stopClimberMotor()
+                        Climber::isPivotArmContactingBar,
+                        Climber::stopClimberMotor
                 ),
 
                 new ClimbState((cl) -> {
@@ -150,7 +150,7 @@ public final class Climber extends AbstractSubsystem {
                     cl.setClawState(ClawState.UNLATCHED);
                 },
                         (cl) -> false,
-                        (cl) -> cl.stopClimberMotor())
+                        Climber::stopClimberMotor)
         ),
 
         /**
@@ -288,12 +288,12 @@ public final class Climber extends AbstractSubsystem {
          */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
                 new ClimbState((cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT),
-                        (cl) -> cl.isElevatorArmContactingBar(),
-                        (cl) -> cl.stopClimberMotor()),
+                        Climber::isElevatorArmContactingBar,
+                        Climber::stopClimberMotor),
 
                 new ClimbState((cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION),
                         (cl) -> false,
-                        (cl) -> cl.stopClimberMotor())
+                        Climber::stopClimberMotor)
         ),
 
         /**
@@ -321,13 +321,13 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {})
         );
 
-        ClimbStatePair(ClimbState automatic, ClimbState stepbystep) {
+        ClimbStatePair(ClimbState automatic, ClimbState stepByStep) {
             this.automatic = automatic;
-            this.stepbystep = stepbystep;
+            this.stepByStep = stepByStep;
         }
 
-        ClimbState automatic;
-        ClimbState stepbystep;
+        final ClimbState automatic;
+        final ClimbState stepByStep;
     }
 
     double otherPivotingArmMustContactByTime = Double.MAX_VALUE;
@@ -526,7 +526,7 @@ public final class Climber extends AbstractSubsystem {
         ClimbState currentClimbState;
 
         if (stepByStep) {
-            currentClimbState = climbStatePair.stepbystep;
+            currentClimbState = climbStatePair.stepByStep;
         } else {
             currentClimbState = climbStatePair.automatic;
         }
@@ -557,7 +557,7 @@ public final class Climber extends AbstractSubsystem {
                 climbStatePair = ClimbStatePair.values()[(climbStatePair.ordinal() + 1) % ClimbStatePair.values().length];
 
                 if (stepByStep) {
-                    currentClimbState = climbStatePair.stepbystep;
+                    currentClimbState = climbStatePair.stepByStep;
                 } else {
                     currentClimbState = climbStatePair.automatic;
                 }
@@ -638,7 +638,7 @@ public final class Climber extends AbstractSubsystem {
         logData("Current Climber State", climbStatePair.toString());
 
         if (stepByStep) {
-            logData("Current Climber WaitCondition", climbStatePair.stepbystep.waitCondition.apply(this));
+            logData("Current Climber WaitCondition", climbStatePair.stepByStep.waitCondition.apply(this));
         } else {
             logData("Current Climber WaitCondition", climbStatePair.automatic.waitCondition.apply(this));
         }

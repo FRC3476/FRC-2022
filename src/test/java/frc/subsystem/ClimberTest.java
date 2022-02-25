@@ -28,6 +28,6 @@ public class ClimberTest {
         frc.utility.Timer.setTime(1000);
         System.out.println("test\n");
         System.out.println(Climber.getInstance().getClimbStatePair());
-        System.out.println(Climber.getInstance().getClimbStatePair().stepbystep.waitCondition.apply(Climber.getInstance()));
+        System.out.println(Climber.getInstance().getClimbStatePair().stepByStep.waitCondition.apply(Climber.getInstance()));
     }
 }
