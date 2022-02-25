@@ -99,16 +99,6 @@ public final class VisionManager extends AbstractSubsystem {
                 .minus(Constants.LIMELIGHT_CENTER_OFFSET.rotateBy(currentGyroAngle)).plus(Constants.GOAL_POSITION);
     }
 
-    /**
-     * @return Allowed turn error in radians
-     */
-    public double getAllowedTurnError() {
-//        logData("Max Turn Error", Math.tan(limelight.getDistanceM() / Constants.GOAL_RADIUS_TURN_ERROR_M));
-//        return Math.tan(limelight.getDistanceM() / Constants.GOAL_RADIUS_TURN_ERROR_M);
-
-        return 2;
-    }
-
     /*
      * @return the current position of the robot based on a translation and some time. It adds the current velocity * time to
      * the translation.
@@ -184,30 +174,33 @@ public final class VisionManager extends AbstractSubsystem {
         }
     }
 
+    public Rotation2d getAngleOfTarget() {
+        if (limelight.isTargetVisible()) {
+            double degreeOffset = Limelight.getInstance().getHorizontalOffset();
+            return robotTracker.getGyroAngle().minus(Rotation2d.fromDegrees(degreeOffset));
+        } else {
+            //Use best guess if no target is visible
+            Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
+                    .minus(Constants.GOAL_POSITION);
+            return new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
+
+            //drive.swerveDriveFieldRelative(controllerDriveInputs);
+        }
+    }
+
     double bypassAimCheckUntil = 0;
+
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         double degreeOffset;
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
         logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
-        if (limelight.isTargetVisible()) {
-            degreeOffset = Limelight.getInstance().getHorizontalOffset();
-            Rotation2d targetRotation = robotTracker.getGyroAngle().minus(
-                    Rotation2d.fromDegrees(degreeOffset));
-            drive.setTurnError(getAllowedTurnError());
-            drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
-        } else {
-//            //Use best guess if no target is visible
-//            Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
-//                    .minus(Constants.GOAL_POSITION);
-//            Rotation2d targetRotation = new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
-//            drive.updateTurn(controllerDriveInputs, targetRotation, fieldRelative);
-            drive.swerveDriveFieldRelative(controllerDriveInputs);
-        }
+
+        drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative);
 
         if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = 0;
         }
-        if (limelight.isTargetVisible() && (!drive.isAiming() || Timer.getFPGATimestamp() < bypassAimCheckUntil)
+        if ((!drive.isAiming() || Timer.getFPGATimestamp() < bypassAimCheckUntil)
                 && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = Timer.getFPGATimestamp() + 0.1;
             shooter.setFiring(true);

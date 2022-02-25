@@ -462,10 +462,6 @@ public final class Drive extends AbstractSubsystem {
         return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
     }
 
-    public void setTurnError(double turnErrorRadians) {
-        turnPID.setTolerance(turnErrorRadians, Math.toRadians(Constants.MAX_PID_STOP_SPEED));
-    }
-
     /**
      * Sets the motor voltage
      *
@@ -556,7 +552,7 @@ public final class Drive extends AbstractSubsystem {
 
             Rotation2d targetHeading = autoTargetHeading;
             if (isAutoAiming) {
-                targetHeading = VisionManager.getInstance().getPredictedRotationTarget();
+                targetHeading = VisionManager.getInstance().getAngleOfTarget();
             }
 
             ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(

@@ -37,7 +37,7 @@ public final class Constants {
     /**
      * Max speed of the robot while shooter (m/s)
      */
-    public static final double MAX_SHOOT_SPEED = 0.1;
+    public static final double MAX_SHOOT_SPEED = 0.05;
     /**
      * Relative position of the limelight from the center of the robot.
      */
@@ -187,7 +187,7 @@ public final class Constants {
      * Maximum speed of the robot when shooting the ball. (Only applies when doing the static shot) Units are in Meters per Second
      * Squared
      */
-    public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(0.1, 2);
+    public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(MAX_SHOOT_SPEED, 2);
 
     public static final double GRAVITY = 9.80665;
 
