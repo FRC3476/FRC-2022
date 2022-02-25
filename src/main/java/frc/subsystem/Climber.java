@@ -206,7 +206,7 @@ public final class Climber extends AbstractSubsystem {
                     cl.setPivotState(PivotState.PIVOTED);
                     cl.data = Timer.getFPGATimestamp();
                 },
-                        (cl) -> false,
+                        (cl) -> true,
                         (cl) -> {})
         ),
 
@@ -222,8 +222,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {}),
 
                 new ClimbState((cl) -> {},
-                        (cl) -> false
-                        ,
+                        (cl) -> false,
                         (cl) -> {})
         ),
 
@@ -262,7 +261,7 @@ public final class Climber extends AbstractSubsystem {
                     cl.data = Timer.getFPGATimestamp();
                 },
                         //TODO: Change the time
-                        (cl) -> false,
+                        (cl) -> true,
                         (cl) -> {})
         ),
 
