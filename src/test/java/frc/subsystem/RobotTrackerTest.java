@@ -4,6 +4,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import frc.utility.Timer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,7 @@ public class RobotTrackerTest {
             double theta = 0; //random.nextDouble() * 2 * Math.PI;
             double period = 0.05;
 
+            Timer.setTime(0);
             robotTracker.resetPosition(new Pose2d(x, y, new Rotation2d(theta)), new Rotation2d(0));
 
             double largeRandomX = random.nextDouble() * 10 - 5;
