@@ -249,6 +249,10 @@ public final class Constants {
 
     public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (30.0 / 31.0);
 
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2d);
+
+    public static final double FEEDER_WHEEL_LOCK_SPEED_RPM = 200;
+
     // Feeder wheel pidf is unused
     public static final double FEEDER_WHEEL_P = 0.0025003;
     public static final double FEEDER_WHEEL_I = 0;

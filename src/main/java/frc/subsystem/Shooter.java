@@ -539,6 +539,25 @@ public final class Shooter extends AbstractSubsystem {
         return feederChecksDisabled;
     }
 
+    private double feederLockPosition = 0;
+
+    public void lockFeederWheel() {
+
+        // Initializes feederLockPosition if it has not been set before
+        if (feederLockPosition == 0) {
+            feederLockPosition = feederWheel.getSelectedSensorPosition();
+        }
+
+        // Will lock feeder to position when locking starts
+        if (Math.abs(feederWheel.getSelectedSensorVelocity() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER) <
+                Constants.FEEDER_WHEEL_LOCK_SPEED_RPM) {
+            feederWheel.set(ControlMode.Position, feederLockPosition);
+        } else {
+            // Resets the lockPosition when not locking
+            feederLockPosition = feederWheel.getSelectedSensorPosition();
+        }
+    }
+
 
     /**
      * Update Method for Shooter.
@@ -572,7 +591,7 @@ public final class Shooter extends AbstractSubsystem {
                 if (feederWheelState == FeederWheelState.REVERSE) {
                     feederWheel.set(ControlMode.PercentOutput, -Constants.FEEDER_WHEEL_SPEED);
                 } else {
-                    feederWheel.set(ControlMode.PercentOutput, 0);
+                    lockFeederWheel();
                 }
 
                 break;
@@ -597,7 +616,7 @@ public final class Shooter extends AbstractSubsystem {
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                        feederWheel.set(ControlMode.PercentOutput, 0);
+                        lockFeederWheel();
                     }
                 }
 
