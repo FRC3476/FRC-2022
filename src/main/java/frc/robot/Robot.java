@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.Thread.State;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -628,9 +629,10 @@ public class Robot extends TimedRobot {
             System.out.println("2");
             selectedAuto.killSwitch();
             System.out.println("3");
-            while (!selectedAuto.isFinished() || !autoThread.isAlive()) {
-                //System.out.println("Waiting for auto to die");
-                OrangeUtility.sleep(10);
+            while (!selectedAuto.isFinished() || autoThread.getState() != State.TERMINATED) {
+                System.out.println("Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
+                        " autoThread.getState() = " + autoThread.getState());
+                OrangeUtility.sleep(50);
             }
             System.out.println("4");
             drive.stopMovement();
