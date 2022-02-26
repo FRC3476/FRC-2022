@@ -262,6 +262,7 @@ public final class RobotTracker extends AbstractSubsystem {
         int index = Collections.binarySearch(list, Map.entry(time, zero), comparator);
         if (index < 0) index = -index - 1;
 
+        if (list.size() < 2) return getGyroAngle();
         if (index >= list.size()) return list.get(list.size() - 1).getValue().plus(gyroOffset);
         //if (index - 1 > list.size() || index < 0) return getGyroAngle();
 
