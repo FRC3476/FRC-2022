@@ -5,6 +5,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
@@ -222,6 +224,12 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
 
+    NetworkTableEntry visionDistanceOffset = NetworkTableInstance.getDefault().getEntry("VisionDistanceOffset");
+
+    {
+        visionDistanceOffset.setDouble(Constants.GOAL_RADIUS - 18);
+    }
+
     /**
      * Calculates and sets the flywheel speed considering a static robot velocity
      */
@@ -347,9 +355,9 @@ public final class VisionManager extends AbstractSubsystem {
                 autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             updateShooterState();
-            Thread.yield();
+            Thread.onSpinWait();
         }
-        double shootUntilTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
+        double shootUntilTime = Timer.getFPGATimestamp() + (numBalls * Constants.SHOOT_TIME_PER_BALL);
 
         shooter.setFiring(true);
         while (Timer.getFPGATimestamp() < shootUntilTime && !killAuto) {
@@ -359,7 +367,7 @@ public final class VisionManager extends AbstractSubsystem {
                 autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             updateShooterState();
-            Thread.yield();
+            Thread.onSpinWait();
         }
         unForceVisionOn(this);
         shooter.setFiring(false);

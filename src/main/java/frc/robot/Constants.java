@@ -27,8 +27,8 @@ public final class Constants {
 
     //Limelight
     //Calibrate using https://www.desmos.com/calculator/n2dsvzsyhk
-    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 57.6925; //TODO: CHANGE
-    public static final double CAMERA_Y_ANGLE = 37.1129; //TODO: CHANGE
+    public static final double CAMERA_TARGET_HEIGHT_OFFSET = 62.1657; //TODO: CHANGE
+    public static final double CAMERA_Y_ANGLE = 35.3203; //TODO: CHANGE
 
     // Vision Manager
     public static final int VISION_MANAGER_PERIOD = 50; //22Hz
@@ -226,10 +226,10 @@ public final class Constants {
     // Shooter PID & Misc
     // TODO: Configure PID for all shooter motors and current limits
 
-    public static final double SHOOTER_P = 3.0e-3; //0.00074361;
+    public static final double SHOOTER_P = 3.0e-4; //0.00074361;
     public static final double SHOOTER_I = 0.001;
     public static final double SHOOTER_D = 0;
-    public static final double SHOOTER_F = 0.0000690 * 1023;
+    public static final double SHOOTER_F = 0.000068 * 1023;
     public static final double SHOOTER_I_ZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;

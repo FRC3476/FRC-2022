@@ -169,9 +169,8 @@ public final class Drive extends AbstractSubsystem {
         }
 
         useFieldRelative = true;
-        synchronized (this) {
-            driveState = DriveState.TELEOP;
-        }
+
+        driveState = DriveState.TELEOP;
     }
     
     public void configCoast() {
@@ -234,8 +233,8 @@ public final class Drive extends AbstractSubsystem {
         this.driveState = driveState;
     }
 
-    synchronized public void setTeleop() {
-        driveState = DriveState.TELEOP;
+    public void setTeleop() {
+        setDriveState(DriveState.TELEOP);
     }
 
     synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
@@ -249,8 +248,8 @@ public final class Drive extends AbstractSubsystem {
         return swerveModuleState;
     }
 
-    public synchronized void startHold() {
-        driveState = DriveState.HOLD;
+    public void startHold() {
+        setDriveState(DriveState.HOLD);
     }
 
     public void endHold() {
@@ -494,6 +493,7 @@ public final class Drive extends AbstractSubsystem {
      * @param angle The angle to set the robot to
      */
     public void setAutoRotation(double angle) {
+        System.out.println("setting angle " + angle);
         autoTargetHeading = Rotation2d.fromDegrees(angle);
     }
 
@@ -508,10 +508,19 @@ public final class Drive extends AbstractSubsystem {
     }
 
     double autoStartTime;
+
+    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(8, 0, 0.1,
+            new TrapezoidProfile.Constraints(6, 6));
+
+    {
+        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
+        autoTurnPIDController.setTolerance(Math.toRadians(10));
+    }
+
     private final HolonomicDriveController swerveAutoController = new HolonomicDriveController(
             new PIDController(1.5, 0, 0),
             new PIDController(1.5, 0, 0),
-            new ProfiledPIDController(5, 0, 0, new TrapezoidProfile.Constraints(6, 5)));
+            autoTurnPIDController);
 
     {
         swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
@@ -520,9 +529,7 @@ public final class Drive extends AbstractSubsystem {
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
         try {
-            synchronized (this) {
-                driveState = DriveState.RAMSETE;
-            }
+            setDriveState(DriveState.RAMSETE);
             this.currentAutoTrajectory = trajectory;
             this.isAutoAiming = false;
             autoStartTime = Timer.getFPGATimestamp();
@@ -700,12 +707,14 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
-    synchronized public void stopMovement() {
+    public void stopMovement() {
+        System.out.println("In StopMovement");
         setDriveState(DriveState.STOP);
+        System.out.println("Exiting StopMovement");
     }
 
     synchronized public boolean isFinished() {
-        return driveState == DriveState.DONE || driveState == DriveState.TELEOP;
+        return driveState == DriveState.STOP || driveState == DriveState.DONE || driveState == DriveState.TELEOP;
     }
 
     @Override
@@ -724,6 +733,8 @@ public final class Drive extends AbstractSubsystem {
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getStatorCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
         }
+
+        logData("Drive State", driveState.toString());
     }
 
 

@@ -216,8 +216,7 @@ public final class Limelight {
      */
     public double getDistanceM() {
         if (isTargetVisible()) {
-            return Units.inchesToMeters((Constants.CAMERA_TARGET_HEIGHT_OFFSET) / Math.tan(
-                    Math.toRadians(Constants.CAMERA_Y_ANGLE + getVerticalOffset())));
+            return Units.inchesToMeters(getDistance());
         } else {
             return 0;
         }
@@ -231,8 +230,8 @@ public final class Limelight {
      */
     public double getDistance() {
         if (isTargetVisible()) {
-            return (Constants.CAMERA_TARGET_HEIGHT_OFFSET) / Math.tan(
-                    Math.toRadians(Constants.CAMERA_Y_ANGLE + getVerticalOffset()));
+            return ((Constants.CAMERA_TARGET_HEIGHT_OFFSET) / Math.tan(
+                    Math.toRadians(Constants.CAMERA_Y_ANGLE + getVerticalOffset()))) - 18;
         } else {
             return 0;
         }

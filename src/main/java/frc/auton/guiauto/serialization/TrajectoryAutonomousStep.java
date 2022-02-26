@@ -62,14 +62,14 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
                     if (!scriptsToExecuteByTime.isEmpty() &&
                             scriptsToExecuteByTime.get(0).getDelay() > Drive.getInstance().getAutoElapsedTime()) {
                         // We have a script to execute, and it is time to execute it
-                        scriptsToExecuteByTime.get(0).execute();
+                        scriptsToExecuteByTime.get(0).execute(templateAuto);
                         scriptsToExecuteByTime.remove(0);
                     }
 
                     if (!scriptsToExecuteByPercent.isEmpty() && scriptsToExecuteByPercent.get(0).getDelay() >
                             (Drive.getInstance().getAutoElapsedTime() / trajectory.getTotalTimeSeconds())) {
                         // We have a script to execute, and it is time to execute it
-                        scriptsToExecuteByPercent.get(0).execute();
+                        scriptsToExecuteByPercent.get(0).execute(templateAuto);
                         scriptsToExecuteByPercent.remove(0);
                     }
 
@@ -84,10 +84,10 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
 
             //Execute any remain scripts
             for (SendableScript sendableScript : scriptsToExecuteByTime) {
-                sendableScript.execute();
+                sendableScript.execute(templateAuto);
             }
             for (SendableScript sendableScript : scriptsToExecuteByPercent) {
-                sendableScript.execute();
+                sendableScript.execute(templateAuto);
             }
 
             if (rotationIndex < rotations.size()) {

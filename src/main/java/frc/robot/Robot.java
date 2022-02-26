@@ -224,9 +224,9 @@ public class Robot extends TimedRobot {
 
 
     @Override
-    public synchronized void autonomousInit() {
+    public void autonomousInit() {
         enabled.setBoolean(true);
-        drive.configCoast();
+        drive.configBrake();
         startSubsystems();
 
         networkAutoLock.lock();
@@ -284,14 +284,13 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
-        killAuto();
         enabled.setBoolean(true);
         startSubsystems();
         useFieldRelative = true;
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
-        drive.configCoast();
+        drive.configBrake();
     }
 
     private final Object driverForcingVisionOn = new Object();
@@ -621,15 +620,25 @@ public class Robot extends TimedRobot {
         visionManager.start();
     }
 
-    public synchronized void killAuto() {
+    public void killAuto() {
+        System.out.println("Killing Auto");
         if (selectedAuto != null) {
             assert autoThread != null;
-            selectedAuto.killSwitch();
-            while (autoThread.getState() != Thread.State.TERMINATED) OrangeUtility.sleep(10);
-
             visionManager.killAuto = true;
+            System.out.println("2");
+            selectedAuto.killSwitch();
+            System.out.println("3");
+            while (!selectedAuto.isFinished()) {
+                //System.out.println("Waiting for auto to die");
+                OrangeUtility.sleep(10);
+            }
+            System.out.println("4");
             drive.stopMovement();
+            System.out.println("5");
             drive.setTeleop();
+            System.out.println("6");
+        } else {
+            System.out.println("Auto is null");
         }
     }
 

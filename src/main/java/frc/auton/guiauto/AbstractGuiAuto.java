@@ -89,6 +89,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         Drive.getInstance().stopMovement();
 
         synchronized (this) {
+            System.out.println("Synchronized to set done to true");
             done = true;
         }
     }

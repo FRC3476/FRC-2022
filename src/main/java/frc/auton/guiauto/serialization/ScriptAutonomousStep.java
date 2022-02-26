@@ -48,7 +48,7 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
                 return;
             }
 
-            if (!sendableScript.execute()) {
+            if (!sendableScript.execute(templateAuto)) {
                 //The sendableScript failed to execute; kill the auto
                 templateAuto.killSwitch();
             }

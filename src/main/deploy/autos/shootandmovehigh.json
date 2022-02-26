@@ -1,7 +1,7 @@
 {
   "autonomousSteps" : [ {
     "type" : "script",
-    "script" : "Intake.setIntakeSolState OPEN\nIntake.setWantedIntakeState INTAKE",
+    "script" : "Intake.setIntakeSolState OPEN\nIntake.setWantedIntakeState INTAKE\nHopper.setHopperState ON",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -16,6 +16,11 @@
         "methodName" : "frc.subsystem.Intake.setWantedIntakeState",
         "args" : [ "INTAKE" ],
         "argTypes" : [ "frc.subsystem.Intake$IntakeState" ],
+        "reflection" : true
+      }, {
+        "methodName" : "frc.subsystem.Hopper.setHopperState",
+        "args" : [ "ON" ],
+        "argTypes" : [ "frc.subsystem.Hopper$HopperState" ],
         "reflection" : true
       } ]
     }
