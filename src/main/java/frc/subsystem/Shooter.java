@@ -548,14 +548,17 @@ public final class Shooter extends AbstractSubsystem {
             feederLockPosition = feederWheel.getSelectedSensorPosition();
         }
 
-        // Will lock feeder to position when locking starts
-        if (Math.abs(feederWheel.getSelectedSensorVelocity() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER) <
-                Constants.FEEDER_WHEEL_LOCK_SPEED_RPM) {
-            feederWheel.set(ControlMode.Position, feederLockPosition);
-        } else {
-            // Resets the lockPosition when not locking
-            feederLockPosition = feederWheel.getSelectedSensorPosition();
-        }
+//        // Will lock feeder to position when locking starts
+//        if (Math.abs(feederWheel.getSelectedSensorVelocity() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER) <
+//                Constants.FEEDER_WHEEL_LOCK_SPEED_RPM) {
+//            feederWheel.set(ControlMode.Position, feederLockPosition);
+//        } else {
+//            // Resets the lockPosition when not locking
+//            feederLockPosition = feederWheel.getSelectedSensorPosition();
+//            feederWheel.set(ControlMode.PercentOutput, 0);
+//        }
+
+        feederWheel.set(ControlMode.PercentOutput, 0);
     }
 
 

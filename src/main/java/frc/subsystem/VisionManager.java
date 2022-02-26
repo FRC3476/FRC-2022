@@ -389,7 +389,7 @@ public final class VisionManager extends AbstractSubsystem {
         shooter.setSpeed(flywheelSpeed);
         shooter.setHoodPosition(ejectionAngle);
 
-        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > 0.1) && !killAuto) {
+        while ((drive.isAiming() || !shooter.isFiring() || drive.getSpeedSquared() > 0.1) && !killAuto) {
             if (drive.driveState == DriveState.RAMSETE) {
                 drive.setAutoAiming(true);
             } else {

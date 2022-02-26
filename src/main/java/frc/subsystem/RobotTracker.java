@@ -96,6 +96,7 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     synchronized public void resetOdometry() {
         swerveDriveOdometry.resetPosition(new Pose2d(), gyroSensor.getRotation2d());
+        update();
     }
 
     private final List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
@@ -298,6 +299,7 @@ public final class RobotTracker extends AbstractSubsystem {
     synchronized public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle) {
         gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
         swerveDriveOdometry.resetPosition(pose, gyroAngle);
+        update();
     }
 
     /**

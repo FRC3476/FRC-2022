@@ -509,8 +509,8 @@ public final class Drive extends AbstractSubsystem {
 
     double autoStartTime;
 
-    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(8, 0, 0.1,
-            new TrapezoidProfile.Constraints(6, 6));
+    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(6, 0, 0.01,
+            new TrapezoidProfile.Constraints(4, 4));
 
     {
         autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
