@@ -247,13 +247,13 @@ public final class Constants {
      */
     public static final double FALCON_UNIT_CONVERSION_FOR_RELATIVE_ENCODER = 600.0d / 2048.0d;
 
-    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (1.0 / 1.5);
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (30.0 / 31.0);
 
     // Feeder wheel pidf is unused
     public static final double FEEDER_WHEEL_P = 0.0025003;
     public static final double FEEDER_WHEEL_I = 0;
     public static final double FEEDER_WHEEL_D = 0;
-    public static final double FEEDER_WHEEL_F = 0.11376 * 1023 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
+    public static final double FEEDER_WHEEL_F = 0.07837 * 1023 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
     public static final double FEEDER_WHEEL_I_ZONE = 0;
 
     public static final double FEEDER_WHEEL_SPEED = 1.0;
