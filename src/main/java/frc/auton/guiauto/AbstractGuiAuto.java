@@ -34,7 +34,8 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         try {
             autonomous = (Autonomous) Serializer.deserializeFromFile(autonomousFile, Autonomous.class);
         } catch (IOException e) {
-            DriverStation.reportError("Failed to deserialize auto", e.getStackTrace());
+            //e.printStackTrace();
+            DriverStation.reportError("Failed to deserialize auto. " + e.getLocalizedMessage(), e.getStackTrace());
         }
         init();
     }
@@ -49,7 +50,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
         try {
             autonomous = (Autonomous) Serializer.deserialize(autonomousJson, Autonomous.class);
         } catch (IOException e) {
-            DriverStation.reportError("Failed to deserialize auto", e.getStackTrace());
+            DriverStation.reportError("Failed to deserialize auto. " + e.getMessage(), e.getStackTrace());
         }
         init();
     }
