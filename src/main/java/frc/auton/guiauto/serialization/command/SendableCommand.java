@@ -93,12 +93,13 @@ public class SendableCommand {
 
             try {
                 Class<?> cls = Class.forName(className);
-                Class[] typeArray = Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new);
+                Class<?>[] typeArray = Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new);
                 if (typeArray.length == 0) {
                     methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1]);
                 } else {
                     methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1],
-                            Arrays.stream(objArgs).sequential().map(Object::getClass).toArray(Class[]::new));
+                            Arrays.stream(objArgs).sequential().map((o) -> getPrimativeClass(o.getClass()))
+                                    .toArray(Class<?>[]::new));
                 }
                 methodToCall.setAccessible(true);
                 if (!Modifier.isStatic(methodToCall.getModifiers())) {
@@ -107,12 +108,14 @@ public class SendableCommand {
                     instance = getInstance.invoke(null);
                 }
             } catch (ClassNotFoundException e) {
-                DriverStation.reportError("Class not found: " + className, e.getStackTrace());
+                DriverStation.reportError("Class not found: " + className + ". " + e.getMessage(), e.getStackTrace());
             } catch (NoSuchMethodException e) {
-                DriverStation.reportError("Could not find method : " + splitMethod[splitMethod.length - 1] + " in class " + className, e.getStackTrace());
+                DriverStation.reportError(
+                        "Could not find method : " + splitMethod[splitMethod.length - 1] + " in class " + className + ". " + e.getMessage(),
+                        e.getStackTrace());
             } catch (InvocationTargetException | IllegalAccessException e) {
                 DriverStation.reportError("Could not get singleton reference in class " + className + " for method: " +
-                        splitMethod[splitMethod.length - 1], e.getStackTrace());
+                        splitMethod[splitMethod.length - 1] + ". " + e.getMessage(), e.getStackTrace());
             }
         }
 
@@ -127,6 +130,30 @@ public class SendableCommand {
     final @Nullable Method methodToCall;
 
     @JsonIgnoreProperties final Object @NotNull [] objArgs;
+
+    private static Class<?> getPrimativeClass(Class<?> clazz) {
+        if (clazz.equals(Integer.class)) {
+            return double.class;
+        } else if (clazz.equals(Double.class)) {
+            return double.class;
+        } else if (clazz.equals(Boolean.class)) {
+            return boolean.class;
+        } else if (clazz.equals(char.class)) {
+            return char.class;
+        } else if (clazz.equals(Byte.class)) {
+            return byte.class;
+        } else if (clazz.equals(Short.class)) {
+            return short.class;
+        } else if (clazz.equals(Long.class)) {
+            return long.class;
+        } else if (clazz.equals(Float.class)) {
+            return float.class;
+        } else if (clazz.equals(String.class)) {
+            return String.class;
+        } else {
+            return clazz;
+        }
+    }
 
 
     /**
