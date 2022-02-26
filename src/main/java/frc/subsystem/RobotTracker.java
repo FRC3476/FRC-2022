@@ -95,8 +95,16 @@ public final class RobotTracker extends AbstractSubsystem {
      * Resets the position on the field to 0,0 with a rotation of 0 degrees
      */
     synchronized public void resetOdometry() {
-        swerveDriveOdometry.resetPosition(new Pose2d(), gyroSensor.getRotation2d());
-        update();
+        Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
+        swerveDriveOdometry.resetPosition(new Pose2d(), rawGyroSensor);
+        gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
+        latencyCompensatedPose = latestEstimatedPose;
+
+        latestChassisSpeeds = getRotatedSpeeds(
+                drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
+                latestEstimatedPose.getRotation());
+
+        latencyCompensatedChassisSpeeds = latestChassisSpeeds;
     }
 
     private final List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
@@ -299,7 +307,15 @@ public final class RobotTracker extends AbstractSubsystem {
     synchronized public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle) {
         gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
         swerveDriveOdometry.resetPosition(pose, gyroAngle);
-        update();
+
+        gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
+        latencyCompensatedPose = latestEstimatedPose;
+
+        latestChassisSpeeds = getRotatedSpeeds(
+                drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
+                latestEstimatedPose.getRotation());
+
+        latencyCompensatedChassisSpeeds = latestChassisSpeeds;
     }
 
     /**
