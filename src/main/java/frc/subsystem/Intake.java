@@ -31,7 +31,7 @@ public final class Intake extends AbstractSubsystem {
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
-        intakeMotor.setSmartCurrentLimit(20);
+        intakeMotor.setSmartCurrentLimit(30);
         intakeMotor.setControlFramePeriodMs(25);
     }
 

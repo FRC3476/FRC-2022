@@ -193,7 +193,6 @@ public final class VisionManager extends AbstractSubsystem {
     double bypassAimCheckUntil = 0;
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-        double degreeOffset;
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
         logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
 
@@ -242,6 +241,8 @@ public final class VisionManager extends AbstractSubsystem {
             Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);
             distanceToTarget = relativeRobotPosition.getNorm();
         }
+
+        logData("Distance to Target", Units.metersToInches(distanceToTarget));
 
         ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
         shooter.setSpeed(shooterPreset.getFlywheelSpeed());

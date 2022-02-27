@@ -215,11 +215,11 @@ public final class Constants {
 
     public static final int SHOOTER_PERIOD_MS = 50;
 
-    public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 50; // TODO: Get actual CAN ID for all shooter components
+    public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 50;
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 51;
     public static final int FEEDER_WHEEL_CAN_ID = 52;
     public static final int HOOD_MOTOR_CAN_ID = 53;
-    public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 54; // Todo
+    public static final int HOOD_ABSOLUTE_ENCODER_CAN_ID = 54;
 
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
@@ -251,10 +251,10 @@ public final class Constants {
 
     public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2d);
 
-    public static final double FEEDER_WHEEL_LOCK_SPEED_RPM = 200;
+    public static final double FEEDER_WHEEL_LOCK_SPEED_RPM = 1000;
 
     // Feeder wheel pidf is unused
-    public static final double FEEDER_WHEEL_P = 0.0025003;
+    public static final double FEEDER_WHEEL_P = 0.0002;
     public static final double FEEDER_WHEEL_I = 0;
     public static final double FEEDER_WHEEL_D = 0;
     public static final double FEEDER_WHEEL_F = 0;
