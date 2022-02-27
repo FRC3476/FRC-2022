@@ -43,6 +43,8 @@ public final class Constants {
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
     public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
+    // This is in inches
+    public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
     //Drive Constants
     public static final int DRIVE_PERIOD = 20;
