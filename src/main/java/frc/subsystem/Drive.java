@@ -472,7 +472,7 @@ public final class Drive extends AbstractSubsystem {
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
         swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
-        SmartDashboard.putNumber("Out Volts " + module, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
+        SmartDashboard.putNumber("Out Volts " + module, ffv);
         //swerveDriveMotors[module].setVoltage(10 * velocity/Constants.SWERVE_METER_PER_ROTATION);
     }
 

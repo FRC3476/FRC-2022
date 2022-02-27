@@ -134,7 +134,7 @@ public final class Constants {
     public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(-0.307975, -0.307975);
 
 
-    public static final double DRIVE_HIGH_SPEED_M = 3.2;
+    public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
 
     /**
@@ -161,7 +161,7 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared Supposed to be 5
      */
-    public static final double MAX_ACCELERATION = 20;
+    public static final double MAX_ACCELERATION = 25;
 
     /**
      * Units are in Radians per Second Squared
