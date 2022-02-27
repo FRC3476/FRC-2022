@@ -137,7 +137,7 @@ public class Robot extends TimedRobot {
 
         // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
         // the autos
-        System.out.println("Starting loading autos");
+        System.out.println("Loading autos");
         CompletableFuture.runAsync(() -> shootAndMoveHigh = new ShootAndMoveHigh()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveLow = new ShootAndMoveLow()).thenRun(this::incrementLoadedAutos);
