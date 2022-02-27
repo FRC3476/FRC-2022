@@ -286,8 +286,8 @@ public final class Constants {
 
     // Hood Constants
 
-    public static final double HOOD_MIN_ANGLE = 90;
-    public static final double HOOD_MAX_ANGLE = 55;
+    public static final double HOOD_MAX_ANGLE = 90;
+    public static final double HOOD_MIN_ANGLE = 55;
     /**
      * Amount of degrees the hood turns per NEO550 rotation
      */
