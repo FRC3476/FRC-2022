@@ -22,7 +22,8 @@ import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import static frc.utility.OrangeUtility.getSpeed;
 import static frc.utility.OrangeUtility.getTranslation2d;
@@ -263,7 +264,7 @@ public final class VisionManager extends AbstractSubsystem {
 //        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
-    private final ArrayList<Object> forceVisionOn = new ArrayList<>(5);
+    private final Set<Object> forceVisionOn = new HashSet<>(5);
 
     /**
      * Forces the vision system to be on.
@@ -272,7 +273,9 @@ public final class VisionManager extends AbstractSubsystem {
      *               will vision be turned off.
      */
     public void forceVisionOn(Object source) {
-        forceVisionOn.add(source);
+        synchronized (forceVisionOn) {
+            forceVisionOn.add(source);
+        }
         limelight.setLedMode(LedMode.ON);
     }
 
@@ -282,9 +285,11 @@ public final class VisionManager extends AbstractSubsystem {
      * @param source The source to remove.
      */
     public void unForceVisionOn(Object source) {
-        forceVisionOn.remove(source);
-        if (forceVisionOn.isEmpty()) {
-            limelight.setLedMode(LedMode.OFF);
+        synchronized (forceVisionOn) {
+            forceVisionOn.remove(source);
+            if (forceVisionOn.isEmpty()) {
+                limelight.setLedMode(LedMode.OFF);
+            }
         }
     }
 
