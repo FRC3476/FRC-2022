@@ -107,7 +107,7 @@ public class Robot extends TimedRobot {
 
     //Control loop states
     boolean limelightTakeSnapshots = false;
-    private ShooterPreset shooterPreset = VisionManager.getInstance().visionLookUpTable.getShooterPreset(36);
+    private ShooterPreset shooterPreset = VisionManager.getInstance().visionLookUpTable.getShooterPreset(0);
     private boolean autoAimRobot = true;
 
     // Input Control
@@ -460,10 +460,10 @@ public class Robot extends TimedRobot {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(300);
             autoAimRobot = true;
         } else if (buttonPanel.getRisingEdge(2)) {
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(100);
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(150);
             autoAimRobot = true;
         } else if (buttonPanel.getRisingEdge(3)) {
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(36);
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(0);
             autoAimRobot = false;
         }
 
@@ -494,9 +494,14 @@ public class Robot extends TimedRobot {
                     break;
                 case MANUAL:
                     //Turn shooter flywheel on with manuel settings
-                    visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-                    shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
-                    shooter.setSpeed(shooterPreset.getFlywheelSpeed());
+                    if (buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6) || buttonPanel.getRawButton(5)) {
+                        visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
+                        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
+                    } else {
+                        visionManager.forceVisionOn(buttonPanelForcingVisionOn);
+                        visionManager.updateShooterStateStaticPose();
+                    }
                     break;
             }
         } else {
