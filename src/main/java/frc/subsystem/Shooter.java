@@ -415,12 +415,12 @@ public final class Shooter extends AbstractSubsystem {
      */
     public void setHoodPosition(double desiredAngle) {
         // Preform Bounds checking between MAX and MIN range
-        if (desiredAngle < 50) {
-            desiredAngle = 50;
+        if (desiredAngle < Constants.HOOD_MAX_ANGLE) {
+            desiredAngle = Constants.HOOD_MAX_ANGLE;
         }
 
-        if (desiredAngle > 90) {
-            desiredAngle = 90;
+        if (desiredAngle > Constants.HOOD_MIN_ANGLE) {
+            desiredAngle = Constants.HOOD_MIN_ANGLE;
         }
         desiredHoodAngle = desiredAngle;
     }
@@ -547,7 +547,7 @@ public final class Shooter extends AbstractSubsystem {
         System.out.println(" Setting Zero " + hoodAbsoluteEncoder.configGetMagnetOffset() + " -> 90");
         hoodAbsoluteEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         hoodAbsoluteEncoder.configMagnetOffset(
-                -(hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
+                -(-hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
 
@@ -574,7 +574,7 @@ public final class Shooter extends AbstractSubsystem {
         switch (shooterState) {
             case OFF:
                 shooterWheelMaster.set(ControlMode.PercentOutput, 0);
-                setHoodPosition(90); // Sets hood to the lowest possible position
+                setHoodPosition(Constants.HOOD_MIN_ANGLE); // Sets hood to the lowest possible position
 
                 if (!isHoodAtTargetAngle()) {
                     moveHoodMotor();
@@ -633,7 +633,7 @@ public final class Shooter extends AbstractSubsystem {
                 if (getHomeSwitchState() == HomeSwitchState.PRESSED || hoodMotor.getOutputCurrent() > Constants.SHOOTER_HOMING_CURRENT_LIMIT) {
                     hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle); // Stop the hood motor
                     // Sets the relative encoder reference to the position of the home switch when Home switch is pressed
-                    hoodRelativeEncoder.setPosition(90);
+                    hoodRelativeEncoder.setPosition(Constants.HOOD_MIN_ANGLE);
 
 
                     // Turns homing off and sets it to the next queued state, ON if no state queued
@@ -656,7 +656,7 @@ public final class Shooter extends AbstractSubsystem {
                     // Sets motor speed to zero if max time is exceeded
                     hoodPID.setReference(0, CANSparkMax.ControlType.kDutyCycle);
                     // Sets current position as the 90 degree mark
-                    hoodRelativeEncoder.setPosition(90);
+                    hoodRelativeEncoder.setPosition(Constants.HOOD_MIN_ANGLE);
 
                     DriverStation.reportWarning("Homing has taken longer than MAX expected time; homing has been stopped",
                             false);
@@ -715,13 +715,13 @@ public final class Shooter extends AbstractSubsystem {
         System.out.println("Hood Test Starting At: " + Timer.getFPGATimestamp());
 
         // Sets hood to 90 degrees
-        setHoodPosition(90);
+        setHoodPosition(Constants.HOOD_MIN_ANGLE);
 
         // Waits 5 seconds
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
         // Sets hood to 50 degrees
-        setHoodPosition(50);
+        setHoodPosition(Constants.HOOD_MAX_ANGLE);
 
         // Waits 5 seconds
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
