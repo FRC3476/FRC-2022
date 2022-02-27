@@ -630,6 +630,10 @@ public final class Drive extends AbstractSubsystem {
         isAiming = !isTurningDone();
     }
 
+    public synchronized void setRotation(double angle) {
+        setRotation(Rotation2d.fromDegrees(angle));
+    }
+
 
     public synchronized boolean isTurningDone() {
         double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
