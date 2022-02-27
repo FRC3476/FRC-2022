@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
+import frc.utility.Limelight;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
@@ -55,7 +56,7 @@ public final class Drive extends AbstractSubsystem {
     {
         turnPID = new ProfiledPIDController(16, 0, 0.1, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
-        turnPID.setTolerance(Math.toRadians(10));
+        setTurnTolerance(Math.toRadians(10));
     }
 
     public @NotNull DriveState driveState;
@@ -459,6 +460,14 @@ public final class Drive extends AbstractSubsystem {
 
         // Multiplies by MAX_ACCELERATION to find the velocity over that period
         return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
+    }
+
+    public void setTurnTolerance(double tolerance) {
+        if (Limelight.getInstance().getDistance() < Constants.VISION_DISTANCE_BEFORE_ERROR_TIGHTENING) {
+            turnPID.setTolerance(tolerance);
+        } else {
+            turnPID.setTolerance(tolerance * .75);
+        }
     }
 
     /**
