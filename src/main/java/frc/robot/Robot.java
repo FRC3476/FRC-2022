@@ -598,6 +598,10 @@ public class Robot extends TimedRobot {
             lastPressTime = Timer.getFPGATimestamp();
         }
 
+        if (xbox.getRisingEdge(XboxButtons.A)) {
+            shooter.setHoodZero();
+        }
+
         if (buttonPanel.getRisingEdge(5)) {
             intake.selfTest();
         }
