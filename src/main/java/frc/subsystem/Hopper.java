@@ -114,12 +114,15 @@ public final class Hopper extends AbstractSubsystem {
         switch (hopperState) {
             case ON:
                 hopperMotor.set(Constants.HOPPER_SPEED);
+                Shooter.getInstance().runFeederWheelReversed = true;
                 break;
             case OFF:
                 hopperMotor.set(0);
+                Shooter.getInstance().runFeederWheelReversed = false;
                 break;
             case REVERSE:
                 hopperMotor.set(-Constants.HOPPER_SPEED);
+                Shooter.getInstance().runFeederWheelReversed = false;
                 break;
         }
     }

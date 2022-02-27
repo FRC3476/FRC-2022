@@ -40,8 +40,6 @@ public final class Shooter extends AbstractSubsystem {
     private final LazyTalonFX feederWheel;
     private double forceFeederOnTime;
 
-    // NEO550 Initialization
-
     // Hood
     private final LazyCANSparkMax hoodMotor;
     private SparkMaxPIDController hoodPID;
@@ -60,6 +58,8 @@ public final class Shooter extends AbstractSubsystem {
 
     // Makes it so feeder can run when not at proper hood and or flywheel speed
     private boolean feederChecksDisabled = false;
+
+    public volatile boolean runFeederWheelReversed;
 
     /**
      * @return true when the shooter will be firing.
@@ -272,6 +272,9 @@ public final class Shooter extends AbstractSubsystem {
         feederWheel.setControlFramePeriod(ControlFrame.Control_3_General, 25);
         feederWheel.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
         feederWheel.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
+        feederWheel.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+        feederWheel.configPeakOutputReverse(-1);
+        feederWheel.configPeakOutputForward(1);
 
         hoodPID = hoodMotor.getPIDController();
         hoodPID.setP(Constants.HOOD_P, 0);
@@ -549,7 +552,7 @@ public final class Shooter extends AbstractSubsystem {
         }
 
 //        // Will lock feeder to position when locking starts
-//        if (Math.abs(feederWheel.getSelectedSensorVelocity() * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER) <
+//        if (Math.abs(feederWheel.getSelectedSensorVelocity() * Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM) <
 //                Constants.FEEDER_WHEEL_LOCK_SPEED_RPM) {
 //            feederWheel.set(ControlMode.Position, feederLockPosition);
 //        } else {
@@ -558,7 +561,10 @@ public final class Shooter extends AbstractSubsystem {
 //            feederWheel.set(ControlMode.PercentOutput, 0);
 //        }
 
-        feederWheel.set(ControlMode.PercentOutput, 0);
+        feederWheel.set(ControlMode.Position, feederLockPosition);
+        logData("Feeder Lock Pos ", feederLockPosition);
+        logData("Feeder lock pos time ", Timer.getFPGATimestamp());
+        //feederWheel.set(ControlMode.PercentOutput, 0);
     }
 
 
@@ -593,8 +599,13 @@ public final class Shooter extends AbstractSubsystem {
 
                 if (feederWheelState == FeederWheelState.REVERSE) {
                     feederWheel.set(ControlMode.PercentOutput, -Constants.FEEDER_WHEEL_SPEED);
+                    feederLockPosition = feederWheel.getSelectedSensorPosition();
                 } else {
-                    lockFeederWheel();
+                    if (runFeederWheelReversed) {
+                        feederWheel.set(ControlMode.PercentOutput, -0.3);
+                    } else {
+                        feederWheel.set(ControlMode.PercentOutput, 0);
+                    }
                 }
 
                 break;
@@ -616,10 +627,15 @@ public final class Shooter extends AbstractSubsystem {
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                    feederLockPosition = feederWheel.getSelectedSensorPosition();
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > forceFeederOnTime) {
-                        lockFeederWheel();
+                        if (runFeederWheelReversed) {
+                            feederWheel.set(ControlMode.PercentOutput, -0.3);
+                        } else {
+                            feederWheel.set(ControlMode.PercentOutput, 0);
+                        }
                     }
                 }
 
@@ -763,6 +779,7 @@ public final class Shooter extends AbstractSubsystem {
         logData("Desired Shooter Speed", getDesiredShooterSpeed());
         logData("Desired Hood Angle", getDesiredHoodAngle());
         logData("Feeder Wheel State", getFeederWheelState());
+        logData("Feeder Wheel Speed", feederWheel.getSelectedSensorVelocity() * Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM);
         logData("Home Switch State", getHomeSwitchState());
         logData("Hood Positioning Mode", getHoodPositionMode());
         logData("Is Hood at Target Angle?", isHoodAtTargetAngle());
