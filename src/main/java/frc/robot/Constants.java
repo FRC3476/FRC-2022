@@ -208,7 +208,7 @@ public final class Constants {
     public static final int HOPPER_PERIOD = 200;
     public static final double HOPPER_SPEED = 1;
     public static final int HOPPER_MOTOR_ID = 30;
-    public static final int HOPPER_CURRENT_LIMIT = 25;
+    public static final int HOPPER_CURRENT_LIMIT = 35;
 
 
     // Shooter Constants
