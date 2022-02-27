@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.*;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
@@ -296,7 +297,7 @@ public final class Shooter extends AbstractSubsystem {
         // If using Absolute Encoder
         if (hoodPositionMode == HoodPositionMode.ABSOLUTE_ENCODER) {
             // Adds and offset to correct angle of the encoder
-            hoodAngle = getHoodAbsoluteEncoderValue() + Constants.HOOD_ABSOLUTE_ENCODER_OFFSET;
+            hoodAngle = getHoodAbsoluteEncoderValue();
 
             // Checks if Absolute Encoder is reading outside expected range
 //            if (hoodAngle > 90.5 || hoodAngle < 49.5) {
@@ -540,6 +541,13 @@ public final class Shooter extends AbstractSubsystem {
             // Resets the lockPosition when not locking
             feederLockPosition = feederWheel.getSelectedSensorPosition();
         }
+    }
+
+    public void setHoodZero() {
+        System.out.println(" Setting Zero " + hoodAbsoluteEncoder.configGetMagnetOffset() + " -> 90");
+        hoodAbsoluteEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+        hoodAbsoluteEncoder.configMagnetOffset(
+                -(hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
 

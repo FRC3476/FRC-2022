@@ -280,11 +280,6 @@ public final class Constants {
     // Hood Constants
 
     /**
-     * Offset for the absolute encoder on hood in order to make angle between 50 and 90
-     */
-    public static final double HOOD_ABSOLUTE_ENCODER_OFFSET = -266.8 + 90; // TODO: Find proper offset
-
-    /**
      * Amount of degrees the hood turns per NEO550 rotation
      */
     public static final double HOOD_DEGREES_PER_MOTOR_ROTATION = 3.69230;
