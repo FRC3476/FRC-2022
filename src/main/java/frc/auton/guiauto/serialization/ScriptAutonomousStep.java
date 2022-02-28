@@ -36,22 +36,22 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
     @Override
     public void execute(@NotNull TemplateAuto templateAuto,
                         @NotNull List<SendableScript> scriptsToExecuteByTime,
-                        @NotNull List<SendableScript> scriptsToExecuteByPercent) {
-        if (!templateAuto.isDead()) { //Check that our auto is still running
-            if (sendableScript.getDelayType() == SendableScript.DelayType.TIME) {
-                scriptsToExecuteByTime.add(sendableScript);
-                return;
-            }
+                        @NotNull List<SendableScript> scriptsToExecuteByPercent) throws InterruptedException {
+        if (Thread.currentThread().isInterrupted()) return;
 
-            if (sendableScript.getDelayType() == SendableScript.DelayType.PERCENT) {
-                scriptsToExecuteByPercent.add(sendableScript);
-                return;
-            }
+        if (sendableScript.getDelayType() == SendableScript.DelayType.TIME) {
+            scriptsToExecuteByTime.add(sendableScript);
+            return;
+        }
 
-            if (!sendableScript.execute(templateAuto)) {
-                //The sendableScript failed to execute; kill the auto
-                templateAuto.killSwitch();
-            }
+        if (sendableScript.getDelayType() == SendableScript.DelayType.PERCENT) {
+            scriptsToExecuteByPercent.add(sendableScript);
+            return;
+        }
+
+        if (!sendableScript.execute()) {
+            //The sendableScript failed to execute; kill the auto
+            Thread.currentThread().interrupt(); // Will kill the auto
         }
     }
 }

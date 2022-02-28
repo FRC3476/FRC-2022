@@ -3,7 +3,6 @@ package frc.auton.guiauto.serialization.command;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import frc.auton.TemplateAuto;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -18,9 +17,10 @@ public class SendableScript implements Comparable<SendableScript> {
     /**
      * @return false if the script fails to execute
      */
-    public boolean execute(TemplateAuto templateAuto) {
+    public boolean execute() throws InterruptedException {
         for (SendableCommand command : commands) {
-            if (templateAuto.isDead()) return false;
+            if (Thread.currentThread().isInterrupted()) return false;
+
             if (!command.execute()) {
                 return false;
             }

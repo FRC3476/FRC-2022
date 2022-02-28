@@ -159,24 +159,15 @@ public class SendableCommand {
     /**
      * @return false if the command fails to execute
      */
-    public boolean execute() {
+    public boolean execute() throws InterruptedException {
         if (methodToCall == null && reflection) {
             DriverStation.reportError("Method to call is null", Thread.currentThread().getStackTrace());
             return false;
         }
-        if (reflection) {
-            try {
+        try {
+            if (reflection) {
                 methodToCall.invoke(instance, objArgs);
-            } catch (IllegalAccessException e) {
-                DriverStation.reportError("Could not access method " + methodName, e.getStackTrace());
-                return false;
-            } catch (InvocationTargetException e) {
-                DriverStation.reportError("Method: " + methodName + " threw an exception while being invoked. " + e.getMessage(),
-                        e.getStackTrace());
-                return false;
-            }
-        } else {
-            try {
+            } else {
                 switch (methodName) {
                     case "print":
                         System.out.println(objArgs[0]);
@@ -185,14 +176,13 @@ public class SendableCommand {
                         Thread.sleep((long) objArgs[0]);
                         break;
                 }
-            } catch (InterruptedException e) {
-                DriverStation.reportError("Thread interrupted while sleeping", e.getStackTrace());
-                return false;
-            } catch (Exception e) {
-                DriverStation.reportError("Could not invoke method " + methodName + " due to: " + e.getMessage(),
-                        e.getStackTrace());
-                return false;
             }
+        } catch (InterruptedException e) {
+            throw new InterruptedException();
+        } catch (Exception e) {
+            DriverStation.reportError("Could not invoke method " + methodName + " due to: " + e.getMessage(),
+                    e.getStackTrace());
+            return false;
         }
         return true;
     }

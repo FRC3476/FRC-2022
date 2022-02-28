@@ -26,7 +26,7 @@ public abstract class AbstractAutonomousStep {
 
     //The method argument is not necessary. We use it to access methods in our superclass of our auto
     public abstract void execute(TemplateAuto templateAuto, List<SendableScript> scriptsToExecuteByTime,
-                                 List<SendableScript> scriptsToExecuteByPercent);
+                                 List<SendableScript> scriptsToExecuteByPercent) throws InterruptedException;
 
 
 }

@@ -82,7 +82,17 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
 
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
             System.out.println("doing a step: " + Timer.getFPGATimestamp());
-            autonomousStep.execute(this, scriptsToExecuteByTime, scriptsToExecuteByPercent);
+            if (Thread.currentThread().isInterrupted()) {
+                System.out.println("Auto was interrupted " + Timer.getFPGATimestamp());
+                return;
+            }
+
+            try {
+                autonomousStep.execute(this, scriptsToExecuteByTime, scriptsToExecuteByPercent);
+            } catch (InterruptedException e) {
+                System.out.println("Auto was interrupted " + Timer.getFPGATimestamp());
+                return;
+            }
         }
 
         System.out.println("finished: " + Timer.getFPGATimestamp());

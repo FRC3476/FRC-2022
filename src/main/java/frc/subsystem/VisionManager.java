@@ -10,8 +10,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
-import frc.utility.*;
+import frc.utility.ControllerDriveInputs;
+import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
+import frc.utility.MathUtil;
+import frc.utility.Timer;
 import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
@@ -345,13 +348,11 @@ public final class VisionManager extends AbstractSubsystem {
 
     private static final ControllerDriveInputs CONTROLLER_DRIVE_NO_MOVEMENT = new ControllerDriveInputs(0, 0, 0);
 
-    public volatile boolean killAuto = false;
-
     /**
      * For auto use only
      */
-    @SuppressWarnings("unused")
-    public void shootBalls(double numBalls) {
+    @SuppressWarnings({"unused", "BusyWait"})
+    public void shootBalls(double numBalls) throws InterruptedException {
         forceVisionOn(this);
         if (drive.driveState == DriveState.RAMSETE) {
             drive.setAutoAiming(true);
@@ -360,65 +361,26 @@ public final class VisionManager extends AbstractSubsystem {
         }
         updateShooterState();
 
-        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > MAX_SHOOT_SPEED) && !killAuto) {
+        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > MAX_SHOOT_SPEED)) {
             if (drive.driveState == DriveState.RAMSETE) {
                 drive.setAutoAiming(true);
             } else {
                 autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             updateShooterState();
-            OrangeUtility.sleep(1);
+            Thread.sleep(10); // Will exit if interrupted
         }
         double shootUntilTime = Timer.getFPGATimestamp() + (numBalls * Constants.SHOOT_TIME_PER_BALL);
 
         shooter.setFiring(true);
-        while (Timer.getFPGATimestamp() < shootUntilTime && !killAuto) {
+        while (Timer.getFPGATimestamp() < shootUntilTime) {
             if (drive.driveState == DriveState.RAMSETE) {
                 drive.setAutoAiming(true);
             } else {
                 autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             updateShooterState();
-            OrangeUtility.sleep(1);
-        }
-        unForceVisionOn(this);
-        shooter.setFiring(false);
-        shooter.setSpeed(0);
-        drive.setAutoAiming(false);
-    }
-
-    /**
-     * For auto use only
-     */
-    @SuppressWarnings("unused")
-    public void shootBalls(double numBalls, double flywheelSpeed, double ejectionAngle) {
-        forceVisionOn(this);
-        if (drive.driveState == DriveState.RAMSETE) {
-            drive.setAutoAiming(true);
-        } else {
-            autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
-        }
-        shooter.setSpeed(flywheelSpeed);
-        shooter.setHoodPosition(ejectionAngle);
-
-        while ((drive.isAiming() || !shooter.isFiring() || drive.getSpeedSquared() > 0.1) && !killAuto) {
-            if (drive.driveState == DriveState.RAMSETE) {
-                drive.setAutoAiming(true);
-            } else {
-                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
-            }
-            Thread.yield();
-        }
-        double shootUntilTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
-
-        shooter.setFiring(true);
-        while (Timer.getFPGATimestamp() < shootUntilTime && !killAuto) {
-            if (drive.driveState == DriveState.RAMSETE) {
-                drive.setAutoAiming(true);
-            } else {
-                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
-            }
-            Thread.yield();
+            Thread.sleep(10); // Will exit if interrupted
         }
         unForceVisionOn(this);
         shooter.setFiring(false);

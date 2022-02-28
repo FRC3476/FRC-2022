@@ -277,7 +277,6 @@ public class Robot extends TimedRobot {
         assert selectedAuto != null;
         //Since autonomous objects can be reused they need to be reset them before we can reuse them again 
         selectedAuto.reset();
-        visionManager.killAuto = false;
 
         //We then create a new thread to run the auto and run it
         autoThread = new Thread(selectedAuto);
@@ -645,9 +644,8 @@ public class Robot extends TimedRobot {
         System.out.println("Killing Auto");
         if (selectedAuto != null) {
             assert autoThread != null;
-            visionManager.killAuto = true;
             System.out.println("2");
-            selectedAuto.killSwitch();
+            autoThread.interrupt();
             System.out.println("3");
             while (!selectedAuto.isFinished() || autoThread.getState() != State.TERMINATED) {
                 System.out.println("Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
