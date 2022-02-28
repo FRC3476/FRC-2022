@@ -22,6 +22,7 @@ import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
+import frc.utility.adjustablePID.RealtimeTuner;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
@@ -114,11 +115,14 @@ public class Robot extends TimedRobot {
     private double firstPressTime = 0;
     private double lastPressTime = 0;
 
+
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
      */
     @Override
     public void robotInit() {
+        RealtimeTuner.initializeTunerData();
+
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_HIGH, SHOOT_AND_MOVE_HIGH);
         autoChooser.addOption(SHOOT_AND_MOVE_MID, SHOOT_AND_MOVE_MID);

@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
-import frc.utility.RealtimeTuner;
 import frc.utility.Timer;
+import frc.utility.adjustablePID.RealtimeTuner;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
 import org.jetbrains.annotations.NotNull;
@@ -815,7 +815,7 @@ public final class Shooter extends AbstractSubsystem {
         logData("Hood Motor Current", hoodMotor.getOutputCurrent());
 
         logData("Shooter P", (Double) RealtimeTuner.getTunerData(shooterPIndex));
-        logData("Shooter I", (Double) RealtimeTuner.getTunerData(shooterIIndex));
+        logData("Shooter I", RealtimeTuner.getTunerData(shooterIIndex));
         logData("Shooter D", (Double) RealtimeTuner.getTunerData(shooterDIndex));
         logData("Shooter F", (Double) RealtimeTuner.getTunerData(shooterFIndex));
         logData("Shooter IZone", (Double) RealtimeTuner.getTunerData(shooterIZoneIndex));
