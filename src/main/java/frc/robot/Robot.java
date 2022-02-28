@@ -22,6 +22,7 @@ import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
+import frc.utility.Limelight.StreamingMode;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
@@ -86,6 +87,8 @@ public class Robot extends TimedRobot {
     private static final String FIVE_BALL = "Five Ball";
     private static final String SIX_BALL = "Six Ball";
 
+    private static final String RESET_POSE = "Reset Pose";
+
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
     //Subsystems
@@ -126,7 +129,10 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(FOUR_BALL, FOUR_BALL);
         autoChooser.addOption(FIVE_BALL, FIVE_BALL);
         autoChooser.addOption(SIX_BALL, SIX_BALL);
+        autoChooser.addOption(RESET_POSE, RESET_POSE);
+
         SmartDashboard.putData("Auto choices", autoChooser);
+        Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
 
         startSubsystems();
         robotTracker.resetGyro();
@@ -253,6 +259,9 @@ public class Robot extends TimedRobot {
                     case SIX_BALL:
                         selectedAuto = sixBall;
                         break;
+                    case RESET_POSE:
+                        selectedAuto = new SetPositionCenter();
+                        break;
                     default:
                         selectedAuto = shootAndMoveLow;
                         break;
@@ -342,11 +351,11 @@ public class Robot extends TimedRobot {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
             hopper.setHopperState(Hopper.HopperState.ON);
-        } else if (stick.getRawButton(1)) {
+        } else if (buttonPanel.getRawButton(8)) {
             // Sets intake to eject without controlling hopper
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.OFF);
-        } else if (buttonPanel.getRawButton(8)) {
+        } else if (stick.getRawButton(1)) {
             // Eject everything
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.REVERSE);
@@ -412,16 +421,16 @@ public class Robot extends TimedRobot {
             climber.forceAdvanceStep();
         }
 
-        if (buttonPanel.getRisingEdge(11)) {
+        if (buttonPanel.getRisingEdge(9)) {
             if (climber.getClimbStatePair() == ClimbState.IDLE) {
                 climber.startClimb();
             } else {
                 climber.resumeClimb();
                 climber.advanceStep();
             }
-        } else if (buttonPanel.getFallingEdge(11)) {
+        } else if (buttonPanel.getFallingEdge(9)) {
             climber.pauseClimb();
-        } else if (buttonPanel.getRawButton(11)) {
+        } else if (buttonPanel.getRawButton(9)) {
             drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
         }
 
@@ -429,20 +438,20 @@ public class Robot extends TimedRobot {
             climber.stopClimb();
         }
 
-        if (buttonPanel.getRisingEdge(10)) {
-            climber.setStepByStep(!climber.isStepByStep());
-        }
+//        if (buttonPanel.getRisingEdge(10)) {
+//            climber.setStepByStep(!climber.isStepByStep());
+//        }
 
         if (stick.getRisingEdge(3)) {
             climber.deployClimb();
         }
 
         //TODO: Debug why this does not work
-        if (buttonPanel.getRisingEdge(9)) {
-            limelightTakeSnapshots = !limelightTakeSnapshots;
-            limelight.takeSnapshots(limelightTakeSnapshots);
-            System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
-        }
+//        if (buttonPanel.getRisingEdge(9)) {
+//            limelightTakeSnapshots = !limelightTakeSnapshots;
+//            limelight.takeSnapshots(limelightTakeSnapshots);
+//            System.out.println("limelight taking snapshots " + limelightTakeSnapshots);
+//        }
 
         // Feeder wheel will not check for shooter speed and hood angle to be correct before
         // enabling when stick button 2 is held down
