@@ -54,7 +54,7 @@ public final class Drive extends AbstractSubsystem {
     private final @NotNull ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(16, 0, 0.1, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
+        turnPID = new ProfiledPIDController(9, 0, 0.01, new TrapezoidProfile.Constraints(6, 4)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
         setTurnTolerance(Math.toRadians(10));
     }
@@ -518,7 +518,7 @@ public final class Drive extends AbstractSubsystem {
 
     double autoStartTime;
 
-    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(6, 0, 0.01,
+    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(8, 0, 0.01,
             new TrapezoidProfile.Constraints(4, 4));
 
     {
@@ -527,8 +527,8 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private final HolonomicDriveController swerveAutoController = new HolonomicDriveController(
-            new PIDController(1.5, 0, 0),
-            new PIDController(1.5, 0, 0),
+            new PIDController(3, 0, 0),
+            new PIDController(3, 0, 0),
             autoTurnPIDController);
 
     {
@@ -695,7 +695,7 @@ public final class Drive extends AbstractSubsystem {
                     deltaSpeed));
         }
 
-        if (turnPID.getPositionError() < Constants.MAX_TURN_ERROR) {
+        if (turnPID.getPositionError() < Math.toRadians(Constants.MAX_TURN_ERROR)) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {
@@ -712,12 +712,13 @@ public final class Drive extends AbstractSubsystem {
             } else {
                 turnMinSpeed = 2;
             }
-            logData("Turn Position Error", turnPID.getPositionError());
-            logData("Turn Actual Speed", curSpeed);
-            logData("Turn PID Command", pidDeltaSpeed);
-            logData("Turn Speed Command", deltaSpeed);
-            logData("Turn Min Speed", turnMinSpeed);
         }
+
+        logData("Turn Position Error", Math.toDegrees(turnPID.getPositionError()));
+        logData("Turn Actual Speed", curSpeed);
+        logData("Turn PID Command", pidDeltaSpeed);
+        logData("Turn Speed Command", deltaSpeed);
+        logData("Turn Min Speed", turnMinSpeed);
     }
 
     public void stopMovement() {
