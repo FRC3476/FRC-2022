@@ -10,11 +10,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
-import frc.utility.ControllerDriveInputs;
-import frc.utility.Limelight;
+import frc.utility.*;
 import frc.utility.Limelight.LedMode;
-import frc.utility.MathUtil;
-import frc.utility.Timer;
 import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
@@ -25,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 
+import static frc.robot.Constants.MAX_SHOOT_SPEED;
 import static frc.utility.OrangeUtility.getSpeed;
 import static frc.utility.OrangeUtility.getTranslation2d;
 
@@ -120,10 +118,10 @@ public final class VisionManager extends AbstractSubsystem {
                                                                   Translation2d currentTranslation) {
         MutableTranslation2d predictedTranslation;
         double speed = getSpeed(robotTracker.getLatencyCompedChassisSpeeds());
-        if (speed > Constants.MAX_SHOOT_SPEED) {
-            double time = (speed - Constants.MAX_SHOOT_SPEED) / Constants.MAX_ACCELERATION;
+        if (speed > MAX_SHOOT_SPEED) {
+            double time = (speed - MAX_SHOOT_SPEED) / Constants.MAX_ACCELERATION;
             MutableTranslation2d velocity = getTranslation2d(currentSpeeds);
-            predictedTranslation = velocity.times(((speed + Constants.MAX_SHOOT_SPEED) / 2) * time).plus(currentTranslation);
+            predictedTranslation = velocity.times(((speed + MAX_SHOOT_SPEED) / 2) * time).plus(currentTranslation);
         } else {
             predictedTranslation = new MutableTranslation2d(currentTranslation);
         }
@@ -193,9 +191,9 @@ public final class VisionManager extends AbstractSubsystem {
 
     double bypassAimCheckUntil = 0;
 
+    double lastChecksFailedTime = 0;
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-        logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
-        logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
+
 
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative);
 
@@ -206,10 +204,18 @@ public final class VisionManager extends AbstractSubsystem {
                 && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = Timer.getFPGATimestamp() + 0.1;
             shooter.setFiring(true);
+            if (!shooter.isFiring()) {
+                lastChecksFailedTime = Timer.getFPGATimestamp();
+            }
         } else {
             bypassAimCheckUntil = 0;
+            lastChecksFailedTime = Timer.getFPGATimestamp();
         }
         Hopper.getInstance().setHopperState(HopperState.ON);
+
+        logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
+        logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
+        logData("Last Shooter Checks Failed Time", lastChecksFailedTime);
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {
@@ -354,14 +360,14 @@ public final class VisionManager extends AbstractSubsystem {
         }
         updateShooterState();
 
-        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > 0.1) && !killAuto) {
+        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > MAX_SHOOT_SPEED) && !killAuto) {
             if (drive.driveState == DriveState.RAMSETE) {
                 drive.setAutoAiming(true);
             } else {
                 autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             updateShooterState();
-            Thread.onSpinWait();
+            OrangeUtility.sleep(1);
         }
         double shootUntilTime = Timer.getFPGATimestamp() + (numBalls * Constants.SHOOT_TIME_PER_BALL);
 
@@ -373,7 +379,7 @@ public final class VisionManager extends AbstractSubsystem {
                 autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             updateShooterState();
-            Thread.onSpinWait();
+            OrangeUtility.sleep(1);
         }
         unForceVisionOn(this);
         shooter.setFiring(false);

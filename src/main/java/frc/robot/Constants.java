@@ -37,7 +37,7 @@ public final class Constants {
     /**
      * Max speed of the robot while shooter (m/s)
      */
-    public static final double MAX_SHOOT_SPEED = 0.05;
+    public static final double MAX_SHOOT_SPEED = 0.1;
     /**
      * Relative position of the limelight from the center of the robot.
      */
@@ -161,9 +161,9 @@ public final class Constants {
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
 
     /**
-     * Units are in Meters Per Second Squared Supposed to be 5
+     * Units are in Meters Per Second Squared
      */
-    public static final double MAX_ACCELERATION = 25;
+    public static final double MAX_ACCELERATION = 22;
 
     /**
      * Units are in Radians per Second Squared
@@ -287,7 +287,7 @@ public final class Constants {
     // Hood Constants
 
     public static final double HOOD_MAX_ANGLE = 90;
-    public static final double HOOD_MIN_ANGLE = 55;
+    public static final double HOOD_MIN_ANGLE = 53;
     /**
      * Amount of degrees the hood turns per NEO550 rotation
      */
