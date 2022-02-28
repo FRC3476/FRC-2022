@@ -194,10 +194,8 @@ public final class VisionManager extends AbstractSubsystem {
     double lastChecksFailedTime = 0;
 
     double lastCallTime = 0;
-
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative);
-
 
         if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = 0;
