@@ -178,7 +178,7 @@ public final class VisionManager extends AbstractSubsystem {
     public Rotation2d getAngleOfTarget() {
         if (limelight.isTargetVisible()) {
             double degreeOffset = Limelight.getInstance().getHorizontalOffset();
-            return robotTracker.getGyroAngle().minus(Rotation2d.fromDegrees(degreeOffset));
+            return getLatencyCompedLimelightRotation().minus(Rotation2d.fromDegrees(degreeOffset));
         } else {
             //Use best guess if no target is visible
             Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
@@ -192,10 +192,12 @@ public final class VisionManager extends AbstractSubsystem {
     double bypassAimCheckUntil = 0;
 
     double lastChecksFailedTime = 0;
+
+    double lastCallTime = 0;
+
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-
-
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative);
+
 
         if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = 0;
@@ -215,7 +217,7 @@ public final class VisionManager extends AbstractSubsystem {
 
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
         logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
-        logData("Last Shooter Checks Failed Time", lastChecksFailedTime);
+        logData("Last Shooter Checks Failed Time", Timer.getFPGATimestamp() - lastChecksFailedTime);
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {

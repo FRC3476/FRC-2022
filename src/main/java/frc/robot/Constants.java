@@ -271,7 +271,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.08;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.00;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;
@@ -400,7 +400,7 @@ public final class Constants {
     /**
      * The height to go to once the drivers request the climber to deploy
      */
-    public static final double CLIMBER_DEPLOY_HEIGHT = 23.45625 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_DEPLOY_HEIGHT = 23.6 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * If the elevator arm is below this height and going down, the climb will abort
@@ -412,7 +412,7 @@ public final class Constants {
      * If the elevator arm is above this height and going down, the climb will abort
      */
 
-    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 28.125 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MAX_CLIMBER_ELEVATOR_HEIGHT = 27.3 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
 
     /**
@@ -438,12 +438,12 @@ public final class Constants {
     /**
      * The max safe height for the elevator arm during the swinging part of the climb
      */
-    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 17.3475 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 19.98 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
      */
-    public static final double MAX_CLIMBER_EXTENSION = 26 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MAX_CLIMBER_EXTENSION = 27.2 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * Length to grab onto mid bar
@@ -453,7 +453,7 @@ public final class Constants {
     /**
      * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 26.331 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 27.1 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
@@ -462,7 +462,7 @@ public final class Constants {
 
     //Robot Tracker
     public static final double DRIVE_VELOCITY_MEASUREMENT_LATENCY = 0.0025;
-    public static final int ROBOT_TRACKER_PERIOD = 20;
+    public static final int ROBOT_TRACKER_PERIOD = 10;
 
     public static final int INTAKE_PERIOD = 50;
     public static final int INTAKE_SOLENOID_CHANNEL = 3;
