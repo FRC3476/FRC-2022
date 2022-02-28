@@ -54,7 +54,7 @@ public final class Drive extends AbstractSubsystem {
     private final @NotNull ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(9, 0, 0.01, new TrapezoidProfile.Constraints(6, 4)); //P=1.0 OR 0.8
+        turnPID = new ProfiledPIDController(16, 0, 0.01, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
         setTurnTolerance(Math.toRadians(10));
     }
