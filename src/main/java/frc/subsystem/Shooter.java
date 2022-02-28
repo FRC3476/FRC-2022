@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
+import frc.utility.RealtimeTuner;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
@@ -30,7 +31,17 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Shooter extends AbstractSubsystem {
 
-    // Talon500 Initialization
+    private double shooterP;
+    private double shooterI;
+    private double shooterD;
+    private double shooterF;
+    private double shooterIZone;
+
+    private int shooterPIndex;
+    private int shooterIIndex;
+    private int shooterDIndex;
+    private int shooterFIndex;
+    private int shooterIZoneIndex;
 
     // Shooter Flywheel
     private final LazyTalonFX shooterWheelMaster;
@@ -217,15 +228,16 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     private void configPID() {
+        shooterPIndex = RealtimeTuner.addValue(shooterP);
+        shooterIIndex = RealtimeTuner.addValue(shooterI);
+        shooterDIndex = RealtimeTuner.addValue(shooterD);
+        shooterFIndex = RealtimeTuner.addValue(shooterF);
+        shooterIZoneIndex = RealtimeTuner.addValue(shooterIZone);
+
         // Second Falcon Follows Speed Of Main Falcon
         shooterWheelSlave.follow(shooterWheelMaster);
 
         // Configure PID Constants and current limit
-        shooterWheelMaster.config_kP(0, Constants.SHOOTER_P);
-        shooterWheelMaster.config_kI(0, Constants.SHOOTER_I);
-        shooterWheelMaster.config_kD(0, Constants.SHOOTER_D);
-        shooterWheelMaster.config_kF(0, Constants.SHOOTER_F);
-        shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE);
         shooterWheelMaster.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
         shooterWheelMaster.configPeakOutputForward(1);
         shooterWheelMaster.configPeakOutputReverse(0);
@@ -595,6 +607,7 @@ public final class Shooter extends AbstractSubsystem {
      */
     @Override
     public void update() {
+
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
@@ -771,6 +784,7 @@ public final class Shooter extends AbstractSubsystem {
         shooterState = ShooterState.OFF;
     }
 
+
     /**
      * Logs variety of values and states to ShuffleBoard.
      * <p>
@@ -799,6 +813,24 @@ public final class Shooter extends AbstractSubsystem {
         logData("Shooter Flywheel Slave Current", shooterWheelSlave.getSupplyCurrent());
         logData("Feeder Wheel Current", feederWheel.getSupplyCurrent());
         logData("Hood Motor Current", hoodMotor.getOutputCurrent());
+
+        logData("Shooter P", (Double) RealtimeTuner.getTunerData(shooterPIndex));
+        logData("Shooter I", (Double) RealtimeTuner.getTunerData(shooterIIndex));
+        logData("Shooter D", (Double) RealtimeTuner.getTunerData(shooterDIndex));
+        logData("Shooter F", (Double) RealtimeTuner.getTunerData(shooterFIndex));
+        logData("Shooter IZone", (Double) RealtimeTuner.getTunerData(shooterIZoneIndex));
+
+        RealtimeTuner.updateValue(shooterP, shooterPIndex);
+        RealtimeTuner.updateValue(shooterI, shooterIIndex);
+        RealtimeTuner.updateValue(shooterD, shooterDIndex);
+        RealtimeTuner.updateValue(shooterF, shooterFIndex);
+        RealtimeTuner.updateValue(shooterIZone, shooterIZoneIndex);
+
+        shooterWheelMaster.config_kP(0, (Double) RealtimeTuner.getTunerData(shooterPIndex));
+        shooterWheelMaster.config_kI(0, (Double) RealtimeTuner.getTunerData(shooterIIndex));
+        shooterWheelMaster.config_kD(0, (Double) RealtimeTuner.getTunerData(shooterDIndex));
+        shooterWheelMaster.config_kF(0, (Double) RealtimeTuner.getTunerData(shooterFIndex));
+        shooterWheelMaster.config_IntegralZone(0, (Double) RealtimeTuner.getTunerData(shooterIZoneIndex));
     }
 
     /** Closing of Shooter motors is not supported. */
