@@ -647,7 +647,7 @@ public class Robot extends TimedRobot {
             System.out.println("2");
             autoThread.interrupt();
             System.out.println("3");
-            while (!selectedAuto.isFinished() || autoThread.getState() != State.TERMINATED) {
+            while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
                 System.out.println("Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
                         " autoThread.getState() = " + autoThread.getState());
                 OrangeUtility.sleep(50);
