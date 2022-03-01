@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import frc.auton.TemplateAuto;
+import frc.auton.guiauto.serialization.command.CommandExecutionFailedException;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,9 +37,9 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
     @Override
     public void execute(@NotNull TemplateAuto templateAuto,
                         @NotNull List<SendableScript> scriptsToExecuteByTime,
-                        @NotNull List<SendableScript> scriptsToExecuteByPercent) throws InterruptedException {
-        if (Thread.currentThread().isInterrupted()) return;
-
+                        @NotNull List<SendableScript> scriptsToExecuteByPercent)
+            throws InterruptedException, CommandExecutionFailedException {
+        
         if (sendableScript.getDelayType() == SendableScript.DelayType.TIME) {
             scriptsToExecuteByTime.add(sendableScript);
             return;
@@ -49,9 +50,7 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
             return;
         }
 
-        if (!sendableScript.execute()) {
-            //The sendableScript failed to execute; kill the auto
-            Thread.currentThread().interrupt(); // Will kill the auto
-        }
+
+        sendableScript.execute();
     }
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.Trajectory.State;
 import frc.auton.TemplateAuto;
+import frc.auton.guiauto.serialization.command.CommandExecutionFailedException;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.Drive;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,8 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
     @Override
     public void execute(@NotNull TemplateAuto templateAuto,
                         @NotNull List<SendableScript> scriptsToExecuteByTime,
-                        @NotNull List<SendableScript> scriptsToExecuteByPercent) throws InterruptedException {
+                        @NotNull List<SendableScript> scriptsToExecuteByPercent)
+            throws InterruptedException, CommandExecutionFailedException {
         //Sort the lists to make sure they are sorted by time
         Collections.sort(scriptsToExecuteByTime);
         Collections.sort(scriptsToExecuteByPercent);

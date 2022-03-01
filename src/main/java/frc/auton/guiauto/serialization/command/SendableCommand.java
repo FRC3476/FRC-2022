@@ -98,7 +98,7 @@ public class SendableCommand {
                     methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1]);
                 } else {
                     methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1],
-                            Arrays.stream(objArgs).sequential().map((o) -> getPrimativeClass(o.getClass()))
+                            Arrays.stream(objArgs).sequential().map((o) -> getPrimitiveClass(o.getClass()))
                                     .toArray(Class<?>[]::new));
                 }
                 methodToCall.setAccessible(true);
@@ -131,7 +131,7 @@ public class SendableCommand {
 
     @JsonIgnoreProperties final Object @NotNull [] objArgs;
 
-    private static Class<?> getPrimativeClass(Class<?> clazz) {
+    private static Class<?> getPrimitiveClass(Class<?> clazz) {
         if (clazz.equals(Integer.class)) {
             return double.class;
         } else if (clazz.equals(Double.class)) {
@@ -157,12 +157,13 @@ public class SendableCommand {
 
 
     /**
-     * @return false if the command fails to execute
+     * @throws InterruptedException            If the command fails do to an interrupt
+     * @throws CommandExecutionFailedException If the command fails to execute for any other reason
      */
-    public boolean execute() throws InterruptedException {
+    public void execute() throws InterruptedException, CommandExecutionFailedException {
         if (methodToCall == null && reflection) {
             DriverStation.reportError("Method to call is null", Thread.currentThread().getStackTrace());
-            return false;
+            throw new CommandExecutionFailedException("Method to call is null");
         }
         try {
             if (reflection) {
@@ -178,12 +179,11 @@ public class SendableCommand {
                 }
             }
         } catch (InterruptedException e) {
-            throw new InterruptedException();
+            throw new InterruptedException("Interrupted while executing a script");
         } catch (Exception e) {
             DriverStation.reportError("Could not invoke method " + methodName + " due to: " + e.getMessage(),
                     e.getStackTrace());
-            return false;
+            throw new CommandExecutionFailedException("Could not invoke method " + methodName + " due to: " + e.getMessage(), e);
         }
-        return true;
     }
 }

@@ -8,6 +8,7 @@ import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.AbstractAutonomousStep;
 import frc.auton.guiauto.serialization.Autonomous;
 import frc.auton.guiauto.serialization.TrajectoryAutonomousStep;
+import frc.auton.guiauto.serialization.command.CommandExecutionFailedException;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.Drive;
 import frc.subsystem.RobotTracker;
@@ -70,6 +71,14 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
 
     @Override
     public void run() {
+        Thread.currentThread().setUncaughtExceptionHandler((t, e) -> {
+            DriverStation.reportError("Uncaught exception in auto thread: " + e.getMessage(), e.getStackTrace());
+            Drive.getInstance().stopMovement();
+            synchronized (this) {
+                this.done = true;
+            }
+        });
+
         System.out.println("Started Running: " + Timer.getFPGATimestamp());
         //Set our initial pose in our robot tracker
         if (initialPose != null) {
@@ -82,7 +91,7 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
 
         for (AbstractAutonomousStep autonomousStep : autonomous.getAutonomousSteps()) {
             System.out.println("doing a step: " + Timer.getFPGATimestamp());
-            if (Thread.currentThread().isInterrupted()) {
+            if (Thread.interrupted()) {
                 System.out.println("Auto was interrupted " + Timer.getFPGATimestamp());
                 return;
             }
@@ -91,6 +100,8 @@ public abstract class AbstractGuiAuto extends TemplateAuto {
                 autonomousStep.execute(this, scriptsToExecuteByTime, scriptsToExecuteByPercent);
             } catch (InterruptedException e) {
                 System.out.println("Auto was interrupted " + Timer.getFPGATimestamp());
+                return;
+            } catch (CommandExecutionFailedException e) {
                 return;
             }
         }
