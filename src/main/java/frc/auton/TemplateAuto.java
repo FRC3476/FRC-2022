@@ -26,7 +26,6 @@ public abstract class TemplateAuto implements Runnable {
     }
 
     public synchronized void reset() {
-        Thread.interrupted(); // Clear the interrupted flag
         this.done = false;
     }
 }
