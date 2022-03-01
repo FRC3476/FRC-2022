@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class VisionLookUpTable {
+
+    private final ReentrantLock shooterConfigLock = new ReentrantLock();
     ShooterConfig shooterConfig;
 
     private static final VisionLookUpTable vt = new VisionLookUpTable();
@@ -53,8 +56,14 @@ public final class VisionLookUpTable {
     private static final ShooterPreset DEFAULT_PRESET = new ShooterPreset(90, 0, 0);
 
     public @NotNull ShooterPreset getShooterPreset(double distanceFromTarget) {
-        List<ShooterPreset> sortedShooterConfigs = shooterConfig.getShooterConfigs();
-
+        List<ShooterPreset> sortedShooterConfigs;
+        shooterConfigLock.lock();
+        try {
+            sortedShooterConfigs = shooterConfig.getShooterConfigs();
+        } finally {
+            shooterConfigLock.unlock();
+        }
+        
         int index = Collections.binarySearch(sortedShooterConfigs, new ShooterPreset(0, 0, distanceFromTarget));
         if (index < 0) { //Convert the binary search index into an actual index
             index = -(index + 1);
@@ -89,14 +98,17 @@ public final class VisionLookUpTable {
     }
 
     /**
-     * <b>MAKE SURE YOU SORT THE LIST BEFORE CALLING THIS FUNCTION</b>
-     *
-     * @param shooterConfig a sorted shooter config
+     * @param shooterConfig a shooter config to use
      */
     public void setShooterConfig(ShooterConfig shooterConfig) {
-        System.out.println(shooterConfig);
-        Collections.sort(shooterConfig.getShooterConfigs());
-        this.shooterConfig = shooterConfig;
+        System.out.println("Loading a new shooter config");
+        shooterConfigLock.lock();
+        try {
+            Collections.sort(shooterConfig.getShooterConfigs());
+            this.shooterConfig = shooterConfig;
+        } finally {
+            shooterConfigLock.unlock();
+        }
     }
 }
 
