@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -155,6 +156,51 @@ public class Robot extends TimedRobot {
         }
         System.out.println("Finished loading autos");
 
+        autoPath.addListener(event ->
+                deserializerExecutor.execute(() -> { //Start deserializing on another thread
+                            System.out.println("starting to parse autonomous");
+                            //Set networktable entries for the gui notifications
+                            pathProcessingStatusEntry.setDouble(1);
+                            pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                            networkAutoLock.lock();
+                            try {
+                                networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
+                            } finally {
+                                networkAutoLock.unlock();
+                            }
+
+                            // ready to be run
+                            System.out.println("done parsing autonomous");
+                            //Set networktable entries for the gui notifications
+                            pathProcessingStatusEntry.setDouble(2);
+                            pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                        }
+                ), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterConfigEntry.addListener(event ->
+                deserializerExecutor.execute(() -> {
+                            System.out.println("start parsing shooter config");
+                            //Set networktable entries for the loading circle
+                            shooterConfigStatusEntry.setDouble(2);
+                            shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                            try {
+                                ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
+                                        ShooterConfig.class);
+                                Collections.sort(shooterConfig.getShooterConfigs());
+                                visionManager.setShooterConfig(shooterConfig);
+                                System.out.println(shooterConfig.getShooterConfigs());
+                            } catch (IOException e) {
+                                //Should never happen. The gui should never upload invalid data.
+                                DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
+                            }
+
+                            System.out.println("done parsing shooter config");
+                            //Set networktable entries for the loading circle
+                            shooterConfigStatusEntry.setDouble(1);
+                            shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                        }
+                ), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -178,55 +224,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
-        //Listen changes in the network auto
-        if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
-            lastAutoPath = autoPath.getString(null);
-            deserializerExecutor.execute(() -> { //Start deserializing on another thread
-                System.out.println("start parsing autonomous");
-                //Set networktable entries for the gui notifications
-                pathProcessingStatusEntry.setDouble(1);
-                pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-                networkAutoLock.lock();
-                try {
-                    networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
-                } finally {
-                    networkAutoLock.unlock();
-                }
-
-                // ready to be run
-                System.out.println("done parsing autonomous");
-                //Set networktable entries for the gui notifications
-                pathProcessingStatusEntry.setDouble(2);
-                pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-            });
-        }
-
-        if (shooterConfigEntry.getString(null) != null && !shooterConfigEntry.getString(null).equals(lastShooterConfig)) {
-            lastShooterConfig = shooterConfigEntry.getString(null);
-            deserializerExecutor.execute(() -> {
-                System.out.println("start parsing shooter config");
-                //Set networktable entries for the loading circle
-                shooterConfigStatusEntry.setDouble(2);
-                shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
-                try {
-                    ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
-                            ShooterConfig.class);
-                    Collections.sort(shooterConfig.getShooterConfigs());
-                    visionManager.setShooterConfig(shooterConfig);
-                    System.out.println(shooterConfig.getShooterConfigs());
-                } catch (IOException e) {
-                    //Should never happen. The gui should never upload invalid data.
-                    DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
-                }
-
-                System.out.println("done parsing shooter config");
-                //Set networktable entries for the loading circle
-                shooterConfigStatusEntry.setDouble(1);
-                shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
-            });
-        }
-
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
     }
 
