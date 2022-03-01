@@ -63,7 +63,7 @@ public final class VisionLookUpTable {
         } finally {
             shooterConfigLock.unlock();
         }
-        
+
         int index = Collections.binarySearch(sortedShooterConfigs, new ShooterPreset(0, 0, distanceFromTarget));
         if (index < 0) { //Convert the binary search index into an actual index
             index = -(index + 1);
@@ -102,9 +102,9 @@ public final class VisionLookUpTable {
      */
     public void setShooterConfig(ShooterConfig shooterConfig) {
         System.out.println("Loading a new shooter config");
+        Collections.sort(shooterConfig.getShooterConfigs());
         shooterConfigLock.lock();
         try {
-            Collections.sort(shooterConfig.getShooterConfigs());
             this.shooterConfig = shooterConfig;
         } finally {
             shooterConfigLock.unlock();
