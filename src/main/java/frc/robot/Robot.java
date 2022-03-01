@@ -555,6 +555,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         killAuto();
+        drive.configCoast();
         enabled.setBoolean(false);
     }
 
