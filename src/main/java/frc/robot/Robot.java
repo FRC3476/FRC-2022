@@ -236,7 +236,6 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         enabled.setBoolean(true);
         drive.configBrake();
-        startSubsystems();
 
         networkAutoLock.lock();
         try {
@@ -296,7 +295,6 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         enabled.setBoolean(true);
-        startSubsystems();
         useFieldRelative = true;
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
@@ -576,7 +574,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testInit() {
-        startSubsystems();
         drive.configCoast();
     }
 
