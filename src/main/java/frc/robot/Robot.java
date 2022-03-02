@@ -66,27 +66,43 @@ public class Robot extends TimedRobot {
     private final @NotNull Lock networkAutoLock = new ReentrantLock();
     NetworkAuto networkAuto = null;
 
-    @Nullable String lastAutoPath = null;
-    @Nullable String lastShooterConfig = null;
-
     final @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
 
     //Auto
     @Nullable TemplateAuto selectedAuto;
     @Nullable Thread autoThread;
 
-    ShootAndMoveHigh shootAndMoveHigh;
-    ShootAndMoveMid shootAndMoveMid;
-    ShootAndMoveLow shootAndMoveLow;
-    FourBall fourBall;
-    FiveBall fiveBall;
-    SixBall sixBall;
-    private static final String SHOOT_AND_MOVE_HIGH = "Shoot and Move High";
-    private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
-    private static final String SHOOT_AND_MOVE_LOW = "Shoot and Move Low";
-    private static final String FOUR_BALL = "Four Ball";
-    private static final String FIVE_BALL = "Five Ball";
-    private static final String SIX_BALL = "Six Ball";
+    //We block the robot from starting until these are initalized
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private ShootAndMoveHigh shootAndMoveHigh;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private ShootAndMoveMid shootAndMoveMid;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private ShootAndMoveLow shootAndMoveLow;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private FourBall fourBall;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private FiveBall fiveBall;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private SixBall sixBall;
+
+    @NotNull private static final String SHOOT_AND_MOVE_HIGH = "Shoot and Move High";
+    @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
+    @NotNull private static final String SHOOT_AND_MOVE_LOW = "Shoot and Move Low";
+    @NotNull private static final String FOUR_BALL = "Four Ball";
+    @NotNull private static final String FIVE_BALL = "Five Ball";
+    @NotNull private static final String SIX_BALL = "Six Ball";
 
     private static final String RESET_POSE = "Reset Pose";
 
@@ -642,9 +658,13 @@ public class Robot extends TimedRobot {
             autoThread.interrupt();
             System.out.println("3");
             while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
-                System.out.println("Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
-                        " autoThread.getState() = " + autoThread.getState());
-                OrangeUtility.sleep(50);
+                Exception throwable = new Exception(
+                        "Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
+                                " autoThread.getState() = " + autoThread.getState());
+                throwable.setStackTrace(autoThread.getStackTrace());
+                throwable.printStackTrace();
+
+                OrangeUtility.sleep(100);
             }
             System.out.println("4");
             drive.stopMovement();
