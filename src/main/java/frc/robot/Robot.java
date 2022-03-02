@@ -657,14 +657,19 @@ public class Robot extends TimedRobot {
             System.out.println("2");
             autoThread.interrupt();
             System.out.println("3");
+            double nextStackTracePrint = Timer.getFPGATimestamp() + 1;
             while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
-                Exception throwable = new Exception(
-                        "Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
-                                " autoThread.getState() = " + autoThread.getState());
-                throwable.setStackTrace(autoThread.getStackTrace());
-                throwable.printStackTrace();
+                if (Timer.getFPGATimestamp() > nextStackTracePrint) {
+                    Exception throwable = new Exception(
+                            "Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
+                                    " autoThread.getState() = " + autoThread.getState());
+                    throwable.setStackTrace(autoThread.getStackTrace());
+                    throwable.printStackTrace();
+                    nextStackTracePrint = Timer.getFPGATimestamp() + 5;
+                }
 
-                OrangeUtility.sleep(100);
+
+                OrangeUtility.sleep(10);
             }
             System.out.println("4");
             drive.stopMovement();
