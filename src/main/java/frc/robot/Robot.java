@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -126,6 +127,16 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         RealtimeTuner.initializeTunerData();
 
+        // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
+        // the autos
+        System.out.println("Loading autos");
+        CompletableFuture.runAsync(() -> shootAndMoveHigh = new ShootAndMoveHigh()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> shootAndMoveLow = new ShootAndMoveLow()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fourBall = new FourBall()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
+
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_HIGH, SHOOT_AND_MOVE_HIGH);
         autoChooser.addOption(SHOOT_AND_MOVE_MID, SHOOT_AND_MOVE_MID);
@@ -144,21 +155,55 @@ public class Robot extends TimedRobot {
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
 
-
-        // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
-        // the autos
-        System.out.println("Loading autos");
-        CompletableFuture.runAsync(() -> shootAndMoveHigh = new ShootAndMoveHigh()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> shootAndMoveLow = new ShootAndMoveLow()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fourBall = new FourBall()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
-
         while (loadingAutos) {
             Thread.onSpinWait();
         }
         System.out.println("Finished loading autos");
+
+        autoPath.addListener(event ->
+                deserializerExecutor.execute(() -> { //Start deserializing on another thread
+                            System.out.println("starting to parse autonomous");
+                            //Set networktable entries for the gui notifications
+                            pathProcessingStatusEntry.setDouble(1);
+                            pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                            networkAutoLock.lock();
+                            try {
+                                networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
+                            } finally {
+                                networkAutoLock.unlock();
+                            }
+
+                            // ready to be run
+                            System.out.println("done parsing autonomous");
+                            //Set networktable entries for the gui notifications
+                            pathProcessingStatusEntry.setDouble(2);
+                            pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                        }
+                ), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterConfigEntry.addListener(event ->
+                deserializerExecutor.execute(() -> {
+                            System.out.println("start parsing shooter config");
+                            //Set networktable entries for the loading circle
+                            shooterConfigStatusEntry.setDouble(2);
+                            shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                            try {
+                                ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
+                                        ShooterConfig.class);
+                                Collections.sort(shooterConfig.getShooterConfigs());
+                                visionManager.setShooterConfig(shooterConfig);
+                                System.out.println(shooterConfig.getShooterConfigs());
+                            } catch (IOException e) {
+                                //Should never happen. The gui should never upload invalid data.
+                                DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
+                            }
+
+                            System.out.println("done parsing shooter config");
+                            //Set networktable entries for the loading circle
+                            shooterConfigStatusEntry.setDouble(1);
+                            shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                        }
+                ), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
@@ -183,55 +228,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
-        //Listen changes in the network auto
-        if (autoPath.getString(null) != null && !autoPath.getString(null).equals(lastAutoPath)) {
-            lastAutoPath = autoPath.getString(null);
-            deserializerExecutor.execute(() -> { //Start deserializing on another thread
-                System.out.println("start parsing autonomous");
-                //Set networktable entries for the gui notifications
-                pathProcessingStatusEntry.setDouble(1);
-                pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-                networkAutoLock.lock();
-                try {
-                    networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
-                } finally {
-                    networkAutoLock.unlock();
-                }
-
-                // ready to be run
-                System.out.println("done parsing autonomous");
-                //Set networktable entries for the gui notifications
-                pathProcessingStatusEntry.setDouble(2);
-                pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-            });
-        }
-
-        if (shooterConfigEntry.getString(null) != null && !shooterConfigEntry.getString(null).equals(lastShooterConfig)) {
-            lastShooterConfig = shooterConfigEntry.getString(null);
-            deserializerExecutor.execute(() -> {
-                System.out.println("start parsing shooter config");
-                //Set networktable entries for the loading circle
-                shooterConfigStatusEntry.setDouble(2);
-                shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
-                try {
-                    ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
-                            ShooterConfig.class);
-                    Collections.sort(shooterConfig.getShooterConfigs());
-                    visionManager.setShooterConfig(shooterConfig);
-                    System.out.println(shooterConfig.getShooterConfigs());
-                } catch (IOException e) {
-                    //Should never happen. The gui should never upload invalid data.
-                    DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
-                }
-
-                System.out.println("done parsing shooter config");
-                //Set networktable entries for the loading circle
-                shooterConfigStatusEntry.setDouble(1);
-                shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
-            });
-        }
-
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
     }
 
@@ -240,7 +236,6 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         enabled.setBoolean(true);
         drive.configBrake();
-        startSubsystems();
 
         networkAutoLock.lock();
         try {
@@ -281,7 +276,6 @@ public class Robot extends TimedRobot {
         assert selectedAuto != null;
         //Since autonomous objects can be reused they need to be reset them before we can reuse them again 
         selectedAuto.reset();
-        visionManager.killAuto = false;
 
         //We then create a new thread to run the auto and run it
         autoThread = new Thread(selectedAuto);
@@ -301,7 +295,6 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         enabled.setBoolean(true);
-        startSubsystems();
         useFieldRelative = true;
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
@@ -566,6 +559,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         killAuto();
+        drive.configCoast();
         enabled.setBoolean(false);
     }
 
@@ -581,7 +575,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testInit() {
-        startSubsystems();
         drive.configCoast();
     }
 
@@ -649,11 +642,10 @@ public class Robot extends TimedRobot {
         System.out.println("Killing Auto");
         if (selectedAuto != null) {
             assert autoThread != null;
-            visionManager.killAuto = true;
             System.out.println("2");
-            selectedAuto.killSwitch();
+            autoThread.interrupt();
             System.out.println("3");
-            while (!selectedAuto.isFinished() || autoThread.getState() != State.TERMINATED) {
+            while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
                 System.out.println("Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
                         " autoThread.getState() = " + autoThread.getState());
                 OrangeUtility.sleep(50);

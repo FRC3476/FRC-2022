@@ -98,7 +98,7 @@ public class SendableCommand {
                     methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1]);
                 } else {
                     methodToCall = cls.getDeclaredMethod(splitMethod[splitMethod.length - 1],
-                            Arrays.stream(objArgs).sequential().map((o) -> getPrimativeClass(o.getClass()))
+                            Arrays.stream(objArgs).sequential().map((o) -> getPrimitiveClass(o.getClass()))
                                     .toArray(Class<?>[]::new));
                 }
                 methodToCall.setAccessible(true);
@@ -131,7 +131,7 @@ public class SendableCommand {
 
     @JsonIgnoreProperties final Object @NotNull [] objArgs;
 
-    private static Class<?> getPrimativeClass(Class<?> clazz) {
+    private static Class<?> getPrimitiveClass(Class<?> clazz) {
         if (clazz.equals(Integer.class)) {
             return double.class;
         } else if (clazz.equals(Double.class)) {
@@ -157,26 +157,18 @@ public class SendableCommand {
 
 
     /**
-     * @return false if the command fails to execute
+     * @throws InterruptedException            If the command fails do to an interrupt
+     * @throws CommandExecutionFailedException If the command fails to execute for any other reason
      */
-    public boolean execute() {
+    public void execute() throws InterruptedException, CommandExecutionFailedException {
         if (methodToCall == null && reflection) {
             DriverStation.reportError("Method to call is null", Thread.currentThread().getStackTrace());
-            return false;
+            throw new CommandExecutionFailedException("Method to call is null");
         }
-        if (reflection) {
-            try {
+        try {
+            if (reflection) {
                 methodToCall.invoke(instance, objArgs);
-            } catch (IllegalAccessException e) {
-                DriverStation.reportError("Could not access method " + methodName, e.getStackTrace());
-                return false;
-            } catch (InvocationTargetException e) {
-                DriverStation.reportError("Method: " + methodName + " threw an exception while being invoked. " + e.getMessage(),
-                        e.getStackTrace());
-                return false;
-            }
-        } else {
-            try {
+            } else {
                 switch (methodName) {
                     case "print":
                         System.out.println(objArgs[0]);
@@ -185,15 +177,13 @@ public class SendableCommand {
                         Thread.sleep((long) objArgs[0]);
                         break;
                 }
-            } catch (InterruptedException e) {
-                DriverStation.reportError("Thread interrupted while sleeping", e.getStackTrace());
-                return false;
-            } catch (Exception e) {
-                DriverStation.reportError("Could not invoke method " + methodName + " due to: " + e.getMessage(),
-                        e.getStackTrace());
-                return false;
             }
+        } catch (InterruptedException e) {
+            throw new InterruptedException("Interrupted while executing a script");
+        } catch (Exception e) {
+            DriverStation.reportError("Could not invoke method " + methodName + " due to: " + e.getMessage(),
+                    e.getStackTrace());
+            throw new CommandExecutionFailedException("Could not invoke method " + methodName + " due to: " + e.getMessage(), e);
         }
-        return true;
     }
 }

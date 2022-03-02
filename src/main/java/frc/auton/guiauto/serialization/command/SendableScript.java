@@ -3,7 +3,6 @@ package frc.auton.guiauto.serialization.command;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import frc.auton.TemplateAuto;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -16,16 +15,13 @@ import java.util.List;
 public class SendableScript implements Comparable<SendableScript> {
 
     /**
-     * @return false if the script fails to execute
+     * @throws InterruptedException if the thread is interrupted while executing the commands
      */
-    public boolean execute(TemplateAuto templateAuto) {
+    public void execute() throws InterruptedException, CommandExecutionFailedException {
         for (SendableCommand command : commands) {
-            if (templateAuto.isDead()) return false;
-            if (!command.execute()) {
-                return false;
-            }
+            if (Thread.interrupted()) throw new InterruptedException("Interrupted while trying to execute a script ");
+            command.execute();
         }
-        return true;
     }
 
     public enum DelayType {

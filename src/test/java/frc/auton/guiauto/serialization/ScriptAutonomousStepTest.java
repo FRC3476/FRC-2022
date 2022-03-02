@@ -33,7 +33,7 @@ class ScriptAutonomousStepTest {
     }
 
     @Test
-    void testTimeDelayedScriptExecution() throws NoSuchFieldException, IllegalAccessException {
+    void testTimeDelayedScriptExecution() throws Exception {
         List<SendableCommand> commandList = new ArrayList<>();
         commandList.add(new SendableCommand(Drive.class.getName() + ".setDriveState", new String[]{"TELEOP"},
                 new String[]{Drive.DriveState.class.getName()}, true));
@@ -63,7 +63,7 @@ class ScriptAutonomousStepTest {
     }
 
     @Test
-    void testPercentDelayedScriptExecution() throws NoSuchFieldException, IllegalAccessException {
+    void testPercentDelayedScriptExecution() throws Exception {
         List<SendableCommand> commandList = new ArrayList<>();
         commandList.add(new SendableCommand(Drive.class.getName() + ".setDriveState", new String[]{"TELEOP"},
                 new String[]{Drive.DriveState.class.getName()}, true));
@@ -92,7 +92,7 @@ class ScriptAutonomousStepTest {
     }
 
     @Test
-    void testNoDelayScriptExecution() throws NoSuchFieldException, IllegalAccessException {
+    void testNoDelayScriptExecution() throws Exception {
         List<SendableCommand> commandList = new ArrayList<>();
         commandList.add(new SendableCommand(Drive.class.getName() + ".setDriveState", new String[]{"TELEOP"},
                 new String[]{Drive.DriveState.class.getName()}, true));

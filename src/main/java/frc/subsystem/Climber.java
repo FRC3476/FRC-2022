@@ -477,6 +477,8 @@ public final class Climber extends AbstractSubsystem {
 
         climberMotor.setInverted(true);
         climberMotor2.setInverted(true);
+
+        climberMotor.setSelectedSensorPosition(0);
     }
 
     /**
