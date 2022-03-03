@@ -1,6 +1,5 @@
 package frc.subsystem;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.Timer;
@@ -36,18 +35,6 @@ public class DriveTest {
     @AfterEach
     void tearDown() throws Exception {
 
-    }
-
-    @Test
-    void testFallbackAim() {
-        for (int i = 0; i < 10; i++) {
-            double randomX = random.nextDouble() * 10 - 5;
-            double randomY = random.nextDouble() * 10 - 5;
-            drive.fallbackAim(new Translation2d(randomX, randomY));
-            double expectedAngle = Math.atan2(Constants.GOAL_POSITION.getY() - randomY, Constants.GOAL_POSITION.getX() - randomX);
-
-            assertEquals(expectedAngle, drive.wantedHeading.getRadians(), DELTA);
-        }
     }
 
     @Test
