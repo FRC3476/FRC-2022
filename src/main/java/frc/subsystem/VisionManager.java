@@ -58,7 +58,7 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     private VisionManager() {
-        super(Constants.VISION_MANAGER_PERIOD);
+        super(Constants.VISION_MANAGER_PERIOD, 2);
     }
 
     public static @NotNull VisionManager getInstance() {
@@ -72,7 +72,16 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Override
     public void logData() {
+        double distanceToTarget;
+        if (limelight.isTargetVisible()) {
+            distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
+        } else {
+            Pose2d currentPose = robotTracker.getLatencyCompedPoseMeters();
+            Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);
+            distanceToTarget = relativeRobotPosition.getNorm();
+        }
 
+        logData("Distance to Target", Units.metersToInches(distanceToTarget));
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {

@@ -219,6 +219,8 @@ public class Robot extends TimedRobot {
 
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
+
+        NetworkTableInstance.getDefault().setUpdateRate(0.05);
     }
 
 
