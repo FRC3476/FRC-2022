@@ -72,16 +72,7 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        double distanceToTarget;
-        if (limelight.isTargetVisible()) {
-            distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
-        } else {
-            Pose2d currentPose = robotTracker.getLatencyCompedPoseMeters();
-            Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);
-            distanceToTarget = relativeRobotPosition.getNorm();
-        }
-
-        logData("Distance to Target", Units.metersToInches(distanceToTarget));
+        logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
@@ -257,20 +248,23 @@ public final class VisionManager extends AbstractSubsystem {
      * Calculates and sets the flywheel speed considering a static robot velocity
      */
     public void updateShooterStateStaticPose() {
+        double distanceToTarget = getDistanceToTarget();
+
+        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
+        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
+        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+    }
+
+    private double getDistanceToTarget() {
         double distanceToTarget;
         if (limelight.isTargetVisible()) {
-            distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS;
+            distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
         } else {
             Pose2d currentPose = robotTracker.getLatencyCompedPoseMeters();
             Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);
             distanceToTarget = relativeRobotPosition.getNorm();
         }
-
-        logData("Distance to Target", Units.metersToInches(distanceToTarget));
-
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
-        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+        return distanceToTarget;
     }
 
     /**
