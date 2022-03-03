@@ -478,7 +478,7 @@ public class Robot extends TimedRobot {
 
     private void runShooter() {
         if (buttonPanel.getRisingEdge(1)) {
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(300);
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(400);
             autoAimRobot = true;
         } else if (buttonPanel.getRisingEdge(2)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(150);
