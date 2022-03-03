@@ -226,14 +226,7 @@ public final class Constants {
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
-    // TODO: Configure PID for all shooter motors and current limits
-
-    //public static final double SHOOTER_P = 3.0e-4; //0.00074361;
-    //public static final double SHOOTER_I = 0.001;
-    //public static final double SHOOTER_D = 0;
-    //public static final double SHOOTER_F = 0.000068 * 1023;
-    //public static final double SHOOTER_I_ZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
-
+    
     public static final double SHOOTER_CURRENT_LIMIT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;

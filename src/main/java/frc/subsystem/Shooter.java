@@ -10,6 +10,9 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
+import edu.wpi.first.networktables.EntryListenerFlags;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
@@ -31,11 +34,13 @@ import org.jetbrains.annotations.NotNull;
 public final class Shooter extends AbstractSubsystem {
 
     // PID TUNING
-    private static final double SHOOTER_P = 3.0e-4; //0.00074361;
-    private static final double SHOOTER_I = 0.001;
-    private static final double SHOOTER_D = 0;
-    private static final double SHOOTER_F = 0.000068 * 1023;
-    private static final double SHOOTER_I_ZONE = 500 / Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
+    final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
+
+    final @NotNull NetworkTableEntry shooterP = networkTableInstance.getEntry("shooter.pid.p");
+    final @NotNull NetworkTableEntry shooterI = networkTableInstance.getEntry("shooter.pid.i");
+    final @NotNull NetworkTableEntry shooterD = networkTableInstance.getEntry("shooter.pid.d");
+    final @NotNull NetworkTableEntry shooterF = networkTableInstance.getEntry("shooter.pid.f");
+    final @NotNull NetworkTableEntry shooterIZone = networkTableInstance.getEntry("shooter.pid.izone");
 
     // Talon500 Initialization
 
@@ -221,6 +226,27 @@ public final class Shooter extends AbstractSubsystem {
         configPID();
 
         hoodRelativeEncoder.setPosition(hoodAbsoluteEncoder.getPosition());
+
+        shooterP.setDouble(4.0e-4);
+        shooterI.setDouble(.001);
+        shooterD.setDouble(0);
+        shooterF.setDouble(0.000068 * 1023);
+        shooterIZone.setDouble(500 / Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM);
+
+        shooterP.addListener(event -> shooterWheelMaster.config_kP(0, event.getEntry().getDouble(4.0e-4)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterI.addListener(event -> shooterWheelMaster.config_kI(0, event.getEntry().getDouble(4.0e-4)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterD.addListener(event -> shooterWheelMaster.config_kD(0, event.getEntry().getDouble(4.0e-4)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterF.addListener(event -> shooterWheelMaster.config_kF(0, event.getEntry().getDouble(4.0e-4)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterIZone.addListener(event -> shooterWheelMaster.config_IntegralZone(0, event.getEntry().getDouble(4.0e-4)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
 
     private void configPID() {
@@ -228,11 +254,6 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelSlave.follow(shooterWheelMaster);
 
         // Configure PID Constants and current limit
-        shooterWheelMaster.config_kP(0, SHOOTER_P);
-        shooterWheelMaster.config_kI(0, SHOOTER_I);
-        shooterWheelMaster.config_kD(0, SHOOTER_D);
-        shooterWheelMaster.config_kF(0, SHOOTER_F);
-        shooterWheelMaster.config_IntegralZone(0, SHOOTER_I_ZONE);
         shooterWheelMaster.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
         shooterWheelMaster.configPeakOutputForward(1);
         shooterWheelMaster.configPeakOutputReverse(0);
@@ -806,19 +827,6 @@ public final class Shooter extends AbstractSubsystem {
         logData("Shooter Flywheel Slave Current", shooterWheelSlave.getSupplyCurrent());
         logData("Feeder Wheel Current", feederWheel.getSupplyCurrent());
         logData("Hood Motor Current", hoodMotor.getOutputCurrent());
-
-        // PID TUNING
-        shooterWheelMaster.config_kP(0, SHOOTER_P);
-        shooterWheelMaster.config_kI(0, SHOOTER_I);
-        shooterWheelMaster.config_kD(0, SHOOTER_D);
-        shooterWheelMaster.config_kF(0, SHOOTER_F);
-        shooterWheelMaster.config_IntegralZone(0, SHOOTER_I_ZONE);
-
-        logData("Shooter P", SHOOTER_P);
-        logData("Shooter I", SHOOTER_I);
-        logData("Shooter D", SHOOTER_D);
-        logData("Shooter F", SHOOTER_F);
-        logData("Shooter IZone", SHOOTER_I_ZONE);
     }
 
     /** Closing of Shooter motors is not supported. */
