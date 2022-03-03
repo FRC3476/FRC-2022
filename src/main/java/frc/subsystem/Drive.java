@@ -838,17 +838,6 @@ public final class Drive extends AbstractSubsystem {
     }
 
     /**
-     * Takes in the robot's current position, and uses that to turn the robot towards the goal.
-     *
-     * @param currentPos the current position of the robot in meters.
-     */
-    public void fallbackAim(Translation2d currentPos) {
-        Translation2d diff = Constants.GOAL_POSITION.minus(currentPos);
-        Rotation2d rotation = new Rotation2d(diff.getX(), diff.getY());
-        setRotation(rotation);
-    }
-
-    /**
      * Checks if gyro is connected. If disconnected, switches to robot-centric drive for the rest of the match. Reports error to
      * driver station when this happens.
      */

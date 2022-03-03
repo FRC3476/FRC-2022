@@ -6,7 +6,6 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
@@ -106,11 +105,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
         latencyCompensatedChassisSpeeds = latestChassisSpeeds;
     }
-
-    private final List<Map.Entry<Double, double[]>> previousAbsolutePositions = new ArrayList<>(20);
     private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(102); // 1s of data at 10ms per
-    private final Queue<Map.Entry<Double, Pose2d>> deferredVisionUpdates = new ArrayDeque<>(20);
-    List<Map.Entry<Double, Translation2d>> previousAccelerometerData = new ArrayList<>(20);
 
     double currentOdometryTime = -1;
 
@@ -128,8 +123,9 @@ public final class RobotTracker extends AbstractSubsystem {
         Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
         synchronized (previousGyroRotations) {
             previousGyroRotations.add(Map.entry(time, gyroSensor.getRotation2d()));
-            if (previousGyroRotations.size() > 100) {
-                previousGyroRotations.subList(0, previousGyroRotations.size() - 100).clear(); // Clear old data
+
+            while (previousGyroRotations.size() > 100) {
+                previousGyroRotations.remove(0);
             }
         }
 

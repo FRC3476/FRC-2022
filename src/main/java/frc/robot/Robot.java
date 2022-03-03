@@ -6,7 +6,6 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -224,7 +223,7 @@ public class Robot extends TimedRobot {
     }
 
 
-    AtomicInteger loadedAutos = new AtomicInteger(0);
+    private final AtomicInteger loadedAutos = new AtomicInteger(0);
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
@@ -532,6 +531,7 @@ public class Robot extends TimedRobot {
         }
     }
 
+    private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
     private void doNormalDriving() {
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
 
@@ -541,7 +541,7 @@ public class Robot extends TimedRobot {
             if (xbox.getRawButton(XboxButtons.Y)) {
                 drive.doHold();
             } else {
-                drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
+                drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
             }
         } else {
             if (useFieldRelative) {
