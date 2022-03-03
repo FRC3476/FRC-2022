@@ -20,6 +20,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.EntryListenerFlags;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -39,6 +42,15 @@ import static frc.robot.Constants.DRIVE_HIGH_SPEED_M;
 
 public final class Drive extends AbstractSubsystem {
 
+    // PID TUNING
+    final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
+
+    final @NotNull NetworkTableEntry turnP = SmartDashboard.getEntry("TurnPIDP");
+    final @NotNull NetworkTableEntry turnI = SmartDashboard.getEntry("TurnPIDI");
+    final @NotNull NetworkTableEntry turnD = SmartDashboard.getEntry("TurnPIDD");
+    final @NotNull NetworkTableEntry turnMaxVelocity = SmartDashboard.getEntry("TurnMaxVelocity");
+    final @NotNull NetworkTableEntry turnMaxAcceleration = SmartDashboard.getEntry("TurnMaxAcceleration");
+
     public enum DriveState {
         TELEOP, TURN, HOLD, DONE, RAMSETE, STOP
     }
@@ -54,7 +66,7 @@ public final class Drive extends AbstractSubsystem {
     private final @NotNull ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(16, 0, 0.01, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
+        turnPID = new ProfiledPIDController(16, 0, 0.00, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
         setTurnTolerance(Math.toRadians(10));
     }
@@ -168,6 +180,33 @@ public final class Drive extends AbstractSubsystem {
             swerveCanCoders[i].setStatusFramePeriod(CANCoderStatusFrame.VbatAndFaults, 200);
             swerveCanCoders[i].setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
         }
+
+        turnP.setDouble(Constants.DEFAULT_TURN_P);
+        turnI.setDouble(Constants.DEFAULT_TURN_I);
+        turnD.setDouble(Constants.DEFAULT_TURN_D);
+        turnMaxVelocity.setDouble(Constants.DEFAULT_TURN_MAX_VELOCITY);
+        turnMaxAcceleration.setDouble(Constants.DEFAULT_TURN_MAX_ACCELERATION);
+
+        turnP.addListener(event -> turnPID.setP(event.getEntry().getDouble(Constants.DEFAULT_TURN_P)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        turnI.addListener(event -> turnPID.setI(event.getEntry().getDouble(Constants.DEFAULT_TURN_I)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        turnD.addListener(event -> turnPID.setD(event.getEntry().getDouble(Constants.DEFAULT_TURN_D)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        turnMaxVelocity.addListener(event -> turnPID.setConstraints(
+                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(Constants.DEFAULT_TURN_MAX_VELOCITY),
+                                turnMaxAcceleration.getDouble(6))),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        turnMaxAcceleration.addListener(
+                event -> turnPID.setConstraints(
+                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(Constants.DEFAULT_TURN_MAX_ACCELERATION),
+                                turnMaxAcceleration.getDouble(6))),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
 
         useFieldRelative = true;
 
@@ -695,7 +734,7 @@ public final class Drive extends AbstractSubsystem {
                     deltaSpeed));
         }
 
-        if (turnPID.getPositionError() < Math.toRadians(Constants.MAX_TURN_ERROR)) {
+        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees()) < Constants.MAX_TURN_ERROR) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {
@@ -714,7 +753,7 @@ public final class Drive extends AbstractSubsystem {
             }
         }
 
-        logData("Turn Position Error", Math.toDegrees(turnPID.getPositionError()));
+        logData("Turn Position Error", targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees());
         logData("Turn Actual Speed", curSpeed);
         logData("Turn PID Command", pidDeltaSpeed);
         logData("Turn Speed Command", deltaSpeed);

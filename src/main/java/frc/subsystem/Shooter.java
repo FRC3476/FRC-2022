@@ -10,8 +10,12 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
+import edu.wpi.first.networktables.EntryListenerFlags;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
@@ -29,6 +33,15 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public final class Shooter extends AbstractSubsystem {
+
+    // PID TUNING
+    final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
+
+    final @NotNull NetworkTableEntry shooterP = SmartDashboard.getEntry("ShooterPIDP");
+    final @NotNull NetworkTableEntry shooterI = SmartDashboard.getEntry("ShooterPIDI");
+    final @NotNull NetworkTableEntry shooterD = SmartDashboard.getEntry("ShooterPIDD");
+    final @NotNull NetworkTableEntry shooterF = SmartDashboard.getEntry("ShooterPIDF");
+    final @NotNull NetworkTableEntry shooterIZone = SmartDashboard.getEntry("ShooterPIDIZone");
 
     // Talon500 Initialization
 
@@ -214,6 +227,28 @@ public final class Shooter extends AbstractSubsystem {
         configPID();
 
         hoodRelativeEncoder.setPosition(hoodAbsoluteEncoder.getPosition());
+
+        shooterP.setDouble(Constants.DEFAULT_SHOOTER_P);
+        shooterI.setDouble(Constants.DEFAULT_SHOOTER_I);
+        shooterD.setDouble(Constants.DEFAULT_SHOOTER_D);
+        shooterF.setDouble(Constants.DEFAULT_SHOOTER_F);
+        shooterIZone.setDouble(Constants.DEFAULT_SHOOTER_IZONE);
+
+        shooterP.addListener(event -> shooterWheelMaster.config_kP(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_P)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterI.addListener(event -> shooterWheelMaster.config_kI(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_I)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterD.addListener(event -> shooterWheelMaster.config_kD(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_D)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterF.addListener(event -> shooterWheelMaster.config_kF(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_F)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterIZone.addListener(
+                event -> shooterWheelMaster.config_IntegralZone(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_IZONE)),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
 
     private void configPID() {
@@ -221,11 +256,6 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelSlave.follow(shooterWheelMaster);
 
         // Configure PID Constants and current limit
-        shooterWheelMaster.config_kP(0, Constants.SHOOTER_P);
-        shooterWheelMaster.config_kI(0, Constants.SHOOTER_I);
-        shooterWheelMaster.config_kD(0, Constants.SHOOTER_D);
-        shooterWheelMaster.config_kF(0, Constants.SHOOTER_F);
-        shooterWheelMaster.config_IntegralZone(0, Constants.SHOOTER_I_ZONE);
         shooterWheelMaster.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
         shooterWheelMaster.configPeakOutputForward(1);
         shooterWheelMaster.configPeakOutputReverse(0);

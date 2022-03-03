@@ -142,7 +142,7 @@ public final class Constants {
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_TURN_ERROR = 1.5;
+    public static final double MAX_TURN_ERROR = 5;
 
     /**
      * Allowed Turn Error in degrees.
@@ -159,6 +159,14 @@ public final class Constants {
     public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
+
+    // TurnPID
+
+    public static final double DEFAULT_TURN_P = 16.0;
+    public static final double DEFAULT_TURN_I = 0.0;
+    public static final double DEFAULT_TURN_D = 0.0;
+    public static final double DEFAULT_TURN_MAX_VELOCITY = 6.0;
+    public static final double DEFAULT_TURN_MAX_ACCELERATION = 6.0;
 
     /**
      * Units are in Meters Per Second Squared
@@ -226,12 +234,11 @@ public final class Constants {
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
-
-    public static final double SHOOTER_P = 0.035;
-    public static final double SHOOTER_I = 0.000;
-    public static final double SHOOTER_D = 0.000;
-    public static final double SHOOTER_F = 0.000068 * 1023;
-    public static final double SHOOTER_I_ZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
+    public static final double DEFAULT_SHOOTER_P = 0.035;
+    public static final double DEFAULT_SHOOTER_I = 0.000;
+    public static final double DEFAULT_SHOOTER_D = 0.000;
+    public static final double DEFAULT_SHOOTER_F = 0.000068 * 1023;
+    public static final double DEFAULT_SHOOTER_IZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 40;
