@@ -196,9 +196,9 @@ public final class VisionManager extends AbstractSubsystem {
 
     double lastChecksFailedTime = 0;
 
-    double lastCallTime = 0;
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative);
+        logData("Rotation Target", getAngleOfTarget().getDegrees());
 
         if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = 0;
@@ -229,7 +229,9 @@ public final class VisionManager extends AbstractSubsystem {
      * @return the time of the last vision update in seconds
      */
     private double getLimelightTime() {
-        return Timer.getFPGATimestamp() - (limelight.getLatency() / 1000) - 0.011;
+        double latency = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
+        logData("Limelight Latency", (limelight.getLatency() / 1000) + (11.0 / 1000));
+        return latency;
     }
 
 
