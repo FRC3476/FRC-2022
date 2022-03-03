@@ -203,9 +203,12 @@ public final class VisionManager extends AbstractSubsystem {
         if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = 0;
         }
-        if ((!drive.isAiming() || Timer.getFPGATimestamp() < bypassAimCheckUntil)
+
+        if ((!drive.isAiming())
                 && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
-            bypassAimCheckUntil = Timer.getFPGATimestamp() + 0.1;
+            if (limelight.isTargetVisible()) {
+                bypassAimCheckUntil = Timer.getFPGATimestamp() + 0.05;
+            }
             shooter.setFiring(true);
             if (!shooter.isFiring()) {
                 lastChecksFailedTime = Timer.getFPGATimestamp();

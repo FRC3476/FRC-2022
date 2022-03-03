@@ -15,6 +15,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
@@ -36,11 +37,11 @@ public final class Shooter extends AbstractSubsystem {
     // PID TUNING
     final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
 
-    final @NotNull NetworkTableEntry shooterP = networkTableInstance.getEntry("shooter.pid.p");
-    final @NotNull NetworkTableEntry shooterI = networkTableInstance.getEntry("shooter.pid.i");
-    final @NotNull NetworkTableEntry shooterD = networkTableInstance.getEntry("shooter.pid.d");
-    final @NotNull NetworkTableEntry shooterF = networkTableInstance.getEntry("shooter.pid.f");
-    final @NotNull NetworkTableEntry shooterIZone = networkTableInstance.getEntry("shooter.pid.izone");
+    final @NotNull NetworkTableEntry shooterP = SmartDashboard.getEntry("ShooterPIDP");
+    final @NotNull NetworkTableEntry shooterI = SmartDashboard.getEntry("ShooterPIDI");
+    final @NotNull NetworkTableEntry shooterD = SmartDashboard.getEntry("ShooterPIDD");
+    final @NotNull NetworkTableEntry shooterF = SmartDashboard.getEntry("ShooterPIDF");
+    final @NotNull NetworkTableEntry shooterIZone = SmartDashboard.getEntry("ShooterPIDIZone");
 
     // Talon500 Initialization
 
@@ -227,25 +228,26 @@ public final class Shooter extends AbstractSubsystem {
 
         hoodRelativeEncoder.setPosition(hoodAbsoluteEncoder.getPosition());
 
-        shooterP.setDouble(4.0e-4);
-        shooterI.setDouble(.001);
-        shooterD.setDouble(0);
-        shooterF.setDouble(0.000068 * 1023);
-        shooterIZone.setDouble(500 / Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM);
+        shooterP.setDouble(Constants.DEFAULT_SHOOTER_P);
+        shooterI.setDouble(Constants.DEFAULT_SHOOTER_I);
+        shooterD.setDouble(Constants.DEFAULT_SHOOTER_D);
+        shooterF.setDouble(Constants.DEFAULT_SHOOTER_F);
+        shooterIZone.setDouble(Constants.DEFAULT_SHOOTER_IZONE);
 
-        shooterP.addListener(event -> shooterWheelMaster.config_kP(0, event.getEntry().getDouble(4.0e-4)),
+        shooterP.addListener(event -> shooterWheelMaster.config_kP(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_P)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        shooterI.addListener(event -> shooterWheelMaster.config_kI(0, event.getEntry().getDouble(4.0e-4)),
+        shooterI.addListener(event -> shooterWheelMaster.config_kI(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_I)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        shooterD.addListener(event -> shooterWheelMaster.config_kD(0, event.getEntry().getDouble(4.0e-4)),
+        shooterD.addListener(event -> shooterWheelMaster.config_kD(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_D)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        shooterF.addListener(event -> shooterWheelMaster.config_kF(0, event.getEntry().getDouble(4.0e-4)),
+        shooterF.addListener(event -> shooterWheelMaster.config_kF(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_F)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        shooterIZone.addListener(event -> shooterWheelMaster.config_IntegralZone(0, event.getEntry().getDouble(4.0e-4)),
+        shooterIZone.addListener(
+                event -> shooterWheelMaster.config_IntegralZone(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_IZONE)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
 
