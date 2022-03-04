@@ -329,7 +329,7 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         if (xbox.getRawAxis(2) > 0.1) {
-            if (!autoAimRobot) { //If vision is off
+            if (!autoAimRobot && isTryingToRunShooterFromButtonPanel()) { //If vision is off
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
@@ -498,9 +498,7 @@ public class Robot extends TimedRobot {
 
         SmartDashboard.putString("Shooter Control State", shooterControlState.toString());
 
-        if (xbox.getRawAxis(2) > 0.1 || buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
-                || buttonPanel.getRawButton(5)) // Trying to turn flywheel on
-        {
+        if (isTryingToRunShooterFromButtonPanel()) {
             // We want the flywheel to be on
             switch (shooterControlState) {
                 case VELOCITY_COMPENSATED:
@@ -531,7 +529,13 @@ public class Robot extends TimedRobot {
         }
     }
 
+    private boolean isTryingToRunShooterFromButtonPanel() {
+        return xbox.getRawAxis(2) > 0.1 || buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
+                || buttonPanel.getRawButton(5);
+    }
+
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
+
     private void doNormalDriving() {
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
 
