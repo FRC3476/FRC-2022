@@ -390,11 +390,11 @@ public class Robot extends TimedRobot {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
             hopper.setHopperState(Hopper.HopperState.ON);
-        } else if (buttonPanel.getRawButton(8)) {
+        } else if (buttonPanel.getRawButton(8) || xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
             // Sets intake to eject without controlling hopper
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.OFF);
-        } else if (stick.getRawButton(1)) {
+        } else if (stick.getRawButton(1) || buttonPanel.getRawButton(7)) {
             // Eject everything
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.REVERSE);
