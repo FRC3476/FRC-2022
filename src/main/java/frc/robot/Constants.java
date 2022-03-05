@@ -37,7 +37,7 @@ public final class Constants {
     /**
      * Max speed of the robot while shooter (m/s)
      */
-    public static final double MAX_SHOOT_SPEED = 0.15;
+    public static final double MAX_SHOOT_SPEED = 0.05;
     /**
      * Relative position of the limelight from the center of the robot.
      */
@@ -143,6 +143,8 @@ public final class Constants {
      * Allowed Turn Error in degrees.
      */
     public static final double MAX_TURN_ERROR = 30;
+
+    public static final double TURN_SPEED_LIMIT_TO_SHOOT = 3;
 
     /**
      * Allowed Turn Error in degrees.

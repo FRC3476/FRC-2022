@@ -736,7 +736,8 @@ public final class Drive extends AbstractSubsystem {
         }
 
         if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getRadians()) < turnErrorRadians &&
-                RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond < Math.toRadians(7)) {
+                RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond < Math.toRadians(
+                        Constants.TURN_SPEED_LIMIT_TO_SHOOT)) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {
