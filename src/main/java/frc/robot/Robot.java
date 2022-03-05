@@ -72,7 +72,7 @@ public class Robot extends TimedRobot {
     //We block the robot from starting until these are initialized
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private ShootAndMoveHigh shootAndMoveHigh;
+    private ShootAndMoveLeft shootAndMoveLeft;
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
@@ -80,7 +80,7 @@ public class Robot extends TimedRobot {
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private ShootAndMoveLow shootAndMoveLow;
+    private ShootAndMoveRight shootAndMoveRight;
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
@@ -94,9 +94,9 @@ public class Robot extends TimedRobot {
     @NotNull
     private SixBall sixBall;
 
-    @NotNull private static final String SHOOT_AND_MOVE_HIGH = "Shoot and Move High";
+    @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
-    @NotNull private static final String SHOOT_AND_MOVE_LOW = "Shoot and Move Low";
+    @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
     @NotNull private static final String FOUR_BALL = "Four Ball";
     @NotNull private static final String FIVE_BALL = "Five Ball";
     @NotNull private static final String SIX_BALL = "Six Ball";
@@ -197,17 +197,17 @@ public class Robot extends TimedRobot {
         // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
         // the autos
         System.out.println("Loading autos");
-        CompletableFuture.runAsync(() -> shootAndMoveHigh = new ShootAndMoveHigh()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> shootAndMoveLeft = new ShootAndMoveLeft()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> shootAndMoveLow = new ShootAndMoveLow()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> shootAndMoveRight = new ShootAndMoveRight()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> fourBall = new FourBall()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
-        autoChooser.setDefaultOption(SHOOT_AND_MOVE_HIGH, SHOOT_AND_MOVE_HIGH);
+        autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
         autoChooser.addOption(SHOOT_AND_MOVE_MID, SHOOT_AND_MOVE_MID);
-        autoChooser.addOption(SHOOT_AND_MOVE_LOW, SHOOT_AND_MOVE_LOW);
+        autoChooser.addOption(SHOOT_AND_MOVE_RIGHT, SHOOT_AND_MOVE_RIGHT);
         autoChooser.addOption(FOUR_BALL, FOUR_BALL);
         autoChooser.addOption(FIVE_BALL, FIVE_BALL);
         autoChooser.addOption(SIX_BALL, SIX_BALL);
@@ -266,8 +266,8 @@ public class Robot extends TimedRobot {
                 System.out.println("Using normal autos");
                 String auto = autoChooser.getSelected();
                 switch (auto) {
-                    case SHOOT_AND_MOVE_HIGH:
-                        selectedAuto = shootAndMoveHigh;
+                    case SHOOT_AND_MOVE_LEFT:
+                        selectedAuto = shootAndMoveLeft;
                         break;
                     case SHOOT_AND_MOVE_MID:
                         selectedAuto = shootAndMoveMid;
@@ -285,7 +285,7 @@ public class Robot extends TimedRobot {
                         selectedAuto = new SetPositionCenter();
                         break;
                     default:
-                        selectedAuto = shootAndMoveLow;
+                        selectedAuto = shootAndMoveRight;
                         break;
                 }
             } else {
