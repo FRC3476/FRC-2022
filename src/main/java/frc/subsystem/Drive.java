@@ -686,7 +686,7 @@ public final class Drive extends AbstractSubsystem {
      * Default method when the x and y velocity and the target heading are not passed
      */
     private void updateTurn() {
-        updateTurn(new ControllerDriveInputs(0, 0, 0), wantedHeading, false);
+        updateTurn(new ControllerDriveInputs(0, 0, 0), wantedHeading, false, Math.toRadians(Constants.MAX_TURN_ERROR));
         // Field relative flag won't do anything since we're not moving
     }
 
@@ -703,7 +703,7 @@ public final class Drive extends AbstractSubsystem {
      * @param useFieldRelative      Whether the target heading is field relative or robot relative
      */
     public void updateTurn(ControllerDriveInputs controllerDriveInputs, @NotNull Rotation2d targetHeading,
-                           boolean useFieldRelative) {
+                           boolean useFieldRelative, double turnErrorRadians) {
         synchronized (this) {
             if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
         }
@@ -734,7 +734,7 @@ public final class Drive extends AbstractSubsystem {
                     deltaSpeed));
         }
 
-        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees()) < Constants.MAX_TURN_ERROR) {
+        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getRadians()) < turnErrorRadians) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {

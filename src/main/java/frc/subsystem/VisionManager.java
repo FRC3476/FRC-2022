@@ -73,6 +73,11 @@ public final class VisionManager extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
+        logData("Rotation Target", getAngleOfTarget().getDegrees());
+        logData("Allowed Turn Error", getAllowedTurnError());
+
+        logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
+        logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
@@ -197,8 +202,7 @@ public final class VisionManager extends AbstractSubsystem {
     double lastChecksFailedTime = 0;
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-        drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative);
-        logData("Rotation Target", getAngleOfTarget().getDegrees());
+        drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative, getAllowedTurnError());
 
         if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
             bypassAimCheckUntil = 0;
@@ -219,9 +223,16 @@ public final class VisionManager extends AbstractSubsystem {
         }
         Hopper.getInstance().setHopperState(HopperState.ON);
 
-        logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
-        logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
         logData("Last Shooter Checks Failed Time", Timer.getFPGATimestamp() - lastChecksFailedTime);
+    }
+
+    /**
+     * {@code Math.tan(Constants.GOAL_RADIUS / getDistanceToTarget())}
+     *
+     * @return The allowed turn error in radians
+     */
+    private double getAllowedTurnError() {
+        return Math.tan(Constants.GOAL_RADIUS / getDistanceToTarget());
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {
@@ -255,6 +266,9 @@ public final class VisionManager extends AbstractSubsystem {
         shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
     }
 
+    /**
+     * @return Distance to the target in meters
+     */
     private double getDistanceToTarget() {
         double distanceToTarget;
         if (limelight.isTargetVisible()) {
