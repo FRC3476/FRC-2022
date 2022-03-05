@@ -81,7 +81,7 @@ public final class Shooter extends AbstractSubsystem {
     public boolean isFiring() {
         return shooterState == ShooterState.ON &&
                 ((feederWheelState == FeederWheelState.FORWARD)
-                        && ((isHoodStopped() && isShooterAtTargetSpeed()) || feederChecksDisabled)
+                        && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed()) || feederChecksDisabled)
                         || Timer.getFPGATimestamp() < forceFeederOnTime);
     }
 
@@ -561,10 +561,6 @@ public final class Shooter extends AbstractSubsystem {
                 CANSparkMax.ControlType.kPosition);
     }
 
-    public boolean isHoodStopped() {
-        return Math.abs(hoodRelativeEncoder.getVelocity()) < Constants.HOOD_HAS_STOPPED_REFERENCE;
-    }
-
     public void setFeederChecksDisabled(boolean feederChecksDisabled) {
         this.feederChecksDisabled = feederChecksDisabled;
     }
@@ -660,7 +656,7 @@ public final class Shooter extends AbstractSubsystem {
 
                 // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
                 // is at target speed. Will also enable if feeder wheel is enabled forward and checks are disabled
-                if ((feederWheelState == FeederWheelState.FORWARD) && ((isHoodStopped() && isShooterAtTargetSpeed()) || feederChecksDisabled)) {
+                if ((feederWheelState == FeederWheelState.FORWARD) && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed()) || feederChecksDisabled)) {
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
