@@ -347,11 +347,13 @@ public class Robot extends TimedRobot {
                 doNormalDriving();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
+                visionManager.updateShooterStateStaticPose();
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             shooter.setFiring(false);
+            shooter.setSpeed(0);
             visionManager.unForceVisionOn(driverForcingVisionOn);
             if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
@@ -489,14 +491,14 @@ public class Robot extends TimedRobot {
         if (buttonPanel.getRisingEdge(1)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
         } else if (buttonPanel.getRisingEdge(2)) {
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(150);
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(0);
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
         }
     }
 
     private boolean isTryingToRunShooterFromButtonPanel() {
-        return xbox.getRawAxis(1) > 0.1 || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(3);
+        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(3);
     }
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);

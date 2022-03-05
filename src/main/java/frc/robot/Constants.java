@@ -312,7 +312,7 @@ public final class Constants {
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in degrees
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = 2;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
 
     /**
      * If _ speed is under this value, hood has stopped

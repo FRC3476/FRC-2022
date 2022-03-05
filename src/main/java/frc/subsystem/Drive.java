@@ -577,6 +577,8 @@ public final class Drive extends AbstractSubsystem {
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
         try {
+            autoTurnPIDController.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
+                    RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
             setDriveState(DriveState.RAMSETE);
             this.currentAutoTrajectory = trajectory;
             this.isAutoAiming = false;
@@ -868,7 +870,8 @@ public final class Drive extends AbstractSubsystem {
         throw new UnsupportedOperationException("Can not close this object");
     }
 
-    public void turnToTarget(double degrees) throws InterruptedException {
+    public void turnToAngle(double degrees) throws InterruptedException {
+        System.out.println("Turning to " + degrees);
         setRotation(degrees);
         while (!isTurningDone()) {
             Thread.sleep(50);
