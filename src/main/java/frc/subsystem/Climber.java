@@ -71,6 +71,7 @@ public final class Climber extends AbstractSubsystem {
     private double data;
 
     private @NotNull Climber.ClimbState climbState = ClimbState.IDLE;
+
     private boolean isPaused = false;
     private double pausedClimberSetpoint;
     private ControlMode pausedClimberMode;
@@ -661,7 +662,7 @@ public final class Climber extends AbstractSubsystem {
 
     }
 
-    public @NotNull Climber.ClimbState getClimbStatePair() {
+    public @NotNull Climber.ClimbState getClimbState() {
         return climbState;
     }
 
@@ -701,6 +702,12 @@ public final class Climber extends AbstractSubsystem {
             logData("Current Climber WaitCondition", climbState.automatic.waitCondition.apply(this));
         }
     }
+
+
+    public boolean isPaused() {
+        return isPaused;
+    }
+
 
     @Override
     public void close() throws Exception {

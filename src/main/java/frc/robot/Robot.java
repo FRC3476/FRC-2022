@@ -6,10 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.EntryListenerFlags;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -38,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as described in the
@@ -127,17 +125,75 @@ public class Robot extends TimedRobot {
     //Control loop states
     boolean limelightTakeSnapshots = false;
     private ShooterPreset shooterPreset = VisionManager.getInstance().visionLookUpTable.getShooterPreset(0);
-    private boolean autoAimRobot = true;
 
     // Input Control
     private double firstPressTime = 0;
     private double lastPressTime = 0;
+
+
+    Consumer<EntryNotification> autoPathListener = (event ->
+            deserializerExecutor.execute(() -> { //Start deserializing on another thread
+                        System.out.println("starting to parse autonomous");
+                        //Set networktable entries for the gui notifications
+                        pathProcessingStatusEntry.setDouble(1);
+                        pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                        networkAutoLock.lock();
+                        try {
+                            networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
+                        } finally {
+                            networkAutoLock.unlock();
+                        }
+
+                        // ready to be run
+                        System.out.println("done parsing autonomous");
+                        //Set networktable entries for the gui notifications
+                        pathProcessingStatusEntry.setDouble(2);
+                        pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
+                    }
+            ));
+
+    Consumer<EntryNotification> shooterGuiListener = event ->
+            deserializerExecutor.execute(() -> {
+                        System.out.println("start parsing shooter config");
+                        //Set networktable entries for the loading circle
+                        shooterConfigStatusEntry.setDouble(2);
+                        shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                        try {
+                            ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
+                                    ShooterConfig.class);
+                            Collections.sort(shooterConfig.getShooterConfigs());
+                            visionManager.setShooterConfig(shooterConfig);
+                            System.out.println(shooterConfig.getShooterConfigs());
+                        } catch (IOException e) {
+                            //Should never happen. The gui should never upload invalid data.
+                            DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
+                        }
+
+                        System.out.println("done parsing shooter config");
+                        //Set networktable entries for the loading circle
+                        shooterConfigStatusEntry.setDouble(1);
+                        shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
+                    }
+            );
 
     /**
      * This function is run when the robot is first started up and should be used for any initialization code.
      */
     @Override
     public void robotInit() {
+
+        if (autoPath.getString(null) != null) {
+            autoPathListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
+        }
+
+        if (shooterConfigEntry.getString(null) != null) {
+            shooterGuiListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
+        }
+
+        autoPath.addListener(autoPathListener, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        shooterConfigEntry.addListener(shooterGuiListener, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
         // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
         // the autos
         System.out.println("Loading autos");
@@ -166,60 +222,14 @@ public class Robot extends TimedRobot {
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
 
+        NetworkTableInstance.getDefault().setUpdateRate(0.05);
+
         while (loadingAutos) {
             Thread.onSpinWait();
         }
         System.out.println("Finished loading autos");
-
-        autoPath.addListener(event ->
-                deserializerExecutor.execute(() -> { //Start deserializing on another thread
-                            System.out.println("starting to parse autonomous");
-                            //Set networktable entries for the gui notifications
-                            pathProcessingStatusEntry.setDouble(1);
-                            pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-                            networkAutoLock.lock();
-                            try {
-                                networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
-                            } finally {
-                                networkAutoLock.unlock();
-                            }
-
-                            // ready to be run
-                            System.out.println("done parsing autonomous");
-                            //Set networktable entries for the gui notifications
-                            pathProcessingStatusEntry.setDouble(2);
-                            pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-                        }
-                ), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
-        shooterConfigEntry.addListener(event ->
-                deserializerExecutor.execute(() -> {
-                            System.out.println("start parsing shooter config");
-                            //Set networktable entries for the loading circle
-                            shooterConfigStatusEntry.setDouble(2);
-                            shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
-                            try {
-                                ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
-                                        ShooterConfig.class);
-                                Collections.sort(shooterConfig.getShooterConfigs());
-                                visionManager.setShooterConfig(shooterConfig);
-                                System.out.println(shooterConfig.getShooterConfigs());
-                            } catch (IOException e) {
-                                //Should never happen. The gui should never upload invalid data.
-                                DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
-                            }
-
-                            System.out.println("done parsing shooter config");
-                            //Set networktable entries for the loading circle
-                            shooterConfigStatusEntry.setDouble(1);
-                            shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
-                        }
-                ), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
-
-        NetworkTableInstance.getDefault().setUpdateRate(0.05);
     }
 
 
@@ -329,23 +339,22 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         if (xbox.getRawAxis(2) > 0.1) {
-            if (!autoAimRobot && isTryingToRunShooterFromButtonPanel()) { //If vision is off
+            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+                shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
                 visionManager.forceVisionOn(driverForcingVisionOn);
-                if (shooterControlState == ShooterControlState.VELOCITY_COMPENSATED) {
-                    visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
-                } else {
-                    visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
-                }
+                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             shooter.setFiring(false);
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (!buttonPanel.getRawButton(11)) { // If we're climbing don't allow the robot to be driven
+            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
+                // driven
                 doNormalDriving();
             }
         }
@@ -432,7 +441,7 @@ public class Robot extends TimedRobot {
         }
 
         if (buttonPanel.getRisingEdge(9)) {
-            if (climber.getClimbStatePair() == ClimbState.IDLE) {
+            if (climber.getClimbState() == ClimbState.IDLE) {
                 climber.startClimb();
             } else {
                 climber.resumeClimb();
@@ -478,60 +487,16 @@ public class Robot extends TimedRobot {
 
     private void runShooter() {
         if (buttonPanel.getRisingEdge(1)) {
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(400);
-            autoAimRobot = true;
+            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
         } else if (buttonPanel.getRisingEdge(2)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(150);
-            autoAimRobot = true;
         } else if (buttonPanel.getRisingEdge(3)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(0);
-            autoAimRobot = false;
-        }
-
-        if (buttonPanel.getRawButton(7)) {
-            shooterControlState = ShooterControlState.VELOCITY_COMPENSATED;
-        } else if (buttonPanel.getRawButton(6)) {
-            shooterControlState = ShooterControlState.STATIC_POSE;
-        } else if (buttonPanel.getRawButton(5)) {
-            shooterControlState = ShooterControlState.MANUAL;
-        }
-
-        SmartDashboard.putString("Shooter Control State", shooterControlState.toString());
-
-        if (isTryingToRunShooterFromButtonPanel()) {
-            // We want the flywheel to be on
-            switch (shooterControlState) {
-                case VELOCITY_COMPENSATED:
-                    // Turns Shooter flywheel on considering a moving robot
-                    visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-                    visionManager.updateShooterState();
-                    break;
-                case STATIC_POSE:
-                    //Turn Shooter Flywheel On and sets the flywheel speed considering a stationary robot
-                    visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-                    visionManager.updateShooterStateStaticPose();
-                    break;
-                case MANUAL:
-                    //Turn shooter flywheel on with manuel settings
-                    if (buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6) || buttonPanel.getRawButton(5)) {
-                        visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-                        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
-                        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-                    } else {
-                        visionManager.forceVisionOn(buttonPanelForcingVisionOn);
-                        visionManager.updateShooterStateStaticPose();
-                    }
-                    break;
-            }
-        } else {
-            visionManager.unForceVisionOn(buttonPanelForcingVisionOn);
-            shooter.setSpeed(0); //Turns off shooter flywheel
         }
     }
 
     private boolean isTryingToRunShooterFromButtonPanel() {
-        return xbox.getRawAxis(2) > 0.1 || buttonPanel.getRawButton(7) || buttonPanel.getRawButton(6)
-                || buttonPanel.getRawButton(5);
+        return xbox.getRawAxis(1) > 0.1 || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(3);
     }
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);

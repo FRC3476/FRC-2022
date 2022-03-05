@@ -675,9 +675,8 @@ public final class Drive extends AbstractSubsystem {
 
 
     public synchronized boolean isTurningDone() {
-        double error = wantedHeading.rotateBy(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        double curSpeed = Math.toDegrees(RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
-        return (Math.abs(error) < Constants.MAX_TURN_ERROR) && curSpeed < Constants.MAX_PID_STOP_SPEED;
+        double error = wantedHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees();
+        return (Math.abs(error) < Constants.MAX_TURN_ERROR);
     }
 
     double turnMinSpeed = 0;
@@ -734,7 +733,8 @@ public final class Drive extends AbstractSubsystem {
                     deltaSpeed));
         }
 
-        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getRadians()) < turnErrorRadians) {
+        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getRadians()) < turnErrorRadians &&
+                RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond < Math.toRadians(7)) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {
@@ -866,5 +866,12 @@ public final class Drive extends AbstractSubsystem {
     @Override
     public void close() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Can not close this object");
+    }
+
+    public void turnToTarget(double degrees) throws InterruptedException {
+        setRotation(degrees);
+        while (!isTurningDone()) {
+            Thread.sleep(50);
+        }
     }
 }

@@ -232,7 +232,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return The allowed turn error in radians
      */
     private double getAllowedTurnError() {
-        return Math.tan(Constants.GOAL_RADIUS / getDistanceToTarget());
+        return Math.tan((Constants.GOAL_RADIUS * 0.8) / getDistanceToTarget());
     }
 
     public Rotation2d getLatencyCompedLimelightRotation() {
