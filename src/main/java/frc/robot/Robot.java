@@ -549,12 +549,7 @@ public class Robot extends TimedRobot {
             }
         } else {
             if (useFieldRelative) {
-                if (xbox.getRawButton(XboxButtons.BACK)) {
-                    double angle = Math.atan2(controllerDriveInputs.getY(), controllerDriveInputs.getX());
-                    drive.updateTurn(controllerDriveInputs, new Rotation2d(angle), true);
-                } else {
-                    drive.swerveDriveFieldRelative(controllerDriveInputs);
-                }
+                drive.swerveDriveFieldRelative(controllerDriveInputs);
             } else {
                 drive.swerveDrive(controllerDriveInputs);
             }
