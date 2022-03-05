@@ -69,7 +69,7 @@ public class Robot extends TimedRobot {
     @Nullable TemplateAuto selectedAuto;
     @Nullable Thread autoThread;
 
-    //We block the robot from starting until these are initalized
+    //We block the robot from starting until these are initialized
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
     private ShootAndMoveHigh shootAndMoveHigh;

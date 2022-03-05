@@ -71,7 +71,8 @@ public final class RobotTracker extends AbstractSubsystem {
      *                              source or sync the epochs.
      */
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        //swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
+        resetPosition(visionRobotPoseMeters);
+        //swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
     }
 
     public void calibrateGyro() {
