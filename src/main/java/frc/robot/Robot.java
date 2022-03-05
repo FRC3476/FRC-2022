@@ -94,12 +94,22 @@ public class Robot extends TimedRobot {
     @NotNull
     private SixBall sixBall;
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private BuddyAutoLeft buddyAutoLeft;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private BuddyAutoRight buddyAutoRight;
+
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
     @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
     @NotNull private static final String FOUR_BALL = "Four Ball";
     @NotNull private static final String FIVE_BALL = "Five Ball";
     @NotNull private static final String SIX_BALL = "Six Ball";
+    @NotNull private static final String BUDDY_AUTO_LEFT = "Buddy Auto Left";
+    @NotNull private static final String BUDDY_AUTO_RIGHT = "Buddy Auto Right";
 
     private static final String RESET_POSE = "Reset Pose";
 
@@ -203,6 +213,8 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> fourBall = new FourBall()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> buddyAutoRight = new BuddyAutoRight()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -237,7 +249,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 6) {
+        if (loadedAutos.incrementAndGet() == 8) {
             loadingAutos = false;
         }
     }
@@ -283,6 +295,12 @@ public class Robot extends TimedRobot {
                         break;
                     case RESET_POSE:
                         selectedAuto = new SetPositionCenter();
+                        break;
+                    case BUDDY_AUTO_LEFT:
+                        selectedAuto = buddyAutoLeft;
+                        break;
+                    case BUDDY_AUTO_RIGHT:
+                        selectedAuto = buddyAutoRight;
                         break;
                     default:
                         selectedAuto = shootAndMoveRight;
