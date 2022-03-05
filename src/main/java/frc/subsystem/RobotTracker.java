@@ -385,7 +385,7 @@ public final class RobotTracker extends AbstractSubsystem {
     public void logData() {
         logData("Last Estimated Robot Pose X", getLastEstimatedPoseMeters().getX());
         logData("Last Estimated Robot Pose Y", getLastEstimatedPoseMeters().getY());
-        logData("Last Estimated Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getDegrees());
+        logData("Last Estimated Robot Pose Angle", getLastEstimatedPoseMeters().getRotation().getRadians());
         logData("Last Estimated Robot Velocity X", getLastChassisSpeeds().vxMetersPerSecond);
         logData("Last Estimated Robot Velocity Y", getLastChassisSpeeds().vyMetersPerSecond);
         logData("Last Estimated Robot Velocity Theta", getLastChassisSpeeds().omegaRadiansPerSecond);
