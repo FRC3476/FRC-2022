@@ -207,6 +207,7 @@ public class Robot extends TimedRobot {
         // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
         // the autos
         System.out.println("Loading autos");
+        long startDeserializeTime = System.currentTimeMillis();
         CompletableFuture.runAsync(() -> shootAndMoveLeft = new ShootAndMoveLeft()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveRight = new ShootAndMoveRight()).thenRun(this::incrementLoadedAutos);
@@ -214,7 +215,6 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> buddyAutoRight = new BuddyAutoRight()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -224,6 +224,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(FIVE_BALL, FIVE_BALL);
         autoChooser.addOption(SIX_BALL, SIX_BALL);
         autoChooser.addOption(RESET_POSE, RESET_POSE);
+        autoChooser.addOption(BUDDY_AUTO_LEFT, BUDDY_AUTO_LEFT);
 
         SmartDashboard.putData("Auto choices", autoChooser);
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
@@ -239,7 +240,8 @@ public class Robot extends TimedRobot {
         while (loadingAutos) {
             Thread.onSpinWait();
         }
-        System.out.println("Finished loading autos");
+        System.out.println(
+                "Finished loading autos in " + ((double) (System.currentTimeMillis() - startDeserializeTime)) / 1000.0);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -249,7 +251,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 8) {
+        if (loadedAutos.incrementAndGet() == 7) {
             loadingAutos = false;
         }
     }
@@ -298,9 +300,6 @@ public class Robot extends TimedRobot {
                         break;
                     case BUDDY_AUTO_LEFT:
                         selectedAuto = buddyAutoLeft;
-                        break;
-                    case BUDDY_AUTO_RIGHT:
-                        selectedAuto = buddyAutoRight;
                         break;
                     default:
                         selectedAuto = shootAndMoveRight;
