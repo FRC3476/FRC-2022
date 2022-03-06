@@ -388,8 +388,7 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_KD = 0.0;
     public static final double CLIMBER_MOTOR_IZONE = 10;
     public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
-    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 0.3;
-    public static final int CLIMBER_MOTOR_MAX_ERROR = 5;
+    public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1;
 
     public static final int CLIMBER_CURRENT_LIMIT = 30;
 
@@ -408,6 +407,9 @@ public final class Constants {
 
 
     public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
+
+    public static final double CLIMBER_MOTOR_MAX_ERROR = 0.1 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
     /**
      * The height to go to once the drivers request the climber to deploy
      */
@@ -444,12 +446,12 @@ public final class Constants {
     /**
      * Amount (relative) to move the climber arm up to unlatch the elevator arm.
      */
-    public static final double CLIMBER_ELEVATOR_UNLATCH_AMOUNT = 100;
+    public static final double CLIMBER_ELEVATOR_UNLATCH_AMOUNT = 5 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The max safe height for the elevator arm during the swinging part of the climb
      */
-    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 19.98 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 19.45 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
@@ -464,7 +466,7 @@ public final class Constants {
     /**
      * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 27.1 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 24.78 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
