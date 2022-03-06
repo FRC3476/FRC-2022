@@ -17,6 +17,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
+import frc.subsystem.Hopper.HopperState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.Limelight.StreamingMode;
@@ -369,6 +370,18 @@ public class Robot extends TimedRobot {
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
+        } else if (buttonPanel.getRisingEdge(6)) {
+            // Sets to low (lobbing) speed
+            shooter.setSpeed(Constants.SHOOTER_TOP_EJECT_SPEED * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR);
+
+            // Sets to ejecting angle, should eject ball right in front of robot
+            shooter.setHoodPosition(Constants.HOOD_TOP_EJECT_ANGLE);
+
+            // Enables feeder wheel
+            shooter.forceFeederForward();
+
+            // Hopper should not move as we only want the one ball already touching the feeder wheel to be ejected
+            Hopper.getInstance().setHopperState(HopperState.OFF);
         } else {
             shooter.setFiring(false);
             shooter.setSpeed(0);
@@ -477,11 +490,6 @@ public class Robot extends TimedRobot {
             climber.stopClimb();
         }
 
-        if (buttonPanel.getRisingEdge(6)) {
-            shooter.enableTopEject();
-        } else if (buttonPanel.getFallingEdge(6)) {
-            shooter.disableTopEject();
-        }
 
 //        if (buttonPanel.getRisingEdge(10)) {
 //            climber.setStepByStep(!climber.isStepByStep());
