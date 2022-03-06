@@ -51,6 +51,10 @@ public final class Drive extends AbstractSubsystem {
     final @NotNull NetworkTableEntry turnMaxVelocity = SmartDashboard.getEntry("TurnMaxVelocity");
     final @NotNull NetworkTableEntry turnMaxAcceleration = SmartDashboard.getEntry("TurnMaxAcceleration");
 
+    public void resetAuto() {
+        autoTurnPIDController.reset(RobotTracker.getInstance().getGyroAngle().getRadians());
+    }
+
     public enum DriveState {
         TELEOP, TURN, HOLD, DONE, RAMSETE, STOP
     }

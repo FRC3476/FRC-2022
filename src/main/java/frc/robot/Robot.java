@@ -274,6 +274,7 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         enabled.setBoolean(true);
         drive.configBrake();
+        drive.resetAuto();
 
         networkAutoLock.lock();
         try {
@@ -370,16 +371,9 @@ public class Robot extends TimedRobot {
                 visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
         } else if (buttonPanel.getRisingEdge(6)) {
-            // Sets to low (lobbing) speed
-            shooter.setSpeed(Constants.SHOOTER_TOP_EJECT_SPEED * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR);
-
-            // Sets to ejecting angle, should eject ball right in front of robot
+            shooter.setSpeed(Constants.SHOOTER_TOP_EJECT_SPEED);
             shooter.setHoodPosition(Constants.HOOD_TOP_EJECT_ANGLE);
-
-            // Enables feeder wheel
-            shooter.forceFeederForward();
-
-            // Hopper should not move as we only want the one ball already touching the feeder wheel to be ejected
+            shooter.setFiring(true);
             Hopper.getInstance().setHopperState(HopperState.OFF);
         } else {
             shooter.setFiring(false);
@@ -468,7 +462,7 @@ public class Robot extends TimedRobot {
             climber.setClimberMotor(0);
         }
 
-        if (stick.getRisingEdge(7) && stick.getRawButton(8)) {
+        if (buttonPanel.getRisingEdge(12)) {
             climber.forceAdvanceStep();
         }
 
@@ -485,7 +479,7 @@ public class Robot extends TimedRobot {
             drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
         }
 
-        if (buttonPanel.getRisingEdge(12)) {
+        if (buttonPanel.getRisingEdge(11)) {
             climber.stopClimb();
         }
 
