@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
+import static frc.robot.Constants.*;
 import static frc.utility.Pneumatics.getPneumaticsHub;
 
 class ClimbStep {
@@ -171,7 +171,9 @@ public final class Climber extends AbstractSubsystem {
                             cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
                             cl.setClawState(ClawState.UNLATCHED);
                         },
-                        (cl) -> false,
+                        (cl) -> Math.abs(
+                                Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION - cl.climberMotor.getSelectedSensorPosition())
+                                < Constants.CLIMBER_MOTOR_MAX_ERROR,
                         Climber::stopClimberMotor
                 )
         ),
@@ -187,8 +189,11 @@ public final class Climber extends AbstractSubsystem {
                 ),
 
                 new ClimbStep(
-                        (cl) -> cl.setClawState(ClawState.LATCHED),
-                        (cl) -> false,
+                        (cl) -> {
+                            cl.setClawState(ClawState.LATCHED);
+                            cl.data = Timer.getFPGATimestamp() + 0.2;
+                        },
+                        (cl) -> Timer.getFPGATimestamp() > cl.data,
                         (cl) -> {}
                 )
         ),
@@ -210,8 +215,11 @@ public final class Climber extends AbstractSubsystem {
                 ),
 
                 new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT),
-                        (cl) -> false,
+                        (cl) -> {
+                            cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
+                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
+                        },
+                        (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {}
                 )
         ),
@@ -232,8 +240,12 @@ public final class Climber extends AbstractSubsystem {
                 ),
 
                 new ClimbStep(
-                        (cl) -> cl.setPivotState(PivotState.PIVOTED),
-                        (cl) -> true,
+                        (cl) -> {
+                            cl.setPivotState(PivotState.PIVOTED);
+                            cl.data = Timer.getFPGATimestamp();
+                        },
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION
+                                && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {}
                 )
         ),
@@ -244,16 +256,13 @@ public final class Climber extends AbstractSubsystem {
         WAIT_TILL_EXTENSION_IS_SAFE(
                 new ClimbStep(
                         (cl) -> {},
-                        (cl) -> {
-                            AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return gyro.getPitch() < 0 && cl.gyroPitchVelocity < 0; // TODO: tune these values
-                        },
+                        (cl) -> cl.gyroPitchVelocity < 0, // TODO: tune these values
                         (cl) -> {}
                 ),
 
                 new ClimbStep(
                         (cl) -> {},
-                        (cl) -> false,
+                        (cl) -> false, // TODO: Copy the check here
                         (cl) -> {}
                 )
         ),
@@ -271,7 +280,7 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION),
-                        (cl) -> false,
+                        (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {}
                 )
         ),
@@ -295,7 +304,8 @@ public final class Climber extends AbstractSubsystem {
                             cl.setPivotState(PivotState.INLINE);
                             cl.data = Timer.getFPGATimestamp();
                         },
-                        (cl) -> true,
+                        //TODO: Change the time
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_UNPIVOT_DURATION,
                         (cl) -> {}
                 )
         ),
@@ -316,7 +326,7 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> {},
-                        (cl) -> false,
+                        (cl) -> false, //TODO: Copy the check here
                         (cl) -> {}
                 )
         ),
@@ -333,7 +343,8 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION),
-                        (cl) -> false,
+                        (cl) -> cl.climberMotor.getSelectedSensorPosition() - CLIMBER_MOTOR_MAX_ERROR
+                                < CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION && false, // TODO: Determine if we want this
                         Climber::stopClimberMotor
                 )
         ),
@@ -362,7 +373,7 @@ public final class Climber extends AbstractSubsystem {
                             cl.setClawState(ClawState.UNLATCHED);
                             cl.data = Timer.getFPGATimestamp();
                         },
-                        (cl) -> false,
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION,
                         (cl) -> {}
                 )
         );
