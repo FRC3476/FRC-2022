@@ -251,6 +251,9 @@ public final class Constants {
      */
     public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 300;
 
+    public static final double SHOOTER_TOP_EJECT_SPEED = 800;
+    public static final double HOOD_TOP_EJECT_ANGLE = 50;
+
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
      * minute

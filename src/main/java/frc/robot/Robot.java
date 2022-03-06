@@ -477,6 +477,12 @@ public class Robot extends TimedRobot {
             climber.stopClimb();
         }
 
+        if (buttonPanel.getRisingEdge(6)) {
+            shooter.enableTopEject();
+        } else if (buttonPanel.getFallingEdge(6)) {
+            shooter.disableTopEject();
+        }
+
 //        if (buttonPanel.getRisingEdge(10)) {
 //            climber.setStepByStep(!climber.isStepByStep());
 //        }

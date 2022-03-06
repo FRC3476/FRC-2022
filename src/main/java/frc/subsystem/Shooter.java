@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.subsystem.Hopper.HopperState;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
@@ -169,6 +170,10 @@ public final class Shooter extends AbstractSubsystem {
          * Commands may be sent to the motors.
          */
         ON,
+        /**
+         * Ejects ball through hood
+         */
+        TOP_EJECT,
 
         /**
          * Test state that will drive motors expected conditions.
@@ -521,6 +526,14 @@ public final class Shooter extends AbstractSubsystem {
         return shooterState;
     }
 
+    public void enableTopEject() {
+        shooterState = shooterState.TOP_EJECT;
+    }
+
+    public void disableTopEject() {
+        shooterState = shooterState.OFF;
+    }
+
     /**
      * Returns queued state for states that have been requested but could not be changed immediately.
      *
@@ -643,6 +656,27 @@ public final class Shooter extends AbstractSubsystem {
                 }
 
                 break;
+
+            // Makes it so top ball only is lobbed out at slow speeds from the hood
+            case TOP_EJECT:
+                // Sets to low (lobbing) speed
+                setSpeed(Constants.SHOOTER_TOP_EJECT_SPEED * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR);
+
+                // Sets to ejecting angle, should eject ball right in front of robot
+                setHoodPosition(Constants.HOOD_TOP_EJECT_ANGLE);
+
+                if (!isHoodAtTargetAngle()) {
+                    moveHoodMotor(); // Sets Motor to travel to desired hood angle
+                }
+
+                // Enables feeder wheel
+                feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
+
+                // Hopper should not move as we only want the one ball already touching the feeder wheel to be ejected
+                Hopper.getInstance().setHopperState(HopperState.OFF);
+
+                break;
+
 
             case ON:
                 //shooterWheelMaster.set(ControlMode.PercentOutput, 1);
