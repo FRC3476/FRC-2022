@@ -504,6 +504,8 @@ public final class Climber extends AbstractSubsystem {
         return false;
     }
 
+    private double timesRun;
+
 
     private Climber() {
         super(Constants.CLIMBER_PERIOD, 1);
@@ -555,6 +557,8 @@ public final class Climber extends AbstractSubsystem {
         climberMotor2.setInverted(true);
 
         climberMotor.setSelectedSensorPosition(0);
+
+        timesRun = 0;
     }
 
     /**
@@ -572,6 +576,7 @@ public final class Climber extends AbstractSubsystem {
         climbState = ClimbState.IDLE;
         climberMotor.set(ControlMode.PercentOutput, 0);
         setBrakeState(BrakeState.BRAKING);
+        timesRun = 0;
     }
 
     /**
@@ -702,7 +707,10 @@ public final class Climber extends AbstractSubsystem {
                 if (!ranEndAction) currentClimbStep.endAction.accept(this);
                 do {
                     climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
-                    if (climbState == ClimbState.IDLE) climbState = ClimbState.START_CLIMB;
+                    if (climbState == ClimbState.IDLE && timesRun < 1) {
+                        climbState = ClimbState.START_CLIMB;
+                        timesRun++;
+                    }
 
                     if (sensorClimb) {
                         currentClimbStep = climbState.positionClimb;
