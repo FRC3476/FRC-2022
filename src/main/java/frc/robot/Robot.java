@@ -20,6 +20,7 @@ import frc.subsystem.Climber.ClimbState;
 import frc.subsystem.Hopper.HopperState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
+import frc.utility.Limelight.LedMode;
 import frc.utility.Limelight.StreamingMode;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
@@ -85,15 +86,27 @@ public class Robot extends TimedRobot {
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private FourBall fourBall;
+    private FourBallBlue fourBallBlue;
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private FiveBall fiveBall;
+    private FiveBallBlue fiveBallBlue;
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private SixBall sixBall;
+    private SixBallBlue sixBallBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private FourBallRed fourBallRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private FiveBallRed fiveBallRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private SixBallRed sixBallRed;
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
@@ -115,6 +128,12 @@ public class Robot extends TimedRobot {
     private static final String RESET_POSE = "Reset Pose";
 
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
+
+
+    @NotNull private static final String RED = "RED";
+    @NotNull private static final String BLUE = "BLUE";
+
+    private final SendableChooser<String> sideChooser = new SendableChooser<>();
 
     //Subsystems
     private final RobotTracker robotTracker = RobotTracker.getInstance();
@@ -212,37 +231,44 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> shootAndMoveLeft = new ShootAndMoveLeft()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> shootAndMoveRight = new ShootAndMoveRight()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fourBall = new FourBall()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fiveBall = new FiveBall()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> sixBall = new SixBall()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fourBallBlue = new FourBallBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fiveBallBlue = new FiveBallBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> sixBallBlue = new SixBallBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fourBallRed = new FourBallRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> fiveBallRed = new FiveBallRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> sixBallRed = new SixBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
         autoChooser.addOption(SHOOT_AND_MOVE_MID, SHOOT_AND_MOVE_MID);
         autoChooser.addOption(SHOOT_AND_MOVE_RIGHT, SHOOT_AND_MOVE_RIGHT);
-        autoChooser.addOption(FOUR_BALL, FOUR_BALL);
         autoChooser.addOption(FIVE_BALL, FIVE_BALL);
         autoChooser.addOption(SIX_BALL, SIX_BALL);
         autoChooser.addOption(RESET_POSE, RESET_POSE);
         autoChooser.addOption(BUDDY_AUTO_LEFT, BUDDY_AUTO_LEFT);
 
+        sideChooser.setDefaultOption(BLUE, BLUE);
+        sideChooser.addOption(BLUE, BLUE);
+
         SmartDashboard.putData("Auto choices", autoChooser);
-        Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
+        SmartDashboard.putData("Red or Blue", sideChooser);
 
         startSubsystems();
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
-        limelight.setLedMode(Limelight.LedMode.OFF);
 
         while (loadingAutos) {
             Thread.onSpinWait();
         }
+
         System.out.println(
                 "Finished loading autos in " + ((double) (System.currentTimeMillis() - startDeserializeTime)) / 1000.0);
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
+        Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
+        limelight.setLedMode(LedMode.OFF);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -252,7 +278,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 7) {
+        if (loadedAutos.incrementAndGet() == 10) {
             loadingAutos = false;
         }
     }
@@ -282,31 +308,60 @@ public class Robot extends TimedRobot {
             if (networkAuto == null) {
                 System.out.println("Using normal autos");
                 String auto = autoChooser.getSelected();
-                switch (auto) {
-                    case SHOOT_AND_MOVE_LEFT:
-                        selectedAuto = shootAndMoveLeft;
-                        break;
-                    case SHOOT_AND_MOVE_MID:
-                        selectedAuto = shootAndMoveMid;
-                        break;
-                    case FOUR_BALL:
-                        selectedAuto = fourBall;
-                        break;
-                    case FIVE_BALL:
-                        selectedAuto = fiveBall;
-                        break;
-                    case SIX_BALL:
-                        selectedAuto = sixBall;
-                        break;
-                    case RESET_POSE:
-                        selectedAuto = new SetPositionCenter();
-                        break;
-                    case BUDDY_AUTO_LEFT:
-                        selectedAuto = buddyAutoLeft;
-                        break;
-                    default:
-                        selectedAuto = shootAndMoveRight;
-                        break;
+                if (sideChooser.getSelected().equals(BLUE)) {
+                    switch (auto) {
+                        case SHOOT_AND_MOVE_LEFT:
+                            selectedAuto = shootAndMoveLeft;
+                            break;
+                        case SHOOT_AND_MOVE_MID:
+                            selectedAuto = shootAndMoveMid;
+                            break;
+                        case FOUR_BALL:
+                            selectedAuto = fourBallBlue;
+                            break;
+                        case FIVE_BALL:
+                            selectedAuto = fiveBallBlue;
+                            break;
+                        case SIX_BALL:
+                            selectedAuto = sixBallBlue;
+                            break;
+                        case RESET_POSE:
+                            selectedAuto = new SetPositionCenter();
+                            break;
+                        case BUDDY_AUTO_LEFT:
+                            selectedAuto = buddyAutoLeft;
+                            break;
+                        default:
+                            selectedAuto = shootAndMoveRight;
+                            break;
+                    }
+                } else {
+                    switch (auto) {
+                        case SHOOT_AND_MOVE_LEFT:
+                            selectedAuto = shootAndMoveLeft;
+                            break;
+                        case SHOOT_AND_MOVE_MID:
+                            selectedAuto = shootAndMoveMid;
+                            break;
+                        case FOUR_BALL:
+                            selectedAuto = fourBallRed;
+                            break;
+                        case FIVE_BALL:
+                            selectedAuto = fiveBallRed;
+                            break;
+                        case SIX_BALL:
+                            selectedAuto = sixBallRed;
+                            break;
+                        case RESET_POSE:
+                            selectedAuto = new SetPositionCenter();
+                            break;
+                        case BUDDY_AUTO_LEFT:
+                            selectedAuto = buddyAutoLeft;
+                            break;
+                        default:
+                            selectedAuto = shootAndMoveRight;
+                            break;
+                    }
                 }
             } else {
                 System.out.println("Using autos from network tables");
