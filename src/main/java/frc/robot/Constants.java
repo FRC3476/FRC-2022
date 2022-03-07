@@ -383,7 +383,7 @@ public final class Constants {
     public static final int CLIMBER_MOTOR_2_ID = 26;
 
     public static final double CLIMBER_MOTOR_KF = 0.0;
-    public static final double CLIMBER_MOTOR_KP = 0.1;
+    public static final double CLIMBER_MOTOR_KP = 0.2;
     public static final double CLIMBER_MOTOR_KI = 0.0;
     public static final double CLIMBER_MOTOR_KD = 0.0;
     public static final double CLIMBER_MOTOR_IZONE = 10;
@@ -408,7 +408,7 @@ public final class Constants {
 
     public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
 
-    public static final double CLIMBER_MOTOR_MAX_ERROR = 0.1 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height to go to once the drivers request the climber to deploy
@@ -456,7 +456,7 @@ public final class Constants {
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
      */
-    public static final double MAX_CLIMBER_EXTENSION = 27.2 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double MAX_CLIMBER_EXTENSION = 27.07 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * Length to grab onto mid bar

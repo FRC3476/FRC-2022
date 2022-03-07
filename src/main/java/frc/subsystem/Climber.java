@@ -85,7 +85,9 @@ public final class Climber extends AbstractSubsystem {
     private double gyroPitchVelocity = 0;
     private double lastGyroPitch;
     private double gyroRollVelocity = 0;
+    private double lastGyroRollVelocity;
     private double lastGyroRoll;
+    private double gyroRollAccel = 0;
 
     public enum ClawState {
         LATCHED, UNLATCHED
@@ -150,7 +152,14 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> {},
-                        (cl) -> true,
+                        (cl) -> {
+                            AHRS gyro = RobotTracker.getInstance().getGyro();
+                            if (Math.abs(gyro.getRoll()) < 5 && Math.abs(cl.gyroRollVelocity) < 0.1) {
+                                return true;
+                            } else {
+                                return gyro.getRoll() > 10 && cl.gyroRollVelocity < 0.1; //TODO: Tune these values
+                            }
+                        },
                         (cl) -> {})
         ),
 
@@ -175,7 +184,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> Math.abs(
                                 Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION - cl.climberMotor.getSelectedSensorPosition())
                                 < Constants.CLIMBER_MOTOR_MAX_ERROR,
-                        Climber::stopClimberMotor
+                        (cl) -> {}
                 )
         ),
 
@@ -185,14 +194,14 @@ public final class Climber extends AbstractSubsystem {
         LATCH_PIVOT_ARM(
                 new ClimbStep(
                         (cl) -> cl.setClawState(ClawState.LATCHED),
-                        (cl) -> cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get(),
+                        Climber::isPivotingArmLatched,
                         (cl) -> {}
                 ),
 
                 new ClimbStep(
                         (cl) -> {
                             cl.setClawState(ClawState.LATCHED);
-                            cl.data = Timer.getFPGATimestamp() + 0.2;
+                            cl.data = Timer.getFPGATimestamp() + 1;
                         },
                         (cl) -> Timer.getFPGATimestamp() > cl.data,
                         (cl) -> {}
@@ -259,14 +268,17 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return cl.gyroPitchVelocity < 0 && gyro.getRoll() > 42.5;
+                            return cl.gyroPitchVelocity > 0 && gyro.getRoll() > 42.5;
                         }, // TODO: tune these values
                         (cl) -> {}
                 ),
 
                 new ClimbStep(
                         (cl) -> {},
-                        (cl) -> false, // TODO: Copy the check here
+                        (cl) -> {
+                            AHRS gyro = RobotTracker.getInstance().getGyro();
+                            return cl.gyroPitchVelocity > 0 && gyro.getRoll() > 42.5;
+                        },
                         (cl) -> {}
                 )
         ),
@@ -322,15 +334,24 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return Math.abs(gyro.getPitch() - 40.5) < 1 && Math.abs(
+                            return gyro.getRoll() < 40.5 && Math.abs(
                                     cl.gyroRollVelocity) < 0.1; //TODO: Tune these values
                         },
                         (cl) -> {}
                 ),
 
                 new ClimbStep(
-                        (cl) -> {},
-                        (cl) -> false, //TODO: Copy the check here
+                        (cl) -> {
+                            cl.data = Double.MAX_VALUE;
+                        },
+                        (cl) -> {
+                            AHRS gyro = RobotTracker.getInstance().getGyro();
+                            if (gyro.getRoll() < 41 && Math.abs(cl.gyroRollVelocity) < 0.1) {
+                                if (cl.data > Timer.getFPGATimestamp() + 0.3) cl.data = Timer.getFPGATimestamp() + 0.3;
+                                return cl.data < Timer.getFPGATimestamp();
+                            }
+                            return false;
+                        },
                         (cl) -> {}
                 )
         ),
@@ -346,10 +367,13 @@ public final class Climber extends AbstractSubsystem {
                 ),
 
                 new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION),
-                        (cl) -> cl.climberMotor.getSelectedSensorPosition() - CLIMBER_MOTOR_MAX_ERROR
-                                < CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION && false, // TODO: Determine if we want this
-                        Climber::stopClimberMotor
+                        (cl) -> {
+                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION);
+                            Drive.getInstance().setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
+                        },
+                        (cl) -> cl.climberMotor.getSelectedSensorPosition() - (0.3 * CLIMBER_ENCODER_TICKS_PER_INCH) < CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION,
+                        // TODO: Determine if we want this
+                        (cl) -> {}
                 )
         ),
 
@@ -363,7 +387,7 @@ public final class Climber extends AbstractSubsystem {
                             cl.data = Timer.getFPGATimestamp();
                         },
                         (cl) -> {
-                            if (cl.pivotingArmLatchedSwitchA.get() && cl.pivotingArmLatchedSwitchB.get()) {
+                            if (cl.isPivotingArmLatchedSwitchA() || cl.isElevatorArmContactSwitchB()) {
                                 cl.data = Timer.getFPGATimestamp();
                             }
                             return Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
@@ -448,7 +472,7 @@ public final class Climber extends AbstractSubsystem {
 
 
     private Climber() {
-        super(Constants.CLIMBER_PERIOD);
+        super(Constants.CLIMBER_PERIOD, 1);
 
         climberMotor = new LazyTalonSRX(Constants.CLIMBER_MOTOR_ID);
         climberMotor2 = new LazyTalonSRX(Constants.CLIMBER_MOTOR_2_ID);
@@ -615,11 +639,16 @@ public final class Climber extends AbstractSubsystem {
             currentClimbStep = climbState.sensorClimb;
         }
 
-        gyroPitchVelocity = RobotTracker.getInstance().getGyro().getPitch() - lastGyroPitch / Constants.CLIMBER_PERIOD;
-        gyroRollVelocity = RobotTracker.getInstance().getGyro().getRoll() - lastGyroRoll / Constants.CLIMBER_PERIOD;
+        double lastGyroRollVelocity = gyroRollVelocity;
+
+        gyroPitchVelocity = (RobotTracker.getInstance().getGyro().getPitch() - lastGyroPitch) / ((double) CLIMBER_PERIOD / 1000);
+        gyroRollVelocity = (RobotTracker.getInstance().getGyro().getRoll() - lastGyroRoll) / ((double) CLIMBER_PERIOD / 1000);
 
         lastGyroPitch = RobotTracker.getInstance().getGyro().getPitch();
         lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
+
+        gyroRollAccel = (gyroRollVelocity - lastGyroRollVelocity) / ((double) CLIMBER_PERIOD / 1000);
+
 
         if (!isPaused) {
             if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
@@ -639,6 +668,7 @@ public final class Climber extends AbstractSubsystem {
                 if (!ranEndAction) currentClimbStep.endAction.accept(this);
 
                 climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
+                if (climbState == ClimbState.IDLE) climbState = ClimbState.START_CLIMB;
 
                 if (sensorClimb) {
                     currentClimbStep = climbState.positionClimb;
@@ -691,6 +721,18 @@ public final class Climber extends AbstractSubsystem {
         return climbState;
     }
 
+    public boolean isPivotingArmLatched() {
+        return isPivotingArmLatchedSwitchA() && isElevatorArmContactSwitchB();
+    }
+
+    public boolean isPivotingArmLatchedSwitchA() {
+        return !pivotingArmLatchedSwitchA.get();
+    }
+
+    public boolean isElevatorArmContactSwitchB() {
+        return !pivotingArmLatchedSwitchB.get();
+    }
+
     @Override
     public void logData() {
         logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
@@ -705,8 +747,8 @@ public final class Climber extends AbstractSubsystem {
         logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get());
         logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get());
         logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
-        logData("Pivoting Arm Contact Switch A", pivotingArmLatchedSwitchA.get());
-        logData("Pivoting Arm Contact Switch B", pivotingArmLatchedSwitchB.get());
+        logData("Pivoting Arm Contact Switch A", isPivotingArmLatchedSwitchA());
+        logData("Pivoting Arm Contact Switch B", isElevatorArmContactSwitchB());
 
         logData("Pivot Solenoid State", getPivotState().toString());
         logData("Latch Solenoid State", getClawState().toString());
@@ -716,6 +758,7 @@ public final class Climber extends AbstractSubsystem {
         logData("Gyro Pitch Velocity", gyroPitchVelocity);
         logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll());
         logData("Gyro Roll Velocity", gyroRollVelocity);
+        logData("Gyro Roll Acceleration", gyroRollAccel);
 
         logData("Climber Is Paused", isPaused);
         logData("Climber Is Step By Step", sensorClimb);

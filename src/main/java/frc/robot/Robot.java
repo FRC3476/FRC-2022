@@ -236,13 +236,13 @@ public class Robot extends TimedRobot {
         robotTracker.resetPosition(new Pose2d());
         limelight.setLedMode(Limelight.LedMode.OFF);
 
-        NetworkTableInstance.getDefault().setUpdateRate(0.05);
-
         while (loadingAutos) {
             Thread.onSpinWait();
         }
         System.out.println(
                 "Finished loading autos in " + ((double) (System.currentTimeMillis() - startDeserializeTime)) / 1000.0);
+
+        NetworkTableInstance.getDefault().setUpdateRate(0.05);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -456,10 +456,10 @@ public class Robot extends TimedRobot {
 
         if (stick.getRawButton(11)) {
             System.out.println("going up");
-            climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+            climber.setClimberMotor(0.5);
         } else if (stick.getRawButton(12)) {
             System.out.println("going down");
-            climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+            climber.setClimberMotor(-0.5);
         } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
             climber.setClimberMotor(0);
         }
@@ -478,7 +478,7 @@ public class Robot extends TimedRobot {
         } else if (buttonPanel.getFallingEdge(9)) {
             climber.pauseClimb();
         } else if (buttonPanel.getRawButton(9)) {
-            drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
+            //drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
         }
 
         if (buttonPanel.getRisingEdge(11)) {
@@ -583,6 +583,7 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
         drive.configCoast();
+        climber.configCoast();
     }
 
     /**
