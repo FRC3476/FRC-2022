@@ -154,7 +154,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (Math.abs(gyro.getRoll()) < 5 && Math.abs(cl.gyroRollVelocity) < 0.1) {
+                            if (Math.abs(gyro.getRoll()) < 5 && Math.abs(cl.gyroRollVelocity) < 2) {
                                 return true;
                             } else {
                                 return gyro.getRoll() > 10 && cl.gyroRollVelocity < 0.1; //TODO: Tune these values
@@ -334,8 +334,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return gyro.getRoll() < 40.5 && Math.abs(
-                                    cl.gyroRollVelocity) < 0.1; //TODO: Tune these values
+                            return gyro.getRoll() < 40.5 && Math.abs(cl.gyroRollVelocity) < 2.5; //TODO: Tune these values
                         },
                         (cl) -> {}
                 ),
@@ -346,9 +345,11 @@ public final class Climber extends AbstractSubsystem {
                         },
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (gyro.getRoll() < 41 && Math.abs(cl.gyroRollVelocity) < 0.1) {
+                            if (gyro.getRoll() < 41 && Math.abs(cl.gyroRollVelocity) < 2.5) {
                                 if (cl.data > Timer.getFPGATimestamp() + 0.3) cl.data = Timer.getFPGATimestamp() + 0.3;
                                 return cl.data < Timer.getFPGATimestamp();
+                            } else {
+                                cl.data = Double.MAX_VALUE;
                             }
                             return false;
                         },
