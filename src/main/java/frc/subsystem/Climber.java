@@ -76,6 +76,7 @@ public final class Climber extends AbstractSubsystem {
     private double pausedClimberSetpoint;
     private ControlMode pausedClimberMode;
 
+    private boolean sensorClimb = true;
     private boolean stepByStep = true;
     private boolean advanceStep = false;
     private boolean skipChecks = false;
@@ -256,7 +257,10 @@ public final class Climber extends AbstractSubsystem {
         WAIT_TILL_EXTENSION_IS_SAFE(
                 new ClimbStep(
                         (cl) -> {},
-                        (cl) -> cl.gyroPitchVelocity < 0, // TODO: tune these values
+                        (cl) -> {
+                            AHRS gyro = RobotTracker.getInstance().getGyro();
+                            return cl.gyroPitchVelocity < 0 && gyro.getRoll() > 42.5;
+                        }, // TODO: tune these values
                         (cl) -> {}
                 ),
 
@@ -318,8 +322,8 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return Math.abs(gyro.getPitch() - 20) < 4 && Math.abs(
-                                    cl.gyroPitchVelocity) < 0.1; //TODO: Tune these values
+                            return Math.abs(gyro.getPitch() - 40.5) < 1 && Math.abs(
+                                    cl.gyroRollVelocity) < 0.1; //TODO: Tune these values
                         },
                         (cl) -> {}
                 ),
@@ -379,23 +383,23 @@ public final class Climber extends AbstractSubsystem {
         );
 
         /**
-         * @param automatic  The climb step to use when doing an automatic climb
-         * @param stepByStep The climb step to use when doing a manual climb, step by step
+         * @param sensorClimb   The climb step to use when doing an automatic climb
+         * @param positionClimb The climb step to use when doing a manual climb, step by step
          */
-        ClimbState(ClimbStep automatic, ClimbStep stepByStep) {
-            this.automatic = automatic;
-            this.stepByStep = stepByStep;
+        ClimbState(ClimbStep sensorClimb, ClimbStep positionClimb) {
+            this.sensorClimb = sensorClimb;
+            this.positionClimb = positionClimb;
         }
 
         /**
          * The climb step to use when doing an automatic climb
          */
-        final ClimbStep automatic;
+        final ClimbStep sensorClimb;
 
         /**
          * The climb step to use when doing a manual climb, step by step
          */
-        final ClimbStep stepByStep;
+        final ClimbStep positionClimb;
     }
 
     double otherPivotingArmMustContactByTime = Double.MAX_VALUE;
@@ -459,6 +463,8 @@ public final class Climber extends AbstractSubsystem {
         climberMotor.configPeakOutputReverse(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
         climberMotor.setNeutralMode(NeutralMode.Brake);
         climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
+                Constants.CLIMBER_CURRENT_LIMIT, 0));
+        climberMotor2.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
                 Constants.CLIMBER_CURRENT_LIMIT, 0));
 
         climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 20); // Default is 10ms
@@ -578,27 +584,35 @@ public final class Climber extends AbstractSubsystem {
     }
 
     /**
-     * @param stepByStep set to true to enable step-by-step mode.
+     * @param sensorClimb set to true to enable step-by-step mode.
      */
+    public synchronized void setSensorClimb(boolean sensorClimb) {
+        this.sensorClimb = sensorClimb;
+    }
+
     public synchronized void setStepByStep(boolean stepByStep) {
         this.stepByStep = stepByStep;
+    }
+
+    public synchronized boolean isStepByStep() {
+        return stepByStep;
     }
 
     /**
      * @return true if the climber is in step-by-step mode
      */
-    public synchronized boolean isStepByStep() {
-        return stepByStep;
+    public synchronized boolean isSensorClimb() {
+        return sensorClimb;
     }
 
     @Override
     public synchronized void update() {
         ClimbStep currentClimbStep;
 
-        if (stepByStep) {
-            currentClimbStep = climbState.stepByStep;
+        if (sensorClimb) {
+            currentClimbStep = climbState.positionClimb;
         } else {
-            currentClimbStep = climbState.automatic;
+            currentClimbStep = climbState.sensorClimb;
         }
 
         gyroPitchVelocity = RobotTracker.getInstance().getGyro().getPitch() - lastGyroPitch / Constants.CLIMBER_PERIOD;
@@ -621,15 +635,15 @@ public final class Climber extends AbstractSubsystem {
                 ranEndAction = true;
             }
 
-            if (skipChecks || currentClimbStep.waitCondition.apply(this)) {
-                //if (!ranEndAction) currentClimbState.endAction.accept(this);
+            if (skipChecks || (currentClimbStep.waitCondition.apply(this) && !stepByStep)) {
+                if (!ranEndAction) currentClimbStep.endAction.accept(this);
 
                 climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
 
-                if (stepByStep) {
-                    currentClimbStep = climbState.stepByStep;
+                if (sensorClimb) {
+                    currentClimbStep = climbState.positionClimb;
                 } else {
-                    currentClimbStep = climbState.automatic;
+                    currentClimbStep = climbState.sensorClimb;
                 }
 
                 currentClimbStep.startAction.accept(this);
@@ -704,14 +718,26 @@ public final class Climber extends AbstractSubsystem {
         logData("Gyro Roll Velocity", gyroRollVelocity);
 
         logData("Climber Is Paused", isPaused);
-        logData("Climber Is Step By Step", stepByStep);
+        logData("Climber Is Step By Step", sensorClimb);
         logData("Current Climber State", climbState.toString());
 
-        if (stepByStep) {
-            logData("Current Climber WaitCondition", climbState.stepByStep.waitCondition.apply(this));
+        if (sensorClimb) {
+            logData("Current Climber WaitCondition", climbState.positionClimb.waitCondition.apply(this));
         } else {
-            logData("Current Climber WaitCondition", climbState.automatic.waitCondition.apply(this));
+            logData("Current Climber WaitCondition", climbState.sensorClimb.waitCondition.apply(this));
         }
+    }
+
+    public void configCoast() {
+        climberMotor.setNeutralMode(NeutralMode.Coast);
+        climberMotor2.setNeutralMode(NeutralMode.Coast);
+        setBrakeState(BrakeState.FREE);
+    }
+
+    public void configBrake() {
+        climberMotor.setNeutralMode(NeutralMode.Coast);
+        climberMotor2.setNeutralMode(NeutralMode.Coast);
+        setBrakeState(BrakeState.BRAKING);
     }
 
 

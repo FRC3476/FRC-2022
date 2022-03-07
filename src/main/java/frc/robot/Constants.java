@@ -390,7 +390,7 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
     public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1;
 
-    public static final int CLIMBER_CURRENT_LIMIT = 30;
+    public static final int CLIMBER_CURRENT_LIMIT = 22;
 
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 1;
@@ -466,7 +466,7 @@ public final class Constants {
     /**
      * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = 24.78 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 2.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause

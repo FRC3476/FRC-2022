@@ -272,6 +272,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        climber.configBrake();
         enabled.setBoolean(true);
         drive.configBrake();
         drive.resetAuto();
@@ -336,6 +337,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
+        climber.configBrake();
         enabled.setBoolean(true);
         useFieldRelative = true;
         SmartDashboard.putBoolean("Field Relative Enabled", true);
@@ -484,9 +486,9 @@ public class Robot extends TimedRobot {
         }
 
 
-//        if (buttonPanel.getRisingEdge(10)) {
-//            climber.setStepByStep(!climber.isStepByStep());
-//        }
+        if (buttonPanel.getRisingEdge(10)) {
+            climber.setStepByStep(!climber.isStepByStep());
+        }
 
         if (stick.getRisingEdge(3)) {
             climber.deployClimb();
