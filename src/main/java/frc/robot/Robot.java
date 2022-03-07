@@ -445,7 +445,7 @@ public class Robot extends TimedRobot {
 //        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {
 //            visionManager.adjustShooterHoodBias(0.5);
 //        }
-
+        
         if (stick.getRisingEdge(9)) {
             climber.toggleClaw();
         }
@@ -594,6 +594,25 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
+
+        // Climber Test Controls
+        if (stick.getRisingEdge(9)) {
+            climber.toggleClaw();
+        }
+
+        if (stick.getRisingEdge(10)) {
+            climber.togglePivot();
+        }
+
+        if (stick.getRawButton(11)) {
+            System.out.println("going up");
+            climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        } else if (stick.getRawButton(12)) {
+            System.out.println("going down");
+            climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
+            climber.setClimberMotor(0);
+        }
 
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
 
