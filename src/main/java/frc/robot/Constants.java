@@ -249,7 +249,7 @@ public final class Constants {
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 300;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 150;
 
     public static final double SHOOTER_TOP_EJECT_SPEED = 800;
     public static final double HOOD_TOP_EJECT_ANGLE = 50;
@@ -282,7 +282,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.00;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;
@@ -317,7 +317,7 @@ public final class Constants {
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in degrees
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = 1;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 0.75;
 
     /**
      * If _ speed is under this value, hood has stopped
@@ -431,7 +431,7 @@ public final class Constants {
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
      */
-    public static final double ARM_PIVOT_DURATION = 0.5;
+    public static final double ARM_PIVOT_DURATION = 1;
 
     /**
      * How long it takes for the pivot pneumatic to close (become inline) (in seconds)
@@ -441,7 +441,7 @@ public final class Constants {
     /**
      * How long it takes for the latch pneumatic on the pivot arm to unlatch (in seconds)
      */
-    public static final double PIVOT_ARM_UNLATCH_DURATION = 0.5;
+    public static final double PIVOT_ARM_UNLATCH_DURATION = 0.3;
 
     /**
      * Amount (relative) to move the climber arm up to unlatch the elevator arm.

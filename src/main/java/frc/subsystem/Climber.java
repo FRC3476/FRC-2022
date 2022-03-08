@@ -168,7 +168,7 @@ public final class Climber extends AbstractSubsystem {
                             if (Math.abs(gyro.getRoll()) < 5 && Math.abs(cl.gyroRollVelocity) < 2) {
                                 return true;
                             } else {
-                                return gyro.getRoll() > 10 && cl.gyroRollVelocity < 0.1; //TODO: Tune these values
+                                return gyro.getRoll() > 30 && cl.gyroRollVelocity < 0.1; //TODO: Tune these values
                             }
                         },
                         (cl) -> {},
@@ -192,7 +192,7 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> {
-                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
+                            cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
                             cl.setClawState(ClawState.UNLATCHED);
                         },
                         (cl) -> Math.abs(
@@ -217,9 +217,9 @@ public final class Climber extends AbstractSubsystem {
                 new ClimbStep(
                         (cl) -> {
                             cl.setClawState(ClawState.LATCHED);
-                            cl.data = Timer.getFPGATimestamp() + 1;
+                            cl.data = Timer.getFPGATimestamp() + 0.0;
                         },
-                        (cl) -> Timer.getFPGATimestamp() > cl.data,
+                        (cl) -> Timer.getFPGATimestamp() > cl.data && cl.isPivotingArmLatched(),
                         (cl) -> {},
                         true
                 )
@@ -234,7 +234,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {
                             //position when it is considered "unlatched"
                             cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
-                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
+                            cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
                         },
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
                                 !cl.elevatorArmContactSwitchA.get() && !cl.elevatorArmContactSwitchB.get(),
@@ -245,7 +245,7 @@ public final class Climber extends AbstractSubsystem {
                 new ClimbStep(
                         (cl) -> {
                             cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
-                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
+                            cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
                         },
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {},
@@ -312,14 +312,14 @@ public final class Climber extends AbstractSubsystem {
          */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
                 new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION),
+                        (cl) -> cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION),
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {},
                         true
                 ),
 
                 new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.Position, Constants.MAX_CLIMBER_EXTENSION),
+                        (cl) -> cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION),
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {},
                         true
@@ -373,8 +373,8 @@ public final class Climber extends AbstractSubsystem {
                         },
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (gyro.getRoll() < 41 && Math.abs(cl.gyroRollVelocity) < 2.5) {
-                                if (cl.data > Timer.getFPGATimestamp() + 0.3) cl.data = Timer.getFPGATimestamp() + 0.3;
+                            if (gyro.getRoll() < 41 && Math.abs(cl.gyroRollVelocity) < 8) {
+                                if (cl.data > Timer.getFPGATimestamp() + 0.2) cl.data = Timer.getFPGATimestamp() + 0.2;
                                 return cl.data < Timer.getFPGATimestamp();
                             } else {
                                 cl.data = Double.MAX_VALUE;
@@ -399,7 +399,7 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> {
-                            cl.climberMotor.set(ControlMode.Position, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION);
+                            cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION);
                             Drive.getInstance().setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
                         },
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() - (0.3 * CLIMBER_ENCODER_TICKS_PER_INCH) < CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION,
@@ -534,6 +534,10 @@ public final class Climber extends AbstractSubsystem {
         climberMotor.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
         climberMotor.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
 
+        climberMotor.configMotionAcceleration(15 * CLIMBER_ENCODER_TICKS_PER_INCH);
+        climberMotor.configMotionCruiseVelocity(48 * CLIMBER_ENCODER_TICKS_PER_INCH);
+        climberMotor.configClosedloopRamp(0);
+
         climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
         climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 100); // Default is 10ms
         climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
@@ -578,6 +582,7 @@ public final class Climber extends AbstractSubsystem {
         setBrakeState(BrakeState.BRAKING);
         timesRun = 0;
         hasStalledIntoBottom = false;
+        minRunTime = -1;
     }
 
     /**
@@ -603,7 +608,7 @@ public final class Climber extends AbstractSubsystem {
      * It sets the motor to Position Control mode and sets the setpoint to the current position.
      */
     private synchronized void stopClimberMotor() {
-        climberMotor.set(ControlMode.Position, climberMotor.getSelectedSensorPosition());
+        climberMotor.set(ControlMode.MotionMagic, climberMotor.getSelectedSensorPosition());
     }
 
     /**
@@ -620,7 +625,7 @@ public final class Climber extends AbstractSubsystem {
      * Sets the climber in the correct state to initiate a climb and moves the elevator arm to the up above the high bar.
      */
     public synchronized void deployClimb() {
-        climberMotor.set(ControlMode.Position, Constants.CLIMBER_DEPLOY_HEIGHT);
+        climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_DEPLOY_HEIGHT);
         setBrakeState(BrakeState.FREE);
         setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
@@ -739,18 +744,20 @@ public final class Climber extends AbstractSubsystem {
     }
 
     boolean hasStalledIntoBottom = false;
+    private double minRunTime = -1;
 
     /**
      * moves the climber down until it stall at the bottom. Press reset button to run again.
      */
     public synchronized void stallIntoBottom() {
+        if (minRunTime == -1) minRunTime = Timer.getFPGATimestamp() + 0.2;
         if (hasStalledIntoBottom) {
             setClimberMotor(0);
         } else {
-            setClimberMotor(-0.3);
+            setClimberMotor(-0.1);
         }
 
-        if (climberMotor.getStatorCurrent() > 12) {
+        if (Math.abs(climberMotor.getStatorCurrent()) > 12 && Timer.getFPGATimestamp() > minRunTime) {
             hasStalledIntoBottom = true;
             climberMotor.setSelectedSensorPosition(0);
             setClimberMotor(0);
@@ -789,11 +796,11 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public boolean isPivotingArmLatchedSwitchA() {
-        return !pivotingArmLatchedSwitchA.get();
+        return pivotingArmLatchedSwitchA.get();
     }
 
     public boolean isElevatorArmContactSwitchB() {
-        return !pivotingArmLatchedSwitchB.get();
+        return pivotingArmLatchedSwitchB.get();
     }
 
     @Override
@@ -812,6 +819,7 @@ public final class Climber extends AbstractSubsystem {
         logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
         logData("Pivoting Arm Contact Switch A", isPivotingArmLatchedSwitchA());
         logData("Pivoting Arm Contact Switch B", isElevatorArmContactSwitchB());
+        logData("Pivoting Arm Latched", isPivotingArmLatched());
 
         logData("Pivot Solenoid State", getPivotState().toString());
         logData("Latch Solenoid State", getClawState().toString());
@@ -824,8 +832,10 @@ public final class Climber extends AbstractSubsystem {
         logData("Gyro Roll Acceleration", gyroRollAccel);
 
         logData("Climber Is Paused", isPaused);
-        logData("Climber Is Step By Step", sensorClimb);
+        logData("Climber Is Step By Step", stepByStep);
         logData("Current Climber State", climbState.toString());
+        logData("Climb Times Run", timesRun);
+
 
         if (sensorClimb) {
             logData("Current Climber WaitCondition", climbState.positionClimb.waitCondition.apply(this));
