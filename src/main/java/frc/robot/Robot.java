@@ -638,7 +638,6 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
         drive.configCoast();
-        climber.configCoast();
     }
 
     /**
@@ -665,10 +664,16 @@ public class Robot extends TimedRobot {
         } else if (stick.getRawButton(12)) {
             System.out.println("going down");
             climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
+        } else if (buttonPanel.getRawButton(9)) {
+            climber.stallIntoBottom();
+        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12) || buttonPanel.getFallingEdge(9)) {
             climber.setClimberMotor(0);
         }
 
+        if (buttonPanel.getRisingEdge(11)) {
+            climber.stopClimb();
+        }
+        
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
 
             // Makes sure that these two buttons are held down for one second before running process

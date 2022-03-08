@@ -577,6 +577,7 @@ public final class Climber extends AbstractSubsystem {
         climberMotor.set(ControlMode.PercentOutput, 0);
         setBrakeState(BrakeState.BRAKING);
         timesRun = 0;
+        hasStalledIntoBottom = false;
     }
 
     /**
@@ -735,6 +736,25 @@ public final class Climber extends AbstractSubsystem {
         climbState = ClimbState.IDLE;
         setBrakeState(Math.abs(percentOutput) < 1.0E-2 ? BrakeState.BRAKING : BrakeState.FREE);
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
+    }
+
+    boolean hasStalledIntoBottom = false;
+
+    /**
+     * moves the climber down until it stall at the bottom. Press reset button to run again.
+     */
+    public synchronized void stallIntoBottom() {
+        if (hasStalledIntoBottom) {
+            setClimberMotor(0);
+        } else {
+            setClimberMotor(-0.3);
+        }
+
+        if (climberMotor.getStatorCurrent() > 12) {
+            hasStalledIntoBottom = true;
+            climberMotor.setSelectedSensorPosition(0);
+            setClimberMotor(0);
+        }
     }
 
     /**
