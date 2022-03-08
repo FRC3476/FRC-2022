@@ -43,7 +43,7 @@ public final class Hopper extends AbstractSubsystem {
     }
 
     public enum HopperState {
-        ON, OFF, REVERSE
+        ON, OFF, REVERSE, SLOW
     }
 
     HopperState wantedHopperState = HopperState.OFF;
@@ -122,6 +122,10 @@ public final class Hopper extends AbstractSubsystem {
                 break;
             case REVERSE:
                 hopperMotor.set(-Constants.HOPPER_SPEED);
+                Shooter.getInstance().runFeederWheelReversed = false;
+                break;
+            case SLOW:
+                hopperMotor.set(Constants.HOPPER_SPEED / 2);
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
         }

@@ -221,7 +221,11 @@ public final class VisionManager extends AbstractSubsystem {
             bypassAimCheckUntil = 0;
             lastChecksFailedTime = Timer.getFPGATimestamp();
         }
-        Hopper.getInstance().setHopperState(HopperState.ON);
+        if (getDistanceToTarget() > 160) {
+            Hopper.getInstance().setHopperState(HopperState.SLOW);
+        } else {
+            Hopper.getInstance().setHopperState(HopperState.ON);
+        }
 
         logData("Last Shooter Checks Failed Time", Timer.getFPGATimestamp() - lastChecksFailedTime);
     }
