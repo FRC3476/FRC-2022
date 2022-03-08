@@ -85,7 +85,7 @@ public final class Climber extends AbstractSubsystem {
     private ControlMode pausedClimberMode;
 
     private boolean sensorClimb = true;
-    private boolean stepByStep = true;
+    private boolean stepByStep = false;
     private boolean advanceStep = false;
     private boolean skipChecks = false;
     private boolean ranEndAction = false;
