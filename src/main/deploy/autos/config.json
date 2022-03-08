@@ -1,6 +1,6 @@
 {
   "scriptMethods" : [ "print", "sleep" ],
-  "selectedAuto" : "C:\\Users\\varun\\Documents\\GitHub\\FRC-2022\\src\\main\\deploy\\autos\\shootandmovelower.json",
+  "selectedAuto" : "C:\\Users\\varun\\Documents\\GitHub\\FRC-2022\\src\\main\\deploy\\autos\\shootandmoveright.json",
   "selectedShooterConfig" : "shooterconfig.json",
   "teamNumber" : 3476,
   "robotLength" : 0.9398,
@@ -10,7 +10,7 @@
   "originY" : -1080.0,
   "pathingConfig" : {
     "maxVelocityMetersPerSecond" : 3.0,
-    "maxAccelerationMetersPerSecondSq" : 2.0,
+    "maxAccelerationMetersPerSecondSq" : 4.0,
     "trajectoryConstraints" : [ {
       "type" : "CentripetalAccelerationConstraint",
       "maxCentripetalAccelerationMetersPerSecondSq" : 2.032
@@ -31,10 +31,10 @@
           "y" : -0.307975
         } ]
       },
-      "maxSpeedMetersPerSecond" : 3.0
+      "maxSpeedMetersPerSecond" : 3.1
     } ]
   },
-  "networkTablesEnabled" : false,
+  "networkTablesEnabled" : true,
   "robotCodeDataFile" : "robotCodeData.json",
   "useReflection" : true,
   "isHolonomic" : true,
