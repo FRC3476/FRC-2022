@@ -427,7 +427,7 @@ public class Robot extends TimedRobot {
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
-        } else if (buttonPanel.getRisingEdge(6)) {
+        } else if (buttonPanel.getRawButton(6)) {
             shooter.setSpeed(Constants.SHOOTER_TOP_EJECT_SPEED);
             shooter.setHoodPosition(Constants.HOOD_TOP_EJECT_ANGLE);
             shooter.setFiring(true);
