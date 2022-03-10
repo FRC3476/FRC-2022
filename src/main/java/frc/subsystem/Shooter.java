@@ -605,6 +605,8 @@ public final class Shooter extends AbstractSubsystem {
                 -(-hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
+    double nextAllowedShooterTime = 0;
+
 
     /**
      * Update Method for Shooter.
@@ -658,14 +660,24 @@ public final class Shooter extends AbstractSubsystem {
                     moveHoodMotor(); // Sets Motor to travel to desired hood angle
                 }
 
-                // Checks to see if feeder wheel is enabled forward, if hoodMotor had finished moving, and if shooterWheel
-                // is at target speed. Will also enable if feeder wheel is enabled forward and checks are disabled
-                if ((feederWheelState == FeederWheelState.FORWARD) && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed()) || feederChecksDisabled)) {
+                if (nextAllowedShooterTime > Timer.getFPGATimestamp() + 0.5) {
+                    //Check to make sure we don't accidentally do anything dumb and prevent us from shooting
+                    nextAllowedShooterTime = Timer.getFPGATimestamp();
+                }
+
+                if ((feederWheelState == FeederWheelState.FORWARD)
+                        && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
+                        && (Timer.getFPGATimestamp() > nextAllowedShooterTime
+                        || VisionManager.getInstance().getDistanceToTarget() < 150)
+                        || feederChecksDisabled)
+                ) {
+
 
                     // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                     feederLockPosition = feederWheel.getSelectedSensorPosition();
+                    nextAllowedShooterTime = Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY;
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > forceFeederOnTime) {

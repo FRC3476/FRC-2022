@@ -221,11 +221,8 @@ public final class VisionManager extends AbstractSubsystem {
             bypassAimCheckUntil = 0;
             lastChecksFailedTime = Timer.getFPGATimestamp();
         }
-        if (getDistanceToTarget() > 160) {
-            Hopper.getInstance().setHopperState(HopperState.SLOW);
-        } else {
-            Hopper.getInstance().setHopperState(HopperState.ON);
-        }
+
+        Hopper.getInstance().setHopperState(HopperState.ON);
 
         logData("Last Shooter Checks Failed Time", Timer.getFPGATimestamp() - lastChecksFailedTime);
     }
@@ -273,7 +270,7 @@ public final class VisionManager extends AbstractSubsystem {
     /**
      * @return Distance to the target in meters
      */
-    private double getDistanceToTarget() {
+    public double getDistanceToTarget() {
         double distanceToTarget;
         if (limelight.isTargetVisible()) {
             distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
