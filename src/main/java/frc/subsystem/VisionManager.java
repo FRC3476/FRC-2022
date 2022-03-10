@@ -7,6 +7,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
@@ -197,28 +198,17 @@ public final class VisionManager extends AbstractSubsystem {
         }
     }
 
-    double bypassAimCheckUntil = 0;
-
     double lastChecksFailedTime = 0;
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative, getAllowedTurnError());
 
-        if (drive.getSpeedSquared() > Constants.MAX_SHOOT_SPEED_SQUARED) {
-            bypassAimCheckUntil = 0;
-        }
-
-        if ((!drive.isAiming())
-                && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
-            if (limelight.isTargetVisible()) {
-                bypassAimCheckUntil = Timer.getFPGATimestamp() + 0.05;
-            }
-            shooter.setFiring(true);
+        if ((!drive.isAiming()) && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
+            shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
             if (!shooter.isFiring()) {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
             }
         } else {
-            bypassAimCheckUntil = 0;
             lastChecksFailedTime = Timer.getFPGATimestamp();
         }
 
