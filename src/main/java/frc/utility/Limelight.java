@@ -230,7 +230,7 @@ public final class Limelight {
      */
     public double getDistance() {
         if (isTargetVisible()) {
-            return 68.728 / (Math.tan(Math.toRadians(57.952 + getVerticalOffset())) - 0.324129);
+            return 63.2878 / (Math.tan(Math.toRadians(61.2839 + getVerticalOffset())) - 0.409064);
         } else {
             return 0;
         }

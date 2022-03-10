@@ -199,16 +199,28 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     double lastChecksFailedTime = 0;
+    double lastPrintTime = 0;
+    boolean checksPassedLastTime = false;
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative, getAllowedTurnError());
 
         if ((!drive.isAiming()) && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
             shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
-            if (!shooter.isFiring()) {
+            if (shooter.isFiring()) {
+                if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
+                    lastPrintTime = Timer.getFPGATimestamp();
+                    checksPassedLastTime = true;
+                    System.out.println(
+                            "Shooting at " + (150 - DriverStation.getMatchTime()) + " "
+                                    + visionLookUpTable.getShooterPreset(Units.metersToInches(getDistanceToTarget())));
+                }
+            } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
+                checksPassedLastTime = false;
             }
         } else {
+            checksPassedLastTime = false;
             lastChecksFailedTime = Timer.getFPGATimestamp();
         }
 
