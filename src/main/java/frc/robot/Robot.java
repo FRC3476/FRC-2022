@@ -249,7 +249,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(BUDDY_AUTO_LEFT, BUDDY_AUTO_LEFT);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
-        sideChooser.addOption(BLUE, BLUE);
+        sideChooser.addOption(RED, RED);
 
         SmartDashboard.putData("Auto choices", autoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);

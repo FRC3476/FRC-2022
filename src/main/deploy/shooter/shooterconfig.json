@@ -1,88 +1,71 @@
 {
   "shooterConfigs" : [ {
-    "hoodEjectAngle": 68.0,
-    "flywheelSpeed": 1800.0,
-    "distance": 40.0
-  },
-    {
-      "hoodEjectAngle": 62.0,
-      "flywheelSpeed": 1750.0,
-      "distance": 60.0
-    },
-    {
-      "hoodEjectAngle": 56.0,
-      "flywheelSpeed": 1800.0,
-      "distance": 82.0
-    },
-    {
-      "hoodEjectAngle": 56.0,
-      "flywheelSpeed": 2000.0,
-      "distance": 106.0
-    },
-    {
-      "hoodEjectAngle": 53.0,
-      "flywheelSpeed": 2100.0,
-      "distance": 115.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2100.0,
-      "distance": 120.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2100.0,
-      "distance": 133.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2250.0,
-      "distance": 144.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2250.0,
-      "distance": 157.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2300.0,
-      "distance": 175.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2400.0,
-      "distance": 190.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2500.0,
-      "distance": 200.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2700.0,
-      "distance": 210.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2800.0,
-      "distance": 225.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 2850.0,
-      "distance": 250.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 3000.0,
-      "distance": 270.0
-    },
-    {
-      "hoodEjectAngle": 51.0,
-      "flywheelSpeed": 3000.0,
-      "distance": 299.0
-    }
-  ]
+    "hoodEjectAngle" : 68.0,
+    "flywheelSpeed" : 1800.0,
+    "distance" : 40.0
+  }, {
+    "hoodEjectAngle" : 62.0,
+    "flywheelSpeed" : 1750.0,
+    "distance" : 60.0
+  }, {
+    "hoodEjectAngle" : 56.0,
+    "flywheelSpeed" : 1800.0,
+    "distance" : 82.0
+  }, {
+    "hoodEjectAngle" : 56.0,
+    "flywheelSpeed" : 2000.0,
+    "distance" : 106.0
+  }, {
+    "hoodEjectAngle" : 53.0,
+    "flywheelSpeed" : 2000.0,
+    "distance" : 115.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2000.0,
+    "distance" : 120.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2100.0,
+    "distance" : 133.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2200.0,
+    "distance" : 144.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2300.0,
+    "distance" : 157.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2350.0,
+    "distance" : 175.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2460.0,
+    "distance" : 190.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2450.0,
+    "distance" : 200.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2500.0,
+    "distance" : 210.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2550.0,
+    "distance" : 225.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2650.0,
+    "distance" : 250.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 3000.0,
+    "distance" : 270.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 3000.0,
+    "distance" : 299.0
+  } ]
 }

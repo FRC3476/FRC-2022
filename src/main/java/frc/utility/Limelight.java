@@ -127,7 +127,7 @@ public final class Limelight {
      * @return Horizontal Offset From Crosshair To Target (LL1: -27 degrees to 27 degrees | LL2: -29.8 to 29.8 degrees)
      */
     public double getHorizontalOffset() {
-        return limelightTable.getEntry("tx").getDouble(0);
+        return limelightTable.getEntry("tx").getDouble(0) - 1;
     }
 
     /**
