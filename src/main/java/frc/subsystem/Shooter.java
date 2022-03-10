@@ -605,7 +605,7 @@ public final class Shooter extends AbstractSubsystem {
                 -(-hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
-    double nextAllowedShooterTime = 0;
+    double nextAllowedShootTime = 0;
 
 
     /**
@@ -660,24 +660,22 @@ public final class Shooter extends AbstractSubsystem {
                     moveHoodMotor(); // Sets Motor to travel to desired hood angle
                 }
 
-                if (nextAllowedShooterTime > Timer.getFPGATimestamp() + 0.5) {
-                    //Check to make sure we don't accidentally do anything dumb and prevent us from shooting
-                    nextAllowedShooterTime = Timer.getFPGATimestamp();
+                if (nextAllowedShootTime > Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY + 0.2) {
+                    //Check to make sure we don't accidentally do anything dumb and prevent us from shooting. It checks if the
+                    //nextAllowedShootTime is greater than the current time plus the delay time which should never happen
+                    nextAllowedShootTime = Timer.getFPGATimestamp();
                 }
 
                 if ((feederWheelState == FeederWheelState.FORWARD)
                         && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
-                        && (Timer.getFPGATimestamp() > nextAllowedShooterTime
+                        && (Timer.getFPGATimestamp() > nextAllowedShootTime
                         || VisionManager.getInstance().getDistanceToTarget() < 150)
                         || feederChecksDisabled)
                 ) {
-
-
-                    // Set Feeder wheel to MAX speed
                     feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
-                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                     feederLockPosition = feederWheel.getSelectedSensorPosition();
-                    nextAllowedShooterTime = Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY;
+                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
+                    nextAllowedShootTime = Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY;
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > forceFeederOnTime) {
