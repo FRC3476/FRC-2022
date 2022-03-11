@@ -62,6 +62,9 @@ public class Robot extends TimedRobot {
     final @NotNull NetworkTableEntry shooterConfigStatusIdEntry = instance.getTable("limelightgui").getEntry(
             "shooterconfigStatusId");
 
+    final @NotNull NetworkTableEntry selectedAutoFeedback = SmartDashboard.getEntry("Selected Auto Feedback");
+
+
     private final @NotNull Lock networkAutoLock = new ReentrantLock();
     NetworkAuto networkAuto = null;
 
@@ -298,6 +301,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        startSubsystems();
         climber.configBrake();
         enabled.setBoolean(true);
         drive.configBrake();
@@ -306,7 +310,7 @@ public class Robot extends TimedRobot {
         networkAutoLock.lock();
         try {
             if (networkAuto == null) {
-                System.out.println("Using normal autos");
+                System.out.println("Using normal autos: " + sideChooser.getSelected());
                 String auto = autoChooser.getSelected();
                 if (sideChooser.getSelected().equals(BLUE)) {
                     switch (auto) {
@@ -392,6 +396,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
+        startSubsystems();
         climber.configBrake();
         enabled.setBoolean(true);
         useFieldRelative = true;
