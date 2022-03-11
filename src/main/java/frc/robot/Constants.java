@@ -283,7 +283,7 @@ public final class Constants {
      * The time that the feeder must be on before it is allowed to turn off
      */
     public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
-    public static final double SECOND_BALL_SHOOT_DELAY = 0.5;
+    public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;
