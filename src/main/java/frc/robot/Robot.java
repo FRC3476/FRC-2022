@@ -127,6 +127,9 @@ public class Robot extends TimedRobot {
     @NotNull private static final String SIX_BALL = "Six Ball";
     @NotNull private static final String BUDDY_AUTO_LEFT = "Buddy Auto Left";
     @NotNull private static final String BUDDY_AUTO_RIGHT = "Buddy Auto Right";
+    @NotNull private static final String SHOOT_ONLY_RIGHT = "Shoot Only Right";
+    @NotNull private static final String SHOOT_ONLY_MID = "Shoot Only Mid";
+    @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
 
     private static final String RESET_POSE = "Reset Pose";
 
@@ -250,6 +253,9 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(SIX_BALL, SIX_BALL);
         autoChooser.addOption(RESET_POSE, RESET_POSE);
         autoChooser.addOption(BUDDY_AUTO_LEFT, BUDDY_AUTO_LEFT);
+        autoChooser.addOption(SHOOT_ONLY_LEFT, SHOOT_ONLY_LEFT);
+        autoChooser.addOption(SHOOT_ONLY_MID, SHOOT_ONLY_MID);
+        autoChooser.addOption(SHOOT_ONLY_RIGHT, SHOOT_ONLY_RIGHT);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
@@ -332,6 +338,15 @@ public class Robot extends TimedRobot {
                         case RESET_POSE:
                             selectedAuto = new SetPositionCenter();
                             break;
+                        case SHOOT_ONLY_LEFT:
+                            selectedAuto = new ShootOnlyLeft();
+                            break;
+                        case SHOOT_ONLY_MID:
+                            selectedAuto = new ShootOnlyMid();
+                            break;
+                        case SHOOT_ONLY_RIGHT:
+                            selectedAuto = new ShootOnlyRight();
+                            break;
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
@@ -358,6 +373,15 @@ public class Robot extends TimedRobot {
                             break;
                         case RESET_POSE:
                             selectedAuto = new SetPositionCenter();
+                            break;
+                        case SHOOT_ONLY_LEFT:
+                            selectedAuto = new ShootOnlyLeft();
+                            break;
+                        case SHOOT_ONLY_MID:
+                            selectedAuto = new ShootOnlyMid();
+                            break;
+                        case SHOOT_ONLY_RIGHT:
+                            selectedAuto = new ShootOnlyRight();
                             break;
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
