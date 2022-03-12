@@ -67,8 +67,8 @@
     "flywheelSpeed" : 3000.0,
     "distance" : 270.0
   }, {
-    "hoodEjectAngle" : 51.0,
-    "flywheelSpeed" : 3000.0,
-    "distance" : 299.0
-  } ]
+      "hoodEjectAngle": 51.0,
+      "flywheelSpeed": 3200.0,
+      "distance": 299.0
+    } ]
 }
