@@ -1,7 +1,7 @@
 {
   "autonomousSteps" : [ {
     "type" : "script",
-    "script" : "Intake.setIntakeSolState OPEN\nIntake.setWantedIntakeState INTAKE\nHopper.setHopperState ON\nsleep 3500",
+    "script" : "Intake.setIntakeSolState OPEN\nIntake.setWantedIntakeState INTAKE\nHopper.setHopperState ON\nsleep 5000",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -24,7 +24,7 @@
         "reflection" : true
       }, {
         "methodName" : "sleep",
-        "args" : [ "3500" ],
+        "args" : [ "5000" ],
         "argTypes" : [ "long" ],
         "reflection" : false
       } ]
