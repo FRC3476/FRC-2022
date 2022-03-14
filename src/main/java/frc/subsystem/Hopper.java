@@ -3,12 +3,12 @@ package frc.subsystem;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.ColorMatch;
-import com.revrobotics.ColorSensorV3;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
+import frc.utility.colorsensor.PicoColorSensor;
+import frc.utility.colorsensor.PicoColorSensor.RawColor;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,12 +17,7 @@ import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 public final class Hopper extends AbstractSubsystem {
     public static @NotNull Hopper INSTANCE = new Hopper();
     private final @NotNull LazyCANSparkMax hopperMotor;
-    private final @NotNull ColorSensorV3 topBall;
-    //private final ColorSensorV3 bottomBall = new ColorSensorV3(Port.kMXP);
-
-    private boolean topBallDetected = false;
-    private boolean bottomBallDetected = false;
-
+    private final @NotNull PicoColorSensor colorSensor;
 
     /**
      * A Rev Color Match object is used to register and detect known colors. This can be calibrated ahead of time or during
@@ -37,6 +32,8 @@ public final class Hopper extends AbstractSubsystem {
      */
     private final Color blueTarget = new Color(0.184, 0.427, 0.39);
     private final Color redTarget = new Color(0.38, 0.41, 0.2);
+
+    private boolean ballDetected;
 
     public static Hopper getInstance() {
         return INSTANCE;
@@ -60,17 +57,21 @@ public final class Hopper extends AbstractSubsystem {
 
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
-        topBall = new ColorSensorV3(I2C.Port.kMXP);
+        colorSensor = new PicoColorSensor();
+    }
+
+    private Color convertRawColor(RawColor rawColor) {
+        return new Color(rawColor.red, rawColor.green, rawColor.blue);
     }
 
     public void checkBallColor() {
-        Color detectedColorTop = topBall.getColor();
+        Color detectedColorTop = convertRawColor(colorSensor.getRawColor0());
         //Color detectedColorBottom = bottomBall.getColor();
 
-        logData("Top Ball Red", detectedColorTop.red);
-        logData("Top Ball Green", detectedColorTop.green);
-        logData("Top Ball Blue", detectedColorTop.blue);
-        logData("Top Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
+        logData("Ball Red", detectedColorTop.red);
+        logData("Ball Green", detectedColorTop.green);
+        logData("Ball Blue", detectedColorTop.blue);
+        logData("Color Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
 
 //        logData("Bottom Red", detectedColorBottom.red);
 //        logData("Bottom Green", detectedColorBottom.green);
@@ -78,14 +79,14 @@ public final class Hopper extends AbstractSubsystem {
 //        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
 
         if (colorMatcher.matchClosestColor(detectedColorTop).color == redTarget) {
-            logData("Top Ball Color", "Red");
-            topBallDetected = true;
+            logData("Ball Color", "Red");
+            ballDetected = true;
         } else if (colorMatcher.matchClosestColor(detectedColorTop).color == blueTarget) {
-            logData("Top Ball Color", "Blue");
-            topBallDetected = true;
+            logData("Ball Color", "Blue");
+            ballDetected = true;
         } else {
-            logData("Top Ball Color", "No Ball Detected");
-            topBallDetected = false;
+            logData("Ball Color", "No Ball Detected");
+            ballDetected = false;
         }
 
 //        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
@@ -98,16 +99,6 @@ public final class Hopper extends AbstractSubsystem {
 //            logData("Bottom Ball Color", "No Ball Detected");
 //            bottomBallDetected = false;
 //        }
-    }
-
-    public void numberOfBalls() {
-        if (topBallDetected && bottomBallDetected) {
-            logData("Number of Balls", 2);
-        } else if (bottomBallDetected || topBallDetected) {
-            logData("Number of Balls", 1);
-        } else {
-            logData("Number of Balls", 0);
-        }
     }
 
     public void setHopperState(HopperState hopperState) {
@@ -131,11 +122,14 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
+    public boolean isBallDetected() {
+        return ballDetected;
+    }
+
     @Override
     public void update() {
         setHopperState(wantedHopperState);
         checkBallColor();
-        numberOfBalls();
     }
 
     public void setWantedHopperState(HopperState hopperState) {
