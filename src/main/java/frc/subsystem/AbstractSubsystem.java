@@ -15,7 +15,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     private final int loggingInterval;
     private int logInterval;
     private @NotNull ThreadSignal signal = ThreadSignal.PAUSED;
-    public @NotNull String subsystemName;
+    public final @NotNull String subsystemName;
     private @Nullable Thread thisThread;
 
     public enum ThreadSignal {
@@ -113,6 +113,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 }
             }
             double executionTimeMS = (Timer.getFPGATimestamp() - startTime) * 1000;
+            logData(subsystemName + " Execution Time", executionTimeMS);
             try {
                 if (period - executionTimeMS > 0) {
                     Thread.sleep((long) (period - executionTimeMS));
@@ -121,7 +122,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 System.out.println("Thread interrupted " + subsystemName + " message: " + e.getMessage());
                 return;
             }
-
+            logData(subsystemName + " Pediod Length", (Timer.getFPGATimestamp() - startTime) * 1000);
         }
     }
 }
