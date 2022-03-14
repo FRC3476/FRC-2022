@@ -65,23 +65,23 @@ public final class Hopper extends AbstractSubsystem {
     }
 
     public void checkBallColor() {
-        Color detectedColorTop = convertRawColor(colorSensor.getRawColor0());
+        Color detectedColor = convertRawColor(colorSensor.getRawColor0());
         //Color detectedColorBottom = bottomBall.getColor();
 
-        logData("Ball Red", detectedColorTop.red);
-        logData("Ball Green", detectedColorTop.green);
-        logData("Ball Blue", detectedColorTop.blue);
-        logData("Color Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
+        logData("Ball Red", detectedColor.red);
+        logData("Ball Green", detectedColor.green);
+        logData("Ball Blue", detectedColor.blue);
+        logData("Color Confidence", colorMatcher.matchClosestColor(detectedColor).confidence);
 
 //        logData("Bottom Red", detectedColorBottom.red);
 //        logData("Bottom Green", detectedColorBottom.green);
 //        logData("Bottom Blue", detectedColorBottom.blue);
 //        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
 
-        if (colorMatcher.matchClosestColor(detectedColorTop).color == redTarget) {
+        if (colorMatcher.matchClosestColor(detectedColor).color == redTarget) {
             logData("Ball Color", "Red");
             ballDetected = true;
-        } else if (colorMatcher.matchClosestColor(detectedColorTop).color == blueTarget) {
+        } else if (colorMatcher.matchClosestColor(detectedColor).color == blueTarget) {
             logData("Ball Color", "Blue");
             ballDetected = true;
         } else {
