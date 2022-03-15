@@ -85,8 +85,6 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-    private double lastLoopTime = 0;
-
     private @NotNull final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
             Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION,
@@ -399,20 +397,23 @@ public final class Drive extends AbstractSubsystem {
 
     @NotNull ChassisSpeeds lastRequestedVelocity = new ChassisSpeeds(0, 0, 0);
 
+    private double lastLoopTime = 0;
+
     /**
      * Puts a limit on the acceleration. This method should be called before setting a chassis speeds to the robot drivebase.
      * <p>
-     * Limits the acceleration by ensuring that the previous velocity and the next
+     * Limits the acceleration by ensuring that the difference between the command and previous velocity doesn't exceed a set
+     * value
      *
      * @param commandedVelocity Desired velocity (The chassis speeds is mutated to the limited acceleration)
-     * @return Velocity that can be achieved within the iteration period
+     * @return an acceleration limited chassis speeds
      */
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
         double dt;
         if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 4) {
             // If the dt is a lot greater than our nominal dt reset the acceleration limiting
             // (ex. we've been disabled for a while)
-            lastRequestedVelocity = new ChassisSpeeds(0, 0, 0);
+            lastRequestedVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
             dt = (double) Constants.DRIVE_PERIOD / 1000;
         } else {
             dt = Timer.getFPGATimestamp() - lastLoopTime;
@@ -446,10 +447,11 @@ public final class Drive extends AbstractSubsystem {
         // Checks if requested change in Angular Velocity is greater than allowed
         if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond)
                 > maxAngularVelocityChange) {
-            // Adds the allowed velocity change to actual velocity, includes the sign of motion
+            // Add the lastCommandVelocity and the maxAngularVelocityChange (changed to have the same sign as the actual change)
             commandedVelocity.omegaRadiansPerSecond =
-                    lastRequestedVelocity.omegaRadiansPerSecond + Math.copySign(maxAngularVelocityChange,
-                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
+                    lastRequestedVelocity.omegaRadiansPerSecond +
+                            Math.copySign(maxAngularVelocityChange,
+                                    commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
         }
 
         lastRequestedVelocity = commandedVelocity; // save our current commanded velocity to be used in next iteration
