@@ -96,13 +96,14 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     /**
-     * @return the current translation of the robot based on the vision data
+     * @return the current translation of the robot based on the vision data. Will only give correct results if the limelight can
+     * see the target
      */
     @Contract(pure = true)
     private MutableTranslation2d getCurrentTranslation() {
         Rotation2d currentGyroAngle = getLatencyCompedLimelightRotation();
 
-        double distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS;
+        double distanceToTarget = getDistanceToTarget();
         double angleToTarget = currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
         return new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
                 distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
@@ -191,6 +192,7 @@ public final class VisionManager extends AbstractSubsystem {
         } else {
             //Use best guess if no target is visible
             Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
+                    .plus(robotPositionOffset)
                     .minus(Constants.GOAL_POSITION);
             return new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
 
@@ -201,6 +203,7 @@ public final class VisionManager extends AbstractSubsystem {
     double lastChecksFailedTime = 0;
     double lastPrintTime = 0;
     boolean checksPassedLastTime = false;
+    private @NotNull Translation2d robotPositionOffset = new Translation2d(0, 0);
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative, getAllowedTurnError());
@@ -214,6 +217,11 @@ public final class VisionManager extends AbstractSubsystem {
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " "
                                     + visionLookUpTable.getShooterPreset(Units.metersToInches(getDistanceToTarget())));
+
+                    if (limelight.isTargetVisible()) {
+                        robotPositionOffset = getCurrentTranslation().getTranslation2d()
+                                .minus(robotTracker.getLatencyCompedPoseMeters().getTranslation());
+                    }
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
