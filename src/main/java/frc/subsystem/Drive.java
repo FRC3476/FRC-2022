@@ -397,110 +397,63 @@ public final class Drive extends AbstractSubsystem {
         return angleDiff;
     }
 
-    @NotNull ChassisSpeeds lastRequestedVelocity =
-            new ChassisSpeeds(0, 0, 0);
+    @NotNull ChassisSpeeds lastRequestedVelocity = new ChassisSpeeds(0, 0, 0);
 
     /**
-     * Puts limit on desired velocity, so it can be achieved with a reasonable acceleration
+     * Puts a limit on the acceleration. This method should be called before setting a chassis speeds to the robot drivebase.
      * <p>
-     * Converts ChassisSpeeds to Translation2d Computes difference between desired and actual velocities Converts from cartesian
-     * to polar coordinate system Checks if velocity change exceeds MAX limit Gets limited velocity vector difference in cartesian
-     * coordinate system Computes limited velocity Converts to format compatible with serveDrive
+     * Limits the acceleration by ensuring that the previous velocity and the next
      *
-     * @param commandedVelocity Desired velocity
+     * @param commandedVelocity Desired velocity (The chassis speeds is mutated to the limited acceleration)
      * @return Velocity that can be achieved within the iteration period
      */
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
-
-        double maxVelocityChange = getMaxAllowedVelocityChange();
-        double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
-
-        if (lastLoopTime - Timer.getFPGATimestamp() > 0.150) lastRequestedVelocity = commandedVelocity;
-        // Sets the last call of the method to the current time
+        double dt;
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 4) {
+            // If the dt is a lot greater than our nominal dt reset the acceleration limiting
+            // (ex. we've been disabled for a while)
+            lastRequestedVelocity = new ChassisSpeeds(0, 0, 0);
+            dt = (double) Constants.DRIVE_PERIOD / 1000;
+        } else {
+            dt = Timer.getFPGATimestamp() - lastLoopTime;
+        }
         lastLoopTime = Timer.getFPGATimestamp();
 
+        double maxVelocityChange = Constants.MAX_ACCELERATION * dt;
+        double maxAngularVelocityChange = Constants.MAX_ANGULAR_ACCELERATION * dt;
 
-        Translation2d velocityVectorChange = new Translation2d(
-                commandedVelocity.vxMetersPerSecond - lastRequestedVelocity.vxMetersPerSecond,
-                commandedVelocity.vyMetersPerSecond - lastRequestedVelocity.vyMetersPerSecond);
+        Translation2d velocityCommand = new Translation2d(
+                commandedVelocity.vxMetersPerSecond, commandedVelocity.vyMetersPerSecond
+        );
 
-        // Convert from cartesian to polar coordinate system
-        double velocityChangeMagnitudeSquared = (velocityVectorChange.getX() * velocityVectorChange.getX()) +
-                (velocityVectorChange.getY() * velocityVectorChange.getY());
-        double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX());
+        Translation2d lastVelocityCommand = new Translation2d(
+                lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond
+        );
 
-        ChassisSpeeds limitedVelocity = commandedVelocity;
+        Translation2d velocityChange = velocityCommand.minus(lastVelocityCommand);
+        double velocityChangeAngle = Math.atan2(velocityChange.getY(), velocityChange.getX()); //Radians
 
-        // Check if velocity change exceeds MAX limit
-        if (velocityChangeMagnitudeSquared > maxVelocityChange * maxVelocityChange) {
-
+        // Check if velocity change exceeds max limit
+        if (velocityChange.getNorm() > maxVelocityChange) {
             // Get limited velocity vector difference in cartesian coordinate system
-            Translation2d limitedVelocityVectorChange =
-                    new Translation2d(Math.cos(velocityDiffAngle) * maxVelocityChange,
-                            Math.sin(velocityDiffAngle) * maxVelocityChange);
+            Translation2d limitedVelocityVectorChange = new Translation2d(maxVelocityChange, new Rotation2d(velocityChangeAngle));
+            Translation2d limitedVelocityVector = lastVelocityCommand.plus(limitedVelocityVectorChange);
 
-            // Compute limited velocity
-            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(
-                    new Translation2d(lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond)
-            );
-
-
-            // Convert to format compatible with serveDrive
-            limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
-                    commandedVelocity.omegaRadiansPerSecond);
+            commandedVelocity.vyMetersPerSecond = limitedVelocityVector.getX();
+            commandedVelocity.vyMetersPerSecond = limitedVelocityVector.getY();
         }
-
 
         // Checks if requested change in Angular Velocity is greater than allowed
         if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond)
                 > maxAngularVelocityChange) {
             // Adds the allowed velocity change to actual velocity, includes the sign of motion
-            limitedVelocity.omegaRadiansPerSecond =
-                    Math.copySign(maxAngularVelocityChange,
-                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond) +
-                            lastRequestedVelocity.omegaRadiansPerSecond;
-        } else {
-            limitedVelocity.omegaRadiansPerSecond = commandedVelocity.omegaRadiansPerSecond;
+            commandedVelocity.omegaRadiansPerSecond =
+                    lastRequestedVelocity.omegaRadiansPerSecond + Math.copySign(maxAngularVelocityChange,
+                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
         }
 
-        lastRequestedVelocity = limitedVelocity; // save our current commanded velocity to be used in next iteration
-        return limitedVelocity;
-    }
-
-    /**
-     * Gets the MAX change in velocity that can occur over the iteration period
-     *
-     * @return Maximum value that the velocity can change within the iteration period
-     */
-    double getMaxAllowedVelocityChange() {
-        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
-        // If iteration period is greater than allowed amount, iteration period = 50 ms
-        double accelLimitPeriod;
-        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
-            accelLimitPeriod = 0.050;
-        } else {
-            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
-        }
-
-        // Multiplies by MAX_ACCELERATION to find the velocity over that period
-        return Constants.MAX_ACCELERATION * (accelLimitPeriod);
-    }
-
-    /**
-     * Gets the Max change in velocity that can occur over the iteration period (20ms)
-     */
-    double getMaxAllowedAngularVelocityChange() {
-        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
-        // If iteration period is greater than allowed amount, iteration period = 50 ms
-        double accelLimitPeriod;
-        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
-            accelLimitPeriod = 0.050;
-        } else {
-            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
-        }
-
-        // Multiplies by MAX_ACCELERATION to find the velocity over that period
-        return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
+        lastRequestedVelocity = commandedVelocity; // save our current commanded velocity to be used in next iteration
+        return commandedVelocity;
     }
 
     /**

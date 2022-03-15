@@ -59,53 +59,6 @@ public class DriveTest {
         }
     }
 
-    @Test
-    void testMaxAllowedVelocityChange() throws NoSuchFieldException, IllegalAccessException {
-        double testPeriod = 0;
-        // Reflection used to set currentRobotState with no velocity
-        Field currentRobotState = RobotTracker.class.getDeclaredField("latencyCompensatedChassisSpeeds");
-        currentRobotState.setAccessible(true);
-        currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
-
-        // Makes lastLoopTime accessible
-        Field lastLoopTime = Drive.class.getDeclaredField("lastLoopTime");
-        lastLoopTime.setAccessible(true);
-
-        for (int i = 0; i < 10; i++) {
-            testPeriod = Math.random() * 0.15;
-            // Sets last loop time to 50 seconds in a match
-            lastLoopTime.set(drive, 50);
-
-            // Sets current time to 50 ms beyond last loop
-            Timer.setTime(50.0 + testPeriod);
-            currentMaxVelocityChange = drive.getMaxAllowedVelocityChange();
-            assertEquals(Constants.MAX_ACCELERATION * testPeriod, currentMaxVelocityChange, DELTA);
-        }
-    }
-
-    @Test
-    void testMaxAllowedVelocityChangeAboveMaxTimeLimit() throws NoSuchFieldException, IllegalAccessException {
-        // Reflection used to set currentRobotState with no velocity
-        Field currentRobotState = RobotTracker.class.getDeclaredField("latencyCompensatedChassisSpeeds");
-        currentRobotState.setAccessible(true);
-        currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
-
-        // Makes lastLoopTime accessible
-        Field lastLoopTime = Drive.class.getDeclaredField("lastLoopTime");
-        lastLoopTime.setAccessible(true);
-
-        for(int i = 0; i < 10; i++) {
-            double testPeriod = Math.random() + 0.15;
-            // Sets last loop time to 50 seconds in a match
-            lastLoopTime.set(drive, 50);
-
-            // Sets current time to 50 ms beyond last loop
-            Timer.setTime(50.0 + testPeriod);
-            currentMaxVelocityChange = drive.getMaxAllowedVelocityChange();
-            assertEquals(Constants.MAX_ACCELERATION * 0.05, currentMaxVelocityChange, DELTA);
-        }
-    }
-
     @Disabled("Limiting angular acceleration breaks test")
     void testLimitAcceleration() throws Exception {
         ChassisSpeeds commandedVelocity = null;
