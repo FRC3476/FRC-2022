@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 
 public final class Hopper extends AbstractSubsystem {
-    public static @NotNull Hopper INSTANCE = new Hopper();
+    private static @NotNull Hopper INSTANCE = new Hopper();
     private final @NotNull LazyCANSparkMax hopperMotor;
     private final @NotNull PicoColorSensor colorSensor;
 
@@ -122,7 +122,7 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
-    public boolean isBallDetected() {
+    public synchronized boolean isBallDetected() {
         return ballDetected;
     }
 

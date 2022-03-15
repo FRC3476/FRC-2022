@@ -222,6 +222,9 @@ public final class Constants {
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
 
+    // Outtake Constants
+    public static final int OUTTAKE_PERIOD = 200;
+
 
     // Shooter Constants
 
