@@ -79,6 +79,8 @@ public final class VisionManager extends AbstractSubsystem {
 
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
         logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
+        logData("Is Robot Allowed Shoot Tilt",
+                Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3);
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
@@ -208,7 +210,8 @@ public final class VisionManager extends AbstractSubsystem {
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative, getAllowedTurnError());
 
-        if ((!drive.isAiming()) && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED) {
+        if ((!drive.isAiming()) && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED &&
+                Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
             if (shooter.isFiring()) {
                 if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
