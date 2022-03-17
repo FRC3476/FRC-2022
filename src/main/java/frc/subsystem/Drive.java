@@ -666,7 +666,7 @@ public final class Drive extends AbstractSubsystem {
      * xVelocity and yVelocity are in m/s
      *
      * @param controllerDriveInputs The x and y velocity of the robot (rotation is ignored)
-     * @param goal                  The target state at the end of the turn (in radians)
+     * @param goal                  The target state at the end of the turn (in radians, radians/s)
      * @param useFieldRelative      Whether the target heading is field relative or robot relative
      */
     public void updateTurn(ControllerDriveInputs controllerDriveInputs, State goal,
