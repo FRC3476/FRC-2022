@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.interpolation.Interpolatable;
 
 import java.util.Objects;
 
@@ -20,7 +19,7 @@ import java.util.Objects;
 @SuppressWarnings({"ParameterName", "MemberName"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
-public class MutableTranslation2d implements Interpolatable<MutableTranslation2d> {
+public class MutableTranslation2d extends Translation2d {
     private double m_x;
     private double m_y;
 
@@ -105,6 +104,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      * @param other The translation to compute the distance to.
      * @return The distance between the two translations.
      */
+    @Override
     public double getDistance(edu.wpi.first.math.geometry.Translation2d other) {
         return Math.hypot(other.getX() - m_x, other.getY() - m_y);
     }
@@ -114,6 +114,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      *
      * @return The x component of the translation.
      */
+    @Override
     @JsonProperty
     public double getX() {
         return m_x;
@@ -124,6 +125,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      *
      * @return The y component of the translation.
      */
+    @Override
     @JsonProperty
     public double getY() {
         return m_y;
@@ -134,6 +136,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      *
      * @return The norm of the translation.
      */
+    @Override
     public double getNorm() {
         return Math.hypot(m_x, m_y);
     }
@@ -150,6 +153,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      * @param other The rotation to rotate the translation by.
      * @return The rotated translation.
      */
+    @Override
     public MutableTranslation2d rotateBy(Rotation2d other) {
         return set(m_x * other.getCos() - m_y * other.getSin(), m_x * other.getSin() + m_y * other.getCos());
     }
@@ -162,6 +166,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      * @param other The translation to add.
      * @return The sum of the translations.
      */
+    @Override
     public MutableTranslation2d plus(edu.wpi.first.math.geometry.Translation2d other) {
         return set(m_x + other.getX(), m_y + other.getY());
     }
@@ -186,6 +191,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      * @param other The translation to subtract.
      * @return The difference between the two translations.
      */
+    @Override
     public MutableTranslation2d minus(edu.wpi.first.math.geometry.Translation2d other) {
         return set(m_x - other.getX(), m_y - other.getY());
     }
@@ -196,6 +202,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      *
      * @return The inverse of the current translation.
      */
+    @Override
     public edu.wpi.first.math.geometry.Translation2d unaryMinus() {
         return new edu.wpi.first.math.geometry.Translation2d(-m_x, -m_y);
     }
@@ -208,6 +215,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      * @param scalar The scalar to multiply by.
      * @return The scaled translation.
      */
+    @Override
     public MutableTranslation2d times(double scalar) {
         return set(m_x * scalar, m_y * scalar);
     }
@@ -220,6 +228,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
      * @param scalar The scalar to multiply by.
      * @return This mutated object.
      */
+    @Override
     public MutableTranslation2d div(double scalar) {
         return set(m_x / scalar, m_y / scalar);
     }
@@ -252,7 +261,7 @@ public class MutableTranslation2d implements Interpolatable<MutableTranslation2d
         return Objects.hash(m_x, m_y);
     }
 
-    @Override
+    
     public MutableTranslation2d interpolate(MutableTranslation2d endValue, double t) {
         return set(MathUtil.interpolate(this.getX(), endValue.getX(), t),
                 MathUtil.interpolate(this.getY(), endValue.getY(), t));
