@@ -12,6 +12,7 @@ import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
 import frc.robot.Constants;
 import frc.utility.Timer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -105,7 +106,6 @@ public final class RobotTracker extends AbstractSubsystem {
      * Resets the position on the field to 0,0 with a rotation of 0 degrees
      */
     synchronized public void resetOdometry() {
-
         lock.writeLock().lock();
         try {
             Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
@@ -263,6 +263,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The field relative ChassisSpeeds.
      */
+    @Contract(pure = true)
     private ChassisSpeeds getRotatedSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
         double dist = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
         return new ChassisSpeeds(
@@ -368,6 +369,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The pose of the robot (x and y are in meters).
      */
+    @Contract(pure = true)
     public @NotNull Pose2d getLastEstimatedPoseMeters() {
         lock.readLock().lock();
         try {
@@ -385,6 +387,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The pose of the robot (x and y are in meters).
      */
+    @Contract(pure = true)
     public @NotNull Pose2d getLatencyCompedPoseMeters() {
         lock.readLock().lock();
         try {
@@ -402,6 +405,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
      */
+    @Contract(pure = true)
     public @NotNull ChassisSpeeds getLastChassisSpeeds() {
         lock.readLock().lock();
         try {
@@ -418,6 +422,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
      */
+    @Contract(pure = true)
     public @NotNull ChassisSpeeds getLatencyCompedChassisSpeeds() {
         lock.readLock().lock();
         try {
@@ -470,7 +475,7 @@ public final class RobotTracker extends AbstractSubsystem {
         instance = new RobotTracker();
     }
 
-
+    @Contract(pure = true)
     public double getGyroRollVelocity() {
         lock.readLock().lock();
         try {
@@ -480,6 +485,7 @@ public final class RobotTracker extends AbstractSubsystem {
         }
     }
 
+    @Contract(pure = true)
     public double getGyroPitchVelocity() {
         lock.readLock().lock();
         try {
@@ -492,6 +498,7 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * @return The gyro angle offset so that it lines up with the robot tracker rotation.
      */
+    @Contract(pure = true)
     public Rotation2d getGyroAngle() {
         lock.readLock().lock();
         try {

@@ -409,6 +409,7 @@ public final class Drive extends AbstractSubsystem {
      * @param commandedVelocity Desired velocity (The chassis speeds is mutated to the limited acceleration)
      * @return an acceleration limited chassis speeds
      */
+    @Contract(mutates = "param")
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
         double dt;
         if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 4) {
@@ -559,7 +560,7 @@ public final class Drive extends AbstractSubsystem {
 
             Rotation2d targetHeading = autoTargetHeading;
             if (isAutoAiming) {
-                targetHeading = VisionManager.getInstance().getAngleOfTarget();
+                targetHeading = VisionManager.getInstance().getAngleToTarget();
             }
 
             ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
