@@ -16,7 +16,6 @@ import frc.utility.Limelight.LedMode;
 import frc.utility.MathUtil;
 import frc.utility.Timer;
 import frc.utility.shooter.visionlookup.ShooterConfig;
-import frc.utility.shooter.visionlookup.ShooterPreset;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -37,20 +36,6 @@ public final class VisionManager extends AbstractSubsystem {
     private final @NotNull Shooter shooter = Shooter.getInstance();
 
     public final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
-    private double shooterHoodAngleBias = 0;
-
-    {
-        logData("Shooter Angle Bias", shooterHoodAngleBias);
-    }
-
-    public void adjustShooterHoodBias(double amount) {
-        shooterHoodAngleBias += amount;
-        logData("Shooter Angle Bias", shooterHoodAngleBias);
-    }
-
-    public double getShooterHoodAngleBias() {
-        return shooterHoodAngleBias;
-    }
 
     public void setShooterConfig(ShooterConfig shooterConfig) {
         visionLookUpTable.setShooterConfig(shooterConfig);
@@ -100,6 +85,8 @@ public final class VisionManager extends AbstractSubsystem {
         drive.updateTurn(controllerDriveInputs, new State(targetAngle, (futureTargetAngle - targetAngle) * 10), useFieldRelative,
                 getAllowedTurnError());
 
+        updateShooterState(aimToPosition.getNorm());
+
         tryToShoot(false);
     }
 
@@ -107,6 +94,7 @@ public final class VisionManager extends AbstractSubsystem {
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         drive.updateTurn(controllerDriveInputs, getAngleToTarget(), fieldRelative, getAllowedTurnError());
 
+        updateShooterState(getDistanceToTarget());
         tryToShoot(true);
     }
 
@@ -136,34 +124,20 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Last Shooter Checks Failed Time", Timer.getFPGATimestamp() - lastChecksFailedTime);
     }
 
-
     /**
-     * Calculates and sets the flywheel speed considering a static robot velocity
+     * Updates the shooter state based on the distance to the target
      */
-    public void updateShooterStateStaticPose() {
-        double distanceToTarget = getDistanceToTarget();
-
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
-        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+    public void updateShooterState() {
+        updateShooterState(getDistanceToTarget());
     }
 
     /**
-     * Calculates and sets the flywheel speed considering a moving robot
+     * Updates the shooter state based on the distance to the target
+     *
+     * @param distanceToTarget the distance to the target (in meters)
      */
-    public void updateShooterState() {
-        Translation2d robotVelocity = getRobotVel();
-
-        Translation2d aimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0.1, getRelativeGoalTranslation(), robotVelocity),
-                robotVelocity
-        );
-
-        double distanceToTarget = aimToPosition.getNorm();
-
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
-        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+    public void updateShooterState(double distanceToTarget) {
+        shooter.set(visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget)));
     }
 
     /**

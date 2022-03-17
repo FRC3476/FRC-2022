@@ -21,6 +21,7 @@ import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
+import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -400,6 +401,12 @@ public final class Shooter extends AbstractSubsystem {
      */
     public HoodPositionMode getHoodPositionMode() {
         return hoodPositionMode;
+    }
+
+
+    public void set(ShooterPreset config) {
+        setSpeed(config.getFlywheelSpeed());
+        setHoodPosition(config.getHoodEjectAngle());
     }
 
     /**
