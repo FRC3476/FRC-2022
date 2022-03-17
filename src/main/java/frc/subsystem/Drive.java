@@ -20,6 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -654,6 +655,21 @@ public final class Drive extends AbstractSubsystem {
      */
     public void updateTurn(ControllerDriveInputs controllerDriveInputs, @NotNull Rotation2d targetHeading,
                            boolean useFieldRelative, double turnErrorRadians) {
+        updateTurn(controllerDriveInputs, new State(targetHeading.getRadians(), 0), useFieldRelative, turnErrorRadians);
+    }
+
+    /**
+     * This method takes in x and y velocity as well as the target heading to calculate how much the robot needs to turn in order
+     * to face a target
+     * <p>
+     * xVelocity and yVelocity are in m/s
+     *
+     * @param controllerDriveInputs The x and y velocity of the robot (rotation is ignored)
+     * @param goal                  The target state at the end of the turn (in radians)
+     * @param useFieldRelative      Whether the target heading is field relative or robot relative
+     */
+    public void updateTurn(ControllerDriveInputs controllerDriveInputs, State goal,
+                           boolean useFieldRelative, double turnErrorRadians) {
         synchronized (this) {
             if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
         }
@@ -665,28 +681,24 @@ public final class Drive extends AbstractSubsystem {
 
 
         lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
-                targetHeading.getRadians());
+        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(), goal);
 
 //        System.out.println(
 //                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
         double curSpeed = RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond;
-        double deltaSpeed = pidDeltaSpeed; //Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
         if (useFieldRelative) {
             swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
                     controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M, controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                    deltaSpeed,
+                    pidDeltaSpeed,
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
             swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M,
                     controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                    deltaSpeed));
+                    pidDeltaSpeed));
         }
 
-        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getRadians()) < turnErrorRadians &&
-                RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond < Math.toRadians(
-                        Constants.TURN_SPEED_LIMIT_TO_SHOOT)) {
+        if (Math.abs(goal.position - RobotTracker.getInstance().getGyroAngle().getRadians()) < turnErrorRadians) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {
@@ -705,10 +717,9 @@ public final class Drive extends AbstractSubsystem {
             }
         }
 
-        logData("Turn Position Error", targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees());
+        logData("Turn Position Error", Math.toDegrees(goal.position - RobotTracker.getInstance().getGyroAngle().getRadians()));
         logData("Turn Actual Speed", curSpeed);
         logData("Turn PID Command", pidDeltaSpeed);
-        logData("Turn Speed Command", deltaSpeed);
         logData("Turn Min Speed", turnMinSpeed);
     }
 
