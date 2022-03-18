@@ -52,7 +52,16 @@ public final class Drive extends AbstractSubsystem {
     final @NotNull NetworkTableEntry turnMaxAcceleration = SmartDashboard.getEntry("TurnMaxAcceleration");
 
     public void resetAuto() {
-        autoTurnPIDController.reset(RobotTracker.getInstance().getGyroAngle().getRadians());
+        ProfiledPIDController autoTurnPIDController
+                = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
+        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
+        autoTurnPIDController.setTolerance(Math.toRadians(10));
+        
+        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+        swerveAutoController = new HolonomicDriveController(
+                new PIDController(3, 0, 0),
+                new PIDController(3, 0, 0),
+                autoTurnPIDController);
     }
 
     public enum DriveState {
@@ -507,28 +516,12 @@ public final class Drive extends AbstractSubsystem {
 
     double autoStartTime;
 
-    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(8, 0, 0.01,
-            new TrapezoidProfile.Constraints(4, 4));
-
-    {
-        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
-        autoTurnPIDController.setTolerance(Math.toRadians(10));
-    }
-
-    private final HolonomicDriveController swerveAutoController = new HolonomicDriveController(
-            new PIDController(3, 0, 0),
-            new PIDController(3, 0, 0),
-            autoTurnPIDController);
-
-    {
-        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
-    }
+    private @NotNull HolonomicDriveController swerveAutoController;
 
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
         try {
-            autoTurnPIDController.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
-                    RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+            resetAuto();
             setDriveState(DriveState.RAMSETE);
             this.currentAutoTrajectory = trajectory;
             this.isAutoAiming = false;
@@ -835,7 +828,7 @@ public final class Drive extends AbstractSubsystem {
         System.out.println("Turning to " + degrees);
         setRotation(degrees);
         while (!isTurningDone()) {
-            Thread.sleep(50);
+            Thread.onSpinWait();
         }
     }
 }
