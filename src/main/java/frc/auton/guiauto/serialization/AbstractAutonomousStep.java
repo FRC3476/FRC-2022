@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.CommandExecutionFailedException;
 import frc.auton.guiauto.serialization.command.SendableScript;
 
@@ -25,8 +24,7 @@ public abstract class AbstractAutonomousStep {
     protected AbstractAutonomousStep() {
     }
 
-    //The method argument is not necessary. We use it to access methods in our superclass of our auto
-    public abstract void execute(TemplateAuto templateAuto, List<SendableScript> scriptsToExecuteByTime,
+    public abstract void execute(List<SendableScript> scriptsToExecuteByTime,
                                  List<SendableScript> scriptsToExecuteByPercent) throws InterruptedException, CommandExecutionFailedException;
 
 

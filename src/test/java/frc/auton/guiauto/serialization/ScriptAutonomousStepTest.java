@@ -1,6 +1,5 @@
 package frc.auton.guiauto.serialization;
 
-import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.SendableCommand;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import frc.subsystem.Drive;
@@ -45,12 +44,7 @@ class ScriptAutonomousStepTest {
         List<SendableScript> timeDelayedCommandList = new ArrayList<>();
         List<SendableScript> percentDelayedCommandList = new ArrayList<>();
 
-        scriptAutonomousStep.execute(new TemplateAuto() {
-            @Override
-            public void run() {
-
-            }
-        }, timeDelayedCommandList, percentDelayedCommandList);
+        scriptAutonomousStep.execute(timeDelayedCommandList, percentDelayedCommandList);
 
 
         Field driveState = Drive.class.getDeclaredField("driveState"); //Use reflection to access private field
@@ -75,12 +69,7 @@ class ScriptAutonomousStepTest {
         List<SendableScript> timeDelayedCommandList = new ArrayList<>();
         List<SendableScript> percentDelayedCommandList = new ArrayList<>();
 
-        scriptAutonomousStep.execute(new TemplateAuto() {
-            @Override
-            public void run() {
-
-            }
-        }, timeDelayedCommandList, percentDelayedCommandList);
+        scriptAutonomousStep.execute(timeDelayedCommandList, percentDelayedCommandList);
 
         Field driveState = Drive.class.getDeclaredField("driveState"); //Use reflection to access private field
         driveState.setAccessible(true);
@@ -104,12 +93,7 @@ class ScriptAutonomousStepTest {
         List<SendableScript> timeDelayedCommandList = new ArrayList<>();
         List<SendableScript> percentDelayedCommandList = new ArrayList<>();
 
-        scriptAutonomousStep.execute(new TemplateAuto() {
-            @Override
-            public void run() {
-
-            }
-        }, timeDelayedCommandList, percentDelayedCommandList);
+        scriptAutonomousStep.execute(timeDelayedCommandList, percentDelayedCommandList);
 
         Field driveState = Drive.class.getDeclaredField("driveState"); //Use reflection to access private field
         driveState.setAccessible(true);
