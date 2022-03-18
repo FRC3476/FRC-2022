@@ -228,9 +228,9 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private double getLimelightTime() {
-        double latency = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
+        double limelightTime = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
         logData("Limelight Latency", (limelight.getLatency() / 1000) + (11.0 / 1000));
-        return latency;
+        return limelightTime;
     }
 
     private final Set<Object> forceVisionOn = new HashSet<>(5);
