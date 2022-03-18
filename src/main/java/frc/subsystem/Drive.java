@@ -690,12 +690,14 @@ public final class Drive extends AbstractSubsystem {
 
         if (useFieldRelative) {
             swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M, controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.6,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.6,
                     pidDeltaSpeed,
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
-            swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
+            swerveDrive(new ChassisSpeeds(
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.6,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.6,
                     pidDeltaSpeed));
         }
 
