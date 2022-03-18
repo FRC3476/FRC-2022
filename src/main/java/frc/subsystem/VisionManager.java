@@ -137,6 +137,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @param distanceToTarget the distance to the target (in meters)
      */
     public void updateShooterState(double distanceToTarget) {
+        logData("Shooter Distance to Target", Units.metersToInches(distanceToTarget));
         shooter.set(visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget)));
     }
 
