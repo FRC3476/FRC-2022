@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static frc.robot.Constants.DRIVE_HIGH_SPEED_M;
+import static frc.robot.Constants.*;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -79,7 +79,9 @@ public final class Drive extends AbstractSubsystem {
     private final @NotNull ProfiledPIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(16, 0, 0.00, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
+        turnPID = new ProfiledPIDController(DEFAULT_TURN_P, DEFAULT_TURN_I, DEFAULT_TURN_D,
+                new TrapezoidProfile.Constraints(DEFAULT_TURN_MAX_VELOCITY, DEFAULT_TURN_MAX_ACCELERATION)); //P=1.0
+        // OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
     }
 
@@ -194,8 +196,8 @@ public final class Drive extends AbstractSubsystem {
         turnP.setDouble(Constants.DEFAULT_TURN_P);
         turnI.setDouble(Constants.DEFAULT_TURN_I);
         turnD.setDouble(Constants.DEFAULT_TURN_D);
-        turnMaxVelocity.setDouble(Constants.DEFAULT_TURN_MAX_VELOCITY);
-        turnMaxAcceleration.setDouble(Constants.DEFAULT_TURN_MAX_ACCELERATION);
+        turnMaxVelocity.setDouble(DEFAULT_TURN_MAX_VELOCITY);
+        turnMaxAcceleration.setDouble(DEFAULT_TURN_MAX_ACCELERATION);
 
         turnP.addListener(event -> turnPID.setP(event.getEntry().getDouble(Constants.DEFAULT_TURN_P)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
@@ -207,13 +209,13 @@ public final class Drive extends AbstractSubsystem {
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         turnMaxVelocity.addListener(event -> turnPID.setConstraints(
-                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(Constants.DEFAULT_TURN_MAX_VELOCITY),
+                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_VELOCITY),
                                 turnMaxAcceleration.getDouble(6))),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         turnMaxAcceleration.addListener(
                 event -> turnPID.setConstraints(
-                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(Constants.DEFAULT_TURN_MAX_ACCELERATION),
+                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_ACCELERATION),
                                 turnMaxAcceleration.getDouble(6))),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 

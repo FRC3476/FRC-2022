@@ -42,7 +42,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.5, 2); //TODO: CHANGE
     // This is in inches
     public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
@@ -167,8 +167,8 @@ public final class Constants {
     public static final double DEFAULT_TURN_P = 16.0;
     public static final double DEFAULT_TURN_I = 0.0;
     public static final double DEFAULT_TURN_D = 0.0;
-    public static final double DEFAULT_TURN_MAX_VELOCITY = 6.0;
-    public static final double DEFAULT_TURN_MAX_ACCELERATION = 6.0;
+    public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
+    public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
     /**
      * Units are in Meters Per Second Squared

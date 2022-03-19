@@ -163,7 +163,7 @@ public final class Limelight {
      */
     public void setLedMode(@NotNull LedMode ledMode) {
         if (limelightGuiTable.getEntry("forceledon").getBoolean(false)) {
-            limelightTable.getEntry("ledMode").setNumber(3);
+            limelightTable.getEntry("ledMode").setNumber(LedMode.ON.i);
         } else {
             limelightTable.getEntry("ledMode").setNumber(ledMode.i);
         }
@@ -230,7 +230,7 @@ public final class Limelight {
      */
     public double getDistance() {
         if (isTargetVisible()) {
-            return 63.2878 / (Math.tan(Math.toRadians(61.2839 + getVerticalOffset())) - 0.409064);
+            return 68.728 / (Math.tan(Math.toRadians(57.952 + getVerticalOffset())) - 0.324129);
         } else {
             return 0;
         }

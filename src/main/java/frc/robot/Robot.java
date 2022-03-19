@@ -453,7 +453,7 @@ public class Robot extends TimedRobot {
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
                 visionManager.forceVisionOn(driverForcingVisionOn);
-                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
+                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             shooter.setFiring(false);
@@ -593,7 +593,7 @@ public class Robot extends TimedRobot {
         VELOCITY_COMPENSATED, STATIC_POSE, MANUAL
     }
 
-    ShooterControlState shooterControlState = ShooterControlState.STATIC_POSE;
+    ShooterControlState shooterControlState = ShooterControlState.VELOCITY_COMPENSATED;
 
     private void runShooter() {
         if (buttonPanel.getRisingEdge(1)) {

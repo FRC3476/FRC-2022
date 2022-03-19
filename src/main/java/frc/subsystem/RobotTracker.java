@@ -1,12 +1,11 @@
 package frc.subsystem;
 
 import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
@@ -39,7 +38,7 @@ public final class RobotTracker extends AbstractSubsystem {
     private @NotNull Pose2d latencyCompensatedPose = new Pose2d();
     private @NotNull ChassisSpeeds latencyCompensatedChassisSpeeds = new ChassisSpeeds();
 
-    private final @NotNull SwerveDrivePoseEstimator swerveDriveOdometry;
+    private final @NotNull SwerveDriveOdometry swerveDriveOdometry;
     private @NotNull Rotation2d gyroOffset = new Rotation2d();
 
     private double gyroRollVelocity = 0;
@@ -55,14 +54,21 @@ public final class RobotTracker extends AbstractSubsystem {
         gyroSensor = new AHRS(SPI.Port.kMXP, (byte) 200);
         gyroSensor.getRequestedUpdateRate();
         //@formatter:off
-        swerveDriveOdometry = new SwerveDrivePoseEstimator(
-                gyroSensor.getRotation2d(),
-                new Pose2d(),
+//        swerveDriveOdometry = new SwerveDrivePoseEstimator(
+//                gyroSensor.getRotation2d(),
+//                new Pose2d(),
+//                drive.getSwerveDriveKinematics(),
+//                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02), // stateStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
+//                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.00035), // localMeasurementStdDevs – [theta], with units in radians.
+//                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.2, 0.2, 0.07), // visionMeasurementStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
+//                (Constants.ROBOT_TRACKER_PERIOD * 2) / 1000.0d); //Only update every other tick
+
+        swerveDriveOdometry = new SwerveDriveOdometry(
                 drive.getSwerveDriveKinematics(),
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02), // stateStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
-                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.00035), // localMeasurementStdDevs – [theta], with units in radians.
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.2, 0.2, 0.07), // visionMeasurementStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
-                (Constants.ROBOT_TRACKER_PERIOD * 2) / 1000.0d); //Only update every other tick
+                gyroSensor.getRotation2d(),
+                new Pose2d()
+
+        );
         //@formatter:on
         //swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), gyroSensor.getRotation2d());
     }
@@ -150,7 +156,7 @@ public final class RobotTracker extends AbstractSubsystem {
             updateOdometry(time, rawGyroSensor, drive.getSwerveModuleStates());
             lock.writeLock().lock();
             try {
-                latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
+                latestEstimatedPose = swerveDriveOdometry.getPoseMeters();
                 gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
                 latencyCompensatedPose = latestEstimatedPose;
 
