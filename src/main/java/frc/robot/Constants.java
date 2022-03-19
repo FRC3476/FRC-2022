@@ -224,7 +224,15 @@ public final class Constants {
 
     // Outtake Constants
     public static final int OUTTAKE_PERIOD = 200;
+    public static final int OUTTAKE_CAN_ID = 60;
+    public static final double OUTTAKE_REDUCTION = (3 / 1d); //TODO FIND REAL VALUE
+    public static final int OUTTAKE_CURRENT_LIMIT = 30;
+    public static final int OUTTAKE_MEASUREMENT_PERIOD = 50;
 
+    /**
+     * Outtake will run for this time (MS) after color sensor trigger
+     */
+    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000d;
 
     // Shooter Constants
 

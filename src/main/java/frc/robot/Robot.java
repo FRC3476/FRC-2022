@@ -134,11 +134,10 @@ public class Robot extends TimedRobot {
 
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
+    @NotNull public static final String RED = "RED";
+    @NotNull public static final String BLUE = "BLUE";
 
-    @NotNull private static final String RED = "RED";
-    @NotNull private static final String BLUE = "BLUE";
-
-    private final SendableChooser<String> sideChooser = new SendableChooser<>();
+    public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
     //Subsystems
     private final RobotTracker robotTracker = RobotTracker.getInstance();

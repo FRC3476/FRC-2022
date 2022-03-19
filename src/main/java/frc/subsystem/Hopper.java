@@ -3,7 +3,6 @@ package frc.subsystem;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.ColorMatch;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Constants;
 import frc.utility.OrangeUtility;
@@ -33,7 +32,9 @@ public final class Hopper extends AbstractSubsystem {
     private final Color blueTarget = new Color(0.184, 0.427, 0.39);
     private final Color redTarget = new Color(0.38, 0.41, 0.2);
 
-    private boolean ballDetected;
+    public enum ColorSensorStatus {RED, BLUE, NO_BALL}
+
+    private ColorSensorStatus colorSensorStatus = ColorSensorStatus.NO_BALL;
 
     public static Hopper getInstance() {
         return INSTANCE;
@@ -80,13 +81,13 @@ public final class Hopper extends AbstractSubsystem {
 
         if (colorMatcher.matchClosestColor(detectedColor).color == redTarget) {
             logData("Ball Color", "Red");
-            ballDetected = true;
+            colorSensorStatus = ColorSensorStatus.RED;
         } else if (colorMatcher.matchClosestColor(detectedColor).color == blueTarget) {
             logData("Ball Color", "Blue");
-            ballDetected = true;
+            colorSensorStatus = ColorSensorStatus.BLUE;
         } else {
             logData("Ball Color", "No Ball Detected");
-            ballDetected = false;
+            colorSensorStatus = ColorSensorStatus.NO_BALL;
         }
 
 //        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
@@ -122,8 +123,8 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
-    public synchronized boolean isBallDetected() {
-        return ballDetected;
+    public synchronized ColorSensorStatus getColorSensorStatus() {
+        return colorSensorStatus;
     }
 
     @Override
@@ -145,7 +146,8 @@ public final class Hopper extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        SmartDashboard.putNumber("Hopper Motor Current", hopperMotor.getOutputCurrent());
+        logData("Hopper Motor Current", hopperMotor.getOutputCurrent());
+        logData("Color Sensor Status", colorSensorStatus);
     }
 
     @Override
