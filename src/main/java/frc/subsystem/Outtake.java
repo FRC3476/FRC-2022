@@ -8,6 +8,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Hopper.ColorSensorStatus;
 import frc.subsystem.Intake.IntakeState;
+import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +58,7 @@ public class Outtake extends AbstractSubsystem {
 
         outtakeWheelsQuadrature = outtakeWheels.getEncoder();
         outtakeWheelsQuadrature.setPositionConversionFactor(Constants.OUTTAKE_REDUCTION);
-        outtakeWheelsQuadrature.setMeasurementPeriod(Constants.OUTTAKE_MEASUREMENT_PERIOD);
+        outtakeWheelsQuadrature.setMeasurementPeriod(Constants.OUTTAKE_MEASUREMENT_PERIOD_MS);
 
         outtakeWheels.burnFlash();
     }
@@ -88,16 +89,26 @@ public class Outtake extends AbstractSubsystem {
         }
     }
 
+    /**
+     * Sets the percent outtake between 1 and -1
+     */
+    private void setOuttakePercentOutput(double percentOutput) {
+        outtakeWheels.setVoltage(12d * percentOutput);
+    }
+
     @Override
     public void update() {
         updateOuttakeState();
 
         switch (outtakeState) {
             case OFF:
+                setOuttakePercentOutput(0);
                 break;
             case EJECT:
+                setOuttakePercentOutput(1 * Constants.OUTTAKE_SPEED_FACTOR);
                 break;
             case INTAKE:
+                setOuttakePercentOutput(-1 * Constants.OUTTAKE_SPEED_FACTOR);
                 break;
         }
     }
@@ -105,12 +116,23 @@ public class Outtake extends AbstractSubsystem {
     @Override
     public void selfTest() {
 
+        setOuttakePercentOutput(1 * Constants.OUTTAKE_SPEED_FACTOR);
+        System.out.println("Ejecting");
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        setOuttakePercentOutput(-1 * Constants.OUTTAKE_SPEED_FACTOR);
+        System.out.println("Intaking");
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        System.out.println("Test Finished");
+        setOuttakePercentOutput(0);
     }
 
     @Override
     public void logData() {
         logData("Outtake State", outtakeState);
         logData("Outtake Velocity", outtakeWheelsQuadrature.getVelocity());
+        logData("Outtake SetVoltage", outtakeWheels.getSetVoltage());
     }
 
     @Override
