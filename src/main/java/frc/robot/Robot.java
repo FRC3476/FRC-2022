@@ -17,7 +17,6 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
-import frc.subsystem.Hopper.HopperState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.Limelight.LedMode;
@@ -456,11 +455,6 @@ public class Robot extends TimedRobot {
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
             }
-        } else if (buttonPanel.getRawButton(6)) {
-            shooter.setSpeed(Constants.SHOOTER_TOP_EJECT_SPEED);
-            shooter.setHoodPosition(Constants.HOOD_TOP_EJECT_ANGLE);
-            shooter.setFiring(true);
-            Hopper.getInstance().setHopperState(HopperState.OFF);
         } else {
             shooter.setFiring(false);
             shooter.setSpeed(0);

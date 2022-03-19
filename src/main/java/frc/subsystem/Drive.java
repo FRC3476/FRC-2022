@@ -20,6 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -27,7 +28,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
-import frc.utility.Limelight;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
@@ -52,7 +52,16 @@ public final class Drive extends AbstractSubsystem {
     final @NotNull NetworkTableEntry turnMaxAcceleration = SmartDashboard.getEntry("TurnMaxAcceleration");
 
     public void resetAuto() {
-        autoTurnPIDController.reset(RobotTracker.getInstance().getGyroAngle().getRadians());
+        ProfiledPIDController autoTurnPIDController
+                = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
+        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
+        autoTurnPIDController.setTolerance(Math.toRadians(10));
+        
+        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+        swerveAutoController = new HolonomicDriveController(
+                new PIDController(3, 0, 0),
+                new PIDController(3, 0, 0),
+                autoTurnPIDController);
     }
 
     public enum DriveState {
@@ -72,7 +81,6 @@ public final class Drive extends AbstractSubsystem {
     {
         turnPID = new ProfiledPIDController(16, 0, 0.00, new TrapezoidProfile.Constraints(6, 6)); //P=1.0 OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
-        setTurnTolerance(Math.toRadians(10));
     }
 
     public @NotNull DriveState driveState;
@@ -86,8 +94,6 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private boolean isAiming = false;
-
-    private double lastLoopTime = 0;
 
     private @NotNull final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
             Constants.SWERVE_LEFT_FRONT_LOCATION,
@@ -399,118 +405,67 @@ public final class Drive extends AbstractSubsystem {
         return angleDiff;
     }
 
-    @NotNull ChassisSpeeds lastRequestedVelocity =
-            new ChassisSpeeds(0, 0, 0);
+    @NotNull ChassisSpeeds lastRequestedVelocity = new ChassisSpeeds(0, 0, 0);
+
+    private double lastLoopTime = 0;
 
     /**
-     * Puts limit on desired velocity, so it can be achieved with a reasonable acceleration
+     * Puts a limit on the acceleration. This method should be called before setting a chassis speeds to the robot drivebase.
      * <p>
-     * Converts ChassisSpeeds to Translation2d Computes difference between desired and actual velocities Converts from cartesian
-     * to polar coordinate system Checks if velocity change exceeds MAX limit Gets limited velocity vector difference in cartesian
-     * coordinate system Computes limited velocity Converts to format compatible with serveDrive
+     * Limits the acceleration by ensuring that the difference between the command and previous velocity doesn't exceed a set
+     * value
      *
-     * @param commandedVelocity Desired velocity
-     * @return Velocity that can be achieved within the iteration period
+     * @param commandedVelocity Desired velocity (The chassis speeds is mutated to the limited acceleration)
+     * @return an acceleration limited chassis speeds
      */
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
-
-        double maxVelocityChange = getMaxAllowedVelocityChange();
-        double maxAngularVelocityChange = getMaxAllowedAngularVelocityChange();
-
-        if (lastLoopTime - Timer.getFPGATimestamp() > 0.150) lastRequestedVelocity = commandedVelocity;
-        // Sets the last call of the method to the current time
+        double dt;
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 4) {
+            // If the dt is a lot greater than our nominal dt reset the acceleration limiting
+            // (ex. we've been disabled for a while)
+            lastRequestedVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+            dt = (double) Constants.DRIVE_PERIOD / 1000;
+        } else {
+            dt = Timer.getFPGATimestamp() - lastLoopTime;
+        }
         lastLoopTime = Timer.getFPGATimestamp();
 
+        double maxVelocityChange = Constants.MAX_ACCELERATION * dt;
+        double maxAngularVelocityChange = Constants.MAX_ANGULAR_ACCELERATION * dt;
 
-        Translation2d velocityVectorChange = new Translation2d(
-                commandedVelocity.vxMetersPerSecond - lastRequestedVelocity.vxMetersPerSecond,
-                commandedVelocity.vyMetersPerSecond - lastRequestedVelocity.vyMetersPerSecond);
+        Translation2d velocityCommand = new Translation2d(
+                commandedVelocity.vxMetersPerSecond, commandedVelocity.vyMetersPerSecond
+        );
 
-        // Convert from cartesian to polar coordinate system
-        double velocityChangeMagnitudeSquared = (velocityVectorChange.getX() * velocityVectorChange.getX()) +
-                (velocityVectorChange.getY() * velocityVectorChange.getY());
-        double velocityDiffAngle = Math.atan2(velocityVectorChange.getY(), velocityVectorChange.getX());
+        Translation2d lastVelocityCommand = new Translation2d(
+                lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond
+        );
 
-        ChassisSpeeds limitedVelocity = commandedVelocity;
+        Translation2d velocityChange = velocityCommand.minus(lastVelocityCommand);
+        double velocityChangeAngle = Math.atan2(velocityChange.getY(), velocityChange.getX()); //Radians
 
-        // Check if velocity change exceeds MAX limit
-        if (velocityChangeMagnitudeSquared > maxVelocityChange * maxVelocityChange) {
-
+        // Check if velocity change exceeds max limit
+        if (velocityChange.getNorm() > maxVelocityChange) {
             // Get limited velocity vector difference in cartesian coordinate system
-            Translation2d limitedVelocityVectorChange =
-                    new Translation2d(Math.cos(velocityDiffAngle) * maxVelocityChange,
-                            Math.sin(velocityDiffAngle) * maxVelocityChange);
+            Translation2d limitedVelocityVectorChange = new Translation2d(maxVelocityChange, new Rotation2d(velocityChangeAngle));
+            Translation2d limitedVelocityVector = lastVelocityCommand.plus(limitedVelocityVectorChange);
 
-            // Compute limited velocity
-            Translation2d limitedVelocityVector = limitedVelocityVectorChange.plus(
-                    new Translation2d(lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond)
-            );
-
-
-            // Convert to format compatible with serveDrive
-            limitedVelocity = new ChassisSpeeds(limitedVelocityVector.getX(), limitedVelocityVector.getY(),
-                    commandedVelocity.omegaRadiansPerSecond);
+            commandedVelocity.vyMetersPerSecond = limitedVelocityVector.getX();
+            commandedVelocity.vyMetersPerSecond = limitedVelocityVector.getY();
         }
-
 
         // Checks if requested change in Angular Velocity is greater than allowed
         if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond)
                 > maxAngularVelocityChange) {
-            // Adds the allowed velocity change to actual velocity, includes the sign of motion
-            limitedVelocity.omegaRadiansPerSecond =
-                    Math.copySign(maxAngularVelocityChange,
-                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond) +
-                            lastRequestedVelocity.omegaRadiansPerSecond;
-        } else {
-            limitedVelocity.omegaRadiansPerSecond = commandedVelocity.omegaRadiansPerSecond;
+            // Add the lastCommandVelocity and the maxAngularVelocityChange (changed to have the same sign as the actual change)
+            commandedVelocity.omegaRadiansPerSecond =
+                    lastRequestedVelocity.omegaRadiansPerSecond +
+                            Math.copySign(maxAngularVelocityChange,
+                                    commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
         }
 
-        lastRequestedVelocity = limitedVelocity; // save our current commanded velocity to be used in next iteration
-        return limitedVelocity;
-    }
-
-    /**
-     * Gets the MAX change in velocity that can occur over the iteration period
-     *
-     * @return Maximum value that the velocity can change within the iteration period
-     */
-    double getMaxAllowedVelocityChange() {
-        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
-        // If iteration period is greater than allowed amount, iteration period = 50 ms
-        double accelLimitPeriod;
-        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
-            accelLimitPeriod = 0.050;
-        } else {
-            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
-        }
-
-        // Multiplies by MAX_ACCELERATION to find the velocity over that period
-        return Constants.MAX_ACCELERATION * (accelLimitPeriod);
-    }
-
-    /**
-     * Gets the Max change in velocity that can occur over the iteration period (20ms)
-     */
-    double getMaxAllowedAngularVelocityChange() {
-        // Gets the iteration period by subtracting the current time with the last time accelLimit was called
-        // If iteration period is greater than allowed amount, iteration period = 50 ms
-        double accelLimitPeriod;
-        if ((Timer.getFPGATimestamp() - lastLoopTime) > 0.150) {
-            accelLimitPeriod = 0.050;
-        } else {
-            accelLimitPeriod = (Timer.getFPGATimestamp() - lastLoopTime);
-        }
-
-        // Multiplies by MAX_ACCELERATION to find the velocity over that period
-        return Constants.MAX_ANGULAR_ACCELERATION * (accelLimitPeriod);
-    }
-
-    public void setTurnTolerance(double tolerance) {
-        if (Limelight.getInstance().getDistance() < Constants.VISION_DISTANCE_BEFORE_ERROR_TIGHTENING) {
-            turnPID.setTolerance(tolerance);
-        } else {
-            turnPID.setTolerance(tolerance * .75);
-        }
+        lastRequestedVelocity = commandedVelocity; // save our current commanded velocity to be used in next iteration
+        return commandedVelocity;
     }
 
     /**
@@ -561,28 +516,12 @@ public final class Drive extends AbstractSubsystem {
 
     double autoStartTime;
 
-    private final ProfiledPIDController autoTurnPIDController = new ProfiledPIDController(8, 0, 0.01,
-            new TrapezoidProfile.Constraints(4, 4));
-
-    {
-        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
-        autoTurnPIDController.setTolerance(Math.toRadians(10));
-    }
-
-    private final HolonomicDriveController swerveAutoController = new HolonomicDriveController(
-            new PIDController(3, 0, 0),
-            new PIDController(3, 0, 0),
-            autoTurnPIDController);
-
-    {
-        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
-    }
+    private @NotNull HolonomicDriveController swerveAutoController;
 
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
         try {
-            autoTurnPIDController.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
-                    RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+            resetAuto();
             setDriveState(DriveState.RAMSETE);
             this.currentAutoTrajectory = trajectory;
             this.isAutoAiming = false;
@@ -709,6 +648,21 @@ public final class Drive extends AbstractSubsystem {
      */
     public void updateTurn(ControllerDriveInputs controllerDriveInputs, @NotNull Rotation2d targetHeading,
                            boolean useFieldRelative, double turnErrorRadians) {
+        updateTurn(controllerDriveInputs, new State(targetHeading.getRadians(), 0), useFieldRelative, turnErrorRadians);
+    }
+
+    /**
+     * This method takes in x and y velocity as well as the target heading to calculate how much the robot needs to turn in order
+     * to face a target
+     * <p>
+     * xVelocity and yVelocity are in m/s
+     *
+     * @param controllerDriveInputs The x and y velocity of the robot (rotation is ignored)
+     * @param goal                  The target state at the end of the turn (in radians)
+     * @param useFieldRelative      Whether the target heading is field relative or robot relative
+     */
+    public void updateTurn(ControllerDriveInputs controllerDriveInputs, State goal,
+                           boolean useFieldRelative, double turnErrorRadians) {
         synchronized (this) {
             if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
         }
@@ -720,28 +674,24 @@ public final class Drive extends AbstractSubsystem {
 
 
         lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(),
-                targetHeading.getRadians());
+        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(), goal);
 
 //        System.out.println(
 //                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
         double curSpeed = RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond;
-        double deltaSpeed = pidDeltaSpeed; //Math.copySign(Math.max(Math.abs(pidDeltaSpeed), turnMinSpeed), pidDeltaSpeed);
 
         if (useFieldRelative) {
             swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
                     controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M, controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                    deltaSpeed,
+                    pidDeltaSpeed,
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
             swerveDrive(new ChassisSpeeds(controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M,
                     controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M,
-                    deltaSpeed));
+                    pidDeltaSpeed));
         }
 
-        if (Math.abs(targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getRadians()) < turnErrorRadians &&
-                RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond < Math.toRadians(
-                        Constants.TURN_SPEED_LIMIT_TO_SHOOT)) {
+        if (Math.abs(goal.position - RobotTracker.getInstance().getGyroAngle().getRadians()) < turnErrorRadians) {
             synchronized (this) {
                 isAiming = false;
                 if (rotateAuto) {
@@ -760,10 +710,9 @@ public final class Drive extends AbstractSubsystem {
             }
         }
 
-        logData("Turn Position Error", targetHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees());
+        logData("Turn Position Error", Math.toDegrees(goal.position - RobotTracker.getInstance().getGyroAngle().getRadians()));
         logData("Turn Actual Speed", curSpeed);
         logData("Turn PID Command", pidDeltaSpeed);
-        logData("Turn Speed Command", deltaSpeed);
         logData("Turn Min Speed", turnMinSpeed);
     }
 
@@ -879,7 +828,7 @@ public final class Drive extends AbstractSubsystem {
         System.out.println("Turning to " + degrees);
         setRotation(degrees);
         while (!isTurningDone()) {
-            Thread.sleep(50);
+            Thread.onSpinWait();
         }
     }
 }

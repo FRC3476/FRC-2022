@@ -12,7 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static frc.robot.Constants.*;
+import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
+import static frc.robot.Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION;
 import static frc.utility.Pneumatics.getPneumaticsHub;
 
 class ClimbStep {
@@ -90,13 +91,6 @@ public final class Climber extends AbstractSubsystem {
     private boolean skipChecks = false;
     private boolean ranEndAction = false;
 
-    private double gyroPitchVelocity = 0;
-    private double lastGyroPitch;
-    private double gyroRollVelocity = 0;
-    private double lastGyroRollVelocity;
-    private double lastGyroRoll;
-    private double gyroRollAccel = 0;
-
     public enum ClawState {
         LATCHED, UNLATCHED
     }
@@ -165,10 +159,10 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (Math.abs(gyro.getRoll()) < 5 && Math.abs(cl.gyroRollVelocity) < 2) {
+                            if (Math.abs(gyro.getRoll()) < 15 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 2) {
                                 return true;
                             } else {
-                                return gyro.getRoll() > 30 && cl.gyroRollVelocity < 0.1; //TODO: Tune these values
+                                return gyro.getRoll() > 30 && RobotTracker.getInstance().getGyroRollVelocity() < 0.1;
                             }
                         },
                         (cl) -> {},
@@ -289,7 +283,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return cl.gyroPitchVelocity > 0 && gyro.getRoll() > 42.5;
+                            return RobotTracker.getInstance().getGyroRollVelocity() > 0 && gyro.getRoll() > 42.5;
                         }, // TODO: tune these values
                         (cl) -> {},
                         false
@@ -299,7 +293,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return cl.gyroPitchVelocity > 0 && gyro.getRoll() > 42.5;
+                            return RobotTracker.getInstance().getGyroRollVelocity() > 0 && gyro.getRoll() > 42.5;
                         },
                         (cl) -> {},
                         false
@@ -361,7 +355,8 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return gyro.getRoll() < 40.5 && Math.abs(cl.gyroRollVelocity) < 2.5; //TODO: Tune these values
+                            return gyro.getRoll() < 40.5 && Math.abs(
+                                    RobotTracker.getInstance().getGyroRollVelocity()) < 2.5; //TODO: Tune these values
                         },
                         (cl) -> {},
                         false
@@ -373,7 +368,7 @@ public final class Climber extends AbstractSubsystem {
                         },
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (gyro.getRoll() < 41 && Math.abs(cl.gyroRollVelocity) < 8) {
+                            if (gyro.getRoll() < 41 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 8) {
                                 if (cl.data > Timer.getFPGATimestamp() + 0.2) cl.data = Timer.getFPGATimestamp() + 0.2;
                                 return cl.data < Timer.getFPGATimestamp();
                             } else {
@@ -684,16 +679,6 @@ public final class Climber extends AbstractSubsystem {
             currentClimbStep = climbState.sensorClimb;
         }
 
-        double lastGyroRollVelocity = gyroRollVelocity;
-
-        gyroPitchVelocity = (RobotTracker.getInstance().getGyro().getPitch() - lastGyroPitch) / ((double) CLIMBER_PERIOD / 1000);
-        gyroRollVelocity = (RobotTracker.getInstance().getGyro().getRoll() - lastGyroRoll) / ((double) CLIMBER_PERIOD / 1000);
-
-        lastGyroPitch = RobotTracker.getInstance().getGyro().getPitch();
-        lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
-
-        gyroRollAccel = (gyroRollVelocity - lastGyroRollVelocity) / ((double) CLIMBER_PERIOD / 1000);
-
 
         if (!isPaused) {
             if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
@@ -824,12 +809,6 @@ public final class Climber extends AbstractSubsystem {
         logData("Pivot Solenoid State", getPivotState().toString());
         logData("Latch Solenoid State", getClawState().toString());
         logData("Brake Solenoid State", getBrakeState().toString());
-
-        logData("Gyro Pitch", RobotTracker.getInstance().getGyro().getPitch());
-        logData("Gyro Pitch Velocity", gyroPitchVelocity);
-        logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll());
-        logData("Gyro Roll Velocity", gyroRollVelocity);
-        logData("Gyro Roll Acceleration", gyroRollAccel);
 
         logData("Climber Is Paused", isPaused);
         logData("Climber Is Step By Step", stepByStep);

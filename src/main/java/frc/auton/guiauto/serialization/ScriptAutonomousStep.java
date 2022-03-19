@@ -3,7 +3,6 @@ package frc.auton.guiauto.serialization;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import frc.auton.TemplateAuto;
 import frc.auton.guiauto.serialization.command.CommandExecutionFailedException;
 import frc.auton.guiauto.serialization.command.SendableScript;
 import org.jetbrains.annotations.NotNull;
@@ -35,11 +34,10 @@ public class ScriptAutonomousStep extends AbstractAutonomousStep {
      * Runs the script
      */
     @Override
-    public void execute(@NotNull TemplateAuto templateAuto,
-                        @NotNull List<SendableScript> scriptsToExecuteByTime,
+    public void execute(@NotNull List<SendableScript> scriptsToExecuteByTime,
                         @NotNull List<SendableScript> scriptsToExecuteByPercent)
             throws InterruptedException, CommandExecutionFailedException {
-        
+
         if (sendableScript.getDelayType() == SendableScript.DelayType.TIME) {
             scriptsToExecuteByTime.add(sendableScript);
             return;

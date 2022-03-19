@@ -4,12 +4,15 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.utility.Timer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +38,7 @@ public class RobotTrackerTest {
     }
 
     @Test
-    void robotTrackerTest() throws NoSuchFieldException, IllegalAccessException { //TODO: Figure out why messing with rotation
+    void robotTrackerTest() throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException { //TODO: Figure out why messing with rotation
         // breaks things
         double time = 0;
         for (int j = 0; j < 100; j++) {
@@ -65,7 +68,11 @@ public class RobotTrackerTest {
 
                 time += dt;
 
-                RobotTracker.getInstance().updateOdometry(time, new Rotation2d(theta),
+                Method updateOdomotry = RobotTracker.class.getDeclaredMethod("updateOdometry", double.class, Rotation2d.class,
+                        SwerveModuleState[].class);
+                updateOdomotry.setAccessible(true);
+                
+                updateOdomotry.invoke(RobotTracker.getInstance(), time, new Rotation2d(theta),
                         drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
             }
 
