@@ -67,6 +67,17 @@ public final class VisionManager extends AbstractSubsystem {
                         < getAllowedTurnError());
         logData("Is Robot Allowed Shoot Tilt",
                 Math.abs(robotTracker.getGyro().getRoll()) < 1.5 && Math.abs(robotTracker.getGyro().getPitch()) < 1.5);
+
+        Translation2d robotVelocity = getRobotVel();
+        Translation2d aimToPosition = getVelocityAdjustedRelativeTranslation(
+                predictFutureTranslation(0.3, getRelativeGoalTranslation(), robotVelocity),
+                robotVelocity
+        );
+
+        Translation2d fieldCentricCords =
+                RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation().minus(aimToPosition);
+        logData("Calculated Target X", fieldCentricCords.getX());
+        logData("Calculated Target Y", fieldCentricCords.getY());
     }
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
@@ -89,7 +100,6 @@ public final class VisionManager extends AbstractSubsystem {
                 new State(targetAngle, (futureTargetAngle - targetAngle) * 50),
                 useFieldRelative,
                 0);
-
         updateShooterState(aimToPosition.getNorm());
 
         tryToShoot(false);
@@ -173,7 +183,7 @@ public final class VisionManager extends AbstractSubsystem {
         double angleToTarget = currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
         return Optional.of(new Translation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
                 distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
-                .minus(Constants.LIMELIGHT_CENTER_OFFSET.rotateBy(currentGyroAngle)).plus(Constants.GOAL_POSITION));
+                .plus(Constants.GOAL_POSITION));
     }
 
     private Translation2d getRelativeGoalTranslation() {
@@ -307,7 +317,7 @@ public final class VisionManager extends AbstractSubsystem {
             if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
                     robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
 
-                robotPositionOffset = robotTranslation.minus(robotTracker.getLatencyCompedPoseMeters().getTranslation());
+                //robotPositionOffset = robotTranslation.minus(robotTracker.getLatencyCompedPoseMeters().getTranslation());
                 logData("Using Vision Info", "Using Vision Info");
             } else {
                 logData("Using Vision Info", "Position is too far from expected");
@@ -403,6 +413,6 @@ public final class VisionManager extends AbstractSubsystem {
 
     double getTimeOfFlight(Translation2d translation2d) {
         double distance = Units.metersToInches(translation2d.getNorm());
-        return (0.00128363 * distance) + 0.334346;
+        return (0.0128363 * distance) + 0.334346;
     }
 }
