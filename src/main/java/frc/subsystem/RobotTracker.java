@@ -46,6 +46,9 @@ public final class RobotTracker extends AbstractSubsystem {
     private double lastGyroPitch = 0;
     private double lastGyroRoll = 0;
 
+    private double maxGyroRoll = 0;
+    private double minGyroRoll = 0;
+
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 
@@ -174,6 +177,14 @@ public final class RobotTracker extends AbstractSubsystem {
 
                 lastGyroPitch = RobotTracker.getInstance().getGyro().getPitch();
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
+
+                if (maxGyroRoll < lastGyroRoll) {
+                    maxGyroRoll = lastGyroRoll;
+                }
+
+                if (minGyroRoll > lastGyroRoll) {
+                    minGyroRoll = lastGyroRoll;
+                }
             } finally {
                 lock.writeLock().unlock();
             }
@@ -459,6 +470,9 @@ public final class RobotTracker extends AbstractSubsystem {
             logData("Gyro Pitch Velocity", gyroPitchVelocity);
             logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll());
             logData("Gyro Roll Velocity", gyroRollVelocity);
+
+            logData("Min Gyro Roll", minGyroRoll);
+            logData("Max Gyro Roll", maxGyroRoll);
 
 
 //        SmartDashboard.putNumber("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());

@@ -162,7 +162,8 @@ public final class Climber extends AbstractSubsystem {
                             if (Math.abs(gyro.getRoll()) < 15 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 2) {
                                 return true;
                             } else {
-                                return gyro.getRoll() > 30 && RobotTracker.getInstance().getGyroRollVelocity() < 0.1;
+                                return gyro.getRoll() > 20 && gyro.getRoll() < 40 &&
+                                        RobotTracker.getInstance().getGyroRollVelocity() > 0;
                             }
                         },
                         (cl) -> {},
@@ -368,9 +369,10 @@ public final class Climber extends AbstractSubsystem {
                         },
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (gyro.getRoll() < 41 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 8) {
-                                if (cl.data > Timer.getFPGATimestamp() + 0.2) cl.data = Timer.getFPGATimestamp() + 0.2;
-                                return cl.data < Timer.getFPGATimestamp();
+                            if (gyro.getRoll() < 41) {
+                                return true;
+//                                if (cl.data > Timer.getFPGATimestamp() + 0.2) cl.data = Timer.getFPGATimestamp() + 0.2;
+//                                return cl.data < Timer.getFPGATimestamp();
                             } else {
                                 cl.data = Double.MAX_VALUE;
                             }
