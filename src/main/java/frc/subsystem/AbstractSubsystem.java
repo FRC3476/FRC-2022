@@ -1,13 +1,9 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
@@ -39,6 +35,14 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     public abstract void logData();
 
+    public void logData(@NotNull String key, @NotNull Object value) {
+        DashboardHandler.getInstance().log(key, value);
+    }
+
+    public void logData(@NotNull String key, @NotNull Object value, boolean logToNetworkTables) {
+        DashboardHandler.getInstance().log(key, value, logToNetworkTables);
+    }
+
     public void pause() {
         signal = ThreadSignal.PAUSED;
     }
@@ -62,39 +66,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     public void update() {
 
     }
-
-    private final Map<String, Object> logDataMap = new HashMap<>();
-
-
-    public void logData(@NotNull String key, @NotNull Object value) {
-        //SmartDashboard.putString(key, value.toString());
-        logDataMap.put(key, value);
-    }
-
     int lastLength = 20;
-
-
-    public void pushLog() {
-        for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
-            Object obj = entry.getValue();
-            Class<?> cl = obj.getClass();
-
-            //@formatter:off
-            if (cl.equals(Integer.class)) SmartDashboard.putNumber(entry.getKey(), (int) obj);
-            else if (cl.equals(Double.class)) SmartDashboard.putNumber(entry.getKey(), (double) obj);
-            else if (cl.equals(Short.class)) SmartDashboard.putNumber(entry.getKey(), (short) obj);
-            else if (cl.equals(Long.class)) SmartDashboard.putNumber(entry.getKey(), (long) obj);
-            else if (cl.equals(Float.class)) SmartDashboard.putNumber(entry.getKey(), (float) obj);
-            else if (cl.equals(Byte.class)) SmartDashboard.putNumber(entry.getKey(), (byte) obj);
-            else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(entry.getKey(), (boolean) obj);
-            else if (cl.equals(String.class)) SmartDashboard.putString(entry.getKey(), (String) obj);
-            else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(entry.getKey(), (Double[]) obj);
-            else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(entry.getKey(), (Boolean[]) obj);
-            else if (cl.equals(String[].class)) SmartDashboard.putStringArray(entry.getKey(), (String[]) obj);
-            else SmartDashboard.putString(entry.getKey(), entry.getValue().toString());
-            //@formatter:on
-        }
-    }
 
     @Override
     @SuppressWarnings("BusyWait")
@@ -103,13 +75,11 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
             double startTime = Timer.getFPGATimestamp();
             if (signal == ThreadSignal.ALIVE) {
                 update();
+                
                 logInterval++;
-                if (logInterval >= loggingInterval) {
-
+                if (logInterval > loggingInterval) {
                     logData();
-                    pushLog();
-                    
-                    logInterval = 1;
+                    logInterval = 0;
                 }
             }
             double executionTimeMS = (Timer.getFPGATimestamp() - startTime) * 1000;
