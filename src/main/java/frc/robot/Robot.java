@@ -736,7 +736,7 @@ public class Robot extends TimedRobot {
             climber.selfTest();
         }
 
-        if (buttonPanel.getRisingEdge(9)) {
+        if (buttonPanel.getRisingEdge(10)) {
             outtake.selfTest();
         }
     }

@@ -47,7 +47,7 @@ public final class Hopper extends AbstractSubsystem {
     HopperState wantedHopperState = HopperState.OFF;
 
     private Hopper() {
-        super(Constants.HOPPER_PERIOD, 5);
+        super(Constants.HOPPER_PERIOD, 1);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
 
@@ -58,7 +58,9 @@ public final class Hopper extends AbstractSubsystem {
 
         colorMatcher.addColorMatch(blueTarget);
         colorMatcher.addColorMatch(redTarget);
+
         colorSensor = new PicoColorSensor();
+        colorSensor.setDebugPrints(Constants.OUTTAKE_DEBUG_PRINTS);
     }
 
     private Color convertRawColor(RawColor rawColor) {
@@ -148,6 +150,9 @@ public final class Hopper extends AbstractSubsystem {
     public void logData() {
         logData("Hopper Motor Current", hopperMotor.getOutputCurrent());
         logData("Color Sensor Status", colorSensorStatus);
+        logData("Is Sensor 1 Connected", colorSensor.isSensor0Connected());
+        logData("Is Sensor 2 Connected", colorSensor.isSensor1Connected());
+        logData("Color Sensor Last Read Time", colorSensor.getLastReadTimestampSeconds());
     }
 
     @Override

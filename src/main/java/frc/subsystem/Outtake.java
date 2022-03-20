@@ -7,6 +7,7 @@ import com.revrobotics.RelativeEncoder;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Hopper.ColorSensorStatus;
+import frc.subsystem.Intake.IntakeSolState;
 import frc.subsystem.Intake.IntakeState;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
@@ -23,7 +24,9 @@ public class Outtake extends AbstractSubsystem {
 
     private double lastDetectionTime;
 
-    private ColorSensorStatus allianceColor = ColorSensorStatus.RED;
+    private @NotNull ColorSensorStatus allianceColor = ColorSensorStatus.RED;
+
+    private @NotNull ColorSensorStatus opposingAllianceColor = ColorSensorStatus.BLUE;
 
     private static @NotNull Outtake instance = new Outtake();
 
@@ -53,6 +56,7 @@ public class Outtake extends AbstractSubsystem {
         outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 200);
         outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 25);
         outtakeWheels.setControlFramePeriodMs(25);
+        outtakeWheels.enableVoltageCompensation(9);
 
         outtakeWheelsQuadrature = outtakeWheels.getEncoder();
         outtakeWheelsQuadrature.setPositionConversionFactor(Constants.OUTTAKE_REDUCTION);
@@ -67,8 +71,10 @@ public class Outtake extends AbstractSubsystem {
     private void updateAllianceColor() {
         if (Robot.sideChooser.getSelected().equals(Robot.BLUE)) {
             allianceColor = ColorSensorStatus.BLUE;
+            opposingAllianceColor = ColorSensorStatus.RED;
         } else {
             allianceColor = ColorSensorStatus.RED;
+            opposingAllianceColor = ColorSensorStatus.BLUE;
         }
     }
 
@@ -77,8 +83,10 @@ public class Outtake extends AbstractSubsystem {
      */
     private void updateOuttakeState() {
         // If color sensor detects a ball or
-        if (hopper.getColorSensorStatus() == allianceColor || Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+        if (hopper.getColorSensorStatus() == opposingAllianceColor && intake.getIntakeSolState() == IntakeSolState.OPEN) {
             lastDetectionTime = Timer.getFPGATimestamp();
+            outtakeState = OuttakeState.EJECT;
+        } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD && intake.getIntakeSolState() == IntakeSolState.OPEN) {
             outtakeState = OuttakeState.EJECT;
         } else if (intake.wantedIntakeState == IntakeState.INTAKE) {
             outtakeState = OuttakeState.INTAKE;
@@ -91,7 +99,7 @@ public class Outtake extends AbstractSubsystem {
      * Sets the percent outtake between 1 and -1
      */
     private void setOuttakePercentOutput(double percentOutput) {
-        outtakeWheels.setVoltage(12d * percentOutput);
+        outtakeWheels.setVoltage(9.0 * percentOutput);
     }
 
     @Override
@@ -104,10 +112,10 @@ public class Outtake extends AbstractSubsystem {
                 setOuttakePercentOutput(0);
                 break;
             case EJECT:
-                setOuttakePercentOutput(1 * Constants.OUTTAKE_SPEED_FACTOR);
+                setOuttakePercentOutput(Constants.OUTTAKE_SPEED_FACTOR);
                 break;
             case INTAKE:
-                setOuttakePercentOutput(-1 * Constants.OUTTAKE_SPEED_FACTOR);
+                setOuttakePercentOutput(-Constants.OUTTAKE_SPEED_FACTOR);
                 break;
         }
     }
@@ -115,11 +123,11 @@ public class Outtake extends AbstractSubsystem {
     @Override
     public void selfTest() {
 
-        setOuttakePercentOutput(1 * Constants.OUTTAKE_SPEED_FACTOR);
+        setOuttakePercentOutput(Constants.OUTTAKE_SPEED_FACTOR);
         System.out.println("Ejecting");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
-        setOuttakePercentOutput(-1 * Constants.OUTTAKE_SPEED_FACTOR);
+        setOuttakePercentOutput(-Constants.OUTTAKE_SPEED_FACTOR);
         System.out.println("Intaking");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 

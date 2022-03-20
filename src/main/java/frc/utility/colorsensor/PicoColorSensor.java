@@ -274,7 +274,7 @@ public class PicoColorSensor implements AutoCloseable {
     }
   }
 
-  void setDebugPrints(boolean debug) {
+  public void setDebugPrints(boolean debug) {
     debugPrints.set(debug);
   }
 
