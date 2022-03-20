@@ -262,7 +262,6 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", autoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);
 
-        startSubsystems();
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
@@ -276,6 +275,7 @@ public class Robot extends TimedRobot {
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
+        startSubsystems();
         limelight.setLedMode(LedMode.OFF);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);

@@ -45,8 +45,6 @@ public class Outtake extends AbstractSubsystem {
     private Outtake() {
         super(Constants.OUTTAKE_PERIOD);
 
-        updateAllianceColor();
-
         outtakeWheels = new LazyCANSparkMax(Constants.OUTTAKE_CAN_ID, MotorType.kBrushless);
         outtakeWheels.setIdleMode(IdleMode.kCoast);
         outtakeWheels.setInverted(false);
@@ -98,6 +96,7 @@ public class Outtake extends AbstractSubsystem {
 
     @Override
     public void update() {
+        updateAllianceColor();
         updateOuttakeState();
 
         switch (outtakeState) {
