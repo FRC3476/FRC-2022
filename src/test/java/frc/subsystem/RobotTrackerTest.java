@@ -1,9 +1,9 @@
 package frc.subsystem;
 
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.utility.Timer;
 import org.junit.jupiter.api.AfterEach;
@@ -22,7 +22,7 @@ public class RobotTrackerTest {
     Drive drive;
     RobotTracker robotTracker;
 
-    Random random = new Random();
+    Random random;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -30,6 +30,7 @@ public class RobotTrackerTest {
         drive.kill();
         robotTracker = RobotTracker.getInstance();
         robotTracker.kill();
+        random = new Random(123123);
     }
 
     @AfterEach
@@ -78,7 +79,7 @@ public class RobotTrackerTest {
 
             Field swerveDriveOdometry = RobotTracker.class.getDeclaredField("swerveDriveOdometry");
             swerveDriveOdometry.setAccessible(true);
-            Pose2d odometry = ((SwerveDrivePoseEstimator) swerveDriveOdometry.get(robotTracker)).getEstimatedPosition();
+            Pose2d odometry = ((SwerveDriveOdometry) swerveDriveOdometry.get(robotTracker)).getPoseMeters();
 
             assertEquals(x, odometry.getTranslation().getX(), 0.3);
             assertEquals(y, odometry.getTranslation().getY(), 0.3);

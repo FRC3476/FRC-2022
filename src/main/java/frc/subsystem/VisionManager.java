@@ -419,7 +419,7 @@ public final class VisionManager extends AbstractSubsystem {
 
         Translation2d fakeGoalPos = relativeGoalTranslation;
 
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 40; i++) {
             //System.out.println("Iteration: " + i + " Fake Goal Pos: " + fakeGoalPos);
             double tof = getTimeOfFlight(fakeGoalPos);
             fakeGoalPos = relativeGoalTranslation.plus(robotVelocity.times(tof));
