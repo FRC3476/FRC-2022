@@ -484,5 +484,5 @@ public final class Constants {
     public static final double INTAKE_OPEN_TIME = 0.0;
 
     public static final int WEB_DASHBOARD_PORT = 5802;
-    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 200;
+    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
 }
