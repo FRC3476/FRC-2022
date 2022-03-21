@@ -190,16 +190,17 @@ public final class Constants {
      */
     public static final double GOAL_RADIUS = Units.inchesToMeters(GOAL_RADIUS_IN);
 
-    /**
-     * This GOAL RADIUS is used to calculate the turn error
-     */
-    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
 
     /**
      * Maximum speed of the robot when shooting the ball. (Only applies when doing the static shot) Units are in Meters per Second
      * Squared
      */
     public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(MAX_SHOOT_SPEED, 2);
+
+   /**
+     * This GOAL RADIUS is used to calculate the turn error
+     */
+    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
 
     public static final double GRAVITY = 9.80665;
 
@@ -262,6 +263,7 @@ public final class Constants {
     public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2d);
 
     public static final double FEEDER_WHEEL_LOCK_SPEED_RPM = 1000;
+
 
     // Feeder wheel pidf is unused
     public static final double FEEDER_WHEEL_P = 0.0002;
@@ -480,4 +482,7 @@ public final class Constants {
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = -1;
     public static final double INTAKE_OPEN_TIME = 0.0;
+
+    public static final int WEB_DASHBOARD_PORT = 5802;
+    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 200;
 }

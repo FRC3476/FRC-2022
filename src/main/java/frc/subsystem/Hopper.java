@@ -52,7 +52,7 @@ public final class Hopper extends AbstractSubsystem {
         super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
-
+        
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
