@@ -50,6 +50,7 @@ public final class Intake extends AbstractSubsystem {
         SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotor.get());
         SmartDashboard.putNumber("Intake Current", intakeMotor.getOutputCurrent());
         SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
+        logData("Wanted Intake State", wantedIntakeState);
     }
 
 

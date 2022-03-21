@@ -4,6 +4,8 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Hopper.ColorSensorStatus;
@@ -16,13 +18,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class Outtake extends AbstractSubsystem {
 
-    private Hopper hopper = Hopper.getInstance();
-    private Intake intake = Intake.getInstance();
+    //private Hopper hopper = Hopper.getInstance();
+    //private Intake intake = Intake.getInstance();
 
     private LazyCANSparkMax outtakeWheels;
-    private RelativeEncoder outtakeWheelsQuadrature;
 
     private double lastDetectionTime;
+
+    private RelativeEncoder outtakeWheelsQuadrature;
 
     private @NotNull ColorSensorStatus allianceColor = ColorSensorStatus.RED;
 
@@ -46,24 +49,28 @@ public class Outtake extends AbstractSubsystem {
     private OuttakeState outtakeState = OuttakeState.OFF;
 
     private Outtake() {
-        super(Constants.OUTTAKE_PERIOD);
+        super(10);
 
         outtakeWheels = new LazyCANSparkMax(Constants.OUTTAKE_CAN_ID, MotorType.kBrushless);
         outtakeWheels.setIdleMode(IdleMode.kCoast);
-        outtakeWheels.setInverted(false);
+        outtakeWheels.setInverted(true);
         outtakeWheels.setSmartCurrentLimit(Constants.OUTTAKE_CURRENT_LIMIT);
         outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 200);
         outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 25);
         outtakeWheels.setControlFramePeriodMs(25);
-        outtakeWheels.enableVoltageCompensation(9);
 
         outtakeWheelsQuadrature = outtakeWheels.getEncoder();
         outtakeWheelsQuadrature.setPositionConversionFactor(Constants.OUTTAKE_REDUCTION);
         outtakeWheelsQuadrature.setMeasurementPeriod(Constants.OUTTAKE_MEASUREMENT_PERIOD_MS);
 
+
+        //outtakeWheels.enableVoltageCompensation(9);
+        outtakeWheels.disableVoltageCompensation();
         outtakeWheels.burnFlash();
     }
+
+    NetworkTableEntry sideEntry = NetworkTableInstance.getDefault().getEntry("FMSInfo.IsRedAlliance");
 
     /**
      * Uses Sendable Chooser to decide Alliance Color
@@ -83,13 +90,17 @@ public class Outtake extends AbstractSubsystem {
      */
     private void updateOuttakeState() {
         // If color sensor detects a ball or
-        if (hopper.getColorSensorStatus() == opposingAllianceColor && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-            lastDetectionTime = Timer.getFPGATimestamp();
-            outtakeState = OuttakeState.EJECT;
-        } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-            outtakeState = OuttakeState.EJECT;
-        } else if (intake.wantedIntakeState == IntakeState.INTAKE) {
-            outtakeState = OuttakeState.INTAKE;
+        Hopper hopper = Hopper.getInstance();
+        Intake intake = Intake.getInstance();
+        if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            if (hopper.getColorSensorStatus() == opposingAllianceColor) {
+                lastDetectionTime = Timer.getFPGATimestamp();
+                outtakeState = OuttakeState.EJECT;
+            } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+                outtakeState = OuttakeState.EJECT;
+            } else {
+                outtakeState = OuttakeState.OFF;
+            }
         } else {
             outtakeState = OuttakeState.OFF;
         }
@@ -99,7 +110,12 @@ public class Outtake extends AbstractSubsystem {
      * Sets the percent outtake between 1 and -1
      */
     private void setOuttakePercentOutput(double percentOutput) {
-        outtakeWheels.setVoltage(9.0 * percentOutput);
+        outtakeWheels.set(percentOutput);
+        //outtakeWheels.getPIDController().setReference(9 * percentOutput, ControlType.kVoltage);
+    }
+
+    public OuttakeState getOuttakeState() {
+        return outtakeState;
     }
 
     @Override
@@ -137,9 +153,10 @@ public class Outtake extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        logData("Outtake State", outtakeState);
+        logData("Outtak" +
+                "e State", outtakeState);
+        logData("Outtake SetVoltage", outtakeWheels.getSetpoint());
         logData("Outtake Velocity", outtakeWheelsQuadrature.getVelocity());
-        logData("Outtake SetVoltage", outtakeWheels.getSetVoltage());
     }
 
     @Override

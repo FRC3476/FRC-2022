@@ -3,17 +3,18 @@ package frc.subsystem;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.ColorMatch;
-import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.Constants;
+import frc.subsystem.Outtake.OuttakeState;
 import frc.utility.OrangeUtility;
 import frc.utility.colorsensor.PicoColorSensor;
-import frc.utility.colorsensor.PicoColorSensor.RawColor;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 
 import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 
 public final class Hopper extends AbstractSubsystem {
+
+    private Outtake outtake = Outtake.getInstance();
     private static @NotNull Hopper INSTANCE = new Hopper();
     private final @NotNull LazyCANSparkMax hopperMotor;
     private final @NotNull PicoColorSensor colorSensor;
@@ -24,13 +25,14 @@ public final class Hopper extends AbstractSubsystem {
      * <p>
      * This object uses a simple euclidian distance to estimate the closest match with given confidence range.
      */
-    private final ColorMatch colorMatcher = new ColorMatch();
 
     /**
      * Note: Any example colors should be calibrated as the user needs, these are here as a basic example.
      */
-    private final Color blueTarget = new Color(0.184, 0.427, 0.39);
-    private final Color redTarget = new Color(0.38, 0.41, 0.2);
+    /*private final Color blueTarget = new Color(101, 246, 255);
+    private final Color redTarget = new Color(255, 75, 194); */
+
+    private final ColorMatch colorMatch = new ColorMatch();
 
     public enum ColorSensorStatus {RED, BLUE, NO_BALL}
 
@@ -47,7 +49,7 @@ public final class Hopper extends AbstractSubsystem {
     HopperState wantedHopperState = HopperState.OFF;
 
     private Hopper() {
-        super(Constants.HOPPER_PERIOD, 1);
+        super(10, 1);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
 
@@ -56,55 +58,76 @@ public final class Hopper extends AbstractSubsystem {
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
         hopperMotor.setControlFramePeriodMs(25);
 
-        colorMatcher.addColorMatch(blueTarget);
-        colorMatcher.addColorMatch(redTarget);
-
         colorSensor = new PicoColorSensor();
         colorSensor.setDebugPrints(Constants.OUTTAKE_DEBUG_PRINTS);
-    }
 
-    private Color convertRawColor(RawColor rawColor) {
-        return new Color(rawColor.red, rawColor.green, rawColor.blue);
+        /*colorMatch.addColorMatch(blueTarget);
+        colorMatch.addColorMatch(redTarget); */
     }
 
     public void checkBallColor() {
-        Color detectedColor = convertRawColor(colorSensor.getRawColor0());
-        //Color detectedColorBottom = bottomBall.getColor();
 
-        logData("Ball Red", detectedColor.red);
-        logData("Ball Green", detectedColor.green);
-        logData("Ball Blue", detectedColor.blue);
-        logData("Color Confidence", colorMatcher.matchClosestColor(detectedColor).confidence);
+        double red = colorSensor.getRawColor0().red / 309d;
+        double green = colorSensor.getRawColor0().green;
+        double blue = colorSensor.getRawColor0().blue / 567d;
+        double proximity = colorSensor.getProximity0();
 
-//        logData("Bottom Red", detectedColorBottom.red);
-//        logData("Bottom Green", detectedColorBottom.green);
-//        logData("Bottom Blue", detectedColorBottom.blue);
-//        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
-
-        if (colorMatcher.matchClosestColor(detectedColor).color == redTarget) {
+        // If color sensor is not connected, defaults to no ball
+        if (proximity < 70 || !colorSensor.isSensor0Connected()) {
+            logData("Ball Color", "No Ball Detected");
+            colorSensorStatus = ColorSensorStatus.NO_BALL;
+        } else if (red > blue) {
             logData("Ball Color", "Red");
             colorSensorStatus = ColorSensorStatus.RED;
-        } else if (colorMatcher.matchClosestColor(detectedColor).color == blueTarget) {
+        } else {
             logData("Ball Color", "Blue");
             colorSensorStatus = ColorSensorStatus.BLUE;
+        }
+
+        /*double red = colorSensor.getRawColor0().red;
+        double green = colorSensor.getRawColor0().green;
+        double blue = colorSensor.getRawColor0().blue;
+        double proximity = colorSensor.getProximity0();
+
+        double max = red;
+        if (green > max) max = green;
+        if (blue > max) max = blue;
+
+        red = (255 * red) / max;
+        green = (255 * green) / max;
+        blue = (255 * blue) / max; */
+
+        logData("Red", red);
+        logData("Green", green);
+        logData("Blue", blue);
+        logData("Color Sensor Proximity", colorSensor.getProximity0());
+
+        logData("Raw Red", colorSensor.getRawColor0().red);
+        logData("Raw Blue", colorSensor.getRawColor0().blue);
+
+        /*Color color = new Color(red, green, blue);
+        if (proximity > 70) {
+            if (colorMatch.matchClosestColor(color).color == redTarget) {
+                logData("Ball Color", "Red");
+                colorSensorStatus = ColorSensorStatus.RED;
+            } else if (colorMatch.matchClosestColor(color).color == blueTarget) {
+                logData("Ball Color", "Blue");
+                colorSensorStatus = ColorSensorStatus.BLUE;
+            } else {
+                logData("Bottom Ball Color", "No Ball Detected");
+            }
         } else {
             logData("Ball Color", "No Ball Detected");
             colorSensorStatus = ColorSensorStatus.NO_BALL;
-        }
-
-//        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
-//            logData("Bottom Ball Color", "Red");
-//            bottomBallDetected = true;
-//        } else if (colorMatcher.matchClosestColor(detectedColorBottom).color == blueTarget) {
-//            logData("Bottom Ball Color", "Blue");
-//            bottomBallDetected = true;
-//        } else {
-//            logData("Bottom Ball Color", "No Ball Detected");
-//            bottomBallDetected = false;
-//        }
+        } */
     }
 
-    public void setHopperState(HopperState hopperState) {
+    private void setHopperStatePrivate(HopperState hopperState) {
+        // Forces Hopper to run in reverse if outtake is ejecting
+        if (outtake.getOuttakeState() == OuttakeState.EJECT) {
+            hopperState = HopperState.OFF;
+        }
+
         switch (hopperState) {
             case ON:
                 hopperMotor.set(Constants.HOPPER_SPEED);
@@ -131,11 +154,11 @@ public final class Hopper extends AbstractSubsystem {
 
     @Override
     public void update() {
-        setHopperState(wantedHopperState);
+        setHopperStatePrivate(wantedHopperState);
         checkBallColor();
     }
 
-    public void setWantedHopperState(HopperState hopperState) {
+    public void setHopperState(HopperState hopperState) {
         wantedHopperState = hopperState;
     }
 
