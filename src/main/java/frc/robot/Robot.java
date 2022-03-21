@@ -589,12 +589,6 @@ public class Robot extends TimedRobot {
         }
     }
 
-    private enum ShooterControlState {
-        VELOCITY_COMPENSATED, STATIC_POSE, MANUAL
-    }
-
-    ShooterControlState shooterControlState = ShooterControlState.VELOCITY_COMPENSATED;
-
     private void runShooter() {
         if (buttonPanel.getRisingEdge(1)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
