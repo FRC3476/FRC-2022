@@ -691,8 +691,8 @@ public final class Drive extends AbstractSubsystem {
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
             swerveDrive(new ChassisSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.5,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.5,
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
                     pidDeltaSpeed));
         }
 
