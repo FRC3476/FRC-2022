@@ -33,6 +33,7 @@ public final class DashboardHandler extends AbstractSubsystem {
      */
     private final HashMap<InetAddress, DashboardConnection> dashboardConnections = new HashMap<>();
     private static final Map<String, String> LOG_DATA_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, Object> LOG_DATA_MAP_OBJECTS = new ConcurrentHashMap<>();
     private static final ReadWriteLock LOG_DATA_MAP_LOCK = new ReentrantReadWriteLock();
     private final HashMap<Character, PacketHandler> packetHandlerMap = new HashMap<>();
 
@@ -78,33 +79,20 @@ public final class DashboardHandler extends AbstractSubsystem {
     }
 
     public void log(@NotNull String key, @NotNull Object value) {
-        log(key, value, false);
+        log(key, value, true);
     }
 
     public void log(@NotNull String key, @NotNull Object value, boolean logToNetworkTables) {
-        if (logToNetworkTables) {
-            //@formatter:off
-            Class<?> cl = value.getClass();
-            if (cl.equals(Integer.class)) SmartDashboard.putNumber(key, (int) value);
-            else if (cl.equals(Double.class)) SmartDashboard.putNumber(key, (double) value);
-            else if (cl.equals(Short.class)) SmartDashboard.putNumber(key, (short) value);
-            else if (cl.equals(Long.class)) SmartDashboard.putNumber(key, (long) value);
-            else if (cl.equals(Float.class)) SmartDashboard.putNumber(key, (float) value);
-            else if (cl.equals(Byte.class)) SmartDashboard.putNumber(key, (byte) value);
-            else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(key, (boolean) value);
-            else if (cl.equals(String.class)) SmartDashboard.putString(key, (String) value);
-            else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(key, (Double[]) value);
-            else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(key, (Boolean[]) value);
-            else if (cl.equals(String[].class)) SmartDashboard.putStringArray(key, (String[]) value);
-            else SmartDashboard.putString(key, value.toString());
-            //@formatter:on
-        }
+
         LOG_DATA_MAP_LOCK.readLock().lock();
         // We're adding a read lock here because there can only be one writer, but there can be many readers. The
         // ConcurrentHashMap is thread-safe and will handle the synchronization with multiple writes for us. We then only put a
         // write lock when reading it to prevent any other writes from happening while we're serializing.
         try {
             LOG_DATA_MAP.put(key, value.toString());
+            if (logToNetworkTables) {
+                LOG_DATA_MAP_OBJECTS.put(key, value);
+            }
         } finally {
             LOG_DATA_MAP_LOCK.readLock().unlock();
         }
@@ -117,6 +105,26 @@ public final class DashboardHandler extends AbstractSubsystem {
             try {
                 SendableLog log = new SendableLog(LOG_DATA_MAP);
                 json = 'd' + Serializer.serializeToString(log);
+
+                for (Map.Entry<String, Object> entry : LOG_DATA_MAP_OBJECTS.entrySet()) {
+                    //@formatter:off
+                    String key = entry.getKey();
+                    Class<?> cl = entry.getValue().getClass();
+                    Object value = entry.getValue();
+                    if (cl.equals(Integer.class)) SmartDashboard.putNumber(key, (int) value);
+                    else if (cl.equals(Double.class)) SmartDashboard.putNumber(key, (double) value);
+                    else if (cl.equals(Short.class)) SmartDashboard.putNumber(key, (short) value);
+                    else if (cl.equals(Long.class)) SmartDashboard.putNumber(key, (long) value);
+                    else if (cl.equals(Float.class)) SmartDashboard.putNumber(key, (float) value);
+                    else if (cl.equals(Byte.class)) SmartDashboard.putNumber(key, (byte) value);
+                    else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(key, (boolean) value);
+                    else if (cl.equals(String.class)) SmartDashboard.putString(key, (String) value);
+                    else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(key, (Double[]) value);
+                    else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(key, (Boolean[]) value);
+                    else if (cl.equals(String[].class)) SmartDashboard.putStringArray(key, (String[]) value);
+                    else SmartDashboard.putString(key, value.toString());
+                    //@formatter:on
+                }
             } finally {
                 LOG_DATA_MAP_LOCK.writeLock().unlock();
             }
