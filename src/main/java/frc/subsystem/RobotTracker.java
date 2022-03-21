@@ -96,11 +96,11 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     public void addVisionMeasurement(Translation2d visionRobotPoseMeters, double timestampSeconds) {
         resetPosition(visionRobotPoseMeters);
-        try {
-            //swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
-        } catch (RuntimeException e) {
-            kalmanFilterFailed();
-        }
+//        try {
+//            swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
+//        } catch (RuntimeException e) {
+//            kalmanFilterFailed();
+//        }
     }
 
     public void calibrateGyro() {
@@ -304,12 +304,8 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private ChassisSpeeds getRotatedSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
-        double dist = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
-        return new ChassisSpeeds(
-                dist * rotation.getCos(),
-                dist * rotation.getSin(),
-                speeds.omegaRadiansPerSecond
-        );
+        Translation2d velocity = new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond).rotateBy(rotation);
+        return new ChassisSpeeds(velocity.getX(), velocity.getY(), speeds.omegaRadiansPerSecond);
     }
 
     private final Comparator<Map.Entry<Double, Rotation2d>> comparator = Comparator.comparingDouble(Entry::getKey);
