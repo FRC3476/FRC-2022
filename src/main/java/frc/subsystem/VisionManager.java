@@ -66,12 +66,19 @@ public final class VisionManager extends AbstractSubsystem {
                         .minus(robotTracker.getGyroAngle())).getRadians())
                         < getAllowedTurnError());
         logData("Is Robot Allowed Shoot Tilt",
-                Math.abs(robotTracker.getGyro().getRoll()) < 1.5 && Math.abs(robotTracker.getGyro().getPitch()) < 1.5);
+                Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3);
 
         Translation2d robotVelocity = getRobotVel();
+        Translation2d relativeRobotTranslation = getRelativeGoalTranslation();
+        logData("Relative Robot Translation X", relativeRobotTranslation.getX());
+        logData("Relative Robot Translation Y", relativeRobotTranslation.getY());
+
+        logData("Vision Robot Velocity X", robotVelocity.getX());
+        logData("Vision Robot Velocity Y", robotVelocity.getY());
+
         Translation2d aimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0.3, getRelativeGoalTranslation(), robotVelocity),
-                robotVelocity
+                predictFutureTranslation(0.0, relativeRobotTranslation, robotVelocity, getAccel()),
+                robotVelocity.plus(getAccel().times(0.2))
         );
 
         Translation2d fieldCentricCords =
@@ -83,16 +90,16 @@ public final class VisionManager extends AbstractSubsystem {
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
         Translation2d robotVelocity = getRobotVel();
         Translation2d aimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0.3, getRelativeGoalTranslation(), robotVelocity),
-                robotVelocity
+                predictFutureTranslation(0, getRelativeGoalTranslation(), robotVelocity, getAccel()),
+                robotVelocity.plus(getAccel().times(0))
         );
 
         double targetAngle = angleOf(aimToPosition).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
         Translation2d futureAimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0.32, getRelativeGoalTranslation(), robotVelocity),
-                robotVelocity
+                predictFutureTranslation(0.02, getRelativeGoalTranslation(), robotVelocity, getAccel()),
+                robotVelocity.plus(getAccel().times(0.02))
         );
         double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
 
@@ -102,7 +109,7 @@ public final class VisionManager extends AbstractSubsystem {
                 0);
         updateShooterState(aimToPosition.getNorm());
 
-        tryToShoot(false);
+        tryToShoot(aimToPosition, (futureTargetAngle - targetAngle) * 50, false);
     }
 
 
@@ -110,14 +117,15 @@ public final class VisionManager extends AbstractSubsystem {
         drive.updateTurn(controllerDriveInputs, getAngleToTarget(), fieldRelative, getAllowedTurnError());
 
         updateShooterState(getDistanceToTarget());
-        tryToShoot(true);
+        tryToShoot(getRelativeGoalTranslation(), 0, true);
     }
 
-    private void tryToShoot(boolean doSpeedCheck) {
-        if (Math.abs((angleOf(getRelativeGoalTranslation()).minus(robotTracker.getGyroAngle())).getRadians())
-                < getAllowedTurnError()
+    private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
+        if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians()) < getAllowedTurnError()
+                && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
+                < Math.toRadians(8)
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck) &&
-                Math.abs(robotTracker.getGyro().getRoll()) < 1.5 && Math.abs(robotTracker.getGyro().getPitch()) < 1.5) {
+                Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
             if (shooter.isFiring()) {
                 if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
@@ -165,8 +173,9 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     public Translation2d getRobotVel() {
-        ChassisSpeeds chassisSpeeds = robotTracker.getLatencyCompedChassisSpeeds();
-        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
+        Rotation2d rotation2d = robotTracker.getGyroAngle();
+        ChassisSpeeds chassisSpeeds = drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates());
+        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond).rotateBy(rotation2d);
     }
 
     /**
@@ -202,7 +211,7 @@ public final class VisionManager extends AbstractSubsystem {
         visionTranslation.ifPresent(
                 mutableTranslation2d -> {
                     robotTracker.addVisionMeasurement(
-                            new Pose2d(mutableTranslation2d, getLatencyCompedLimelightRotation()),
+                            mutableTranslation2d,
                             getLimelightTime());
                     robotPositionOffset = new Translation2d();
                 }
@@ -317,7 +326,12 @@ public final class VisionManager extends AbstractSubsystem {
             if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
                     robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
 
-                //robotPositionOffset = robotTranslation.minus(robotTracker.getLatencyCompedPoseMeters().getTranslation());
+
+                robotTracker.addVisionMeasurement(robotTranslation,
+                        getLimelightTime());
+                robotPositionOffset = new Translation2d();
+
+
                 logData("Using Vision Info", "Using Vision Info");
             } else {
                 logData("Using Vision Info", "Position is too far from expected");
@@ -385,8 +399,10 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private Translation2d predictFutureTranslation(double predictAheadTime, Translation2d currentTranslation,
-                                                   Translation2d currentVelocity) {
-        return currentTranslation.plus(currentVelocity.times(predictAheadTime));
+                                                   Translation2d currentVelocity, Translation2d currentAcceleration) {
+        return currentTranslation
+                .plus(currentVelocity.times(predictAheadTime))
+                .plus(currentTranslation.times(0.5 * predictAheadTime * predictAheadTime));
     }
 
     /**
@@ -403,16 +419,30 @@ public final class VisionManager extends AbstractSubsystem {
 
         Translation2d fakeGoalPos = relativeGoalTranslation;
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 15; i++) {
             //System.out.println("Iteration: " + i + " Fake Goal Pos: " + fakeGoalPos);
             double tof = getTimeOfFlight(fakeGoalPos);
-            fakeGoalPos = relativeGoalTranslation.minus(robotVelocity.times(tof));
+            fakeGoalPos = relativeGoalTranslation.plus(robotVelocity.times(tof));
         }
         return fakeGoalPos;
     }
 
     double getTimeOfFlight(Translation2d translation2d) {
         double distance = Units.metersToInches(translation2d.getNorm());
-        return (0.0128363 * distance) + 0.334346;
+
+        double timeOfFlightFrames;
+        if (distance < 120) {
+            timeOfFlightFrames = 28;
+        } else {
+            timeOfFlightFrames = (0.09 * (distance - 120)) + 28;
+        }
+
+        //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
+        return timeOfFlightFrames / 30;
+    }
+
+
+    private Translation2d getAccel() {
+        return robotTracker.getAcceleration();
     }
 }

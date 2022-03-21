@@ -164,7 +164,7 @@ public final class Constants {
 
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = 16.0;
+    public static final double DEFAULT_TURN_P = 8.0;
     public static final double DEFAULT_TURN_I = 0.0;
     public static final double DEFAULT_TURN_D = 0.0;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
@@ -239,7 +239,7 @@ public final class Constants {
     public static final double DEFAULT_SHOOTER_P = 0.035;
     public static final double DEFAULT_SHOOTER_I = 0.000;
     public static final double DEFAULT_SHOOTER_D = 0.000;
-    public static final double DEFAULT_SHOOTER_F = 0.000068 * 1023;
+    public static final double DEFAULT_SHOOTER_F = 0.069664;
     public static final double DEFAULT_SHOOTER_IZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -464,7 +464,7 @@ public final class Constants {
     /**
      * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 4.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause

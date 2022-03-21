@@ -48,7 +48,7 @@ public class RobotTrackerTest {
             double period = 0.05;
 
             Timer.setTime(0);
-            robotTracker.resetPosition(new Pose2d(x, y, new Rotation2d(theta)), new Rotation2d(0));
+            robotTracker.resetPosition(new Pose2d(x, y, new Rotation2d(theta)), new Rotation2d(0), true);
 
             double largeRandomX = random.nextDouble() * 10 - 5;
             double largeRandomY = random.nextDouble() * 10 - 5;
