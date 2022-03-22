@@ -79,10 +79,7 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Vision Robot Velocity X", robotVelocity.getX());
         logData("Vision Robot Velocity Y", robotVelocity.getY());
 
-        Translation2d aimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0.0, relativeRobotTranslation, robotVelocity, getAccel()),
-                robotVelocity.plus(getAccel().times(0.2))
-        );
+        Translation2d aimToPosition = getAdjustedTranslation(0.15);
 
         Translation2d fieldCentricCords =
                 RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation().minus(aimToPosition);
@@ -90,29 +87,24 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Calculated Target Y", fieldCentricCords.getY());
     }
 
+
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
-        Translation2d robotVelocity = getRobotVel();
-        Translation2d aimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0, getRelativeGoalTranslation(), robotVelocity, getAccel()),
-                robotVelocity.plus(getAccel().times(0))
-        );
+        Translation2d aimToPosition = getAdjustedTranslation(0.15);
 
         double targetAngle = angleOf(aimToPosition).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
-        Translation2d futureAimToPosition = getVelocityAdjustedRelativeTranslation(
-                predictFutureTranslation(0.02, getRelativeGoalTranslation(), robotVelocity, getAccel()),
-                robotVelocity.plus(getAccel().times(0.02))
-        );
+        Translation2d futureAimToPosition = getAdjustedTranslation(0.25);
         double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
 
         drive.updateTurn(controllerDriveInputs,
-                new State(targetAngle, (futureTargetAngle - targetAngle) * 50),
+                new State(targetAngle, (futureTargetAngle - targetAngle) * 10),
                 useFieldRelative,
                 0);
+
         updateShooterState(aimToPosition.getNorm());
 
-        tryToShoot(aimToPosition, (futureTargetAngle - targetAngle) * 50, false);
+        tryToShoot(aimToPosition, (futureTargetAngle - targetAngle) * 10, false);
     }
 
 
@@ -198,6 +190,9 @@ public final class VisionManager extends AbstractSubsystem {
                 .plus(Constants.GOAL_POSITION));
     }
 
+    /**
+     * @return current relative translation of the robot based on the robot tracker
+     */
     private Translation2d getRelativeGoalTranslation() {
         return robotTracker.getLatencyCompedPoseMeters().getTranslation()
                 .plus(robotPositionOffset)
@@ -441,6 +436,10 @@ public final class VisionManager extends AbstractSubsystem {
         return fakeGoalPos;
     }
 
+    /**
+     * @param translation2d The position of the target
+     * @return the time of flight to the target
+     */
     double getTimeOfFlight(Translation2d translation2d) {
         double distance = Units.metersToInches(translation2d.getNorm());
 
@@ -453,6 +452,20 @@ public final class VisionManager extends AbstractSubsystem {
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
         return timeOfFlightFrames / 30;
+    }
+
+    /**
+     * @param predictAheadTime The amount of time ahead of the robot that the robot should predict
+     * @return A translation that compensates for the robot's velocity. This is used to calculate the "fake" target position
+     */
+    @NotNull
+    private Translation2d getAdjustedTranslation(double predictAheadTime) {
+        Translation2d relativeRobotTranslation = getRelativeGoalTranslation();
+        Translation2d robotVelocity = getRobotVel();
+        return getVelocityAdjustedRelativeTranslation(
+                predictFutureTranslation(predictAheadTime, relativeRobotTranslation, robotVelocity, getAccel()),
+                robotVelocity.plus(getAccel().times(predictAheadTime))
+        );
     }
 
 
