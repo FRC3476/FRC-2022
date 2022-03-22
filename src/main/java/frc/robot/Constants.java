@@ -283,6 +283,8 @@ public final class Constants {
      */
     public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
     public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
+    public static final double RUMBLE_DELAY = 0.1666666667;
+    public static final double RUMBLE_TIME = 0.25;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;

@@ -15,8 +15,10 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
@@ -586,8 +588,8 @@ public final class Shooter extends AbstractSubsystem {
                 -(-hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
-    double nextAllowedShootTime = 0;
-
+    private double nextAllowedShootTime = 0;
+    private double rumbleTime = 0;
 
     /**
      * Update Method for Shooter.
@@ -611,6 +613,7 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 shooterWheelMaster.set(ControlMode.PercentOutput, 0);
                 setHoodPosition(Constants.HOOD_MAX_ANGLE); // Sets hood to the lowest possible position
 
@@ -629,13 +632,13 @@ public final class Shooter extends AbstractSubsystem {
                     }
                 }
 
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
+
                 break;
 
             case ON:
-                //shooterWheelMaster.set(ControlMode.PercentOutput, 1);
                 shooterWheelMaster.set(ControlMode.Velocity,
                         desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
-//                shooterWheelMaster.set(ControlMode.PercentOutput, 0.5);
 
                 if (!isHoodAtTargetAngle()) {
                     moveHoodMotor(); // Sets Motor to travel to desired hood angle
@@ -656,6 +659,8 @@ public final class Shooter extends AbstractSubsystem {
                     feederLockPosition = feederWheel.getSelectedSensorPosition();
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                     nextAllowedShootTime = Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY;
+                    rumbleTime = Timer.getFPGATimestamp() + Constants.RUMBLE_DELAY;
+                    Robot.setRumble(RumbleType.kLeftRumble, 0);
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > forceFeederOnTime) {
@@ -664,6 +669,12 @@ public final class Shooter extends AbstractSubsystem {
                         } else {
                             feederWheel.set(ControlMode.PercentOutput, 0);
                         }
+                    }
+
+                    if (Timer.getFPGATimestamp() > rumbleTime && rumbleTime < Timer.getFPGATimestamp() + Constants.RUMBLE_TIME) {
+                        Robot.setRumble(RumbleType.kLeftRumble, 1);
+                    } else {
+                        Robot.setRumble(RumbleType.kLeftRumble, 0);
                     }
                 }
                 break;
@@ -719,9 +730,11 @@ public final class Shooter extends AbstractSubsystem {
                     System.out.println("Homing Failed At: " + Timer.getFPGATimestamp());
                     homingStartTime = -1;
                 }
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 break;
 
             case TEST:
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 break;
         }
     }

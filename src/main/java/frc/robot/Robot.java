@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -153,9 +154,13 @@ public class Robot extends TimedRobot {
     private final VisionManager visionManager = VisionManager.getInstance();
 
     //Inputs
-    private final Controller xbox = new Controller(0);
-    private final Controller stick = new Controller(1);
-    private final Controller buttonPanel = new Controller(2);
+    private final static Controller xbox = new Controller(0);
+    private final static Controller stick = new Controller(1);
+    private final static Controller buttonPanel = new Controller(2);
+
+    public static void setRumble(RumbleType type, double value) {
+        xbox.setRumble(type, value);
+    }
 
 
     //Control loop states
