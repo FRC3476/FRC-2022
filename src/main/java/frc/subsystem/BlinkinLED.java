@@ -1,7 +1,10 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import frc.utility.Timer;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public final class BlinkinLED extends AbstractSubsystem {
     private static @NotNull BlinkinLED instance = new BlinkinLED();
@@ -10,6 +13,44 @@ public final class BlinkinLED extends AbstractSubsystem {
         return instance;
     }
 
+
+    public static class LedStatus implements Comparable<LedStatus> {
+        public final double value;
+        public final int priority;
+
+        public LedStatus(BlinkinLedMode value, int priority) {
+            this.value = value.value;
+            this.priority = priority;
+        }
+
+        public LedStatus(double value, int priority) {
+            this.value = value;
+            this.priority = priority;
+        }
+
+        @Override
+        public int compareTo(@NotNull BlinkinLED.LedStatus o) {
+            return Integer.compare(this.priority, o.priority);
+        }
+
+        @Override
+        public String toString() {
+            return "(" + value + ", " + priority + ")";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            LedStatus that = (LedStatus) o;
+            return Double.compare(that.value, value) == 0 && priority == that.priority;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value, priority);
+        }
+    }
 
     public enum BlinkinLedMode {
         // yoinked from https://github.com/Mechanical-Advantage/RobotCode2022/blob/main/src/main/java/frc/robot/util/BlinkinLedDriver.java
@@ -137,8 +178,22 @@ public final class BlinkinLED extends AbstractSubsystem {
         spark = new Spark(0);
     }
 
-    public void setColor(double color) {
-        spark.set(color);
+    private @NotNull LedStatus currentStatus = new LedStatus(BlinkinLedMode.SOLID_ORANGE, -100);
+
+    private double statusExpiryTime = 0;
+
+    /**
+     * Set the status of the BlinkinLED.
+     * <p>
+     * If the ledStatus has a priority that is >= the current priority the current status is set as the LEDs state. OR if the
+     * previous ledStatus has expired the current ledStatus is set as the LED's state.
+     */
+    public synchronized void setStatus(LedStatus ledStatus) {
+        if (ledStatus.priority >= currentStatus.priority || Timer.getFPGATimestamp() > statusExpiryTime) {
+            spark.set(ledStatus.value);
+            currentStatus = ledStatus;
+            statusExpiryTime = Timer.getFPGATimestamp() + 0.1;
+        }
     }
 
     @Override

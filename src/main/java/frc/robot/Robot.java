@@ -513,14 +513,6 @@ public class Robot extends TimedRobot {
             visionManager.unForceVisionOn(resettingPoseVisionOn);
         }
 
-        if ((shooter.getShooterState() == Shooter.ShooterState.OFF)) {
-            if (limelight.isConnected()) { // Simple status indicator that shows if the limelight is connected or not
-                blinkinLED.setColor(0.77);
-            } else {
-                blinkinLED.setColor(0.61);
-            }
-        }
-
 //        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
 //            visionManager.adjustShooterHoodBias(-0.5);
 //        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {

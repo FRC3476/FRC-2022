@@ -8,6 +8,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
+import frc.subsystem.BlinkinLED.BlinkinLedMode;
+import frc.subsystem.BlinkinLED.LedStatus;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
 import frc.utility.ControllerDriveInputs;
@@ -34,6 +36,7 @@ public final class VisionManager extends AbstractSubsystem {
     private final @NotNull Limelight limelight = Limelight.getInstance();
     private final @NotNull Drive drive = Drive.getInstance();
     private final @NotNull Shooter shooter = Shooter.getInstance();
+    private final @NotNull BlinkinLED blinkinLED = BlinkinLED.getInstance();
 
     public final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
 
@@ -297,6 +300,11 @@ public final class VisionManager extends AbstractSubsystem {
 
     private final Object updateLoopSource = new Object();
 
+    private final LedStatus limelightUsingVisionStatus = new LedStatus(BlinkinLedMode.SOLID_LAWN_GREEN, 1);
+    private final LedStatus limelightNotConnectedStatus = new LedStatus(BlinkinLedMode.SOLID_RED, 100);
+    private final LedStatus limelightTooFarFromExpectedStatus = new LedStatus(BlinkinLedMode.SOLID_ORANGE, 100);
+    private final LedStatus limelightNotVisibleStatus = new LedStatus(BlinkinLedMode.SOLID_RED_ORANGE, 100);
+
     @Override
     public void update() {
         Pose2d robotTrackerPose = robotTracker.getLatencyCompedPoseMeters();
@@ -304,6 +312,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double angleToTarget = Math.atan2(relativeGoalPos.getY(), relativeGoalPos.getX());
 
+        if (!limelight.isTargetVisible()) {
+            blinkinLED.setStatus(limelightNotConnectedStatus);
+        }
 
         if (Math.abs(angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50)) {
             forceVisionOn(updateLoopSource);
@@ -333,11 +344,14 @@ public final class VisionManager extends AbstractSubsystem {
 
 
                 logData("Using Vision Info", "Using Vision Info");
+                blinkinLED.setStatus(limelightUsingVisionStatus);
             } else {
                 logData("Using Vision Info", "Position is too far from expected");
+                blinkinLED.setStatus(limelightTooFarFromExpectedStatus);
             }
         } else {
             logData("Using Vision Info", "No target visible");
+            blinkinLED.setStatus(limelightNotVisibleStatus);
         }
     }
 

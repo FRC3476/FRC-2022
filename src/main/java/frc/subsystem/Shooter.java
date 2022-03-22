@@ -537,32 +537,6 @@ public final class Shooter extends AbstractSubsystem {
         return nextState;
     }
 
-    // Sets LED different colors, depends on if flywheel is up to speed and if hood is in correct position
-    private void setLedForOnMode() {
-
-        // Sets LED different colors for different shooter scenarios
-        if (!isShooterAtTargetSpeed()) {
-            // If Shooter is not at the target speed, LED will display this color
-            BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
-        } else if (!isHoodAtTargetAngle()) {
-            // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
-            BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
-        } else {
-            // If both hood and flywheel are ready for shooting, LED will display this color
-            BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_READY_TO_SHOOT);
-        }
-    }
-
-    // Sets BlinkinLED to color when robot is in homing mode
-    private void setLedForHomingMode() {
-        BlinkinLED.getInstance().setColor(Constants.LED_HOOD_HOMING_IN_PROGRESS);
-    }
-
-    // Sets BlinkinLED to color when robot is in test mode
-    private void setLedForTestMode() {
-        BlinkinLED.getInstance().setColor(Constants.LED_TEST_IN_PROGRESS);
-    }
-
     private void moveHoodMotor() {
         hoodPID.setReference((desiredHoodAngle - getHoodAngle() + hoodRelativeEncoder.getPosition()),
                 CANSparkMax.ControlType.kPosition);
@@ -692,9 +666,6 @@ public final class Shooter extends AbstractSubsystem {
                         }
                     }
                 }
-
-                // Sets Blinkin LED different colors for different flywheel and hood states
-                setLedForOnMode();
                 break;
 
             case HOMING:
@@ -748,16 +719,9 @@ public final class Shooter extends AbstractSubsystem {
                     System.out.println("Homing Failed At: " + Timer.getFPGATimestamp());
                     homingStartTime = -1;
                 }
-
-                // Sets LED for Homing states
-                setLedForHomingMode();
                 break;
 
             case TEST:
-
-                // Sets LED for testing state
-                setLedForTestMode();
-
                 break;
         }
     }
