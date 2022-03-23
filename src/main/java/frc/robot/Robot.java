@@ -151,7 +151,6 @@ public class Robot extends TimedRobot {
     private final Shooter shooter = Shooter.getInstance();
     private final Climber climber = Climber.getInstance();
     private final VisionManager visionManager = VisionManager.getInstance();
-    private final Outtake outtake = Outtake.getInstance();
 
     //Inputs
     private final static Controller xbox = new Controller(0);
@@ -729,10 +728,6 @@ public class Robot extends TimedRobot {
         if (buttonPanel.getRisingEdge(8)) {
             climber.selfTest();
         }
-
-        if (buttonPanel.getRisingEdge(10)) {
-            outtake.selfTest();
-        }
     }
 
     private void startSubsystems() {
@@ -744,7 +739,6 @@ public class Robot extends TimedRobot {
         shooter.start();
         climber.start();
         visionManager.start();
-        outtake.start();
     }
 
     public void killAuto() {

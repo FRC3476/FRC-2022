@@ -1,12 +1,19 @@
 package frc.subsystem;
 
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
-import com.revrobotics.ColorMatch;
+import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
-import frc.subsystem.Outtake.OuttakeState;
+import frc.robot.Robot;
+import frc.subsystem.Intake.IntakeSolState;
+import frc.subsystem.Intake.IntakeState;
 import frc.utility.OrangeUtility;
-import frc.utility.colorsensor.PicoColorSensor;
+import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,29 +21,16 @@ import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 
 public final class Hopper extends AbstractSubsystem {
 
-    private Outtake outtake = Outtake.getInstance();
     private static @NotNull Hopper INSTANCE = new Hopper();
     private final @NotNull LazyCANSparkMax hopperMotor;
-    private final @NotNull PicoColorSensor colorSensor;
+    private RelativeEncoder outtakeWheelsQuadrature;
+    private LazyCANSparkMax outtakeWheels;
+    private double lastDetectionTime;
 
-    /**
-     * A Rev Color Match object is used to register and detect known colors. This can be calibrated ahead of time or during
-     * operation.
-     * <p>
-     * This object uses a simple euclidian distance to estimate the closest match with given confidence range.
-     */
+    final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
+    NetworkTable intakeTable = instance.getTable("limelight-intake");
+    NetworkTableEntry ta = intakeTable.getEntry("ta");
 
-    /**
-     * Note: Any example colors should be calibrated as the user needs, these are here as a basic example.
-     */
-    /*private final Color blueTarget = new Color(101, 246, 255);
-    private final Color redTarget = new Color(255, 75, 194); */
-
-    private final ColorMatch colorMatch = new ColorMatch();
-
-    public enum ColorSensorStatus {RED, BLUE, NO_BALL}
-
-    private ColorSensorStatus colorSensorStatus = ColorSensorStatus.NO_BALL;
 
     public static Hopper getInstance() {
         return INSTANCE;
@@ -48,8 +42,27 @@ public final class Hopper extends AbstractSubsystem {
 
     HopperState wantedHopperState = HopperState.OFF;
 
+    /**
+     * Outtake can either be OFF or INTAKE, or EJECT
+     */
+    public enum OuttakeState {
+        OFF,
+        INTAKE,
+        EJECT,
+    }
+
+    private OuttakeState outtakeState = OuttakeState.OFF;
+
+    public enum BallColor {
+        RED,
+        BLUE,
+        NO_BALL
+    }
+
+    BallColor opposingAllianceColor = BallColor.BLUE;
+
     private Hopper() {
-        super(10, 1);
+        super(10, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
 
@@ -58,73 +71,81 @@ public final class Hopper extends AbstractSubsystem {
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
         hopperMotor.setControlFramePeriodMs(25);
 
-        colorSensor = new PicoColorSensor();
-        colorSensor.setDebugPrints(Constants.OUTTAKE_DEBUG_PRINTS);
+        outtakeWheels = new LazyCANSparkMax(Constants.OUTTAKE_CAN_ID, MotorType.kBrushless);
+        outtakeWheels.setIdleMode(IdleMode.kCoast);
+        outtakeWheels.setInverted(true);
+        outtakeWheels.setSmartCurrentLimit(Constants.OUTTAKE_CURRENT_LIMIT);
+        outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+        outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 200);
+        outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 25);
+        outtakeWheels.setControlFramePeriodMs(25);
 
-        /*colorMatch.addColorMatch(blueTarget);
-        colorMatch.addColorMatch(redTarget); */
+        outtakeWheelsQuadrature = outtakeWheels.getEncoder();
+        outtakeWheelsQuadrature.setPositionConversionFactor(Constants.OUTTAKE_REDUCTION);
+        outtakeWheelsQuadrature.setMeasurementPeriod(Constants.OUTTAKE_MEASUREMENT_PERIOD_MS);
+
+        outtakeWheels.disableVoltageCompensation();
+        outtakeWheels.burnFlash();
     }
 
-    public void checkBallColor() {
-
-        double red = colorSensor.getRawColor0().red / 309d;
-        double green = colorSensor.getRawColor0().green;
-        double blue = colorSensor.getRawColor0().blue / 567d;
-        double proximity = colorSensor.getProximity0();
-
-        // If color sensor is not connected, defaults to no ball
-        if (proximity < 70 || !colorSensor.isSensor0Connected()) {
-            logData("Ball Color", "No Ball Detected");
-            colorSensorStatus = ColorSensorStatus.NO_BALL;
-        } else if (red > blue) {
-            logData("Ball Color", "Red");
-            colorSensorStatus = ColorSensorStatus.RED;
+    /**
+     * Uses Sendable Chooser to decide Alliance Color
+     */
+    private void updateAllianceColor() {
+        if (Robot.sideChooser.getSelected().equals(Robot.BLUE)) {
+            opposingAllianceColor = BallColor.RED;
         } else {
-            logData("Ball Color", "Blue");
-            colorSensorStatus = ColorSensorStatus.BLUE;
+            opposingAllianceColor = BallColor.BLUE;
         }
+    }
 
-        /*double red = colorSensor.getRawColor0().red;
-        double green = colorSensor.getRawColor0().green;
-        double blue = colorSensor.getRawColor0().blue;
-        double proximity = colorSensor.getProximity0();
-
-        double max = red;
-        if (green > max) max = green;
-        if (blue > max) max = blue;
-
-        red = (255 * red) / max;
-        green = (255 * green) / max;
-        blue = (255 * blue) / max; */
-
-        logData("Red", red);
-        logData("Green", green);
-        logData("Blue", blue);
-        logData("Color Sensor Proximity", colorSensor.getProximity0());
-
-        logData("Raw Red", colorSensor.getRawColor0().red);
-        logData("Raw Blue", colorSensor.getRawColor0().blue);
-
-        /*Color color = new Color(red, green, blue);
-        if (proximity > 70) {
-            if (colorMatch.matchClosestColor(color).color == redTarget) {
-                logData("Ball Color", "Red");
-                colorSensorStatus = ColorSensorStatus.RED;
-            } else if (colorMatch.matchClosestColor(color).color == blueTarget) {
-                logData("Ball Color", "Blue");
-                colorSensorStatus = ColorSensorStatus.BLUE;
+    /**
+     * Updates state of outtake based on color sensor and intake direction
+     */
+    private void updateOuttakeState() {
+        // If color sensor detects a ball or
+        Intake intake = Intake.getInstance();
+        if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            if (getBallColor() == opposingAllianceColor) {
+                lastDetectionTime = Timer.getFPGATimestamp();
+                outtakeState = OuttakeState.EJECT;
+            } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+                outtakeState = OuttakeState.EJECT;
             } else {
-                logData("Bottom Ball Color", "No Ball Detected");
+                outtakeState = OuttakeState.OFF;
             }
         } else {
-            logData("Ball Color", "No Ball Detected");
-            colorSensorStatus = ColorSensorStatus.NO_BALL;
-        } */
+            outtakeState = OuttakeState.OFF;
+        }
+    }
+
+    /**
+     * Sets the percent outtake between 1 and -1
+     */
+    private void setOuttakePercentOutput(double percentOutput) {
+        outtakeWheels.set(percentOutput);
+        //outtakeWheels.getPIDController().setReference(9 * percentOutput, ControlType.kVoltage);
+    }
+
+    public OuttakeState getOuttakeState() {
+        return outtakeState;
+    }
+
+    public BallColor getBallColor() {
+        @NotNull BallColor currentBallColor;
+
+        if (ta.getDouble(0) > .01) {
+            currentBallColor = opposingAllianceColor;
+        } else {
+            currentBallColor = BallColor.NO_BALL;
+        }
+
+        return currentBallColor;
     }
 
     private void setHopperStatePrivate(HopperState hopperState) {
         // Forces Hopper to run in reverse if outtake is ejecting
-        if (outtake.getOuttakeState() == OuttakeState.EJECT) {
+        if (getOuttakeState() == OuttakeState.EJECT) {
             hopperState = HopperState.OFF;
         }
 
@@ -148,14 +169,25 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
-    public synchronized ColorSensorStatus getColorSensorStatus() {
-        return colorSensorStatus;
-    }
-
     @Override
     public void update() {
+        updateAllianceColor();
+        getBallColor();
+        updateOuttakeState();
+
+        switch (outtakeState) {
+            case OFF:
+                setOuttakePercentOutput(0);
+                break;
+            case EJECT:
+                setOuttakePercentOutput(Constants.OUTTAKE_SPEED_FACTOR);
+                break;
+            case INTAKE:
+                setOuttakePercentOutput(-Constants.OUTTAKE_SPEED_FACTOR);
+                break;
+        }
+
         setHopperStatePrivate(wantedHopperState);
-        checkBallColor();
     }
 
     public void setHopperState(HopperState hopperState) {
@@ -167,15 +199,28 @@ public final class Hopper extends AbstractSubsystem {
         setHopperState(HopperState.ON);
         OrangeUtility.sleep(5000);
         setHopperState(HopperState.OFF);
+        OrangeUtility.sleep(5000);
+
+        setOuttakePercentOutput(Constants.OUTTAKE_SPEED_FACTOR);
+        System.out.println("Ejecting");
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        setOuttakePercentOutput(-Constants.OUTTAKE_SPEED_FACTOR);
+        System.out.println("Intaking");
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        System.out.println("Test Finished");
+        setOuttakePercentOutput(0);
     }
 
     @Override
     public void logData() {
         logData("Hopper Motor Current", hopperMotor.getOutputCurrent());
-        logData("Color Sensor Status", colorSensorStatus);
-        logData("Is Sensor 1 Connected", colorSensor.isSensor0Connected());
-        logData("Is Sensor 2 Connected", colorSensor.isSensor1Connected());
-        logData("Color Sensor Last Read Time", colorSensor.getLastReadTimestampSeconds());
+
+        logData("Outtae State", outtakeState);
+        logData("Outtake SetVoltage", outtakeWheels.getSetpoint());
+        logData("Outtake Velocity", outtakeWheelsQuadrature.getVelocity());
+        logData("Current Ball Color", getBallColor());
     }
 
     @Override
