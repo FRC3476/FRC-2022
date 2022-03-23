@@ -5,13 +5,11 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Intake.IntakeSolState;
 import frc.subsystem.Intake.IntakeState;
+import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
@@ -26,11 +24,7 @@ public final class Hopper extends AbstractSubsystem {
     private RelativeEncoder outtakeWheelsQuadrature;
     private LazyCANSparkMax outtakeWheels;
     private double lastDetectionTime;
-
-    final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
-    NetworkTable intakeTable = instance.getTable("limelight-intake");
-    NetworkTableEntry ta = intakeTable.getEntry("ta");
-
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.intakeLimelightName);
 
     public static Hopper getInstance() {
         return INSTANCE;
@@ -134,7 +128,7 @@ public final class Hopper extends AbstractSubsystem {
     public BallColor getBallColor() {
         @NotNull BallColor currentBallColor;
 
-        if (ta.getDouble(0) > .01) {
+        if (intakeLimelight.isTargetVisible()) {
             currentBallColor = opposingAllianceColor;
         } else {
             currentBallColor = BallColor.NO_BALL;

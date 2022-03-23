@@ -146,6 +146,7 @@ public class Robot extends TimedRobot {
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.intakeLimelightName);
     private final Hopper hopper = Hopper.getInstance();
     private final Intake intake = Intake.getInstance();
     private final Shooter shooter = Shooter.getInstance();
@@ -282,6 +283,7 @@ public class Robot extends TimedRobot {
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
         startSubsystems();
         limelight.setLedMode(LedMode.OFF);
+        intakeLimelight.setLedMode(LedMode.OFF);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
