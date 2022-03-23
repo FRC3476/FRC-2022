@@ -136,17 +136,17 @@ public class Robot extends TimedRobot {
 
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
+    @NotNull public static final String RED = "RED";
+    @NotNull public static final String BLUE = "BLUE";
 
-    @NotNull private static final String RED = "RED";
-    @NotNull private static final String BLUE = "BLUE";
-
-    private final SendableChooser<String> sideChooser = new SendableChooser<>();
+    public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
     //Subsystems
     private final RobotTracker robotTracker = RobotTracker.getInstance();
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.intakeLimelightName);
     private final Hopper hopper = Hopper.getInstance();
     private final Intake intake = Intake.getInstance();
     private final Shooter shooter = Shooter.getInstance();
@@ -268,7 +268,6 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", autoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);
 
-        startSubsystems();
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
@@ -282,7 +281,9 @@ public class Robot extends TimedRobot {
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
+        startSubsystems();
         limelight.setLedMode(LedMode.OFF);
+        intakeLimelight.setLedMode(LedMode.OFF);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
