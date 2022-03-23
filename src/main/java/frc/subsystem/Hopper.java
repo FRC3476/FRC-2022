@@ -88,8 +88,10 @@ public final class Hopper extends AbstractSubsystem {
     private void updateAllianceColor() {
         if (Robot.sideChooser.getSelected().equals(Robot.BLUE)) {
             opposingAllianceColor = BallColor.RED;
+            intakeLimelight.setPipeline(1);
         } else {
             opposingAllianceColor = BallColor.BLUE;
+            intakeLimelight.setPipeline(0);
         }
     }
 
@@ -137,13 +139,27 @@ public final class Hopper extends AbstractSubsystem {
         return currentBallColor;
     }
 
-    private void setHopperStatePrivate(HopperState hopperState) {
-        // Forces Hopper to run in reverse if outtake is ejecting
-        if (getOuttakeState() == OuttakeState.EJECT) {
-            hopperState = HopperState.OFF;
+    @Override
+    public void update() {
+        updateAllianceColor();
+        getBallColor();
+        updateOuttakeState();
+
+        // Outtake motor control
+        switch (outtakeState) {
+            case OFF:
+                setOuttakePercentOutput(0);
+                break;
+            case EJECT:
+                setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
+                break;
+            case INTAKE:
+                setOuttakePercentOutput(-Constants.OUTTAKE_SPEED);
+                break;
         }
 
-        switch (hopperState) {
+        // Hopper Motor Control
+        switch (wantedHopperState) {
             case ON:
                 hopperMotor.set(Constants.HOPPER_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = true;
@@ -163,27 +179,6 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
-    @Override
-    public void update() {
-        updateAllianceColor();
-        getBallColor();
-        updateOuttakeState();
-
-        switch (outtakeState) {
-            case OFF:
-                setOuttakePercentOutput(0);
-                break;
-            case EJECT:
-                setOuttakePercentOutput(Constants.OUTTAKE_SPEED_FACTOR);
-                break;
-            case INTAKE:
-                setOuttakePercentOutput(-Constants.OUTTAKE_SPEED_FACTOR);
-                break;
-        }
-
-        setHopperStatePrivate(wantedHopperState);
-    }
-
     public void setHopperState(HopperState hopperState) {
         wantedHopperState = hopperState;
     }
@@ -195,11 +190,11 @@ public final class Hopper extends AbstractSubsystem {
         setHopperState(HopperState.OFF);
         OrangeUtility.sleep(5000);
 
-        setOuttakePercentOutput(Constants.OUTTAKE_SPEED_FACTOR);
+        setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
         System.out.println("Ejecting");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
-        setOuttakePercentOutput(-Constants.OUTTAKE_SPEED_FACTOR);
+        setOuttakePercentOutput(-Constants.OUTTAKE_SPEED);
         System.out.println("Intaking");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
