@@ -217,19 +217,17 @@ public final class Constants {
 
 
     //Hopper Constants
-    public static final int HOPPER_PERIOD = 50;
+    public static final int HOPPER_PERIOD = 10;
     public static final double HOPPER_SPEED = .5;
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
     public static final String intakeLimelightName = "limelight-intake";
 
     // Outtake Constants
-    public static final int OUTTAKE_PERIOD = 50;
     public static final int OUTTAKE_CAN_ID = 60;
     public static final double OUTTAKE_REDUCTION = (3.0 / 1.0);
     public static final int OUTTAKE_CURRENT_LIMIT = 20;
     public static final int OUTTAKE_MEASUREMENT_PERIOD_MS = 200;
-    public static final boolean OUTTAKE_DEBUG_PRINTS = false;
     /**
      * Maximum Percent Output of Outtake wheels
      */

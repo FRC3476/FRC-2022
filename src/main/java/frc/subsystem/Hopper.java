@@ -56,7 +56,7 @@ public final class Hopper extends AbstractSubsystem {
     BallColor opposingAllianceColor = BallColor.BLUE;
 
     private Hopper() {
-        super(10, 5);
+        super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
 
