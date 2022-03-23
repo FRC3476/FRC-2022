@@ -6,8 +6,10 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -152,9 +154,13 @@ public class Robot extends TimedRobot {
     private final Outtake outtake = Outtake.getInstance();
 
     //Inputs
-    private final Controller xbox = new Controller(0);
-    private final Controller stick = new Controller(1);
-    private final Controller buttonPanel = new Controller(2);
+    private final static Controller xbox = new Controller(0);
+    private final static Controller stick = new Controller(1);
+    private final static Controller buttonPanel = new Controller(2);
+
+    public static void setRumble(RumbleType type, double value) {
+        xbox.setRumble(type, value);
+    }
 
 
     //Control loop states
@@ -451,9 +457,8 @@ public class Robot extends TimedRobot {
                 doNormalDriving();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
-                visionManager.updateShooterStateStaticPose();
                 visionManager.forceVisionOn(driverForcingVisionOn);
-                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
+                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             shooter.setFiring(false);
@@ -462,6 +467,9 @@ public class Robot extends TimedRobot {
             if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
                 doNormalDriving();
+            } else {
+                // Stop the robot from moving
+                drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
             }
         }
 
@@ -508,14 +516,6 @@ public class Robot extends TimedRobot {
             visionManager.forceUpdatePose();
         } else {
             visionManager.unForceVisionOn(resettingPoseVisionOn);
-        }
-
-        if ((shooter.getShooterState() == Shooter.ShooterState.OFF)) {
-            if (limelight.isConnected()) { // Simple status indicator that shows if the limelight is connected or not
-                blinkinLED.setColor(0.77);
-            } else {
-                blinkinLED.setColor(0.61);
-            }
         }
 
 //        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
@@ -585,12 +585,6 @@ public class Robot extends TimedRobot {
             shooter.setFeederChecksDisabled(!shooter.isFeederChecksDisabled());
         }
     }
-
-    private enum ShooterControlState {
-        VELOCITY_COMPENSATED, STATIC_POSE, MANUAL
-    }
-
-    ShooterControlState shooterControlState = ShooterControlState.STATIC_POSE;
 
     private void runShooter() {
         if (buttonPanel.getRisingEdge(1)) {

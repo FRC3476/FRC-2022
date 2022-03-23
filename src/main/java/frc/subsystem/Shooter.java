@@ -15,12 +15,15 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
+import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -402,6 +405,12 @@ public final class Shooter extends AbstractSubsystem {
         return hoodPositionMode;
     }
 
+
+    public void set(ShooterPreset config) {
+        setSpeed(config.getFlywheelSpeed());
+        setHoodPosition(config.getHoodEjectAngle());
+    }
+
     /**
      * Sets Speed of Shooter FlywheelWheel.
      *
@@ -530,32 +539,6 @@ public final class Shooter extends AbstractSubsystem {
         return nextState;
     }
 
-    // Sets LED different colors, depends on if flywheel is up to speed and if hood is in correct position
-    private void setLedForOnMode() {
-
-        // Sets LED different colors for different shooter scenarios
-        if (!isShooterAtTargetSpeed()) {
-            // If Shooter is not at the target speed, LED will display this color
-            BlinkinLED.getInstance().setColor(Constants.LED_FLYWHEEL_APPROACHING_DESIRED_SPEED);
-        } else if (!isHoodAtTargetAngle()) {
-            // If Shooter is not at the target angle, but it is at the target speed, LED will display this color
-            BlinkinLED.getInstance().setColor(Constants.LED_HOOD_APPROACHING_DESIRED_POSITION);
-        } else {
-            // If both hood and flywheel are ready for shooting, LED will display this color
-            BlinkinLED.getInstance().setColor(Constants.LED_SHOOTER_READY_TO_SHOOT);
-        }
-    }
-
-    // Sets BlinkinLED to color when robot is in homing mode
-    private void setLedForHomingMode() {
-        BlinkinLED.getInstance().setColor(Constants.LED_HOOD_HOMING_IN_PROGRESS);
-    }
-
-    // Sets BlinkinLED to color when robot is in test mode
-    private void setLedForTestMode() {
-        BlinkinLED.getInstance().setColor(Constants.LED_TEST_IN_PROGRESS);
-    }
-
     private void moveHoodMotor() {
         hoodPID.setReference((desiredHoodAngle - getHoodAngle() + hoodRelativeEncoder.getPosition()),
                 CANSparkMax.ControlType.kPosition);
@@ -605,8 +588,8 @@ public final class Shooter extends AbstractSubsystem {
                 -(-hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
-    double nextAllowedShootTime = 0;
-
+    private double nextAllowedShootTime = 0;
+    private double rumbleTime = 0;
 
     /**
      * Update Method for Shooter.
@@ -630,6 +613,7 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 shooterWheelMaster.set(ControlMode.PercentOutput, 0);
                 setHoodPosition(Constants.HOOD_MAX_ANGLE); // Sets hood to the lowest possible position
 
@@ -648,13 +632,13 @@ public final class Shooter extends AbstractSubsystem {
                     }
                 }
 
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
+
                 break;
 
             case ON:
-                //shooterWheelMaster.set(ControlMode.PercentOutput, 1);
                 shooterWheelMaster.set(ControlMode.Velocity,
                         desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
-//                shooterWheelMaster.set(ControlMode.PercentOutput, 0.5);
 
                 if (!isHoodAtTargetAngle()) {
                     moveHoodMotor(); // Sets Motor to travel to desired hood angle
@@ -675,6 +659,8 @@ public final class Shooter extends AbstractSubsystem {
                     feederLockPosition = feederWheel.getSelectedSensorPosition();
                     forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
                     nextAllowedShootTime = Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY;
+                    rumbleTime = Timer.getFPGATimestamp() + Constants.RUMBLE_DELAY;
+                    Robot.setRumble(RumbleType.kLeftRumble, 0);
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > forceFeederOnTime) {
@@ -684,10 +670,13 @@ public final class Shooter extends AbstractSubsystem {
                             feederWheel.set(ControlMode.PercentOutput, 0);
                         }
                     }
-                }
 
-                // Sets Blinkin LED different colors for different flywheel and hood states
-                setLedForOnMode();
+                    if (Timer.getFPGATimestamp() > rumbleTime && rumbleTime < Timer.getFPGATimestamp() + Constants.RUMBLE_TIME) {
+                        Robot.setRumble(RumbleType.kLeftRumble, 1);
+                    } else {
+                        Robot.setRumble(RumbleType.kLeftRumble, 0);
+                    }
+                }
                 break;
 
             case HOMING:
@@ -741,16 +730,11 @@ public final class Shooter extends AbstractSubsystem {
                     System.out.println("Homing Failed At: " + Timer.getFPGATimestamp());
                     homingStartTime = -1;
                 }
-
-                // Sets LED for Homing states
-                setLedForHomingMode();
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 break;
 
             case TEST:
-
-                // Sets LED for testing state
-                setLedForTestMode();
-
+                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 break;
         }
     }

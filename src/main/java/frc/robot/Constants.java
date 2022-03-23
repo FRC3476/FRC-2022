@@ -31,7 +31,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 35.3203; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 50; //22Hz
+    public static final int VISION_MANAGER_PERIOD = 1000 / 90; //90Hz
     public static final double SHOOT_TIME_PER_BALL = 0.2; // For Auto
 
     /**
@@ -42,7 +42,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.0, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.5, 2); //TODO: CHANGE
     // This is in inches
     public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
@@ -164,11 +164,11 @@ public final class Constants {
 
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = 16.0;
+    public static final double DEFAULT_TURN_P = 8.0;
     public static final double DEFAULT_TURN_I = 0.0;
     public static final double DEFAULT_TURN_D = 0.0;
-    public static final double DEFAULT_TURN_MAX_VELOCITY = 6.0;
-    public static final double DEFAULT_TURN_MAX_ACCELERATION = 6.0;
+    public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
+    public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
     /**
      * Units are in Meters Per Second Squared
@@ -255,7 +255,7 @@ public final class Constants {
     public static final double DEFAULT_SHOOTER_P = 0.035;
     public static final double DEFAULT_SHOOTER_I = 0.000;
     public static final double DEFAULT_SHOOTER_D = 0.000;
-    public static final double DEFAULT_SHOOTER_F = 0.000068 * 1023;
+    public static final double DEFAULT_SHOOTER_F = 0.069664;
     public static final double DEFAULT_SHOOTER_IZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -297,6 +297,8 @@ public final class Constants {
      */
     public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
     public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
+    public static final double RUMBLE_DELAY = 0.1666666667;
+    public static final double RUMBLE_TIME = 0.25;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;
@@ -480,7 +482,7 @@ public final class Constants {
     /**
      * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 2.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 4.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
@@ -496,4 +498,7 @@ public final class Constants {
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
     public static final double INTAKE_MOTOR_SPEED = -1;
     public static final double INTAKE_OPEN_TIME = 0.0;
+
+    public static final int WEB_DASHBOARD_PORT = 5802;
+    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
 }

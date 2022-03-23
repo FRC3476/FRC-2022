@@ -4,11 +4,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
+import frc.subsystem.BlinkinLED.BlinkinLedMode;
+import frc.subsystem.BlinkinLED.LedStatus;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
 import frc.utility.ControllerDriveInputs;
@@ -16,19 +17,17 @@ import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
 import frc.utility.MathUtil;
 import frc.utility.Timer;
-import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
-import frc.utility.shooter.visionlookup.ShooterPreset;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static frc.robot.Constants.MAX_SHOOT_SPEED;
-import static frc.utility.OrangeUtility.getSpeed;
-import static frc.utility.OrangeUtility.getTranslation2d;
+import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
     private static final @NotNull VisionManager instance = new VisionManager();
@@ -37,22 +36,9 @@ public final class VisionManager extends AbstractSubsystem {
     private final @NotNull Limelight limelight = Limelight.getInstance();
     private final @NotNull Drive drive = Drive.getInstance();
     private final @NotNull Shooter shooter = Shooter.getInstance();
+    private final @NotNull BlinkinLED blinkinLED = BlinkinLED.getInstance();
 
     public final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
-    private double shooterHoodAngleBias = 0;
-
-    {
-        logData("Shooter Angle Bias", shooterHoodAngleBias);
-    }
-
-    public void adjustShooterHoodBias(double amount) {
-        shooterHoodAngleBias += amount;
-        logData("Shooter Angle Bias", shooterHoodAngleBias);
-    }
-
-    public double getShooterHoodAngleBias() {
-        return shooterHoodAngleBias;
-    }
 
     public void setShooterConfig(ShooterConfig shooterConfig) {
         visionLookUpTable.setShooterConfig(shooterConfig);
@@ -74,143 +60,66 @@ public final class VisionManager extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
-        logData("Rotation Target", getAngleOfTarget().getDegrees());
+        logData("Rotation Target", getAngleToTarget().getDegrees());
         logData("Allowed Turn Error", getAllowedTurnError());
 
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
-        logData("Is Robot Allowed Shoot Aiming", !drive.isAiming());
+        logData("Is Robot Allowed Shoot Aiming",
+                Math.abs((angleOf(getRelativeGoalTranslation())
+                        .minus(robotTracker.getGyroAngle())).getRadians())
+                        < getAllowedTurnError());
         logData("Is Robot Allowed Shoot Tilt",
                 Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3);
+
+        Translation2d robotVelocity = getRobotVel();
+        Translation2d relativeRobotTranslation = getRelativeGoalTranslation();
+        logData("Relative Robot Translation X", relativeRobotTranslation.getX());
+        logData("Relative Robot Translation Y", relativeRobotTranslation.getY());
+
+        logData("Vision Robot Velocity X", robotVelocity.getX());
+        logData("Vision Robot Velocity Y", robotVelocity.getY());
+
+        Translation2d aimToPosition = getAdjustedTranslation(0.15);
+
+        Translation2d fieldCentricCords =
+                RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation().minus(aimToPosition);
+        logData("Calculated Target X", fieldCentricCords.getX());
+        logData("Calculated Target Y", fieldCentricCords.getY());
     }
+
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
-        autoTurnRobotToTarget(controllerDriveInputs, useFieldRelative);
-//        Rotation2d targetRotation = getPredictedRotationTarget();
-//        drive.updateTurn(controllerDriveInputs, targetRotation, useFieldRelative);
-//        shooter.setFiring(!drive.isAiming());
+        Translation2d aimToPosition = getAdjustedTranslation(0.15);
+
+        double targetAngle = angleOf(aimToPosition).getRadians();
+
+        // Get the angle that will be used in the future to calculate the end velocity of the turn
+        Translation2d futureAimToPosition = getAdjustedTranslation(0.25);
+        double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
+
+        drive.updateTurn(controllerDriveInputs,
+                new State(targetAngle, (futureTargetAngle - targetAngle) * 10),
+                useFieldRelative,
+                0);
+
+        updateShooterState(aimToPosition.getNorm());
+
+        tryToShoot(aimToPosition, (futureTargetAngle - targetAngle) * 10, false);
     }
 
-    public Rotation2d getPredictedRotationTarget() {
-        MutableTranslation2d relativeRobotPosition = predictTranslationAtZeroVelocity(
-                robotTracker.getLatencyCompedChassisSpeeds(),
-                robotTracker.getLatencyCompedPoseMeters().getTranslation()).minus(Constants.GOAL_POSITION);
-        return new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
-    }
-
-    /**
-     * @return the current translation of the robot based on the vision data. Will only give correct results if the limelight can
-     * see the target
-     */
-    @Contract(pure = true)
-    private MutableTranslation2d getCurrentTranslation() {
-        Rotation2d currentGyroAngle = getLatencyCompedLimelightRotation();
-
-        double distanceToTarget = getDistanceToTarget();
-        double angleToTarget = currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
-        return new MutableTranslation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
-                distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
-                .minus(Constants.LIMELIGHT_CENTER_OFFSET.rotateBy(currentGyroAngle)).plus(Constants.GOAL_POSITION);
-    }
-
-    /*
-     * @return the current position of the robot based on a translation and some time. It adds the current velocity * time to
-     * the translation.
-     */
-    private MutableTranslation2d predictFutureTranslation(double predictAheadTime, MutableTranslation2d currentTranslation,
-                                                          Translation2d currentVelocity) {
-        return currentTranslation.plus(currentVelocity.times(predictAheadTime));
-    }
-
-    /**
-     * @return the position of the robot when it hits {@link Constants#MAX_SHOOT_SPEED} if the robot starts decelerating
-     * immediately.
-     */
-    @Contract(pure = true)
-    private MutableTranslation2d predictTranslationAtZeroVelocity(ChassisSpeeds currentSpeeds,
-                                                                  Translation2d currentTranslation) {
-        MutableTranslation2d predictedTranslation;
-        double speed = getSpeed(robotTracker.getLatencyCompedChassisSpeeds());
-        if (speed > MAX_SHOOT_SPEED) {
-            double time = (speed - MAX_SHOOT_SPEED) / Constants.MAX_ACCELERATION;
-            MutableTranslation2d velocity = getTranslation2d(currentSpeeds);
-            predictedTranslation = velocity.times(((speed + MAX_SHOOT_SPEED) / 2) * time).plus(currentTranslation);
-        } else {
-            predictedTranslation = new MutableTranslation2d(currentTranslation);
-        }
-
-        logData("Predicted Future Pose X", predictedTranslation.getX());
-        logData("Predicted Future Pose Y", predictedTranslation.getY());
-        logData("Predicted Future Pose Time", Timer.getFPGATimestamp());
-
-        return predictedTranslation;
-    }
-
-
-    /**
-     * @param dist  distance to target (meters)
-     * @param angle angle of the hood (radians)
-     * @return horizontal velocity needed to hit target
-     */
-    @Contract(pure = true)
-    private double getNeededHorizontalBallVelocity(double dist, double angle) {
-        //@formatter:off
-        return Math.sqrt((0.5 * Constants.GRAVITY * dist) / (Math.tan(angle) - ((Constants.GOAL_HEIGHT - Constants.SHOOTER_HEIGHT) / dist)));
-        //@formatter:on
-    }
-
-    /**
-     * @param speed     wanted ejection velocity
-     * @param hoodAngle angle of the hood
-     */
-    @Contract(pure = true)
-    private void getShooterRPM(double speed, double hoodAngle) {
-
-    }
-
-
-    @Contract(pure = true)
-    private MutableTranslation2d getVelocityCompensatedEjectionVector(Translation2d robotVelocityVector,
-                                                                      MutableTranslation2d wantedEjectionVector) {
-        return wantedEjectionVector.minus(robotVelocityVector);
-    }
-
-    /**
-     * Adds a vision update to the robot tracker even if the calculated pose is too far from the expected pose.
-     * <p>
-     * You need to call {@link #forceVisionOn(Object)} before calling this method.
-     */
-    public void forceUpdatePose() {
-        limelight.setLedMode(LedMode.ON);
-        if (limelight.isTargetVisible()) {
-            robotTracker.addVisionMeasurement(new Pose2d(getCurrentTranslation().getTranslation2d(),
-                    getLatencyCompedLimelightRotation()), getLimelightTime());
-        }
-    }
-
-    public Rotation2d getAngleOfTarget() {
-        if (limelight.isTargetVisible()) {
-            double degreeOffset = Limelight.getInstance().getHorizontalOffset();
-            return getLatencyCompedLimelightRotation().minus(Rotation2d.fromDegrees(degreeOffset));
-        } else {
-            //Use best guess if no target is visible
-            Translation2d relativeRobotPosition = robotTracker.getLatencyCompedPoseMeters().getTranslation()
-                    .plus(robotPositionOffset)
-                    .minus(Constants.GOAL_POSITION);
-            return new Rotation2d(Math.atan2(relativeRobotPosition.getY(), relativeRobotPosition.getX()));
-
-            //drive.swerveDriveFieldRelative(controllerDriveInputs);
-        }
-    }
-
-    double lastChecksFailedTime = 0;
-    double lastPrintTime = 0;
-    boolean checksPassedLastTime = false;
-    private @NotNull Translation2d robotPositionOffset = new Translation2d(0, 0);
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-        drive.updateTurn(controllerDriveInputs, getAngleOfTarget(), fieldRelative, getAllowedTurnError());
+        drive.updateTurn(controllerDriveInputs, getAngleToTarget(), fieldRelative, getAllowedTurnError());
 
-        if ((!drive.isAiming()) && drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED &&
+        updateShooterState(getDistanceToTarget());
+        tryToShoot(getRelativeGoalTranslation(), 0, true);
+    }
+
+    private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
+        if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians()) < getAllowedTurnError()
+                && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
+                < Math.toRadians(8)
+                && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck) &&
                 Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
             if (shooter.isFiring()) {
@@ -220,11 +129,6 @@ public final class VisionManager extends AbstractSubsystem {
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " "
                                     + visionLookUpTable.getShooterPreset(Units.metersToInches(getDistanceToTarget())));
-
-                    if (limelight.isTargetVisible()) {
-                        robotPositionOffset = getCurrentTranslation().getTranslation2d()
-                                .minus(robotTracker.getLatencyCompedPoseMeters().getTranslation());
-                    }
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
@@ -237,8 +141,100 @@ public final class VisionManager extends AbstractSubsystem {
 
         Hopper.getInstance().setHopperState(HopperState.ON);
 
+        logData("Is Shooter Firing", shooter.isFiring());
+
         logData("Last Shooter Checks Failed Time", Timer.getFPGATimestamp() - lastChecksFailedTime);
     }
+
+    /**
+     * Updates the shooter state based on the distance to the target
+     */
+    public void updateShooterState() {
+        updateShooterState(getDistanceToTarget());
+    }
+
+    /**
+     * Updates the shooter state based on the distance to the target
+     *
+     * @param distanceToTarget the distance to the target (in meters)
+     */
+    public void updateShooterState(double distanceToTarget) {
+        logData("Shooter Distance to Target", Units.metersToInches(distanceToTarget));
+        shooter.set(visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget)));
+    }
+
+    /**
+     * @return the current robot velocity from the robot tracker
+     */
+    @Contract(pure = true)
+    public Translation2d getRobotVel() {
+        Rotation2d rotation2d = robotTracker.getGyroAngle();
+        ChassisSpeeds chassisSpeeds = drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates());
+        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond).rotateBy(rotation2d);
+    }
+
+    /**
+     * @return the current translation of the robot based on the vision data. Will only give correct results if the limelight can
+     * see the target
+     */
+    @Contract(pure = true)
+    private @NotNull Optional<Translation2d> getVisionTranslation() {
+        if (!limelight.isTargetVisible()) return Optional.empty();
+
+        Rotation2d currentGyroAngle = getLatencyCompedLimelightRotation();
+
+        double distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
+        double angleToTarget = currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
+        return Optional.of(new Translation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
+                distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
+                .plus(Constants.GOAL_POSITION));
+    }
+
+    /**
+     * @return current relative translation of the robot based on the robot tracker
+     */
+    private Translation2d getRelativeGoalTranslation() {
+        return robotTracker.getLatencyCompedPoseMeters().getTranslation()
+                .plus(robotPositionOffset)
+                .minus(Constants.GOAL_POSITION);
+    }
+
+    /**
+     * Adds a vision update to the robot tracker even if the calculated pose is too far from the expected pose.
+     * <p>
+     * You need to call {@link #forceVisionOn(Object)} before calling this method.
+     */
+    public void forceUpdatePose() {
+        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        visionTranslation.ifPresent(
+                mutableTranslation2d -> {
+                    robotTracker.addVisionMeasurement(
+                            mutableTranslation2d,
+                            getLimelightTime());
+                    robotPositionOffset = new Translation2d();
+                }
+        );
+    }
+
+    /**
+     * @return the angle the robot needs to face to point towards the target
+     */
+    public Rotation2d getAngleToTarget() {
+        return angleOf(getRelativeGoalTranslation());
+    }
+
+    /**
+     * @return Distance to the target in meters
+     */
+    public double getDistanceToTarget() {
+        return getRelativeGoalTranslation().getNorm();
+    }
+
+
+    double lastChecksFailedTime = 0;
+    double lastPrintTime = 0;
+    boolean checksPassedLastTime = false;
+    private @NotNull Translation2d robotPositionOffset = new Translation2d(0, 0);
 
     /**
      * {@code Math.tan(Constants.GOAL_RADIUS / getDistanceToTarget())}
@@ -249,64 +245,19 @@ public final class VisionManager extends AbstractSubsystem {
         return Math.tan((Constants.GOAL_RADIUS * 0.8) / getDistanceToTarget());
     }
 
-    public Rotation2d getLatencyCompedLimelightRotation() {
+    @Contract(pure = true)
+    public @NotNull Rotation2d getLatencyCompedLimelightRotation() {
         return robotTracker.getGyroRotation(getLimelightTime());
     }
 
     /**
      * @return the time of the last vision update in seconds
      */
+    @Contract(pure = true)
     private double getLimelightTime() {
-        double latency = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
+        double limelightTime = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
         logData("Limelight Latency", (limelight.getLatency() / 1000) + (11.0 / 1000));
-        return latency;
-    }
-
-
-    NetworkTableEntry visionDistanceOffset = NetworkTableInstance.getDefault().getEntry("VisionDistanceOffset");
-
-    {
-        visionDistanceOffset.setDouble(Constants.GOAL_RADIUS - 18);
-    }
-
-    /**
-     * Calculates and sets the flywheel speed considering a static robot velocity
-     */
-    public void updateShooterStateStaticPose() {
-        double distanceToTarget = getDistanceToTarget();
-
-        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget));
-        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
-    }
-
-    /**
-     * @return Distance to the target in meters
-     */
-    public double getDistanceToTarget() {
-        double distanceToTarget;
-        if (limelight.isTargetVisible()) {
-            distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
-        } else {
-            Pose2d currentPose = robotTracker.getLatencyCompedPoseMeters();
-            Translation2d relativeRobotPosition = currentPose.getTranslation().minus(Constants.GOAL_POSITION);
-            distanceToTarget = relativeRobotPosition.getNorm();
-        }
-        return distanceToTarget;
-    }
-
-    /**
-     * Calculates and sets the flywheel speed considering a moving robot
-     */
-    public void updateShooterState() {
-        updateShooterStateStaticPose();
-//        MutableTranslation2d predictedPose = predictTranslationAtZeroVelocity(robotTracker.getLatencyCompedChassisSpeeds(),
-//                robotTracker.getLatencyCompedPoseMeters().getTranslation());
-//        double distanceToTarget = predictedPose.minus(Constants.GOAL_POSITION).getNorm();
-//
-//        ShooterPreset shooterPreset = visionLookUpTable.getShooterPreset(distanceToTarget);
-//        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-//        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle() + shooterHoodAngleBias);
+        return limelightTime;
     }
 
     private final Set<Object> forceVisionOn = new HashSet<>(5);
@@ -344,15 +295,21 @@ public final class VisionManager extends AbstractSubsystem {
 
     private final Object updateLoopSource = new Object();
 
+    private final LedStatus limelightUsingVisionStatus = new LedStatus(BlinkinLedMode.SOLID_LAWN_GREEN, 1);
+    private final LedStatus limelightNotConnectedStatus = new LedStatus(BlinkinLedMode.SOLID_RED, 100);
+    private final LedStatus limelightTooFarFromExpectedStatus = new LedStatus(BlinkinLedMode.SOLID_ORANGE, 100);
+    private final LedStatus limelightNotVisibleStatus = new LedStatus(BlinkinLedMode.SOLID_RED_ORANGE, 100);
+
     @Override
     public void update() {
         Pose2d robotTrackerPose = robotTracker.getLatencyCompedPoseMeters();
-        Translation2d goalTranslationOffset = robotTrackerPose.getTranslation()
-                .plus(Constants.LIMELIGHT_CENTER_OFFSET.rotateBy(getLatencyCompedLimelightRotation()))
-                .minus(Constants.GOAL_POSITION);
+        Translation2d relativeGoalPos = getRelativeGoalTranslation();
 
-        double angleToTarget = Math.atan2(goalTranslationOffset.getY(), goalTranslationOffset.getX());
+        double angleToTarget = Math.atan2(relativeGoalPos.getY(), relativeGoalPos.getX());
 
+        if (!limelight.isTargetVisible()) {
+            blinkinLED.setStatus(limelightNotConnectedStatus);
+        }
 
         if (Math.abs(angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50)) {
             forceVisionOn(updateLoopSource);
@@ -360,24 +317,36 @@ public final class VisionManager extends AbstractSubsystem {
             unForceVisionOn(updateLoopSource);
         }
 
-        if (limelight.isTargetVisible()) {
-            MutableTranslation2d robotTranslation = getCurrentTranslation();
 
-            Pose2d visionPose = new Pose2d(robotTranslation.getTranslation2d(), getLatencyCompedLimelightRotation());
+        Optional<Translation2d> robotTranslationOptional = getVisionTranslation();
+        if (robotTranslationOptional.isPresent()) {
+            Translation2d robotTranslation = robotTranslationOptional.get();
+
+            Pose2d visionPose = new Pose2d(robotTranslation, getLatencyCompedLimelightRotation());
             logData("Vision Pose X", visionPose.getX());
             logData("Vision Pose Y", visionPose.getY());
-            logData("Vision Pose Angle", visionPose.getRotation().getDegrees());
+            logData("Vision Pose Angle", visionPose.getRotation().getRadians());
             logData("Vision Pose Time", getLimelightTime());
 
-            if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
+            //TODO: Check that the contours aren't touching the edge of the screen before using them
+            if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
                     robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-                //robotTracker.addVisionMeasurement(visionPose, getLimelightTime());
+
+
+                robotTracker.addVisionMeasurement(robotTranslation,
+                        getLimelightTime());
+                robotPositionOffset = new Translation2d();
+
+
                 logData("Using Vision Info", "Using Vision Info");
+                blinkinLED.setStatus(limelightUsingVisionStatus);
             } else {
                 logData("Using Vision Info", "Position is too far from expected");
+                blinkinLED.setStatus(limelightTooFarFromExpectedStatus);
             }
         } else {
             logData("Using Vision Info", "No target visible");
+            blinkinLED.setStatus(limelightNotVisibleStatus);
         }
     }
 
@@ -428,5 +397,79 @@ public final class VisionManager extends AbstractSubsystem {
     @Override
     public void close() throws Exception {
 
+    }
+
+
+    //------- Math Methods -------
+
+    /**
+     * @return the current position of the robot based on a translation and some time. It adds the current velocity * time to the
+     * translation.
+     */
+    @Contract(pure = true)
+    private Translation2d predictFutureTranslation(double predictAheadTime, Translation2d currentTranslation,
+                                                   Translation2d currentVelocity, Translation2d currentAcceleration) {
+        return currentTranslation
+                .plus(currentVelocity.times(predictAheadTime))
+                .plus(currentTranslation.times(0.5 * predictAheadTime * predictAheadTime));
+    }
+
+    /**
+     * Calculates a "fake" target position that the robot should aim to based on the current position and the current velocity. If
+     * the robot shoots to this "fake" position, it will shoot the ball into the actual target.
+     *
+     * @param relativeGoalTranslation The relative position of the target from the robot
+     * @param robotVelocity           The velocity of the robot
+     * @return The position of the "fake" target
+     */
+    @Contract(pure = true)
+    @NotNull Translation2d getVelocityAdjustedRelativeTranslation(
+            @NotNull Translation2d relativeGoalTranslation, @NotNull Translation2d robotVelocity) {
+
+        Translation2d fakeGoalPos = relativeGoalTranslation;
+
+        for (int i = 0; i < 40; i++) {
+            //System.out.println("Iteration: " + i + " Fake Goal Pos: " + fakeGoalPos);
+            double tof = getTimeOfFlight(fakeGoalPos);
+            fakeGoalPos = relativeGoalTranslation.plus(robotVelocity.times(tof));
+        }
+        return fakeGoalPos;
+    }
+
+    /**
+     * @param translation2d The position of the target
+     * @return the time of flight to the target
+     */
+    double getTimeOfFlight(Translation2d translation2d) {
+        double distance = Units.metersToInches(translation2d.getNorm());
+
+        double timeOfFlightFrames;
+        if (distance < 120) {
+            timeOfFlightFrames = 28;
+        } else {
+            timeOfFlightFrames = (0.09 * (distance - 120)) + 28;
+        }
+
+        //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
+        return timeOfFlightFrames / 30;
+    }
+
+    /**
+     * @param predictAheadTime The amount of time ahead of the robot that the robot should predict
+     * @return A translation that compensates for the robot's velocity. This is used to calculate the "fake" target position
+     */
+    @NotNull
+    private Translation2d getAdjustedTranslation(double predictAheadTime) {
+        Translation2d relativeRobotTranslation = getRelativeGoalTranslation();
+        Translation2d robotVelocity = getRobotVel();
+        return getVelocityAdjustedRelativeTranslation(
+                predictFutureTranslation(predictAheadTime, relativeRobotTranslation, robotVelocity, getAccel()),
+                robotVelocity.plus(getAccel().times(predictAheadTime))
+        );
+    }
+
+
+    private Translation2d getAccel() {
+        return robotTracker.getAcceleration();
     }
 }

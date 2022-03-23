@@ -1,21 +1,23 @@
 package frc.subsystem;
 
 import com.kauailabs.navx.frc.AHRS;
-import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
 import frc.robot.Constants;
 import frc.utility.Timer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
@@ -38,7 +40,7 @@ public final class RobotTracker extends AbstractSubsystem {
     private @NotNull Pose2d latencyCompensatedPose = new Pose2d();
     private @NotNull ChassisSpeeds latencyCompensatedChassisSpeeds = new ChassisSpeeds();
 
-    private final @NotNull SwerveDrivePoseEstimator swerveDriveOdometry;
+    private final SwerveDriveOdometry swerveDriveOdometry;
     private @NotNull Rotation2d gyroOffset = new Rotation2d();
 
     private double gyroRollVelocity = 0;
@@ -46,7 +48,12 @@ public final class RobotTracker extends AbstractSubsystem {
     private double lastGyroPitch = 0;
     private double lastGyroRoll = 0;
 
+    private double maxGyroRoll = 0;
+    private double minGyroRoll = 0;
+
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+    private Translation2d acceleration = new Translation2d();
 
 
     private RobotTracker() {
@@ -54,14 +61,21 @@ public final class RobotTracker extends AbstractSubsystem {
         gyroSensor = new AHRS(SPI.Port.kMXP, (byte) 200);
         gyroSensor.getRequestedUpdateRate();
         //@formatter:off
-        swerveDriveOdometry = new SwerveDrivePoseEstimator(
-                gyroSensor.getRotation2d(),
-                new Pose2d(),
+//        swerveDriveOdometry = new SwerveDrivePoseEstimator(
+//                gyroSensor.getRotation2d(),
+//                new Pose2d(),
+//                drive.getSwerveDriveKinematics(),
+//                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02), // stateStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
+//                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.00035), // localMeasurementStdDevs – [theta], with units in radians.
+//                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.2, 0.2, 0.07), // visionMeasurementStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
+//                (Constants.ROBOT_TRACKER_PERIOD * 2) / 1000.0d); //Only update every other tick
+
+        swerveDriveOdometry = new SwerveDriveOdometry(
                 drive.getSwerveDriveKinematics(),
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.02), // stateStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
-                new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.00035), // localMeasurementStdDevs – [theta], with units in radians.
-                new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.2, 0.2, 0.07), // visionMeasurementStdDevs – [x, y, theta]ᵀ, with units in meters and radians.
-                (Constants.ROBOT_TRACKER_PERIOD * 2) / 1000.0d); //Only update every other tick
+                gyroSensor.getRotation2d(),
+                new Pose2d()
+
+        );
         //@formatter:on
         //swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), gyroSensor.getRotation2d());
     }
@@ -80,9 +94,13 @@ public final class RobotTracker extends AbstractSubsystem {
      *                              as Timer.getFPGATimestamp.) This means that you should use Timer.getFPGATimestamp as your time
      *                              source or sync the epochs.
      */
-    public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
+    public void addVisionMeasurement(Translation2d visionRobotPoseMeters, double timestampSeconds) {
         resetPosition(visionRobotPoseMeters);
-        //swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
+//        try {
+//            swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
+//        } catch (RuntimeException e) {
+//            kalmanFilterFailed();
+//        }
     }
 
     public void calibrateGyro() {
@@ -105,7 +123,6 @@ public final class RobotTracker extends AbstractSubsystem {
      * Resets the position on the field to 0,0 with a rotation of 0 degrees
      */
     synchronized public void resetOdometry() {
-
         lock.writeLock().lock();
         try {
             Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
@@ -115,18 +132,27 @@ public final class RobotTracker extends AbstractSubsystem {
 
             latestChassisSpeeds = getRotatedSpeeds(
                     drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
-                    latestEstimatedPose.getRotation());
+                    getGyroAngle());
 
             latencyCompensatedChassisSpeeds = latestChassisSpeeds;
         } finally {
             lock.writeLock().unlock();
         }
     }
+
     private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(102); // 1s of data at 10ms per
 
     double currentOdometryTime = -1;
 
+
+    AtomicInteger failedTime = new AtomicInteger(0);
+
+    private void kalmanFilterFailed() {
+        logData("Kalman Filter Failed Counter", failedTime.incrementAndGet());
+    }
+
     private boolean updateNextTick = true;
+
     /**
      * Updates the robot's position on the field using forward kinematics and integration of the pose over time. This method
      * automatically calculates the current time to calculate period (difference between two timestamps). The period is used to
@@ -150,13 +176,13 @@ public final class RobotTracker extends AbstractSubsystem {
             updateOdometry(time, rawGyroSensor, drive.getSwerveModuleStates());
             lock.writeLock().lock();
             try {
-                latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
-                gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
+                latestEstimatedPose = swerveDriveOdometry.getPoseMeters();
+                //gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
                 latencyCompensatedPose = latestEstimatedPose;
 
                 latestChassisSpeeds = getRotatedSpeeds(
                         drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
-                        latestEstimatedPose.getRotation());
+                        getGyroAngle());
 
                 latencyCompensatedChassisSpeeds = latestChassisSpeeds;
                 currentOdometryTime = Timer.getFPGATimestamp();
@@ -168,6 +194,19 @@ public final class RobotTracker extends AbstractSubsystem {
 
                 lastGyroPitch = RobotTracker.getInstance().getGyro().getPitch();
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
+
+
+                acceleration = new Translation2d(getGyro().getWorldLinearAccelX(), getGyro().getWorldLinearAccelY())
+                        .rotateBy(gyroSensor.getRotation2d().unaryMinus())
+                        .rotateBy(getGyroAngle());
+
+                if (maxGyroRoll < lastGyroRoll) {
+                    maxGyroRoll = lastGyroRoll;
+                }
+
+                if (minGyroRoll > lastGyroRoll) {
+                    minGyroRoll = lastGyroRoll;
+                }
             } finally {
                 lock.writeLock().unlock();
             }
@@ -263,13 +302,10 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The field relative ChassisSpeeds.
      */
+    @Contract(pure = true)
     private ChassisSpeeds getRotatedSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
-        double dist = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
-        return new ChassisSpeeds(
-                dist * rotation.getCos(),
-                dist * rotation.getSin(),
-                speeds.omegaRadiansPerSecond
-        );
+        Translation2d velocity = new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond).rotateBy(rotation);
+        return new ChassisSpeeds(velocity.getX(), velocity.getY(), speeds.omegaRadiansPerSecond);
     }
 
     private final Comparator<Map.Entry<Double, Rotation2d>> comparator = Comparator.comparingDouble(Entry::getKey);
@@ -338,16 +374,21 @@ public final class RobotTracker extends AbstractSubsystem {
      * @param pose The position on the field that your robot is at.
      */
     public void resetPosition(Pose2d pose) {
-        resetPosition(pose, gyroSensor.getRotation2d());
+        resetPosition(pose, gyroSensor.getRotation2d(), true);
     }
 
-    public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle) {
+    public void resetPosition(Translation2d pose) {
+        resetPosition(new Pose2d(pose, getGyroAngle()), gyroSensor.getRotation2d(), false);
+    }
+
+
+    public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle, boolean offsetGyro) {
         lock.writeLock().lock();
         try {
-            gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
+            if (offsetGyro) {
+                gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
+            }
             swerveDriveOdometry.resetPosition(pose, gyroAngle);
-
-            gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
             latencyCompensatedPose = latestEstimatedPose;
 
             latestChassisSpeeds = getRotatedSpeeds(
@@ -368,6 +409,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The pose of the robot (x and y are in meters).
      */
+    @Contract(pure = true)
     public @NotNull Pose2d getLastEstimatedPoseMeters() {
         lock.readLock().lock();
         try {
@@ -385,6 +427,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The pose of the robot (x and y are in meters).
      */
+    @Contract(pure = true)
     public @NotNull Pose2d getLatencyCompedPoseMeters() {
         lock.readLock().lock();
         try {
@@ -402,6 +445,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
      */
+    @Contract(pure = true)
     public @NotNull ChassisSpeeds getLastChassisSpeeds() {
         lock.readLock().lock();
         try {
@@ -418,6 +462,7 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The velocity of the robot (x and y are in meters per second, Theta is in radians per second).
      */
+    @Contract(pure = true)
     public @NotNull ChassisSpeeds getLatencyCompedChassisSpeeds() {
         lock.readLock().lock();
         try {
@@ -449,6 +494,9 @@ public final class RobotTracker extends AbstractSubsystem {
             logData("Gyro Roll", RobotTracker.getInstance().getGyro().getRoll());
             logData("Gyro Roll Velocity", gyroRollVelocity);
 
+            logData("Min Gyro Roll", minGyroRoll);
+            logData("Max Gyro Roll", maxGyroRoll);
+
 
 //        SmartDashboard.putNumber("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());
 //        SmartDashboard.putNumber("Latency Comped Robot Pose Y", getLatencyCompedPoseMeters().getX());
@@ -470,7 +518,7 @@ public final class RobotTracker extends AbstractSubsystem {
         instance = new RobotTracker();
     }
 
-
+    @Contract(pure = true)
     public double getGyroRollVelocity() {
         lock.readLock().lock();
         try {
@@ -480,6 +528,7 @@ public final class RobotTracker extends AbstractSubsystem {
         }
     }
 
+    @Contract(pure = true)
     public double getGyroPitchVelocity() {
         lock.readLock().lock();
         try {
@@ -492,6 +541,7 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * @return The gyro angle offset so that it lines up with the robot tracker rotation.
      */
+    @Contract(pure = true)
     public Rotation2d getGyroAngle() {
         lock.readLock().lock();
         try {
@@ -508,6 +558,15 @@ public final class RobotTracker extends AbstractSubsystem {
             swerveDriveOdometry.resetPosition(getLastEstimatedPoseMeters(), new Rotation2d(0));
         } finally {
             lock.writeLock().unlock();
+        }
+    }
+
+    public Translation2d getAcceleration() {
+        lock.readLock().lock();
+        try {
+            return acceleration;
+        } finally {
+            lock.readLock().unlock();
         }
     }
 }

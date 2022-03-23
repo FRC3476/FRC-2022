@@ -73,7 +73,6 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
 
     int lastLength = 20;
 
-
     public void pushLog() {
         for (Map.Entry<String, Object> entry : logDataMap.entrySet()) {
             Object obj = entry.getValue();
@@ -103,6 +102,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
             double startTime = Timer.getFPGATimestamp();
             if (signal == ThreadSignal.ALIVE) {
                 update();
+
                 logInterval++;
                 if (logInterval >= loggingInterval) {
 
@@ -122,7 +122,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
                 System.out.println("Thread interrupted " + subsystemName + " message: " + e.getMessage());
                 return;
             }
-            logData(subsystemName + " Pediod Length", (Timer.getFPGATimestamp() - startTime) * 1000);
+            logData(subsystemName + " Period Length", (Timer.getFPGATimestamp() - startTime) * 1000);
         }
     }
 }
