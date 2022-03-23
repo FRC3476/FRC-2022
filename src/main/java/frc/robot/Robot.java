@@ -146,7 +146,7 @@ public class Robot extends TimedRobot {
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
-    private final Limelight intakeLimelight = Limelight.getInstance(Constants.intakeLimelightName);
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
     private final Hopper hopper = Hopper.getInstance();
     private final Intake intake = Intake.getInstance();
     private final Shooter shooter = Shooter.getInstance();

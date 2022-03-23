@@ -24,7 +24,7 @@ public final class Hopper extends AbstractSubsystem {
     private RelativeEncoder outtakeWheelsQuadrature;
     private LazyCANSparkMax outtakeWheels;
     private double lastDetectionTime;
-    private final Limelight intakeLimelight = Limelight.getInstance(Constants.intakeLimelightName);
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
 
     public static Hopper getInstance() {
         return INSTANCE;

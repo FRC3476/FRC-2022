@@ -222,7 +222,7 @@ public final class Constants {
     public static final double HOPPER_SPEED = .5;
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
-    public static final String intakeLimelightName = "limelight-intake";
+    public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
     // Outtake Constants
     public static final int OUTTAKE_CAN_ID = 60;
