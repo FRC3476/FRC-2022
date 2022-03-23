@@ -5,8 +5,10 @@ import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This class is used to get data from the limelight network tables
@@ -15,11 +17,38 @@ public final class Limelight {
     final @NotNull NetworkTable limelightTable;
     final @NotNull NetworkTable limelightGuiTable;
 
-    private static final Limelight INSTANCE = new Limelight();
+    private static final HashMap<String, Limelight> LIMELIGHT_MAP = new HashMap<>();
+    private static final ReentrantReadWriteLock LIMELIGHT_MAP_LOCK = new ReentrantReadWriteLock();
 
     public static @NotNull Limelight getInstance() {
-        return INSTANCE;
+        return getInstance("limelight");
     }
+
+    public static @NotNull Limelight getInstance(String name) {
+        LIMELIGHT_MAP_LOCK.readLock().lock();
+        try {
+            if (LIMELIGHT_MAP.containsKey(name)) {
+                return LIMELIGHT_MAP.get(name);
+            } else {
+                LIMELIGHT_MAP_LOCK.readLock().unlock();
+                LIMELIGHT_MAP_LOCK.writeLock().lock();
+                try {
+                    if (LIMELIGHT_MAP.containsKey(name)) {
+                        return LIMELIGHT_MAP.get(name);
+                    } else {
+                        Limelight limelight = new Limelight(name);
+                        LIMELIGHT_MAP.put(name, limelight);
+                        return limelight;
+                    }
+                } finally {
+                    LIMELIGHT_MAP_LOCK.writeLock().unlock();
+                }
+            }
+        } finally {
+            LIMELIGHT_MAP_LOCK.readLock().unlock();
+        }
+    }
+
 
     /**
      * Limelight’s LED states
@@ -90,20 +119,17 @@ public final class Limelight {
         }
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
-    private Limelight() {
-        limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
-        limelightGuiTable = NetworkTableInstance.getDefault().getTable("limelightgui");
-        limelightGuiTable.getEntry("CameraTargetHeightOffset").setDouble(Constants.CAMERA_TARGET_HEIGHT_OFFSET);
-        limelightGuiTable.getEntry("CameraYAngle").setDouble(Constants.CAMERA_Y_ANGLE);
+    private Limelight(String name) {
+        limelightTable = NetworkTableInstance.getDefault().getTable(name);
+        limelightGuiTable = NetworkTableInstance.getDefault().getTable(name + "gui");
 
         limelightTable.getEntry("tl").addListener(event -> lastUpdate = Timer.getFPGATimestamp(),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         limelightGuiTable.getEntry("forceledon").addListener(event -> {
             if (event.getEntry().getBoolean(false)) {
-                INSTANCE.setLedMode(LedMode.ON);
-                INSTANCE.setCamMode(CamMode.VISION_PROCESSOR);
+                this.setLedMode(LedMode.ON);
+                this.setCamMode(CamMode.VISION_PROCESSOR);
             }
         }, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
