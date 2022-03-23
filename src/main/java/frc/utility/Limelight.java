@@ -29,23 +29,22 @@ public final class Limelight {
         try {
             if (LIMELIGHT_MAP.containsKey(name)) {
                 return LIMELIGHT_MAP.get(name);
-            } else {
-                LIMELIGHT_MAP_LOCK.readLock().unlock();
-                LIMELIGHT_MAP_LOCK.writeLock().lock();
-                try {
-                    if (LIMELIGHT_MAP.containsKey(name)) {
-                        return LIMELIGHT_MAP.get(name);
-                    } else {
-                        Limelight limelight = new Limelight(name);
-                        LIMELIGHT_MAP.put(name, limelight);
-                        return limelight;
-                    }
-                } finally {
-                    LIMELIGHT_MAP_LOCK.writeLock().unlock();
-                }
             }
         } finally {
             LIMELIGHT_MAP_LOCK.readLock().unlock();
+        }
+
+        LIMELIGHT_MAP_LOCK.writeLock().lock();
+        try {
+            if (LIMELIGHT_MAP.containsKey(name)) {
+                return LIMELIGHT_MAP.get(name);
+            } else {
+                Limelight limelight = new Limelight(name);
+                LIMELIGHT_MAP.put(name, limelight);
+                return limelight;
+            }
+        } finally {
+            LIMELIGHT_MAP_LOCK.writeLock().unlock();
         }
     }
 
