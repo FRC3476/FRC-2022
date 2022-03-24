@@ -20,6 +20,7 @@ import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.utility.*;
+import frc.utility.Controller.XboxAxes;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.Limelight.LedMode;
 import frc.utility.Limelight.StreamingMode;
@@ -436,7 +437,6 @@ public class Robot extends TimedRobot {
     }
 
     private final Object driverForcingVisionOn = new Object();
-    private final Object buttonPanelForcingVisionOn = new Object();
     private final Object resettingPoseVisionOn = new Object();
 
     /**
@@ -464,7 +464,9 @@ public class Robot extends TimedRobot {
             shooter.setFiring(false);
             shooter.setSpeed(0);
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
+            if (xbox.getRawAxis(XboxAxes.LEFT_TRIGGER) > 0.1) {
+                drive.centerOntoBall(getControllerDriveInputs(), useFieldRelative);
+            } else if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
                 doNormalDriving();
             } else {

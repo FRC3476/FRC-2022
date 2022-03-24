@@ -576,7 +576,7 @@ public final class Drive extends AbstractSubsystem {
 
     PIDController centerOntoBallPID = new PIDController(1, 0, 0, 0.02);
 
-    private void centerOntoBall(ControllerDriveInputs inputs) {
+    public void centerOntoBall(ControllerDriveInputs inputs, boolean fieldRelativeEnabled) {
         Limelight limelight = Limelight.getInstance("limelight-intake");
         if (limelight.isTargetVisible()) {
 
@@ -607,14 +607,23 @@ public final class Drive extends AbstractSubsystem {
             }
 
             double strafeCommand = centerOntoBallPID.calculate(pidError, 0);
-            Translation2d correction = new Translation2d(strafeCommand, 0).rotateBy(
-                    RobotTracker.getInstance().getGyroAngle()); //Make it perpendicular to the robot
+            Translation2d correction = new Translation2d(0, strafeCommand);
 
-            ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                    DRIVE_HIGH_SPEED_M * inputs.getX() + correction.getX(),
-                    DRIVE_HIGH_SPEED_M * inputs.getY() + correction.getY(),
-                    inputs.getRotation() * 7,
-                    RobotTracker.getInstance().getGyroAngle());
+            ChassisSpeeds chassisSpeeds;
+            if (useFieldRelative && fieldRelativeEnabled) {
+                correction = correction.rotateBy(RobotTracker.getInstance().getGyroAngle()); //Make it perpendicular to the robot
+                chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                        DRIVE_HIGH_SPEED_M * inputs.getX() + correction.getX(),
+                        DRIVE_HIGH_SPEED_M * inputs.getY() + correction.getY(),
+                        inputs.getRotation() * 7,
+                        RobotTracker.getInstance().getGyroAngle());
+            } else {
+                chassisSpeeds = new ChassisSpeeds(
+                        DRIVE_HIGH_SPEED_M * inputs.getX() + correction.getX(),
+                        DRIVE_HIGH_SPEED_M * inputs.getY() + correction.getY(),
+                        inputs.getRotation() * 7);
+            }
+
             swerveDrive(chassisSpeeds);
         } else {
             swerveDriveFieldRelative(inputs);
@@ -661,8 +670,8 @@ public final class Drive extends AbstractSubsystem {
     private void searchForBall() {
         Limelight intakeLimelight = Limelight.getInstance("limelight-intake");
         if (intakeLimelight.isTargetVisible()) {
-            Translation2d movement = new Translation2d(0.25, 0).rotateBy(RobotTracker.getInstance().getGyroAngle());
-            centerOntoBall(new ControllerDriveInputs(movement.getX(), movement.getY(), 0));
+            Translation2d movement = new Translation2d(0.25, 0);
+            centerOntoBall(new ControllerDriveInputs(movement.getX(), movement.getY(), 0), false);
         } else {
             swerveDrive(new ChassisSpeeds(0, 0, 0));
         }
