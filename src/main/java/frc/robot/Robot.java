@@ -19,6 +19,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
+import frc.subsystem.Intake.IntakeSolState;
 import frc.utility.*;
 import frc.utility.Controller.XboxAxes;
 import frc.utility.Controller.XboxButtons;
@@ -464,7 +465,7 @@ public class Robot extends TimedRobot {
             shooter.setFiring(false);
             shooter.setSpeed(0);
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (xbox.getRawAxis(XboxAxes.LEFT_TRIGGER) > 0.1) {
+            if (xbox.getRawAxis(XboxAxes.LEFT_TRIGGER) > 0.1 && intake.getIntakeSolState() == IntakeSolState.OPEN) {
                 drive.centerOntoBall(getControllerDriveInputs(), useFieldRelative);
             } else if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
