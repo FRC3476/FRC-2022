@@ -74,8 +74,13 @@ public class ControllerDriveInputs {
      * @return {@link ControllerDriveInputs}
      */
     public @NotNull ControllerDriveInputs squareInputs() {
-        x = Math.copySign(x * x, x);
-        y = Math.copySign(y * y, y);
+        double dist = Math.hypot(x, y);
+        double distSquared = dist * dist;
+        double angle = Math.atan2(y, x);
+
+
+        x = distSquared * Math.cos(angle);
+        y = distSquared * Math.sin(angle);
         rotation = Math.copySign(rotation * rotation, rotation);
         return this;
     }
@@ -86,8 +91,12 @@ public class ControllerDriveInputs {
      * @return {@link ControllerDriveInputs}
      */
     public @NotNull ControllerDriveInputs cubeInputs() {
-        x = x * x * x;
-        y = y * y * y;
+        double dist = Math.hypot(x, y);
+        double distCubed = dist * dist * dist;
+        double angle = Math.atan2(y, x);
+
+        x = distCubed * Math.cos(angle);
+        y = distCubed * Math.sin(angle);
         rotation = rotation * rotation * rotation;
         return this;
     }
