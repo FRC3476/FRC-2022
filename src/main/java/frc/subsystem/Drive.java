@@ -898,4 +898,8 @@ public final class Drive extends AbstractSubsystem {
             Thread.onSpinWait();
         }
     }
+
+    public synchronized void setSearchForBall() {
+        setDriveState(DriveState.SEARCH_FOR_BALL);
+    }
 }
