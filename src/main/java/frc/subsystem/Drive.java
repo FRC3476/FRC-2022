@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
+import frc.utility.Limelight;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
@@ -65,7 +66,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public enum DriveState {
-        TELEOP, TURN, HOLD, DONE, RAMSETE, STOP
+        TELEOP, TURN, HOLD, DONE, RAMSETE, SEARCH_FOR_BALL, STOP
     }
 
     public boolean useRelativeEncoderPosition = false;
@@ -573,6 +574,53 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
+    PIDController centerOntoBallPID = new PIDController(1, 0, 0, 0.02);
+
+    private void centerOntoBall(ControllerDriveInputs inputs) {
+        Limelight limelight = Limelight.getInstance("limelight-intake");
+        if (limelight.isTargetVisible()) {
+
+            /* Top Down View
+            [] - ball
+                        X
+                    []------
+                     \     |
+                      \    |
+                       \   | Y
+                        \  |
+                         \ |
+                          \|
+              |---|----|----|----|----| Intake
+             */
+
+            double distY = Math.tan(Math.toRadians(limelight.getVerticalOffset() + 50)) * 20;
+
+            double distX = Math.tan(limelight.getHorizontalOffset()) * distY;
+
+            double allowedError = (distY * 0.2) + 20;
+
+            double pidError;
+            if (Math.abs(distX) < allowedError) {
+                pidError = 0;
+            } else {
+                pidError = distX - (Math.signum(distX) * allowedError);
+            }
+
+            double strafeCommand = centerOntoBallPID.calculate(pidError, 0);
+            Translation2d correction = new Translation2d(strafeCommand, 0).rotateBy(
+                    RobotTracker.getInstance().getGyroAngle()); //Make it perpendicular to the robot
+
+            ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                    DRIVE_HIGH_SPEED_M * inputs.getX() + correction.getX(),
+                    DRIVE_HIGH_SPEED_M * inputs.getY() + correction.getY(),
+                    inputs.getRotation() * 7,
+                    RobotTracker.getInstance().getGyroAngle());
+            swerveDrive(chassisSpeeds);
+        } else {
+            swerveDriveFieldRelative(inputs);
+        }
+    }
+
     public void setAutoRotation(@NotNull Rotation2d rotation) {
         autoTargetHeading = rotation;
         System.out.println("new rotation" + rotation.getDegrees());
@@ -603,6 +651,20 @@ public final class Drive extends AbstractSubsystem {
                 break;
             case STOP:
                 swerveDrive(new ChassisSpeeds(0, 0, 0));
+                break;
+            case SEARCH_FOR_BALL:
+                searchForBall();
+                break;
+        }
+    }
+
+    private void searchForBall() {
+        Limelight intakeLimelight = Limelight.getInstance("limelight-intake");
+        if (intakeLimelight.isTargetVisible()) {
+            Translation2d movement = new Translation2d(0.25, 0).rotateBy(RobotTracker.getInstance().getGyroAngle());
+            centerOntoBall(new ControllerDriveInputs(movement.getX(), movement.getY(), 0));
+        } else {
+            swerveDrive(new ChassisSpeeds(0, 0, 0));
         }
     }
 
