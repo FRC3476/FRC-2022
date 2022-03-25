@@ -598,7 +598,8 @@ public final class Drive extends AbstractSubsystem {
 
             double distX = Math.tan(limelight.getHorizontalOffset()) * distY;
 
-            double allowedError = (distY * 0.2) + 20;
+
+            double allowedError = DriverStation.isAutonomous() ? 0 : (distY * 0.2) + 20;
 
             double pidError;
             if (Math.abs(distX) < allowedError) {
@@ -824,6 +825,15 @@ public final class Drive extends AbstractSubsystem {
         }
 
         logData("Drive State", driveState.toString());
+
+        Limelight limelight = Limelight.getInstance("limelight-intake");
+        if (limelight.isTargetVisible()) {
+            double distY = Math.tan(Math.toRadians(limelight.getVerticalOffset() + INTAKE_LIMELIGHT_ANGLE_OFFSET))
+                    * INTAKE_LIMELIGHT_HEIGHT_OFFSET;
+            double distX = Math.tan(limelight.getHorizontalOffset()) * distY;
+            logData("Limelight Distance X", distX);
+            logData("Limelight Distance Y", distY);
+        }
     }
 
 
