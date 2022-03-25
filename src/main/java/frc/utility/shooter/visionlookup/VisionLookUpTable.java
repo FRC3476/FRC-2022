@@ -110,5 +110,14 @@ public final class VisionLookUpTable {
             shooterConfigLock.unlock();
         }
     }
+
+    public void printShooterConfig() {
+        shooterConfigLock.lock();
+        try {
+            shooterConfig.printCSV();
+        } finally {
+            shooterConfigLock.unlock();
+        }
+    }
 }
 

@@ -2,13 +2,12 @@ package frc.auton.guiauto.serialization.reflection;
 
 import edu.wpi.first.wpilibj.Filesystem;
 import frc.utility.Serializer;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jetbrains.annotations.Nullable;
 
 import static frc.auton.guiauto.serialization.reflection.ReflectionUtils.findClasses;
 public final class ClassInformationSender {
@@ -23,10 +22,10 @@ public final class ClassInformationSender {
             for (Class<?> aClass : classes) {
                 reflectionClassData.add(new ReflectionClassData(aClass));
             }
-            System.out.println(Serializer.serializeToString(reflectionClassData));
+            //System.out.println(Serializer.serializeToString(reflectionClassData));
+            System.out.println("Successfully updated reflection information");
 
-
-            if(file != null) {
+            if (file != null) {
                 file.getParentFile().mkdir();
                 Serializer.serializeToFile(reflectionClassData, file);
             }

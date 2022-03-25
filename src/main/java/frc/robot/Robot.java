@@ -25,6 +25,7 @@ import frc.utility.Limelight.LedMode;
 import frc.utility.Limelight.StreamingMode;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
+import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -777,5 +778,6 @@ public class Robot extends TimedRobot {
     public void simulationInit() {
         ClassInformationSender.updateReflectionInformation(
                 new File(OsUtil.getUserConfigDirectory("AutoBuilder") + "/robotCodeData.json"));
+        VisionLookUpTable.getInstance().printShooterConfig();
     }
 }

@@ -28,4 +28,14 @@ public class ShooterConfig {
                 "shooterConfigs=" + shooterConfigs +
                 '}';
     }
+
+    public void printCSV() {
+        StringBuilder sb = new StringBuilder();
+        for (ShooterPreset shooterPreset : shooterConfigs) {
+            sb.append(shooterPreset.getDistance()).append(",")
+                    .append(shooterPreset.getFlywheelSpeed()).append(",")
+                    .append(shooterPreset.getHoodEjectAngle()).append("\n");
+        }
+        System.out.println(sb);
+    }
 }
