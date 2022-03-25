@@ -593,7 +593,8 @@ public final class Drive extends AbstractSubsystem {
               |---|----|----|----|----| Intake
              */
 
-            double distY = Math.tan(Math.toRadians(limelight.getVerticalOffset() + 50)) * 20;
+            double distY = Math.tan(Math.toRadians(limelight.getVerticalOffset() + INTAKE_LIMELIGHT_ANGLE_OFFSET))
+                    * INTAKE_LIMELIGHT_HEIGHT_OFFSET;
 
             double distX = Math.tan(limelight.getHorizontalOffset()) * distY;
 
@@ -607,6 +608,9 @@ public final class Drive extends AbstractSubsystem {
             }
 
             double strafeCommand = centerOntoBallPID.calculate(pidError, 0);
+            strafeCommand = Math.signum(strafeCommand) * Math.min(Math.abs(strafeCommand), MAX_CENTERING_SPEED);
+            // Ensure that the driver can always override the PID
+
             Translation2d correction = new Translation2d(0, strafeCommand);
 
             ChassisSpeeds chassisSpeeds;

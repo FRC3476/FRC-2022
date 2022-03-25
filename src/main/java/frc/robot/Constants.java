@@ -180,6 +180,16 @@ public final class Constants {
      */
     public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 27);
 
+    /**
+     * Angular offset of the intake limelight (degrees)
+     */
+    public static final double INTAKE_LIMELIGHT_ANGLE_OFFSET = 50;
+    /**
+     * Height offset of the intake limelight from the ground (inches)
+     */
+    public static final double INTAKE_LIMELIGHT_HEIGHT_OFFSET = 0.75;
+    public static final double MAX_CENTERING_SPEED = 0.5;
+
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
     public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
