@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.drive.Vector2d;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * This class is used to get data from the limelight network tables
  */
 public final class Limelight {
+    public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
     final @NotNull NetworkTable limelightTable;
     final @NotNull NetworkTable limelightGuiTable;
 
@@ -259,5 +261,27 @@ public final class Limelight {
         } else {
             return 0;
         }
+    }
+
+
+    public Vector2d[] getCorners() {
+        Vector2d[] processedCorners = new Vector2d[4];
+        double[] corners = limelightTable.getEntry("tcornxy").getDoubleArray(EMPTY_DOUBLE_ARRAY);
+        for (int i = 0; i < corners.length; i += 2) {
+            if (i + 1 < corners.length) {
+                processedCorners[i / 2] = new Vector2d(corners[i], corners[i + 1]);
+            }
+        }
+        return processedCorners;
+    }
+
+    public boolean areCornersTouchingEdge() {
+        Vector2d[] corners = getCorners();
+        for (Vector2d corner : corners) {
+            if (corner.x < 2 || corner.x > 318 || corner.y < 2 || corner.y > 238) {
+                return true;
+            }
+        }
+        return false;
     }
 }
