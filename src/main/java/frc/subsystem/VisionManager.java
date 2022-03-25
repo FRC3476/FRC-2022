@@ -343,10 +343,9 @@ public final class VisionManager extends AbstractSubsystem {
             logData("Vision Pose Angle", visionPose.getRotation().getRadians());
             logData("Vision Pose Time", getLimelightTime());
 
-            //TODO: Check that the contours aren't touching the edge of the screen before using them
             if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
-                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-
+                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED
+                    && !limelight.areCornersTouchingEdge()) {
 
                 robotTracker.addVisionMeasurement(robotTranslation,
                         getLimelightTime());
