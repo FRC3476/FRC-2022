@@ -197,7 +197,7 @@ public final class Constants {
      */
     public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(MAX_SHOOT_SPEED, 2);
 
-   /**
+    /**
      * This GOAL RADIUS is used to calculate the turn error
      */
     public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
@@ -218,11 +218,33 @@ public final class Constants {
 
 
     //Hopper Constants
-    public static final int HOPPER_PERIOD = 200;
-    public static final double HOPPER_SPEED = 1;
+    public static final int HOPPER_PERIOD = 10;
+    public static final double HOPPER_SPEED = .5;
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
+    public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
+    // Outtake Constants
+    public static final int OUTTAKE_CAN_ID = 60;
+    public static final double OUTTAKE_REDUCTION = (3.0 / 1.0);
+    public static final int OUTTAKE_CURRENT_LIMIT = 20;
+    public static final int OUTTAKE_MEASUREMENT_PERIOD_MS = 200;
+    public static final double OUTTAKE_VERTICAL_OFFSET_THRESHOLD = 0;
+    /**
+     * Outtake Always intake has outtake always intaking until opposite ball color is found The other option is to have the
+     * outtake always outtaking until a friendly ball color is found
+     */
+    public static final boolean OUTTAKE_ALWAYS_INTAKE = true;
+    /**
+     * Maximum Percent Output of Outtake wheels
+     */
+    public static final double INTAKEING_OUTTAKE_SPEED = .5;
+    public static final double EJECT_OUTTAKE_SPEED = .5;
+
+    /**
+     * Outtake will run for this time (Sec) after color sensor trigger
+     */
+    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000d;
 
     // Shooter Constants
 
@@ -251,6 +273,9 @@ public final class Constants {
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
     public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 150;
+
+    public static final int SHOOTER_EJECT_SPEED = 500;
+    public static final double HOOD_EJECT_ANGLE = 85;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
@@ -486,5 +511,6 @@ public final class Constants {
     public static final double INTAKE_OPEN_TIME = 0.0;
 
     public static final int WEB_DASHBOARD_PORT = 5802;
+
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
 }

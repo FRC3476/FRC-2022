@@ -1,42 +1,31 @@
 package frc.subsystem;
 
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
-import com.revrobotics.ColorMatch;
-import com.revrobotics.ColorSensorV3;
-import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
+import com.revrobotics.RelativeEncoder;
 import frc.robot.Constants;
+import frc.robot.Robot;
+import frc.subsystem.Intake.IntakeSolState;
+import frc.subsystem.Intake.IntakeState;
+import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
+import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.NotNull;
 
 import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
 
 public final class Hopper extends AbstractSubsystem {
-    public static @NotNull Hopper INSTANCE = new Hopper();
+
+    private static @NotNull Hopper INSTANCE = new Hopper();
     private final @NotNull LazyCANSparkMax hopperMotor;
-    private final @NotNull ColorSensorV3 topBall;
-    //private final ColorSensorV3 bottomBall = new ColorSensorV3(Port.kMXP);
-
-    private boolean topBallDetected = false;
-    private boolean bottomBallDetected = false;
-
-
-    /**
-     * A Rev Color Match object is used to register and detect known colors. This can be calibrated ahead of time or during
-     * operation.
-     * <p>
-     * This object uses a simple euclidian distance to estimate the closest match with given confidence range.
-     */
-    private final ColorMatch colorMatcher = new ColorMatch();
-
-    /**
-     * Note: Any example colors should be calibrated as the user needs, these are here as a basic example.
-     */
-    private final Color blueTarget = new Color(0.184, 0.427, 0.39);
-    private final Color redTarget = new Color(0.38, 0.41, 0.2);
+    private RelativeEncoder outtakeWheelsQuadrature;
+    private LazyCANSparkMax outtakeWheels;
+    private double lastDetectionTime;
+    private boolean disableEject = false;
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
 
     public static Hopper getInstance() {
         return INSTANCE;
@@ -48,6 +37,26 @@ public final class Hopper extends AbstractSubsystem {
 
     HopperState wantedHopperState = HopperState.OFF;
 
+    /**
+     * Outtake can either be OFF or INTAKE, or EJECT
+     */
+    public enum OuttakeState {
+        OFF,
+        INTAKE,
+        EJECT,
+    }
+
+    private OuttakeState outtakeState = OuttakeState.OFF;
+
+    public enum BallColor {
+        RED,
+        BLUE,
+        NO_BALL
+    }
+
+    BallColor opposingAllianceColor = BallColor.BLUE;
+    BallColor friendlyAllianceColor = BallColor.RED;
+
     private Hopper() {
         super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -58,60 +67,176 @@ public final class Hopper extends AbstractSubsystem {
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
         hopperMotor.setControlFramePeriodMs(25);
 
-        colorMatcher.addColorMatch(blueTarget);
-        colorMatcher.addColorMatch(redTarget);
-        topBall = new ColorSensorV3(I2C.Port.kMXP);
+        outtakeWheels = new LazyCANSparkMax(Constants.OUTTAKE_CAN_ID, MotorType.kBrushless);
+        outtakeWheels.setIdleMode(IdleMode.kCoast);
+        outtakeWheels.setInverted(true);
+        outtakeWheels.setSmartCurrentLimit(Constants.OUTTAKE_CURRENT_LIMIT);
+        outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+        outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 200);
+        outtakeWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 25);
+        outtakeWheels.setControlFramePeriodMs(25);
+
+        outtakeWheelsQuadrature = outtakeWheels.getEncoder();
+        outtakeWheelsQuadrature.setPositionConversionFactor(Constants.OUTTAKE_REDUCTION);
+        outtakeWheelsQuadrature.setMeasurementPeriod(Constants.OUTTAKE_MEASUREMENT_PERIOD_MS);
+
+        outtakeWheels.disableVoltageCompensation();
+        outtakeWheels.burnFlash();
     }
 
-    public void checkBallColor() {
-        Color detectedColorTop = topBall.getColor();
-        //Color detectedColorBottom = bottomBall.getColor();
+    /**
+     * Uses Sendable Chooser to decide Alliance Color
+     */
+    private void updateAllianceColor() {
+        if (Robot.sideChooser.getSelected().equals(Robot.BLUE)) {
+            opposingAllianceColor = BallColor.RED;
+            friendlyAllianceColor = BallColor.BLUE;
 
-        logData("Top Ball Red", detectedColorTop.red);
-        logData("Top Ball Green", detectedColorTop.green);
-        logData("Top Ball Blue", detectedColorTop.blue);
-        logData("Top Confidence", colorMatcher.matchClosestColor(detectedColorTop).confidence);
-
-//        logData("Bottom Red", detectedColorBottom.red);
-//        logData("Bottom Green", detectedColorBottom.green);
-//        logData("Bottom Blue", detectedColorBottom.blue);
-//        logData("Bottom Confidence", colorMatcher.matchClosestColor(detectedColorBottom).confidence);
-
-        if (colorMatcher.matchClosestColor(detectedColorTop).color == redTarget) {
-            logData("Top Ball Color", "Red");
-            topBallDetected = true;
-        } else if (colorMatcher.matchClosestColor(detectedColorTop).color == blueTarget) {
-            logData("Top Ball Color", "Blue");
-            topBallDetected = true;
+            if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+                // Will detect opposite color balls and outtake when it sees them
+                intakeLimelight.setPipeline(1);
+            } else {
+                // Will detect same colored balls and intake when it sees them
+                intakeLimelight.setPipeline(0);
+            }
         } else {
-            logData("Top Ball Color", "No Ball Detected");
-            topBallDetected = false;
-        }
-
-//        if (colorMatcher.matchClosestColor(detectedColorBottom).color == redTarget) {
-//            logData("Bottom Ball Color", "Red");
-//            bottomBallDetected = true;
-//        } else if (colorMatcher.matchClosestColor(detectedColorBottom).color == blueTarget) {
-//            logData("Bottom Ball Color", "Blue");
-//            bottomBallDetected = true;
-//        } else {
-//            logData("Bottom Ball Color", "No Ball Detected");
-//            bottomBallDetected = false;
-//        }
-    }
-
-    public void numberOfBalls() {
-        if (topBallDetected && bottomBallDetected) {
-            logData("Number of Balls", 2);
-        } else if (bottomBallDetected || topBallDetected) {
-            logData("Number of Balls", 1);
-        } else {
-            logData("Number of Balls", 0);
+            opposingAllianceColor = BallColor.BLUE;
+            friendlyAllianceColor = BallColor.RED;
+            if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+                // Will detect same colored balls and intake when it sees them
+                intakeLimelight.setPipeline(0);
+            } else {
+                // Will detect opposite color balls and outtake when it sees them
+                intakeLimelight.setPipeline(1);
+            }
         }
     }
 
-    public void setHopperState(HopperState hopperState) {
-        switch (hopperState) {
+    /**
+     * Toggles disableEject
+     */
+    public void toggleEjectOverride() {
+        disableEject = !disableEject;
+    }
+
+    /**
+     * Updates state of outtake based on color sensor and intake direction
+     */
+    private void updateOuttakeState() {
+        // If color sensor detects a ball or
+        Intake intake = Intake.getInstance();
+
+        if (wantedHopperState == HopperState.REVERSE) {
+            outtakeState = OuttakeState.EJECT;
+            return;
+        }
+
+        if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+            // Intake is running and open
+            if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                // Ball Color is opposite
+                if (getBallColor() == opposingAllianceColor) {
+                    lastDetectionTime = Timer.getFPGATimestamp();
+                    outtakeState = OuttakeState.EJECT;
+                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+                    // Opposite ball color detected within a certain time frame
+                    outtakeState = OuttakeState.EJECT;
+                } else {
+                    outtakeState = OuttakeState.INTAKE;
+                }
+            } else {
+                outtakeState = OuttakeState.OFF;
+            }
+        } else {
+            // Intake is running and open
+            if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                // Ball Color is opposite
+                if (getBallColor() == friendlyAllianceColor) {
+                    lastDetectionTime = Timer.getFPGATimestamp();
+                    outtakeState = OuttakeState.INTAKE;
+                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+                    // Opposite ball color detected within a certain time frame
+                    outtakeState = OuttakeState.INTAKE;
+                } else {
+                    outtakeState = OuttakeState.EJECT;
+                }
+            } else {
+                outtakeState = OuttakeState.OFF;
+            }
+        }
+    }
+
+    private void updateOuttakeStateOverridden() {
+        Intake intake = Intake.getInstance();
+        if (wantedHopperState == HopperState.REVERSE) {
+            outtakeState = OuttakeState.EJECT;
+        } else if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            outtakeState = OuttakeState.INTAKE;
+        } else {
+            outtakeState = OuttakeState.OFF;
+        }
+    }
+
+    /**
+     * Sets the percent outtake between 1 and -1
+     */
+    private void setOuttakePercentOutput(double percentOutput) {
+        outtakeWheels.set(percentOutput);
+        //outtakeWheels.getPIDController().setReference(9 * percentOutput, ControlType.kVoltage);
+    }
+
+    public OuttakeState getOuttakeState() {
+        return outtakeState;
+    }
+
+    public BallColor getBallColor() {
+        @NotNull BallColor currentBallColor;
+
+        if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+            if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
+                currentBallColor = opposingAllianceColor;
+            } else {
+                currentBallColor = BallColor.NO_BALL;
+            }
+        } else {
+            if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
+                currentBallColor = friendlyAllianceColor;
+            } else {
+                currentBallColor = BallColor.NO_BALL;
+            }
+        }
+
+        return currentBallColor;
+    }
+
+    @Override
+    public void update() {
+        updateAllianceColor();
+        getBallColor();
+
+        if (!disableEject) {
+            updateOuttakeState();
+        } else {
+            updateOuttakeStateOverridden();
+        }
+
+        // Outtake motor control
+
+        switch (outtakeState) {
+            case OFF:
+                setOuttakePercentOutput(0);
+                break;
+            case EJECT:
+                setOuttakePercentOutput(Constants.EJECT_OUTTAKE_SPEED);
+                break;
+            case INTAKE:
+                setOuttakePercentOutput(-Constants.INTAKEING_OUTTAKE_SPEED);
+                break;
+        }
+
+
+        // Hopper Motor Control
+        switch (wantedHopperState) {
             case ON:
                 hopperMotor.set(Constants.HOPPER_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = true;
@@ -131,14 +256,7 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
-    @Override
-    public void update() {
-        setHopperState(wantedHopperState);
-        checkBallColor();
-        numberOfBalls();
-    }
-
-    public void setWantedHopperState(HopperState hopperState) {
+    public void setHopperState(HopperState hopperState) {
         wantedHopperState = hopperState;
     }
 
@@ -147,11 +265,29 @@ public final class Hopper extends AbstractSubsystem {
         setHopperState(HopperState.ON);
         OrangeUtility.sleep(5000);
         setHopperState(HopperState.OFF);
+        OrangeUtility.sleep(5000);
+
+        setOuttakePercentOutput(Constants.INTAKEING_OUTTAKE_SPEED);
+        System.out.println("Ejecting");
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        setOuttakePercentOutput(-Constants.INTAKEING_OUTTAKE_SPEED);
+        System.out.println("Intaking");
+        OrangeUtility.sleep(Constants.TEST_TIME_MS);
+
+        System.out.println("Test Finished");
+        setOuttakePercentOutput(0);
     }
 
     @Override
     public void logData() {
-        SmartDashboard.putNumber("Hopper Motor Current", hopperMotor.getOutputCurrent());
+        logData("Hopper Motor Current", hopperMotor.getOutputCurrent());
+        logData("Outtake State", outtakeState);
+        logData("Outtake SetVoltage", outtakeWheels.getSetpoint());
+        logData("Outtake Velocity", outtakeWheelsQuadrature.getVelocity());
+        logData("Outtake Current", outtakeWheels.getOutputCurrent());
+        logData("Current Ball Color", getBallColor());
+        logData("Eject Disabled", disableEject);
     }
 
     @Override

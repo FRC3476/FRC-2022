@@ -137,17 +137,19 @@ public class Robot extends TimedRobot {
 
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
+    @NotNull public static final String RED = "RED";
+    @NotNull public static final String BLUE = "BLUE";
 
-    @NotNull private static final String RED = "RED";
-    @NotNull private static final String BLUE = "BLUE";
+    private static boolean hoodEject = false;
 
-    private final SendableChooser<String> sideChooser = new SendableChooser<>();
+    public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
     //Subsystems
     private final RobotTracker robotTracker = RobotTracker.getInstance();
     private final Drive drive = Drive.getInstance();
     private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
     private final Limelight limelight = Limelight.getInstance();
+    private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
     private final Hopper hopper = Hopper.getInstance();
     private final Intake intake = Intake.getInstance();
     private final Shooter shooter = Shooter.getInstance();
@@ -269,7 +271,6 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", autoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);
 
-        startSubsystems();
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
@@ -283,7 +284,9 @@ public class Robot extends TimedRobot {
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
+        startSubsystems();
         limelight.setLedMode(LedMode.OFF);
+        intakeLimelight.setLedMode(LedMode.OFF);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -451,7 +454,9 @@ public class Robot extends TimedRobot {
 
         if (xbox.getRawAxis(2) > 0.1) {
             if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
-                shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                if (!hoodEject) {
+                    shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                }
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
@@ -506,11 +511,17 @@ public class Robot extends TimedRobot {
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
+        // Override outtake to always intake
+        if (buttonPanel.getRisingEdge(5)) {
+            hopper.toggleEjectOverride();
+        }
+
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         }
+
 
         if (stick.getRawButton(4)) {
             visionManager.forceVisionOn(resettingPoseVisionOn);
@@ -594,11 +605,18 @@ public class Robot extends TimedRobot {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
+        } else if (buttonPanel.getRawButton(6)) {
+            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+            hoodEject = true;
+        } else {
+            hoodEject = false;
         }
     }
 
     private boolean isTryingToRunShooterFromButtonPanel() {
-        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(3);
+        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(
+                3) || buttonPanel.getRawButton(6);
     }
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
@@ -741,6 +759,7 @@ public class Robot extends TimedRobot {
         shooter.start();
         climber.start();
         visionManager.start();
+        DashboardHandler.getInstance().start();
     }
 
     public void killAuto() {

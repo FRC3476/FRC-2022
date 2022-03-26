@@ -68,6 +68,7 @@ public abstract class AbstractSubsystem implements Runnable, AutoCloseable {
     }
 
     int lastLength = 20;
+
     @Override
     @SuppressWarnings("BusyWait")
     public void run() {
