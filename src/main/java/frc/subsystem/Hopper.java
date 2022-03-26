@@ -126,6 +126,11 @@ public final class Hopper extends AbstractSubsystem {
         // If color sensor detects a ball or
         Intake intake = Intake.getInstance();
 
+        if (wantedHopperState == HopperState.REVERSE) {
+            outtakeState = OuttakeState.EJECT;
+            return;
+        }
+
         if (Constants.OUTTAKE_ALWAYS_INTAKE) {
             // Intake is running and open
             if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
@@ -140,7 +145,7 @@ public final class Hopper extends AbstractSubsystem {
                     outtakeState = OuttakeState.INTAKE;
                 }
             } else {
-                outtakeState = OuttakeState.INTAKE;
+                outtakeState = OuttakeState.OFF;
             }
         } else {
             // Intake is running and open
@@ -156,12 +161,12 @@ public final class Hopper extends AbstractSubsystem {
                     outtakeState = OuttakeState.EJECT;
                 }
             } else {
-                outtakeState = OuttakeState.EJECT;
+                outtakeState = OuttakeState.OFF;
             }
         }
     }
 
-    private void updateOuttakeStateOverrided() {
+    private void updateOuttakeStateOverridden() {
         Intake intake = Intake.getInstance();
         if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
             outtakeState = OuttakeState.INTAKE;
@@ -210,7 +215,7 @@ public final class Hopper extends AbstractSubsystem {
         if (!disableEject) {
             updateOuttakeState();
         } else {
-            updateOuttakeStateOverrided();
+            updateOuttakeStateOverridden();
         }
 
         // Outtake motor control
@@ -275,10 +280,10 @@ public final class Hopper extends AbstractSubsystem {
     @Override
     public void logData() {
         logData("Hopper Motor Current", hopperMotor.getOutputCurrent());
-
-        logData("Outtae State", outtakeState);
+        logData("Outtake State", outtakeState);
         logData("Outtake SetVoltage", outtakeWheels.getSetpoint());
         logData("Outtake Velocity", outtakeWheelsQuadrature.getVelocity());
+        logData("Outtake Current", outtakeWheels.getOutputCurrent());
         logData("Current Ball Color", getBallColor());
         logData("Eject Disabled", disableEject);
     }

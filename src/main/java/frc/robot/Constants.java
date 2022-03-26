@@ -238,7 +238,7 @@ public final class Constants {
     /**
      * Maximum Percent Output of Outtake wheels
      */
-    public static final double OUTTAKE_SPEED = 1d;
+    public static final double OUTTAKE_SPEED = .5;
 
     /**
      * Outtake will run for this time (Sec) after color sensor trigger
