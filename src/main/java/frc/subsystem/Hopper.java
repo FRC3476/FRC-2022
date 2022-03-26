@@ -137,10 +137,10 @@ public final class Hopper extends AbstractSubsystem {
                     // Opposite ball color detected within a certain time frame
                     outtakeState = OuttakeState.EJECT;
                 } else {
-                    outtakeState = OuttakeState.OFF;
+                    outtakeState = OuttakeState.INTAKE;
                 }
             } else {
-                outtakeState = OuttakeState.OFF;
+                outtakeState = OuttakeState.INTAKE;
             }
         } else {
             // Intake is running and open
@@ -156,7 +156,7 @@ public final class Hopper extends AbstractSubsystem {
                     outtakeState = OuttakeState.EJECT;
                 }
             } else {
-                outtakeState = OuttakeState.OFF;
+                outtakeState = OuttakeState.EJECT;
             }
         }
     }

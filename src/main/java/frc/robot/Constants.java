@@ -241,7 +241,7 @@ public final class Constants {
     public static final double OUTTAKE_SPEED = 1d;
 
     /**
-     * Outtake will run for this time (MS) after color sensor trigger
+     * Outtake will run for this time (Sec) after color sensor trigger
      */
     public static final double OUTTAKE_RUN_PERIOD = 50 / 1000d;
 
