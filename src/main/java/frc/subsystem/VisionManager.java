@@ -92,21 +92,33 @@ public final class VisionManager extends AbstractSubsystem {
 
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
-        Translation2d aimToPosition = getAdjustedTranslation(0.15);
 
+        double timeFromLastShoot = shooter.getLastShotTime() - Timer.getFPGATimestamp();
+        double shooterLookAheadTime = 0.15 + timeFromLastShoot;
+        boolean justShot = false;
+        if (shooterLookAheadTime < 0) {
+            shooterLookAheadTime = 0.15;
+            justShot = true;
+        }
+
+        double turnDelay = 0.15;
+
+        Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
         double targetAngle = angleOf(aimToPosition).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
-        Translation2d futureAimToPosition = getAdjustedTranslation(0.25);
+        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + (justShot ? 0.1 : 0));
         double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
 
         drive.updateTurn(controllerDriveInputs,
                 new State(targetAngle, (futureTargetAngle - targetAngle) * 10),
                 useFieldRelative,
                 0);
-        Translation2d aimChecksPosition = getAdjustedTranslation(0.00);
 
+
+        Translation2d aimChecksPosition = getAdjustedTranslation(shooterLookAheadTime);
         updateShooterState(aimChecksPosition.getNorm());
+
         tryToShoot(aimChecksPosition, (futureTargetAngle - targetAngle) * 10, false);
     }
 

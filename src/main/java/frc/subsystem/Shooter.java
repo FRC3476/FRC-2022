@@ -563,7 +563,7 @@ public final class Shooter extends AbstractSubsystem {
         return lastShotTime;
     }
 
-    private double lastShotTime = 0;
+    private volatile double lastShotTime = 0;
 
     /**
      * Update Method for Shooter.
