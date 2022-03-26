@@ -104,10 +104,10 @@ public final class VisionManager extends AbstractSubsystem {
                 new State(targetAngle, (futureTargetAngle - targetAngle) * 10),
                 useFieldRelative,
                 0);
+        Translation2d aimChecksPosition = getAdjustedTranslation(0.00);
 
-        updateShooterState(aimToPosition.getNorm());
-
-        tryToShoot(aimToPosition, (futureTargetAngle - targetAngle) * 10, false);
+        updateShooterState(aimChecksPosition.getNorm());
+        tryToShoot(aimChecksPosition, (futureTargetAngle - targetAngle) * 10, false);
     }
 
 
@@ -257,7 +257,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return The allowed turn error in radians
      */
     private double getAllowedTurnError(double distance) {
-        return Math.tan((Constants.GOAL_RADIUS * 0.4) / distance);
+        return Math.tan((Constants.GOAL_RADIUS * 0.6) / distance);
     }
 
     @Contract(pure = true)
@@ -317,6 +317,7 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Override
     public void update() {
+        robotPositionOffset = new Translation2d();
         Pose2d robotTrackerPose = robotTracker.getLatencyCompedPoseMeters();
         Translation2d relativeGoalPos = getRelativeGoalTranslation();
 
@@ -326,7 +327,7 @@ public final class VisionManager extends AbstractSubsystem {
             blinkinLED.setStatus(limelightNotConnectedStatus);
         }
 
-        if (Math.abs(angleToTarget - robotTrackerPose.getRotation().getRadians()) < Math.toRadians(50)) {
+        if (Math.abs(angleToTarget - robotTracker.getGyroAngle().getRadians()) < Math.toRadians(50)) {
             forceVisionOn(updateLoopSource);
         } else {
             unForceVisionOn(updateLoopSource);
@@ -343,16 +344,22 @@ public final class VisionManager extends AbstractSubsystem {
             logData("Vision Pose Angle", visionPose.getRotation().getRadians());
             logData("Vision Pose Time", getLimelightTime());
 
-            if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
+            Translation2d trackerTranslation = robotTracker.getLatencyCompedPoseMeters().getTranslation();
+
+            logData("Tracker Translation X", trackerTranslation.getX());
+            logData("Tracker Translation Y", trackerTranslation.getY());
+
+            if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
                     robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-
-                robotTracker.addVisionMeasurement(robotTranslation,
-                        getLimelightTime());
-                robotPositionOffset = new Translation2d();
-
-
-                logData("Using Vision Info", "Using Vision Info");
-                blinkinLED.setStatus(limelightUsingVisionStatus);
+                if (limelight.areCornersTouchingEdge()) {
+                    logData("Using Vision Info", "Corners touching edge");
+                } else {
+                    robotTracker.addVisionMeasurement(robotTranslation,
+                            getLimelightTime());
+                    robotPositionOffset = new Translation2d();
+                    logData("Using Vision Info", "Using Vision Info");
+                    blinkinLED.setStatus(limelightUsingVisionStatus);
+                }
             } else {
                 logData("Using Vision Info", "Position is too far from expected");
                 blinkinLED.setStatus(limelightTooFarFromExpectedStatus);
@@ -458,9 +465,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 120) {
-            timeOfFlightFrames = 28;
+            timeOfFlightFrames = 25;
         } else {
-            timeOfFlightFrames = (0.09 * (distance - 120)) + 28;
+            timeOfFlightFrames = (0.065 * (distance - 120)) + 25;
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;

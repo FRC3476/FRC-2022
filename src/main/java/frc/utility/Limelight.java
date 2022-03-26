@@ -265,8 +265,8 @@ public final class Limelight {
 
 
     public Vector2d[] getCorners() {
-        Vector2d[] processedCorners = new Vector2d[4];
         double[] corners = limelightTable.getEntry("tcornxy").getDoubleArray(EMPTY_DOUBLE_ARRAY);
+        Vector2d[] processedCorners = new Vector2d[corners.length / 2];
         for (int i = 0; i < corners.length; i += 2) {
             if (i + 1 < corners.length) {
                 processedCorners[i / 2] = new Vector2d(corners[i], corners[i + 1]);
@@ -278,7 +278,8 @@ public final class Limelight {
     public boolean areCornersTouchingEdge() {
         Vector2d[] corners = getCorners();
         for (Vector2d corner : corners) {
-            if (corner.x < 2 || corner.x > 318 || corner.y < 2 || corner.y > 238) {
+            if (corner.x < 30 || corner.x > 290 || corner.y < 30 || corner.y > 210) {
+
                 return true;
             }
         }
