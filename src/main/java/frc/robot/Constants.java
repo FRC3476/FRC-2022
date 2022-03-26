@@ -229,6 +229,12 @@ public final class Constants {
     public static final double OUTTAKE_REDUCTION = (3.0 / 1.0);
     public static final int OUTTAKE_CURRENT_LIMIT = 20;
     public static final int OUTTAKE_MEASUREMENT_PERIOD_MS = 200;
+    public static final double OUTTAKE_VERTICAL_OFFSET_THRESHOLD = 0;
+    /**
+     * Outtake Always intake has outtake always intaking until opposite ball color is found The other option is to have the
+     * outtake always outtaking until a friendly ball color is found
+     */
+    public static final boolean OUTTAKE_ALWAYS_INTAKE = true;
     /**
      * Maximum Percent Output of Outtake wheels
      */

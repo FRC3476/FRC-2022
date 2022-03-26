@@ -55,6 +55,7 @@ public final class Hopper extends AbstractSubsystem {
     }
 
     BallColor opposingAllianceColor = BallColor.BLUE;
+    BallColor friendlyAllianceColor = BallColor.RED;
 
     private Hopper() {
         super(Constants.HOPPER_PERIOD, 5);
@@ -89,10 +90,25 @@ public final class Hopper extends AbstractSubsystem {
     private void updateAllianceColor() {
         if (Robot.sideChooser.getSelected().equals(Robot.BLUE)) {
             opposingAllianceColor = BallColor.RED;
-            intakeLimelight.setPipeline(1);
+            friendlyAllianceColor = BallColor.BLUE;
+
+            if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+                // Will detect opposite color balls and outtake when it sees them
+                intakeLimelight.setPipeline(1);
+            } else {
+                // Will detect same colored balls and intake when it sees them
+                intakeLimelight.setPipeline(0);
+            }
         } else {
             opposingAllianceColor = BallColor.BLUE;
-            intakeLimelight.setPipeline(0);
+            friendlyAllianceColor = BallColor.RED;
+            if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+                // Will detect same colored balls and intake when it sees them
+                intakeLimelight.setPipeline(0);
+            } else {
+                // Will detect opposite color balls and outtake when it sees them
+                intakeLimelight.setPipeline(1);
+            }
         }
     }
 
@@ -109,17 +125,39 @@ public final class Hopper extends AbstractSubsystem {
     private void updateOuttakeState() {
         // If color sensor detects a ball or
         Intake intake = Intake.getInstance();
-        if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-            if (getBallColor() == opposingAllianceColor) {
-                lastDetectionTime = Timer.getFPGATimestamp();
-                outtakeState = OuttakeState.EJECT;
-            } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
-                outtakeState = OuttakeState.EJECT;
+
+        if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+            // Intake is running and open
+            if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                // Ball Color is opposite
+                if (getBallColor() == opposingAllianceColor) {
+                    lastDetectionTime = Timer.getFPGATimestamp();
+                    outtakeState = OuttakeState.EJECT;
+                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+                    // Opposite ball color detected within a certain time frame
+                    outtakeState = OuttakeState.EJECT;
+                } else {
+                    outtakeState = OuttakeState.OFF;
+                }
             } else {
                 outtakeState = OuttakeState.OFF;
             }
         } else {
-            outtakeState = OuttakeState.OFF;
+            // Intake is running and open
+            if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                // Ball Color is opposite
+                if (getBallColor() == friendlyAllianceColor) {
+                    lastDetectionTime = Timer.getFPGATimestamp();
+                    outtakeState = OuttakeState.INTAKE;
+                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
+                    // Opposite ball color detected within a certain time frame
+                    outtakeState = OuttakeState.INTAKE;
+                } else {
+                    outtakeState = OuttakeState.EJECT;
+                }
+            } else {
+                outtakeState = OuttakeState.OFF;
+            }
         }
     }
 
@@ -147,10 +185,18 @@ public final class Hopper extends AbstractSubsystem {
     public BallColor getBallColor() {
         @NotNull BallColor currentBallColor;
 
-        if (intakeLimelight.isTargetVisible()) {
-            currentBallColor = opposingAllianceColor;
+        if (Constants.OUTTAKE_ALWAYS_INTAKE) {
+            if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
+                currentBallColor = opposingAllianceColor;
+            } else {
+                currentBallColor = BallColor.NO_BALL;
+            }
         } else {
-            currentBallColor = BallColor.NO_BALL;
+            if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
+                currentBallColor = friendlyAllianceColor;
+            } else {
+                currentBallColor = BallColor.NO_BALL;
+            }
         }
 
         return currentBallColor;
@@ -180,7 +226,7 @@ public final class Hopper extends AbstractSubsystem {
                 setOuttakePercentOutput(-Constants.OUTTAKE_SPEED);
                 break;
         }
-    }
+
 
         // Hopper Motor Control
         switch (wantedHopperState) {
