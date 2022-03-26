@@ -17,6 +17,7 @@ import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
 import frc.utility.MathUtil;
 import frc.utility.Timer;
+import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.Contract;
@@ -93,21 +94,21 @@ public final class VisionManager extends AbstractSubsystem {
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
 
-        double timeFromLastShoot = shooter.getLastShotTime() - Timer.getFPGATimestamp();
-        double shooterLookAheadTime = 0.15 + timeFromLastShoot;
+        double timeFromLastShoot = Timer.getFPGATimestamp() - shooter.getLastShotTime();
+        double shooterLookAheadTime = 0.15 - timeFromLastShoot;
         boolean justShot = false;
         if (shooterLookAheadTime < 0) {
             shooterLookAheadTime = 0.15;
             justShot = true;
         }
 
-        double turnDelay = 0.15;
+        double turnDelay = 0.00;
 
         Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
         double targetAngle = angleOf(aimToPosition).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
-        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + (justShot ? 0.1 : 0));
+        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + (justShot ? 0.0 : 0.1));
         double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
 
         drive.updateTurn(controllerDriveInputs,
@@ -458,14 +459,24 @@ public final class VisionManager extends AbstractSubsystem {
     @NotNull Translation2d getVelocityAdjustedRelativeTranslation(
             @NotNull Translation2d relativeGoalTranslation, @NotNull Translation2d robotVelocity) {
 
-        Translation2d fakeGoalPos = relativeGoalTranslation;
+        MutableTranslation2d fakeGoalPos = new MutableTranslation2d(relativeGoalTranslation);
+
+        double relGoalX = relativeGoalTranslation.getX();
+        double relGoalY = relativeGoalTranslation.getY();
+
+        double velX = robotVelocity.getX();
+        double velY = robotVelocity.getY();
 
         for (int i = 0; i < 40; i++) {
             //System.out.println("Iteration: " + i + " Fake Goal Pos: " + fakeGoalPos);
             double tof = getTimeOfFlight(fakeGoalPos);
-            fakeGoalPos = relativeGoalTranslation.plus(robotVelocity.times(tof));
+
+            fakeGoalPos.set(
+                    relGoalX + (velX * tof),
+                    relGoalY + (velY * tof)
+            );
         }
-        return fakeGoalPos;
+        return fakeGoalPos.getTranslation2d();
     }
 
     /**
@@ -477,13 +488,13 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 120) {
-            timeOfFlightFrames = 25;
+            timeOfFlightFrames = 25.0 / 30.0;
         } else {
-            timeOfFlightFrames = (0.065 * (distance - 120)) + 25;
+            timeOfFlightFrames = ((0.065 / 30) * (distance - 120)) + (25.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
-        return timeOfFlightFrames / 30;
+        return timeOfFlightFrames;
     }
 
     /**
