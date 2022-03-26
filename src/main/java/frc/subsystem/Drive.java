@@ -76,11 +76,10 @@ public final class Drive extends AbstractSubsystem {
         return INSTANCE;
     }
 
-    private final @NotNull ProfiledPIDController turnPID;
+    private final @NotNull PIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(DEFAULT_TURN_P, DEFAULT_TURN_I, DEFAULT_TURN_D,
-                new TrapezoidProfile.Constraints(DEFAULT_TURN_MAX_VELOCITY, DEFAULT_TURN_MAX_ACCELERATION)); //P=1.0
+        turnPID = new PIDController(DEFAULT_TURN_P, DEFAULT_TURN_I, DEFAULT_TURN_D); //P=1.0
         // OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -208,16 +207,16 @@ public final class Drive extends AbstractSubsystem {
         turnD.addListener(event -> turnPID.setD(event.getEntry().getDouble(Constants.DEFAULT_TURN_D)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        turnMaxVelocity.addListener(event -> turnPID.setConstraints(
-                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_VELOCITY),
-                                turnMaxAcceleration.getDouble(6))),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
-        turnMaxAcceleration.addListener(
-                event -> turnPID.setConstraints(
-                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_ACCELERATION),
-                                turnMaxAcceleration.getDouble(6))),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+//        turnMaxVelocity.addListener(event -> turnPID.setConstraints(
+//                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_VELOCITY),
+//                                turnMaxAcceleration.getDouble(6))),
+//                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+//
+//        turnMaxAcceleration.addListener(
+//                event -> turnPID.setConstraints(
+//                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_ACCELERATION),
+//                                turnMaxAcceleration.getDouble(6))),
+//                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 
         useFieldRelative = true;
@@ -671,13 +670,13 @@ public final class Drive extends AbstractSubsystem {
         }
 
         if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
-            turnPID.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
-                    RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+            turnPID.reset();
         }
 
 
+        turnPID.setSetpoint(goal.position);
         lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(), goal);
+        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians());
 
 //        System.out.println(
 //                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
@@ -685,14 +684,14 @@ public final class Drive extends AbstractSubsystem {
 
         if (useFieldRelative) {
             swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.3,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.3,
                     pidDeltaSpeed,
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
             swerveDrive(new ChassisSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.3,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.3,
                     pidDeltaSpeed));
         }
 

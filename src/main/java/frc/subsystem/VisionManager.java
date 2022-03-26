@@ -75,7 +75,17 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Vision Robot Velocity X", robotVelocity.getX());
         logData("Vision Robot Velocity Y", robotVelocity.getY());
 
-        Translation2d aimToPosition = getAdjustedTranslation(0.15);
+        double timeFromLastShoot = Timer.getFPGATimestamp() - shooter.getLastShotTime();
+        double shooterLookAheadTime = 0.15 - timeFromLastShoot;
+        boolean justShot = false;
+        if (shooterLookAheadTime < 0) {
+            shooterLookAheadTime = 0.15;
+            justShot = true;
+        }
+
+        double turnDelay = 0.00;
+
+        Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
 
         Translation2d fieldCentricCords =
                 RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation().minus(aimToPosition);
@@ -102,7 +112,7 @@ public final class VisionManager extends AbstractSubsystem {
             justShot = true;
         }
 
-        double turnDelay = 0.00;
+        double turnDelay = 0.0;
 
         Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
         double targetAngle = angleOf(aimToPosition).getRadians();
@@ -488,9 +498,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 120) {
-            timeOfFlightFrames = 25.0 / 30.0;
+            timeOfFlightFrames = ((0.02 / 30) * (distance - 120)) + (22.5 / 30);
         } else {
-            timeOfFlightFrames = ((0.065 / 30) * (distance - 120)) + (25.0 / 30);
+            timeOfFlightFrames = ((0.077 / 30) * (distance - 120)) + (22.5 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
