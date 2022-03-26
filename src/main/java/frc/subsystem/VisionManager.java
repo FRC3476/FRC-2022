@@ -61,13 +61,8 @@ public final class VisionManager extends AbstractSubsystem {
     public void logData() {
         logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
         logData("Rotation Target", getAngleToTarget().getDegrees());
-        logData("Allowed Turn Error", getAllowedTurnError());
 
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
-        logData("Is Robot Allowed Shoot Aiming",
-                Math.abs((angleOf(getRelativeGoalTranslation())
-                        .minus(robotTracker.getGyroAngle())).getRadians())
-                        < getAllowedTurnError());
         logData("Is Robot Allowed Shoot Tilt",
                 Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3);
 
@@ -85,6 +80,14 @@ public final class VisionManager extends AbstractSubsystem {
                 RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation().minus(aimToPosition);
         logData("Calculated Target X", fieldCentricCords.getX());
         logData("Calculated Target Y", fieldCentricCords.getY());
+
+        double allowedTurnError = getAllowedTurnError(aimToPosition.getNorm());
+
+        logData("Allowed Turn Error", allowedTurnError);
+        logData("Is Robot Allowed Shoot Aiming",
+                Math.abs((angleOf(getRelativeGoalTranslation())
+                        .minus(robotTracker.getGyroAngle())).getRadians())
+                        < allowedTurnError);
     }
 
 
@@ -116,11 +119,14 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
-        if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians()) < getAllowedTurnError()
+        //@formatter:off
+        if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians())
+                    < getAllowedTurnError(aimToPosition.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
-                < Math.toRadians(8)
-                && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck) &&
-                Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
+                    < Math.toRadians(8)
+                && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
+                && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
+            //@formatter:on
             shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
             if (shooter.isFiring()) {
                 if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
@@ -242,7 +248,16 @@ public final class VisionManager extends AbstractSubsystem {
      * @return The allowed turn error in radians
      */
     private double getAllowedTurnError() {
-        return Math.tan((Constants.GOAL_RADIUS * 0.8) / getDistanceToTarget());
+        return getAllowedTurnError(getDistanceToTarget());
+    }
+
+    /**
+     * {@code Math.tan(Constants.GOAL_RADIUS / getDistanceToTarget())}
+     *
+     * @return The allowed turn error in radians
+     */
+    private double getAllowedTurnError(double distance) {
+        return Math.tan((Constants.GOAL_RADIUS * 0.4) / distance);
     }
 
     @Contract(pure = true)
@@ -328,10 +343,9 @@ public final class VisionManager extends AbstractSubsystem {
             logData("Vision Pose Angle", visionPose.getRotation().getRadians());
             logData("Vision Pose Time", getLimelightTime());
 
-            //TODO: Check that the contours aren't touching the edge of the screen before using them
             if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
-                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-
+                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED
+                    && !limelight.areCornersTouchingEdge()) {
 
                 robotTracker.addVisionMeasurement(robotTranslation,
                         getLimelightTime());
