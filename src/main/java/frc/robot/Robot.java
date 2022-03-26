@@ -601,11 +601,15 @@ public class Robot extends TimedRobot {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
+        } else if (buttonPanel.getRisingEdge(6)) {
+            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
         }
     }
 
     private boolean isTryingToRunShooterFromButtonPanel() {
-        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(3);
+        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(
+                3) || buttonPanel.getRawButton(6);
     }
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
