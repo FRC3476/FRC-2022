@@ -238,7 +238,8 @@ public final class Constants {
     /**
      * Maximum Percent Output of Outtake wheels
      */
-    public static final double OUTTAKE_SPEED = .5;
+    public static final double INTAKEING_OUTTAKE_SPEED = .5;
+    public static final double EJECT_OUTTAKE_SPEED = .5;
 
     /**
      * Outtake will run for this time (Sec) after color sensor trigger
@@ -511,5 +512,5 @@ public final class Constants {
 
     public static final int WEB_DASHBOARD_PORT = 5802;
 
-    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 200;
+    public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
 }

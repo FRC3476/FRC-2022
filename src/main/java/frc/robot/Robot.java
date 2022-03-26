@@ -140,6 +140,8 @@ public class Robot extends TimedRobot {
     @NotNull public static final String RED = "RED";
     @NotNull public static final String BLUE = "BLUE";
 
+    private static boolean hoodEject = false;
+
     public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
     //Subsystems
@@ -452,7 +454,9 @@ public class Robot extends TimedRobot {
 
         if (xbox.getRawAxis(2) > 0.1) {
             if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
-                shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                if (!hoodEject) {
+                    shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                }
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
@@ -601,9 +605,12 @@ public class Robot extends TimedRobot {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
-        } else if (buttonPanel.getRisingEdge(6)) {
+        } else if (buttonPanel.getRawButton(6)) {
             shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
             shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+            hoodEject = true;
+        } else {
+            hoodEject = false;
         }
     }
 
@@ -752,6 +759,7 @@ public class Robot extends TimedRobot {
         shooter.start();
         climber.start();
         visionManager.start();
+        DashboardHandler.getInstance().start();
     }
 
     public void killAuto() {

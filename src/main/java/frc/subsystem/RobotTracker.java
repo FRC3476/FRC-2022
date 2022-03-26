@@ -389,6 +389,7 @@ public final class RobotTracker extends AbstractSubsystem {
                 gyroOffset = latestEstimatedPose.getRotation().minus(gyroAngle);
             }
             swerveDriveOdometry.resetPosition(pose, gyroAngle);
+            latestEstimatedPose = pose;
             latencyCompensatedPose = latestEstimatedPose;
 
             latestChassisSpeeds = getRotatedSpeeds(

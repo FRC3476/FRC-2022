@@ -213,9 +213,9 @@ public final class VisionManager extends AbstractSubsystem {
     public void forceUpdatePose() {
         Optional<Translation2d> visionTranslation = getVisionTranslation();
         visionTranslation.ifPresent(
-                mutableTranslation2d -> {
+                translation2d -> {
                     robotTracker.addVisionMeasurement(
-                            mutableTranslation2d,
+                            translation2d,
                             getLimelightTime());
                     robotPositionOffset = new Translation2d();
                 }
@@ -344,8 +344,7 @@ public final class VisionManager extends AbstractSubsystem {
             logData("Vision Pose Time", getLimelightTime());
 
             if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset),
-                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED
-                    && !limelight.areCornersTouchingEdge()) {
+                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
 
                 robotTracker.addVisionMeasurement(robotTranslation,
                         getLimelightTime());

@@ -168,7 +168,9 @@ public final class Hopper extends AbstractSubsystem {
 
     private void updateOuttakeStateOverridden() {
         Intake intake = Intake.getInstance();
-        if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+        if (wantedHopperState == HopperState.REVERSE) {
+            outtakeState = OuttakeState.EJECT;
+        } else if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
             outtakeState = OuttakeState.INTAKE;
         } else {
             outtakeState = OuttakeState.OFF;
@@ -225,10 +227,10 @@ public final class Hopper extends AbstractSubsystem {
                 setOuttakePercentOutput(0);
                 break;
             case EJECT:
-                setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
+                setOuttakePercentOutput(Constants.EJECT_OUTTAKE_SPEED);
                 break;
             case INTAKE:
-                setOuttakePercentOutput(-Constants.OUTTAKE_SPEED);
+                setOuttakePercentOutput(-Constants.INTAKEING_OUTTAKE_SPEED);
                 break;
         }
 
@@ -265,11 +267,11 @@ public final class Hopper extends AbstractSubsystem {
         setHopperState(HopperState.OFF);
         OrangeUtility.sleep(5000);
 
-        setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
+        setOuttakePercentOutput(Constants.INTAKEING_OUTTAKE_SPEED);
         System.out.println("Ejecting");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
-        setOuttakePercentOutput(-Constants.OUTTAKE_SPEED);
+        setOuttakePercentOutput(-Constants.INTAKEING_OUTTAKE_SPEED);
         System.out.println("Intaking");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 

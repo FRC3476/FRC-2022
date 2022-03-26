@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.subsystem.Hopper.OuttakeState;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
@@ -100,7 +101,11 @@ public final class Intake extends AbstractSubsystem {
     private void setIntakeState(IntakeState intakeState) {
         switch (intakeState) {
             case INTAKE:
-                intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
+                if (Hopper.getInstance().getOuttakeState() == OuttakeState.EJECT) {
+                    intakeMotor.set(-Constants.EJECT_OUTTAKE_SPEED);
+                } else {
+                    intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
+                }
                 break;
 
             case EJECT:
