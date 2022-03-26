@@ -506,11 +506,17 @@ public class Robot extends TimedRobot {
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
+        // Override outtake to always intake
+        if (buttonPanel.getRisingEdge(5)) {
+            hopper.toggleEjectOverride();
+        }
+
         if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         }
+
 
         if (stick.getRawButton(4)) {
             visionManager.forceVisionOn(resettingPoseVisionOn);

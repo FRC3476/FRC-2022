@@ -24,6 +24,7 @@ public final class Hopper extends AbstractSubsystem {
     private RelativeEncoder outtakeWheelsQuadrature;
     private LazyCANSparkMax outtakeWheels;
     private double lastDetectionTime;
+    private boolean disableEject = false;
     private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
 
     public static Hopper getInstance() {
@@ -96,6 +97,13 @@ public final class Hopper extends AbstractSubsystem {
     }
 
     /**
+     * Toggles disableEject
+     */
+    public void toggleEjectOverride() {
+        disableEject = !disableEject;
+    }
+
+    /**
      * Updates state of outtake based on color sensor and intake direction
      */
     private void updateOuttakeState() {
@@ -110,6 +118,15 @@ public final class Hopper extends AbstractSubsystem {
             } else {
                 outtakeState = OuttakeState.OFF;
             }
+        } else {
+            outtakeState = OuttakeState.OFF;
+        }
+    }
+
+    private void updateOuttakeStateOverrided() {
+        Intake intake = Intake.getInstance();
+        if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            outtakeState = OuttakeState.INTAKE;
         } else {
             outtakeState = OuttakeState.OFF;
         }
@@ -143,9 +160,15 @@ public final class Hopper extends AbstractSubsystem {
     public void update() {
         updateAllianceColor();
         getBallColor();
-        updateOuttakeState();
+
+        if (!disableEject) {
+            updateOuttakeState();
+        } else {
+            updateOuttakeStateOverrided();
+        }
 
         // Outtake motor control
+
         switch (outtakeState) {
             case OFF:
                 setOuttakePercentOutput(0);
@@ -157,6 +180,7 @@ public final class Hopper extends AbstractSubsystem {
                 setOuttakePercentOutput(-Constants.OUTTAKE_SPEED);
                 break;
         }
+    }
 
         // Hopper Motor Control
         switch (wantedHopperState) {
@@ -210,6 +234,7 @@ public final class Hopper extends AbstractSubsystem {
         logData("Outtake SetVoltage", outtakeWheels.getSetpoint());
         logData("Outtake Velocity", outtakeWheelsQuadrature.getVelocity());
         logData("Current Ball Color", getBallColor());
+        logData("Eject Disabled", disableEject);
     }
 
     @Override
