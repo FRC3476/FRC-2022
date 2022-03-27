@@ -669,12 +669,12 @@ public final class Drive extends AbstractSubsystem {
             if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
         }
 
-        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
-            turnPID.reset();
-        }
-
 
         turnPID.setSetpoint(goal.position);
+
+        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(30)) {
+            turnPID.reset();
+        }
         lastTurnUpdate = Timer.getFPGATimestamp();
         double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians());
 
