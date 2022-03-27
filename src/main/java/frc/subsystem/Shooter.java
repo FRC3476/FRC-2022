@@ -624,10 +624,12 @@ public final class Shooter extends AbstractSubsystem {
                 }
 
                 if (
-                        (feederWheelState == FeederWheelState.FORWARD)
+                        ((feederWheelState == FeederWheelState.FORWARD)
                                 && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
                                 && (Timer.getFPGATimestamp() > SECOND_BALL_SHOOT_DELAY + lastShotTime)
-                                || feederChecksDisabled)
+                                || feederChecksDisabled))
+                                // Doesn't need any of the checks if hood ejecting
+                                || (feederWheelState == FeederWheelState.FORWARD && Robot.hoodEject)
                 ) {
                     feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
                     lastShotTime = Timer.getFPGATimestamp();
