@@ -8,11 +8,11 @@ import com.revrobotics.RelativeEncoder;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Intake.IntakeSolState;
-import frc.subsystem.Intake.IntakeState;
 import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
@@ -92,23 +92,14 @@ public final class Hopper extends AbstractSubsystem {
             opposingAllianceColor = BallColor.RED;
             friendlyAllianceColor = BallColor.BLUE;
 
-            if (Constants.OUTTAKE_ALWAYS_INTAKE) {
-                // Will detect opposite color balls and outtake when it sees them
+            // Will detect opposite color balls and outtake when it sees them
                 intakeLimelight.setPipeline(1);
-            } else {
-                // Will detect same colored balls and intake when it sees them
-                intakeLimelight.setPipeline(0);
-            }
         } else {
             opposingAllianceColor = BallColor.BLUE;
             friendlyAllianceColor = BallColor.RED;
-            if (Constants.OUTTAKE_ALWAYS_INTAKE) {
-                // Will detect same colored balls and intake when it sees them
-                intakeLimelight.setPipeline(0);
-            } else {
-                // Will detect opposite color balls and outtake when it sees them
-                intakeLimelight.setPipeline(1);
-            }
+
+            // Will detect same colored balls and intake when it sees them
+            intakeLimelight.setPipeline(0);
         }
     }
 
@@ -132,46 +123,28 @@ public final class Hopper extends AbstractSubsystem {
             return;
         }
 
-        if (Constants.OUTTAKE_ALWAYS_INTAKE) {
-            // Intake is running and open
-            if (wantedHopperState == HopperState.ON && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-                // Ball Color is opposite
-                if (getBallColor() == opposingAllianceColor) {
-                    lastDetectionTime = Timer.getFPGATimestamp();
-                    outtakeState = OuttakeState.EJECT;
-                    // Opposite ball color detected within a certain time frame
-                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
-                    outtakeState = OuttakeState.EJECT;
-                } else {
-                    outtakeState = OuttakeState.INTAKE;
-                }
+        // Intake is running and open
+        if (wantedHopperState == HopperState.ON) {
+            // Ball Color is opposite
+            if (getBallColor() == opposingAllianceColor && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                lastDetectionTime = Timer.getFPGATimestamp();
+                outtakeState = OuttakeState.EJECT;
+                // Opposite ball color detected within a certain time frame
+            } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                outtakeState = OuttakeState.EJECT;
             } else {
-                outtakeState = OuttakeState.OFF;
+                outtakeState = OuttakeState.INTAKE;
             }
         } else {
-            // Intake is running and open
-            if (wantedHopperState == HopperState.ON && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-                // Ball Color is opposite
-                if (getBallColor() == friendlyAllianceColor) {
-                    lastDetectionTime = Timer.getFPGATimestamp();
-                    outtakeState = OuttakeState.INTAKE;
-                    // Opposite ball color detected within a certain time frame
-                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
-                    outtakeState = OuttakeState.INTAKE;
-                } else {
-                    outtakeState = OuttakeState.EJECT;
-                }
-            } else {
-                outtakeState = OuttakeState.OFF;
-            }
+            outtakeState = OuttakeState.OFF;
         }
     }
 
     private void updateOuttakeStateOverridden() {
         Intake intake = Intake.getInstance();
-        if (wantedHopperState == HopperState.REVERSE) {
+        if (wantedHopperState == HopperState.REVERSE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
             outtakeState = OuttakeState.EJECT;
-        } else if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+        } else if (wantedHopperState == HopperState.ON) {
             outtakeState = OuttakeState.INTAKE;
         } else {
             outtakeState = OuttakeState.OFF;
@@ -190,21 +163,14 @@ public final class Hopper extends AbstractSubsystem {
         return outtakeState;
     }
 
+    @Contract(pure = true)
     public BallColor getBallColor() {
         @NotNull BallColor currentBallColor;
 
-        if (Constants.OUTTAKE_ALWAYS_INTAKE) {
-            if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
-                currentBallColor = opposingAllianceColor;
-            } else {
-                currentBallColor = BallColor.NO_BALL;
-            }
+        if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
+            currentBallColor = opposingAllianceColor;
         } else {
-            if (intakeLimelight.getVerticalOffset() < Constants.OUTTAKE_VERTICAL_OFFSET_THRESHOLD) {
-                currentBallColor = friendlyAllianceColor;
-            } else {
-                currentBallColor = BallColor.NO_BALL;
-            }
+            currentBallColor = BallColor.NO_BALL;
         }
 
         return currentBallColor;
@@ -213,7 +179,6 @@ public final class Hopper extends AbstractSubsystem {
     @Override
     public void update() {
         updateAllianceColor();
-        getBallColor();
 
         // Override that makes it so the eject outtake state can never be set
         if (!disableEject) {
@@ -290,6 +255,7 @@ public final class Hopper extends AbstractSubsystem {
         logData("Outtake Current", outtakeWheels.getOutputCurrent());
         logData("Current Ball Color", getBallColor());
         logData("Eject Disabled", disableEject);
+        logData("Hopper State", wantedHopperState);
     }
 
     @Override
