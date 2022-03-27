@@ -564,7 +564,7 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     private volatile double lastShotTime = 0;
-
+=
     /**
      * Update Method for Shooter.
      * <p>
@@ -584,6 +584,9 @@ public final class Shooter extends AbstractSubsystem {
      */
     @Override
     public void update() {
+        // Doesn't need any of the checks if hood ejecting
+        updateEjectChecking();
+
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
@@ -610,6 +613,7 @@ public final class Shooter extends AbstractSubsystem {
                 break;
 
             case ON:
+
                 shooterWheelMaster.set(ControlMode.Velocity,
                         desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
 
@@ -628,8 +632,6 @@ public final class Shooter extends AbstractSubsystem {
                                 && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
                                 && (Timer.getFPGATimestamp() > SECOND_BALL_SHOOT_DELAY + lastShotTime)
                                 || feederChecksDisabled))
-                                // Doesn't need any of the checks if hood ejecting
-                                || (feederWheelState == FeederWheelState.FORWARD && Robot.hoodEject)
                 ) {
                     feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
                     lastShotTime = Timer.getFPGATimestamp();
