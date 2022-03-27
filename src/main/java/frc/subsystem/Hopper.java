@@ -215,6 +215,7 @@ public final class Hopper extends AbstractSubsystem {
         updateAllianceColor();
         getBallColor();
 
+        // Override that makes it so the eject outtake state can never be set
         if (!disableEject) {
             updateOuttakeState();
         } else {
@@ -228,10 +229,10 @@ public final class Hopper extends AbstractSubsystem {
                 setOuttakePercentOutput(0);
                 break;
             case EJECT:
-                setOuttakePercentOutput(Constants.EJECT_OUTTAKE_SPEED);
+                setOuttakePercentOutput(Constants.OUTTAKE_EJECTION_SPEED);
                 break;
             case INTAKE:
-                setOuttakePercentOutput(-Constants.INTAKEING_OUTTAKE_SPEED);
+                setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
                 break;
         }
 
@@ -268,11 +269,11 @@ public final class Hopper extends AbstractSubsystem {
         setHopperState(HopperState.OFF);
         OrangeUtility.sleep(5000);
 
-        setOuttakePercentOutput(Constants.INTAKEING_OUTTAKE_SPEED);
+        setOuttakePercentOutput(-Constants.INTAKE_EJECTION_SPEED);
         System.out.println("Ejecting");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 
-        setOuttakePercentOutput(-Constants.INTAKEING_OUTTAKE_SPEED);
+        setOuttakePercentOutput(Constants.INTAKE_EJECTION_SPEED);
         System.out.println("Intaking");
         OrangeUtility.sleep(Constants.TEST_TIME_MS);
 

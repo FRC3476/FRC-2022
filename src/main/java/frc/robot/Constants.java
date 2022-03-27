@@ -235,11 +235,17 @@ public final class Constants {
      * outtake always outtaking until a friendly ball color is found
      */
     public static final boolean OUTTAKE_ALWAYS_INTAKE = true;
+
+
     /**
-     * Maximum Percent Output of Outtake wheels
+     * Outtake's speed when ejecting balls
      */
-    public static final double INTAKEING_OUTTAKE_SPEED = .5;
-    public static final double EJECT_OUTTAKE_SPEED = .5;
+    public static final double OUTTAKE_EJECTION_SPEED = .5;
+
+    /**
+     * Outtake's speed when intaking balls
+     */
+    public static final double OUTTAKE_SPEED = -.5;
 
     /**
      * Outtake will run for this time (Sec) after color sensor trigger
@@ -507,8 +513,17 @@ public final class Constants {
     public static final int INTAKE_PERIOD = 50;
     public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
-    public static final double INTAKE_MOTOR_SPEED = -1;
     public static final double INTAKE_OPEN_TIME = 0.0;
+
+    /**
+     * Intake Speed when intaking balls
+     */
+    public static final double INTAKE_SPEED = -1;
+
+    /**
+     * Intake speed when ejecting balls
+     */
+    public static final double INTAKE_EJECTION_SPEED = -.5;
 
     public static final int WEB_DASHBOARD_PORT = 5802;
 
