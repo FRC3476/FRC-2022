@@ -126,20 +126,21 @@ public final class Hopper extends AbstractSubsystem {
         // If color sensor detects a ball or
         Intake intake = Intake.getInstance();
 
-        if (wantedHopperState == HopperState.REVERSE) {
+        // Override for all other possible states that reverses outtake if hopper is in reverse
+        if (wantedHopperState == HopperState.REVERSE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
             outtakeState = OuttakeState.EJECT;
             return;
         }
 
         if (Constants.OUTTAKE_ALWAYS_INTAKE) {
             // Intake is running and open
-            if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            if (wantedHopperState == HopperState.ON && intake.getIntakeSolState() == IntakeSolState.OPEN) {
                 // Ball Color is opposite
                 if (getBallColor() == opposingAllianceColor) {
                     lastDetectionTime = Timer.getFPGATimestamp();
                     outtakeState = OuttakeState.EJECT;
-                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
                     // Opposite ball color detected within a certain time frame
+                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
                     outtakeState = OuttakeState.EJECT;
                 } else {
                     outtakeState = OuttakeState.INTAKE;
@@ -149,13 +150,13 @@ public final class Hopper extends AbstractSubsystem {
             }
         } else {
             // Intake is running and open
-            if (intake.wantedIntakeState == IntakeState.INTAKE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            if (wantedHopperState == HopperState.ON && intake.getIntakeSolState() == IntakeSolState.OPEN) {
                 // Ball Color is opposite
                 if (getBallColor() == friendlyAllianceColor) {
                     lastDetectionTime = Timer.getFPGATimestamp();
                     outtakeState = OuttakeState.INTAKE;
-                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
                     // Opposite ball color detected within a certain time frame
+                } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD) {
                     outtakeState = OuttakeState.INTAKE;
                 } else {
                     outtakeState = OuttakeState.EJECT;
