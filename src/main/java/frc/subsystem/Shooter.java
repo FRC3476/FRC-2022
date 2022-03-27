@@ -564,7 +564,7 @@ public final class Shooter extends AbstractSubsystem {
     }
 
     private volatile double lastShotTime = 0;
-=
+
     /**
      * Update Method for Shooter.
      * <p>
@@ -584,9 +584,6 @@ public final class Shooter extends AbstractSubsystem {
      */
     @Override
     public void update() {
-        // Doesn't need any of the checks if hood ejecting
-        updateEjectChecking();
-
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
