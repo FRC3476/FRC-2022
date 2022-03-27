@@ -157,7 +157,7 @@ public final class VisionManager extends AbstractSubsystem {
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
                 && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             //@formatter:on
-            shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
+            shooter.setFiring(true);
             if (shooter.isFiring()) {
                 if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
                     lastPrintTime = Timer.getFPGATimestamp();
