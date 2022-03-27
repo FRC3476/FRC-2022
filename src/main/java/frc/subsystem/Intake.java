@@ -102,7 +102,7 @@ public final class Intake extends AbstractSubsystem {
         switch (intakeState) {
             case INTAKE:
                 if (Hopper.getInstance().getOuttakeState() == OuttakeState.EJECT) {
-                    intakeMotor.set(-Constants.EJECT_OUTTAKE_SPEED);
+                    intakeMotor.set(-Constants.INTAKEING_OUTTAKE_SPEED);
                 } else {
                     intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
                 }
