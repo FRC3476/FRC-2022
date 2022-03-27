@@ -56,12 +56,12 @@ public final class Drive extends AbstractSubsystem {
                 = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
         autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
         autoTurnPIDController.setTolerance(Math.toRadians(10));
-        
-        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+
         swerveAutoController = new HolonomicDriveController(
                 new PIDController(3, 0, 0),
                 new PIDController(3, 0, 0),
                 autoTurnPIDController);
+        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
     }
 
     public enum DriveState {
@@ -684,14 +684,14 @@ public final class Drive extends AbstractSubsystem {
 
         if (useFieldRelative) {
             swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.3,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.3,
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
                     pidDeltaSpeed,
                     RobotTracker.getInstance().getGyroAngle()));
         } else {
             swerveDrive(new ChassisSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.3,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.3,
+                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
+                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
                     pidDeltaSpeed));
         }
 

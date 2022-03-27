@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.MAX_SHOOT_SPEED;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
@@ -135,10 +136,16 @@ public final class VisionManager extends AbstractSubsystem {
 
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-        drive.updateTurn(controllerDriveInputs, getAngleToTarget(), fieldRelative, getAllowedTurnError());
-
-        updateShooterState(getDistanceToTarget());
-        tryToShoot(getRelativeGoalTranslation(), 0, true);
+        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        Translation2d relativeGoalPos;
+        if (visionTranslation.isPresent()) {
+            relativeGoalPos = visionTranslation.get().minus(GOAL_POSITION);
+        } else {
+            relativeGoalPos = getRelativeGoalTranslation();
+        }
+        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos), fieldRelative, getAllowedTurnError());
+        updateShooterState(relativeGoalPos.getNorm());
+        tryToShoot(relativeGoalPos, 0, true);
     }
 
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
