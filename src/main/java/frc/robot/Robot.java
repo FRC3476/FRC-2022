@@ -121,6 +121,15 @@ public class Robot extends TimedRobot {
     @NotNull
     private BuddyAutoRight buddyAutoRight;
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HideBallsBlue hideBallsBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HideBallsRed hideBallsRed;
+
+
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
     @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
@@ -132,6 +141,8 @@ public class Robot extends TimedRobot {
     @NotNull private static final String SHOOT_ONLY_RIGHT = "Shoot Only Right";
     @NotNull private static final String SHOOT_ONLY_MID = "Shoot Only Mid";
     @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
+    @NotNull private static final String HIDE_BALLS = "Hide Balls";
+
 
     private static final String RESET_POSE = "Reset Pose";
 
@@ -250,6 +261,8 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> fiveBallRed = new FiveBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBallRed = new SixBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideBallsBlue = new HideBallsBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideBallsRed = new HideBallsRed()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -262,6 +275,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(SHOOT_ONLY_LEFT, SHOOT_ONLY_LEFT);
         autoChooser.addOption(SHOOT_ONLY_MID, SHOOT_ONLY_MID);
         autoChooser.addOption(SHOOT_ONLY_RIGHT, SHOOT_ONLY_RIGHT);
+        autoChooser.addOption(HIDE_BALLS, HIDE_BALLS);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
@@ -296,7 +310,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 10) {
+        if (loadedAutos.incrementAndGet() == 12) {
             loadingAutos = false;
         }
     }
@@ -359,6 +373,9 @@ public class Robot extends TimedRobot {
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
+                        case HIDE_BALLS:
+                            selectedAuto = hideBallsBlue;
+                            break;
                         default:
                             selectedAuto = shootAndMoveRight;
                             break;
@@ -394,6 +411,9 @@ public class Robot extends TimedRobot {
                             break;
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
+                            break;
+                        case HIDE_BALLS:
+                            selectedAuto = hideBallsRed;
                             break;
                         default:
                             selectedAuto = shootAndMoveRight;
