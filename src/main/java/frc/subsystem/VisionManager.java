@@ -237,10 +237,7 @@ public final class VisionManager extends AbstractSubsystem {
         double angleOffset = Math.atan2(offsetVector.getX(), offsetVector.getZ());
 
 
-        double distanceToTarget =
-                Units.inchesToMeters(
-                        Math.hypot(offsetVector.getX(), offsetVector.getZ())
-                                + Constants.GOAL_RADIUS + Units.inchesToMeters(23));
+        double distanceToTarget = Units.inchesToMeters(Math.hypot(offsetVector.getX(), offsetVector.getZ()));
 
         double angleToTarget = currentGyroAngle.getRadians() - angleOffset;
         return Optional.of(new Translation2d(distanceToTarget * Math.cos(angleToTarget),
