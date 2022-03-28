@@ -285,6 +285,8 @@ public class Robot extends TimedRobot {
         startSubsystems();
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
+
+        limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }

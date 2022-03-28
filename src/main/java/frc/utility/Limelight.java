@@ -1,11 +1,22 @@
 package frc.utility;
 
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.Vector2d;
+import frc.subsystem.AbstractSubsystem;
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -14,7 +25,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * This class is used to get data from the limelight network tables
  */
-public final class Limelight {
+public final class Limelight extends AbstractSubsystem {
     public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
     final @NotNull NetworkTable limelightTable;
     final @NotNull NetworkTable limelightGuiTable;
@@ -25,6 +36,10 @@ public final class Limelight {
     public static @NotNull Limelight getInstance() {
         return getInstance("limelight");
     }
+
+
+    volatile double angle = -38;
+    volatile double hOffset = 56;
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();
@@ -48,6 +63,21 @@ public final class Limelight {
         } finally {
             LIMELIGHT_MAP_LOCK.writeLock().unlock();
         }
+    }
+
+    @Override
+    public void selfTest() {
+
+    }
+
+    @Override
+    public void logData() {
+
+    }
+
+    @Override
+    public void close() throws Exception {
+
     }
 
 
@@ -121,8 +151,25 @@ public final class Limelight {
     }
 
     private Limelight(String name) {
+        super(-1);
         limelightTable = NetworkTableInstance.getDefault().getTable(name);
         limelightGuiTable = NetworkTableInstance.getDefault().getTable(name + "gui");
+
+        NetworkTableEntry angleTable = limelightGuiTable.getEntry("angle");
+        angleTable.setDouble(angle);
+        angleTable.addListener(event -> {
+                    angle = event.getEntry().getDouble(angle);
+                    System.out.println("Changing angle to " + hOffset);
+                },
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        NetworkTableEntry offsetTable = limelightGuiTable.getEntry("hOffset");
+        offsetTable.setDouble(hOffset);
+        offsetTable.addListener(event -> {
+                    hOffset = event.getEntry().getDouble(hOffset);
+                    System.out.println("Changing hOffset to " + hOffset);
+                },
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         limelightTable.getEntry("tl").addListener(event -> lastUpdate = Timer.getFPGATimestamp(),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
@@ -263,6 +310,94 @@ public final class Limelight {
         }
     }
 
+    public Vector2d getTargetPosInCameraPixels() {
+        return new Vector2d(
+                (getHorizontalOffset() / 29.8) * (320.0 / 2) + (320.0 / 2),
+                (getVerticalOffset() / 24.85) * (240.0 / 2) + (240.0 / 2)
+        );
+    }
+
+    /**
+     * @return Distance from the limelight to the target in IN
+     * @see <a href="https://docs.limelightvision.io/en/latest/cs_estimating_distance.html">Limelight Docs: Estimating
+     * Distance</a>
+     */
+    public Vector3D getCorrectTargetVector() {
+        if (isTargetVisible()) {
+
+            Vector2d targetPosInCameraPixels = getTargetPosInCameraPixels();
+
+            double py = targetPosInCameraPixels.y;
+            double px = targetPosInCameraPixels.x;
+
+
+            Matrix<N3, N3> cameraMatrixInverse = new MatBuilder<>(Nat.N3(), Nat.N3()).fill(
+                    0.003883, 0, -0.6213,
+                    0, 0.003901, -0.4681,
+                    0, 0, 1
+            );
+
+            Matrix<N3, N1> cameraUnitVector = cameraMatrixInverse.times(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(px, py, 1));
+
+
+            Rotation cameraRotation =
+                    new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(angle), 0, 0);
+
+            Vector3D vector3D = new Vector3D(
+                    cameraUnitVector.get(0, 0),
+                    cameraUnitVector.get(1, 0),
+                    cameraUnitVector.get(2, 0)
+            );
+
+//            return vector3D;
+
+            vector3D = vector3D.normalize();
+
+//
+            Vector3D goalDir = cameraRotation.applyTo(vector3D);
+
+            //logData("Rotated angle", rotatedAngle.toString(), true);
+
+            double k = hOffset / goalDir.getY();
+
+            return goalDir.scalarMultiply(k).add(new Vector3D(0, 0, 6.0867));
+
+//            double fx = 257.5129206733333; // focal length x
+//            double fy = 256.350717159; // focal length y
+//
+            //return 68.728 / (Math.tan(rotatedAngle.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[1]));
+        } else {
+            return new Vector3D(0, 0, 0);
+        }
+    }
+
+
+    //
+//            Rotation targetRotation =
+//                    new Rotation(
+//                            RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
+//                            Math.toRadians(getHorizontalOffset()), Math.toRadians(getVerticalOffset()), Math.toRadians(0));
+//
+//            Rotation changedRotation = cameraRotation.compose(targetRotation, RotationConvention.VECTOR_OPERATOR);
+
+//            double cy = 240.0 / 2;
+//            double cx = 320.0 / 2;
+
+//            Vector2d targetPosInCameraPixels = getTargetPosInCameraPixels();
+//
+//            double py = targetPosInCameraPixels.y;
+//            double px = targetPosInCameraPixels.x;
+//
+//
+//
+//
+//            double theta = Math.toRadians(90 - 57);
+//            double cos = Math.cos(theta);
+//            double sin = Math.sin(theta);
+//
+//            Vector3D goalDir = new Vector3D(px, cos * py - sin, sin * py + cos);
+//
+//            goalDir.normalize();
 
     public Vector2d[] getCorners() {
         double[] corners = limelightTable.getEntry("tcornxy").getDoubleArray(EMPTY_DOUBLE_ARRAY);
