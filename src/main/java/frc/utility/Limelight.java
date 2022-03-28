@@ -40,7 +40,7 @@ public final class Limelight extends AbstractSubsystem {
 
     volatile double angle = -38;
     volatile double hOffset = 56;
-    volatile double zOffset = 43;
+    volatile double depthOffset = 24;
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();
@@ -167,8 +167,8 @@ public final class Limelight extends AbstractSubsystem {
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         NetworkTableEntry zOffsetTable = limelightGuiTable.getEntry("zOffset");
-        zOffsetTable.setDouble(zOffset);
-        zOffsetTable.addListener(event -> zOffset = event.getEntry().getDouble(0),
+        zOffsetTable.setDouble(depthOffset);
+        zOffsetTable.addListener(event -> depthOffset = event.getEntry().getDouble(0),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 
@@ -319,8 +319,8 @@ public final class Limelight extends AbstractSubsystem {
     }
 
     private static final Matrix<N3, N3> CAMERA_MATRIX_INVERSE = new MatBuilder<>(Nat.N3(), Nat.N3()).fill(
-            0.003883, 0, -0.6213,
-            0, 0.003901, -0.4681,
+            0.00392173, 0, -0.6274771,
+            0, 0.00389782, -0.46773827,
             0, 0, 1
     );
 
@@ -355,7 +355,7 @@ public final class Limelight extends AbstractSubsystem {
 
             return goalDir.scalarMultiply(k)
                     .add(new Vector3D(0, 0, 6.0867)
-                            .add(new Vector3D(Math.sin(angle) * zOffset, 0, Math.cos(angle) * zOffset)));
+                            .add(new Vector3D(Math.sin(angle) * depthOffset, 0, Math.cos(angle) * depthOffset)));
         } else {
             return new Vector3D(0, 0, 0);
         }
