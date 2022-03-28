@@ -325,6 +325,18 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
+        if (!DriverStation.isEnabled()) {
+            xbox.update();
+            stick.update();
+            buttonPanel.update();
+        }
+
+        if (stick.getRawButton(4)) {
+            visionManager.forceVisionOn(resettingPoseVisionOn);
+            visionManager.forceUpdatePose();
+        } else {
+            visionManager.unForceVisionOn(resettingPoseVisionOn);
+        }
     }
 
 
@@ -546,14 +558,6 @@ public class Robot extends TimedRobot {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
-        }
-
-
-        if (stick.getRawButton(4)) {
-            visionManager.forceVisionOn(resettingPoseVisionOn);
-            visionManager.forceUpdatePose();
-        } else {
-            visionManager.unForceVisionOn(resettingPoseVisionOn);
         }
 
 //        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
