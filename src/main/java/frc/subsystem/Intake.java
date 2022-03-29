@@ -92,7 +92,7 @@ public final class Intake extends AbstractSubsystem {
         INTAKE, EJECT, OFF
     }
 
-    IntakeState wantedIntakeState = IntakeState.OFF;
+    private IntakeState wantedIntakeState = IntakeState.OFF;
 
     public synchronized void setWantedIntakeState(IntakeState intakeState) {
         wantedIntakeState = intakeState;
@@ -101,7 +101,7 @@ public final class Intake extends AbstractSubsystem {
     private void setIntakeState(IntakeState intakeState) {
         switch (intakeState) {
             case INTAKE:
-                if (Hopper.getInstance().getOuttakeState() == OuttakeState.EJECT) {
+                if (Hopper.getInstance().getOuttakeState() == OuttakeState.AUTO_EJECT) {
                     intakeMotor.set(Constants.INTAKE_EJECTION_SPEED);
                 } else {
                     intakeMotor.set(Constants.INTAKE_SPEED);

@@ -38,12 +38,13 @@ public final class Hopper extends AbstractSubsystem {
     HopperState wantedHopperState = HopperState.OFF;
 
     /**
-     * Outtake can either be OFF or INTAKE, or EJECT
+     * Outtake can either be OFF or INTAKE, or AUTO_EJECT
      */
     public enum OuttakeState {
         OFF,
         INTAKE,
-        EJECT,
+        AUTO_EJECT,
+        MANUAL_EJECT
     }
 
     private OuttakeState outtakeState = OuttakeState.OFF;
@@ -93,7 +94,7 @@ public final class Hopper extends AbstractSubsystem {
             friendlyAllianceColor = BallColor.BLUE;
 
             // Will detect opposite color balls and outtake when it sees them
-                intakeLimelight.setPipeline(1);
+            intakeLimelight.setPipeline(1);
         } else {
             opposingAllianceColor = BallColor.BLUE;
             friendlyAllianceColor = BallColor.RED;
@@ -114,40 +115,28 @@ public final class Hopper extends AbstractSubsystem {
      * Updates state of outtake based on color sensor and intake direction
      */
     private void updateOuttakeState() {
-        // If color sensor detects a ball or
         Intake intake = Intake.getInstance();
 
-        // Override for all other possible states that reverses outtake if hopper is in reverse
-        if (wantedHopperState == HopperState.REVERSE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-            outtakeState = OuttakeState.EJECT;
+        if (wantedHopperState == HopperState.REVERSE) {
+            outtakeState = intake.getIntakeSolState() == IntakeSolState.OPEN ? OuttakeState.MANUAL_EJECT : OuttakeState.OFF;
+            return;
+        }
+        if (wantedHopperState == HopperState.OFF) {
+            outtakeState = OuttakeState.OFF;
             return;
         }
 
-        // Intake is running and open
-        if (wantedHopperState == HopperState.ON) {
-            // Ball Color is opposite
-            if (getBallColor() == opposingAllianceColor && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-                lastDetectionTime = Timer.getFPGATimestamp();
-                outtakeState = OuttakeState.EJECT;
-                // Opposite ball color detected within a certain time frame
-            } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-                outtakeState = OuttakeState.EJECT;
-            } else {
-                outtakeState = OuttakeState.INTAKE;
-            }
+        if (getBallColor() == opposingAllianceColor
+                && intake.getIntakeSolState() == IntakeSolState.OPEN
+                && !disableEject) { // If disable eject is on, it will not outtake
+            lastDetectionTime = Timer.getFPGATimestamp();
+            outtakeState = OuttakeState.AUTO_EJECT;
+        } else if (Timer.getFPGATimestamp() - lastDetectionTime < Constants.OUTTAKE_RUN_PERIOD
+                && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+            // Ensure that we keep outtaking for a minimum amount of time
+            outtakeState = OuttakeState.AUTO_EJECT;
         } else {
-            outtakeState = OuttakeState.OFF;
-        }
-    }
-
-    private void updateOuttakeStateOverridden() {
-        Intake intake = Intake.getInstance();
-        if (wantedHopperState == HopperState.REVERSE && intake.getIntakeSolState() == IntakeSolState.OPEN) {
-            outtakeState = OuttakeState.EJECT;
-        } else if (wantedHopperState == HopperState.ON) {
             outtakeState = OuttakeState.INTAKE;
-        } else {
-            outtakeState = OuttakeState.OFF;
         }
     }
 
@@ -179,37 +168,23 @@ public final class Hopper extends AbstractSubsystem {
     @Override
     public void update() {
         updateAllianceColor();
+        updateOuttakeState();
 
-        // Override that makes it so the eject outtake state can never be set
-        if (!disableEject) {
-            updateOuttakeState();
+        // Outtake motor control
 
-            // Outtake motor control
-
-            switch (outtakeState) {
-                case OFF:
-                    setOuttakePercentOutput(0);
-                    break;
-                case EJECT:
-                    setOuttakePercentOutput(Constants.OUTTAKE_AUTO_EJECTION_SPEED);
-                    break;
-                case INTAKE:
-                    setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
-                    break;
-            }
-        } else {
-            // Modified outtakeState update to reflect manual ejecting
-            updateOuttakeStateOverridden();
-
-            switch (outtakeState) {
-                case OFF:
-                    setOuttakePercentOutput(0);
-                    break;
-                case EJECT:
-                    // Outtake runs at max speed when manual ejecting (trigger eject)
-                    setOuttakePercentOutput(Constants.OUTTAKE_MANUAL_EJECTION_SPEED);
-                    break;
-            }
+        switch (outtakeState) {
+            case OFF:
+                setOuttakePercentOutput(0);
+                break;
+            case AUTO_EJECT:
+                setOuttakePercentOutput(Constants.OUTTAKE_AUTO_EJECTION_SPEED);
+                break;
+            case INTAKE:
+                setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
+                break;
+            case MANUAL_EJECT:
+                setOuttakePercentOutput(Constants.OUTTAKE_MANUAL_EJECTION_SPEED);
+                break;
         }
 
 
