@@ -69,13 +69,14 @@ public final class DashboardHandler extends AbstractSubsystem {
 
     private DashboardHandler(int period) {
         super(period);
+        receivingSocket = null; //Disables networking code
 
-        try {
-            receivingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
-            receivingSocket.setSoTimeout(5);
-        } catch (SocketException e) {
-            DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
-        }
+//        try {
+//            receivingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
+//            receivingSocket.setSoTimeout(5);
+//        } catch (SocketException e) {
+//            DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
+//        }
     }
 
     public void log(@NotNull String key, @NotNull Object value) {
