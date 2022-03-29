@@ -32,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.State;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -50,6 +51,8 @@ import java.util.function.Consumer;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
+
+    public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
