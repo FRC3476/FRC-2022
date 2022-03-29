@@ -218,22 +218,33 @@ public final class Hopper extends AbstractSubsystem {
         // Override that makes it so the eject outtake state can never be set
         if (!disableEject) {
             updateOuttakeState();
+
+            // Outtake motor control
+
+            switch (outtakeState) {
+                case OFF:
+                    setOuttakePercentOutput(0);
+                    break;
+                case EJECT:
+                    setOuttakePercentOutput(Constants.OUTTAKE_AUTO_EJECTION_SPEED);
+                    break;
+                case INTAKE:
+                    setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
+                    break;
+            }
         } else {
+            // Modified outtakeState update to reflect manual ejecting
             updateOuttakeStateOverridden();
-        }
 
-        // Outtake motor control
-
-        switch (outtakeState) {
-            case OFF:
-                setOuttakePercentOutput(0);
-                break;
-            case EJECT:
-                setOuttakePercentOutput(Constants.OUTTAKE_EJECTION_SPEED);
-                break;
-            case INTAKE:
-                setOuttakePercentOutput(Constants.OUTTAKE_SPEED);
-                break;
+            switch (outtakeState) {
+                case OFF:
+                    setOuttakePercentOutput(0);
+                    break;
+                case EJECT:
+                    // Outtake runs at max speed when manual ejecting (trigger eject)
+                    setOuttakePercentOutput(Constants.OUTTAKE_MANUAL_EJECTION_SPEED);
+                    break;
+            }
         }
 
 

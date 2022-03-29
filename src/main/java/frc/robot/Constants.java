@@ -238,9 +238,14 @@ public final class Constants {
 
 
     /**
-     * Outtake's speed when ejecting balls
+     * Outtake's speed when automatically ejecting balls
      */
-    public static final double OUTTAKE_EJECTION_SPEED = .5;
+    public static final double OUTTAKE_AUTO_EJECTION_SPEED = .5;
+
+    /**
+     * Outtake's speed when manually ejecting balls
+     */
+    public static final double OUTTAKE_MANUAL_EJECTION_SPEED = 1;
 
     /**
      * Outtake's speed when intaking balls
