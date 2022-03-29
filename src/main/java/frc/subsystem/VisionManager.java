@@ -92,10 +92,8 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeFromLastShoot = Timer.getFPGATimestamp() - shooter.getLastShotTime();
         double shooterLookAheadTime = 0.15 - timeFromLastShoot;
-        boolean justShot = false;
         if (shooterLookAheadTime < 0) {
             shooterLookAheadTime = 0.15;
-            justShot = true;
         }
 
         double turnDelay = 0.00;
@@ -367,7 +365,6 @@ public final class VisionManager extends AbstractSubsystem {
     @Override
     public void update() {
         robotPositionOffset = new Translation2d();
-        Pose2d robotTrackerPose = robotTracker.getLatencyCompedPoseMeters();
         Translation2d relativeGoalPos = getRelativeGoalTranslation();
 
         double angleToTarget = Math.atan2(relativeGoalPos.getY(), relativeGoalPos.getX());
