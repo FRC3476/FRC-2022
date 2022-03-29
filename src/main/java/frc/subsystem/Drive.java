@@ -833,6 +833,7 @@ public final class Drive extends AbstractSubsystem {
         setRotation(degrees);
         while (!isTurningDone()) {
             Thread.onSpinWait();
+            if (Thread.interrupted()) throw new InterruptedException("Interrupted while turning");
         }
     }
 }

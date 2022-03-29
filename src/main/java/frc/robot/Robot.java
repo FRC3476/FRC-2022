@@ -126,11 +126,27 @@ public class Robot extends TimedRobot {
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private HideBallsBlue hideBallsBlue;
+    private HideCargoBlue hideCargoBlue;
 
     @SuppressWarnings("NotNullFieldNotInitialized")
     @NotNull
-    private HideBallsRed hideBallsRed;
+    private HideCargoRed hideCargoRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private BuddyAutoLeftHideBlue buddyAutoLeftHideBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private BuddyAutoLeftHideRed buddyAutoLeftHideRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HangerCargoBlue hangerCargoBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HangerCargoRed hangerCargoRed;
 
 
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
@@ -144,7 +160,9 @@ public class Robot extends TimedRobot {
     @NotNull private static final String SHOOT_ONLY_RIGHT = "Shoot Only Right";
     @NotNull private static final String SHOOT_ONLY_MID = "Shoot Only Mid";
     @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
-    @NotNull private static final String HIDE_BALLS = "Hide Balls";
+    @NotNull private static final String HIDE_CARGO = "Hide Cargo";
+    @NotNull private static final String BUDDY_AUTO_LEFT_HIDE = "Buddy Auto Left Hide";
+    @NotNull private static final String HANGER_CARGO = "Hanger Cargo";
 
 
     private static final String RESET_POSE = "Reset Pose";
@@ -264,8 +282,13 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> fiveBallRed = new FiveBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBallRed = new SixBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> hideBallsBlue = new HideBallsBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> hideBallsRed = new HideBallsRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideCargoBlue = new HideCargoBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideCargoRed = new HideCargoRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> buddyAutoLeftHideBlue = new BuddyAutoLeftHideBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> buddyAutoLeftHideRed = new BuddyAutoLeftHideRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hangerCargoBlue = new HangerCargoBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hangerCargoRed = new HangerCargoRed()).thenRun(this::incrementLoadedAutos);
+
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -278,7 +301,9 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(SHOOT_ONLY_LEFT, SHOOT_ONLY_LEFT);
         autoChooser.addOption(SHOOT_ONLY_MID, SHOOT_ONLY_MID);
         autoChooser.addOption(SHOOT_ONLY_RIGHT, SHOOT_ONLY_RIGHT);
-        autoChooser.addOption(HIDE_BALLS, HIDE_BALLS);
+        autoChooser.addOption(HIDE_CARGO, HIDE_CARGO);
+        autoChooser.addOption(HANGER_CARGO, HANGER_CARGO);
+        autoChooser.addOption(BUDDY_AUTO_LEFT_HIDE, BUDDY_AUTO_LEFT_HIDE);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
@@ -313,7 +338,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 12) {
+        if (loadedAutos.incrementAndGet() == 16) {
             loadingAutos = false;
         }
     }
@@ -388,8 +413,14 @@ public class Robot extends TimedRobot {
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
-                        case HIDE_BALLS:
-                            selectedAuto = hideBallsBlue;
+                        case HIDE_CARGO:
+                            selectedAuto = hideCargoBlue;
+                            break;
+                        case BUDDY_AUTO_LEFT_HIDE:
+                            selectedAuto = buddyAutoLeftHideBlue;
+                            break;
+                        case HANGER_CARGO:
+                            selectedAuto = hangerCargoBlue;
                             break;
                         default:
                             selectedAuto = shootAndMoveRight;
@@ -427,8 +458,14 @@ public class Robot extends TimedRobot {
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
-                        case HIDE_BALLS:
-                            selectedAuto = hideBallsRed;
+                        case HIDE_CARGO:
+                            selectedAuto = hideCargoRed;
+                            break;
+                        case BUDDY_AUTO_LEFT_HIDE:
+                            selectedAuto = buddyAutoLeftHideRed;
+                            break;
+                        case HANGER_CARGO:
+                            selectedAuto = hangerCargoRed;
                             break;
                         default:
                             selectedAuto = shootAndMoveRight;
