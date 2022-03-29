@@ -7,6 +7,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.drive.Vector2d;
 import frc.robot.Constants;
 import frc.subsystem.BlinkinLED.BlinkinLedMode;
 import frc.subsystem.BlinkinLED.LedStatus;
@@ -20,6 +21,7 @@ import frc.utility.Timer;
 import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +29,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.MAX_SHOOT_SPEED;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
@@ -62,6 +65,18 @@ public final class VisionManager extends AbstractSubsystem {
     public void logData() {
         logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
         logData("Rotation Target", getAngleToTarget().getDegrees());
+
+        Vector3D correctVector = limelight.getCorrectTargetVector();
+        logData("New Distance", Math.hypot(correctVector.getX(), correctVector.getZ()));
+
+        Vector2d targetPx = limelight.getTargetPosInCameraPixels();
+
+        logData("py", targetPx.y);
+        logData("px", targetPx.x);
+
+//        Vector2d newRelGoalPos = limelight.getCorrectGoalPos();
+//        logData("New Z", newRelGoalPos.x);
+//        logData("New X", newRelGoalPos.y);
 
         logData("Allow Shooting Robot Speed", drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED);
         logData("Is Robot Allowed Shoot Tilt",
@@ -135,10 +150,16 @@ public final class VisionManager extends AbstractSubsystem {
 
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
-        drive.updateTurn(controllerDriveInputs, getAngleToTarget(), fieldRelative, getAllowedTurnError());
-
-        updateShooterState(getDistanceToTarget());
-        tryToShoot(getRelativeGoalTranslation(), 0, true);
+        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        Translation2d relativeGoalPos;
+        if (visionTranslation.isPresent()) {
+            relativeGoalPos = visionTranslation.get().minus(GOAL_POSITION);
+        } else {
+            relativeGoalPos = getRelativeGoalTranslation();
+        }
+        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos), fieldRelative, getAllowedTurnError());
+        updateShooterState(relativeGoalPos.getNorm());
+        tryToShoot(relativeGoalPos, 0, true);
     }
 
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
@@ -150,7 +171,7 @@ public final class VisionManager extends AbstractSubsystem {
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
                 && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             //@formatter:on
-            shooter.setFiring(limelight.isTargetVisible() || DriverStation.isAutonomous());
+            shooter.setFiring(true);
             if (shooter.isFiring()) {
                 if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
                     lastPrintTime = Timer.getFPGATimestamp();
@@ -212,10 +233,15 @@ public final class VisionManager extends AbstractSubsystem {
 
         Rotation2d currentGyroAngle = getLatencyCompedLimelightRotation();
 
-        double distanceToTarget = limelight.getDistanceM() + Constants.GOAL_RADIUS + Units.inchesToMeters(23);
-        double angleToTarget = currentGyroAngle.getDegrees() - limelight.getHorizontalOffset();
-        return Optional.of(new Translation2d(distanceToTarget * Math.cos(Math.toRadians(angleToTarget)),
-                distanceToTarget * Math.sin(Math.toRadians(angleToTarget)))
+        Vector3D offsetVector = limelight.getCorrectTargetVector();
+        double angleOffset = Math.atan2(offsetVector.getX(), offsetVector.getZ());
+
+
+        double distanceToTarget = Units.inchesToMeters(Math.hypot(offsetVector.getX(), offsetVector.getZ()));
+
+        double angleToTarget = currentGyroAngle.getRadians() - angleOffset;
+        return Optional.of(new Translation2d(distanceToTarget * Math.cos(angleToTarget),
+                distanceToTarget * Math.sin(angleToTarget))
                 .plus(Constants.GOAL_POSITION));
     }
 
@@ -350,11 +376,13 @@ public final class VisionManager extends AbstractSubsystem {
             blinkinLED.setStatus(limelightNotConnectedStatus);
         }
 
-        if (Math.abs(angleToTarget - robotTracker.getGyroAngle().getRadians()) < Math.toRadians(50)) {
+        if (Math.abs(new Rotation2d(angleToTarget).minus(robotTracker.getGyroAngle()).getRadians()) < Math.toRadians(50)) {
             forceVisionOn(updateLoopSource);
         } else {
             unForceVisionOn(updateLoopSource);
         }
+
+        logData("Angle To Target", angleToTarget);
 
 
         Optional<Translation2d> robotTranslationOptional = getVisionTranslation();

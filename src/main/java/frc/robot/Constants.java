@@ -42,7 +42,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.5, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(4, 2); //TODO: CHANGE
     // This is in inches
     public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
@@ -230,12 +230,6 @@ public final class Constants {
     public static final int OUTTAKE_CURRENT_LIMIT = 20;
     public static final int OUTTAKE_MEASUREMENT_PERIOD_MS = 200;
     public static final double OUTTAKE_VERTICAL_OFFSET_THRESHOLD = 0;
-    /**
-     * Outtake Always intake has outtake always intaking until opposite ball color is found The other option is to have the
-     * outtake always outtaking until a friendly ball color is found
-     */
-    public static final boolean OUTTAKE_ALWAYS_INTAKE = true;
-
 
     /**
      * Outtake's speed when automatically ejecting balls
@@ -285,8 +279,8 @@ public final class Constants {
      */
     public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 150;
 
-    public static final int SHOOTER_EJECT_SPEED = 500;
-    public static final double HOOD_EJECT_ANGLE = 85;
+    public static final int SHOOTER_EJECT_SPEED = 750;
+    public static final double HOOD_EJECT_ANGLE = 53;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1

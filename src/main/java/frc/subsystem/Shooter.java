@@ -610,6 +610,7 @@ public final class Shooter extends AbstractSubsystem {
                 break;
 
             case ON:
+
                 shooterWheelMaster.set(ControlMode.Velocity,
                         desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
 
@@ -624,10 +625,10 @@ public final class Shooter extends AbstractSubsystem {
                 }
 
                 if (
-                        (feederWheelState == FeederWheelState.FORWARD)
+                        ((feederWheelState == FeederWheelState.FORWARD)
                                 && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
                                 && (Timer.getFPGATimestamp() > SECOND_BALL_SHOOT_DELAY + lastShotTime)
-                                || feederChecksDisabled)
+                                || feederChecksDisabled))
                 ) {
                     feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
                     lastShotTime = Timer.getFPGATimestamp();

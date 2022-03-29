@@ -1,11 +1,22 @@
 package frc.utility;
 
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.Vector2d;
+import frc.subsystem.AbstractSubsystem;
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -14,7 +25,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * This class is used to get data from the limelight network tables
  */
-public final class Limelight {
+public final class Limelight extends AbstractSubsystem {
     public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
     final @NotNull NetworkTable limelightTable;
     final @NotNull NetworkTable limelightGuiTable;
@@ -25,6 +36,11 @@ public final class Limelight {
     public static @NotNull Limelight getInstance() {
         return getInstance("limelight");
     }
+
+
+    volatile double angle = -38;
+    volatile double hOffset = 56;
+    volatile double depthOffset = 24;
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();
@@ -48,6 +64,21 @@ public final class Limelight {
         } finally {
             LIMELIGHT_MAP_LOCK.writeLock().unlock();
         }
+    }
+
+    @Override
+    public void selfTest() {
+
+    }
+
+    @Override
+    public void logData() {
+
+    }
+
+    @Override
+    public void close() throws Exception {
+
     }
 
 
@@ -121,8 +152,25 @@ public final class Limelight {
     }
 
     private Limelight(String name) {
+        super(-1);
         limelightTable = NetworkTableInstance.getDefault().getTable(name);
         limelightGuiTable = NetworkTableInstance.getDefault().getTable(name + "gui");
+
+        NetworkTableEntry angleTable = limelightGuiTable.getEntry("angle");
+        angleTable.setDouble(angle);
+        angleTable.addListener(event -> angle = event.getEntry().getDouble(0),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        NetworkTableEntry hOffsetTable = limelightGuiTable.getEntry("hOffset");
+        hOffsetTable.setDouble(hOffset);
+        hOffsetTable.addListener(event -> hOffset = event.getEntry().getDouble(0),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        NetworkTableEntry zOffsetTable = limelightGuiTable.getEntry("zOffset");
+        zOffsetTable.setDouble(depthOffset);
+        zOffsetTable.addListener(event -> depthOffset = event.getEntry().getDouble(0),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
 
         limelightTable.getEntry("tl").addListener(event -> lastUpdate = Timer.getFPGATimestamp(),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
@@ -263,6 +311,55 @@ public final class Limelight {
         }
     }
 
+    public Vector2d getTargetPosInCameraPixels() {
+        return new Vector2d(
+                (getHorizontalOffset() / 29.8) * (320.0 / 2) + (320.0 / 2),
+                (getVerticalOffset() / 24.85) * (240.0 / 2) + (240.0 / 2)
+        );
+    }
+
+    private static final Matrix<N3, N3> CAMERA_MATRIX_INVERSE = new MatBuilder<>(Nat.N3(), Nat.N3()).fill(
+            0.00392173, 0, -0.6274771,
+            0, 0.00389782, -0.46773827,
+            0, 0, 1
+    );
+
+    /**
+     * @return The Correct distance from the limelight to the target in IN. This correctly compensates for the angle of the camera
+     * to ensure a consistent distance as the robot rotates.
+     */
+    public Vector3D getCorrectTargetVector() {
+        if (isTargetVisible()) {
+
+            Vector2d targetPosInCameraPixels = getTargetPosInCameraPixels();
+
+            double py = targetPosInCameraPixels.y;
+            double px = targetPosInCameraPixels.x;
+
+            Matrix<N3, N1> cameraUnitVector = CAMERA_MATRIX_INVERSE.times(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(px, py, 1));
+
+
+            Rotation cameraRotation =
+                    new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(angle), 0, 0);
+
+            Vector3D vector3D = new Vector3D(
+                    cameraUnitVector.get(0, 0),
+                    cameraUnitVector.get(1, 0),
+                    cameraUnitVector.get(2, 0)
+            );
+
+            Vector3D goalDir = cameraRotation.applyTo(vector3D);
+            double angle = Math.atan2(goalDir.getX(), goalDir.getZ());
+
+            double k = hOffset / goalDir.getY();
+
+            return goalDir.scalarMultiply(k)
+                    .add(new Vector3D(0, 0, 6.0867)
+                            .add(new Vector3D(Math.sin(angle) * depthOffset, 0, Math.cos(angle) * depthOffset)));
+        } else {
+            return new Vector3D(0, 0, 0);
+        }
+    }
 
     public Vector2d[] getCorners() {
         double[] corners = limelightTable.getEntry("tcornxy").getDoubleArray(EMPTY_DOUBLE_ARRAY);

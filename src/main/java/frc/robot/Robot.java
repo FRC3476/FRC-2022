@@ -121,6 +121,15 @@ public class Robot extends TimedRobot {
     @NotNull
     private BuddyAutoRight buddyAutoRight;
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HideBallsBlue hideBallsBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HideBallsRed hideBallsRed;
+
+
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
     @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
@@ -132,6 +141,8 @@ public class Robot extends TimedRobot {
     @NotNull private static final String SHOOT_ONLY_RIGHT = "Shoot Only Right";
     @NotNull private static final String SHOOT_ONLY_MID = "Shoot Only Mid";
     @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
+    @NotNull private static final String HIDE_BALLS = "Hide Balls";
+
 
     private static final String RESET_POSE = "Reset Pose";
 
@@ -139,8 +150,6 @@ public class Robot extends TimedRobot {
 
     @NotNull public static final String RED = "RED";
     @NotNull public static final String BLUE = "BLUE";
-
-    private static boolean hoodEject = false;
 
     public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
@@ -252,6 +261,8 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> fiveBallRed = new FiveBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBallRed = new SixBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideBallsBlue = new HideBallsBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideBallsRed = new HideBallsRed()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -264,6 +275,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(SHOOT_ONLY_LEFT, SHOOT_ONLY_LEFT);
         autoChooser.addOption(SHOOT_ONLY_MID, SHOOT_ONLY_MID);
         autoChooser.addOption(SHOOT_ONLY_RIGHT, SHOOT_ONLY_RIGHT);
+        autoChooser.addOption(HIDE_BALLS, HIDE_BALLS);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
@@ -287,6 +299,8 @@ public class Robot extends TimedRobot {
         startSubsystems();
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
+
+        limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -296,7 +310,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 10) {
+        if (loadedAutos.incrementAndGet() == 12) {
             loadingAutos = false;
         }
     }
@@ -311,6 +325,18 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
+        if (!DriverStation.isEnabled()) {
+            xbox.update();
+            stick.update();
+            buttonPanel.update();
+        }
+
+        if (stick.getRawButton(4)) {
+            visionManager.forceVisionOn(resettingPoseVisionOn);
+            visionManager.forceUpdatePose();
+        } else {
+            visionManager.unForceVisionOn(resettingPoseVisionOn);
+        }
     }
 
 
@@ -359,6 +385,9 @@ public class Robot extends TimedRobot {
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
+                        case HIDE_BALLS:
+                            selectedAuto = hideBallsBlue;
+                            break;
                         default:
                             selectedAuto = shootAndMoveRight;
                             break;
@@ -394,6 +423,9 @@ public class Robot extends TimedRobot {
                             break;
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
+                            break;
+                        case HIDE_BALLS:
+                            selectedAuto = hideBallsRed;
                             break;
                         default:
                             selectedAuto = shootAndMoveRight;
@@ -452,11 +484,16 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
-        if (xbox.getRawAxis(2) > 0.1) {
+        // Hood Eject
+        if (buttonPanel.getRawButton(6)) {
+            shooter.setFeederChecksDisabled(true);
+            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+            shooter.setFiring(true);
+        } else if (xbox.getRawAxis(2) > 0.1) {
+            shooter.setFeederChecksDisabled(false);
             if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
-                if (!hoodEject) {
-                    shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
-                }
+                shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
@@ -467,6 +504,7 @@ public class Robot extends TimedRobot {
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
+            shooter.setFeederChecksDisabled(false);
             shooter.setFiring(false);
             shooter.setSpeed(0);
             visionManager.unForceVisionOn(driverForcingVisionOn);
@@ -520,14 +558,6 @@ public class Robot extends TimedRobot {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
-        }
-
-
-        if (stick.getRawButton(4)) {
-            visionManager.forceVisionOn(resettingPoseVisionOn);
-            visionManager.forceUpdatePose();
-        } else {
-            visionManager.unForceVisionOn(resettingPoseVisionOn);
         }
 
 //        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
@@ -605,12 +635,6 @@ public class Robot extends TimedRobot {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
-        } else if (buttonPanel.getRawButton(6)) {
-            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
-            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
-            hoodEject = true;
-        } else {
-            hoodEject = false;
         }
     }
 
