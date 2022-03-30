@@ -39,8 +39,9 @@ public final class Limelight extends AbstractSubsystem {
 
 
     volatile double angle = -38;
-    volatile double hOffset = 56;
-    volatile double depthOffset = 24;
+    volatile double hOffset = 43;
+    volatile double depthOffset = 34.5;
+    volatile double centerOffset = 6.9;
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();
@@ -166,9 +167,14 @@ public final class Limelight extends AbstractSubsystem {
         hOffsetTable.addListener(event -> hOffset = event.getEntry().getDouble(0),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        NetworkTableEntry zOffsetTable = limelightGuiTable.getEntry("zOffset");
-        zOffsetTable.setDouble(depthOffset);
-        zOffsetTable.addListener(event -> depthOffset = event.getEntry().getDouble(0),
+        NetworkTableEntry depthOffsetTable = limelightGuiTable.getEntry("depthOffset");
+        depthOffsetTable.setDouble(depthOffset);
+        depthOffsetTable.addListener(event -> depthOffset = event.getEntry().getDouble(0),
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        NetworkTableEntry centerOffsetTable = limelightGuiTable.getEntry("centerOffset");
+        centerOffsetTable.setDouble(centerOffset);
+        centerOffsetTable.addListener(event -> centerOffset = event.getEntry().getDouble(0),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 
@@ -354,7 +360,7 @@ public final class Limelight extends AbstractSubsystem {
             double k = hOffset / goalDir.getY();
 
             return goalDir.scalarMultiply(k)
-                    .add(new Vector3D(0, 0, 6.0867)
+                    .add(new Vector3D(0, 0, centerOffset) //5.875
                             .add(new Vector3D(Math.sin(angle) * depthOffset, 0, Math.cos(angle) * depthOffset)));
         } else {
             return new Vector3D(0, 0, 0);
@@ -375,7 +381,7 @@ public final class Limelight extends AbstractSubsystem {
     public boolean areCornersTouchingEdge() {
         Vector2d[] corners = getCorners();
         for (Vector2d corner : corners) {
-            if (corner.x < 30 || corner.x > 290 || corner.y < 30 || corner.y > 210) {
+            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 0 || corner.y > 240 - 15) {
 
                 return true;
             }

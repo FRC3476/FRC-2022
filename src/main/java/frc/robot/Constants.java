@@ -165,7 +165,7 @@ public final class Constants {
     // TurnPID
 
     public static final double DEFAULT_TURN_P = 12.0;
-    public static final double DEFAULT_TURN_I = 4.0;
+    public static final double DEFAULT_TURN_I = 20.0;
     public static final double DEFAULT_TURN_D = 0.0;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;

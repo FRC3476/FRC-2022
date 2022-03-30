@@ -69,6 +69,8 @@ public final class VisionManager extends AbstractSubsystem {
         Vector3D correctVector = limelight.getCorrectTargetVector();
         logData("New Distance", Math.hypot(correctVector.getX(), correctVector.getZ()));
 
+        logData("Old Distance ", limelight.getDistance() + Constants.GOAL_RADIUS_IN + 23);
+
         Vector2d targetPx = limelight.getTargetPosInCameraPixels();
 
         logData("py", targetPx.y);
@@ -112,6 +114,8 @@ public final class VisionManager extends AbstractSubsystem {
                 Math.abs((angleOf(getRelativeGoalTranslation())
                         .minus(robotTracker.getGyroAngle())).getRadians())
                         < allowedTurnError);
+
+        logData("Acceleration", getAccel().getNorm());
     }
 
 
@@ -402,8 +406,10 @@ public final class VisionManager extends AbstractSubsystem {
                 if (limelight.areCornersTouchingEdge()) {
                     logData("Using Vision Info", "Corners touching edge");
                 } else {
-                    robotTracker.addVisionMeasurement(robotTranslation,
-                            getLimelightTime());
+                    if (!DriverStation.isAutonomous()) {
+                        robotTracker.addVisionMeasurement(robotTranslation,
+                                getLimelightTime());
+                    }
                     robotPositionOffset = new Translation2d();
                     logData("Using Vision Info", "Using Vision Info");
                     blinkinLED.setStatus(limelightUsingVisionStatus);
@@ -523,9 +529,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 120) {
-            timeOfFlightFrames = ((0.02 / 30) * (distance - 120)) + (22.5 / 30);
+            timeOfFlightFrames = ((0.02 / 30) * (distance - 120)) + (22.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.077 / 30) * (distance - 120)) + (22.5 / 30);
+            timeOfFlightFrames = ((0.07 / 30) * (distance - 120)) + (22.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
