@@ -288,7 +288,7 @@ public final class Drive extends AbstractSubsystem {
         setDriveState(DriveState.TELEOP);
     }
 
-    synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
+    public @NotNull SwerveModuleState[] getSwerveModuleStates() {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
@@ -573,7 +573,12 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void setAutoRotation(@NotNull Rotation2d rotation) {
-        autoTargetHeading = rotation;
+        currentAutoTrajectoryLock.lock();
+        try {
+            autoTargetHeading = rotation;
+        } finally {
+            currentAutoTrajectoryLock.unlock();
+        }
         System.out.println("new rotation" + rotation.getDegrees());
     }
 
@@ -621,9 +626,12 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
-    public synchronized boolean isTurningDone() {
-        double error = wantedHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        return (Math.abs(error) < Constants.MAX_TURN_ERROR);
+    public boolean isTurningDone() {
+        Rotation2d currentHeading = RobotTracker.getInstance().getGyroAngle();
+        synchronized (this) {
+            double error = wantedHeading.minus(currentHeading).getDegrees();
+            return (Math.abs(error) < Constants.MAX_TURN_ERROR);
+        }
     }
 
     double turnMinSpeed = 0;
