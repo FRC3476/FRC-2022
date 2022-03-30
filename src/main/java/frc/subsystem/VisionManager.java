@@ -170,6 +170,7 @@ public final class VisionManager extends AbstractSubsystem {
                     < getAllowedTurnError(aimToPosition.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
+                && getAccel().getNorm() < 1
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
                 && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             //@formatter:on
@@ -531,7 +532,7 @@ public final class VisionManager extends AbstractSubsystem {
         if (distance < 120) {
             timeOfFlightFrames = ((0.02 / 30) * (distance - 120)) + (22.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.07 / 30) * (distance - 120)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.071 / 30) * (distance - 120)) + (22.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;

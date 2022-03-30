@@ -508,6 +508,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
+        hopper.setEjectOverride(false);
         drive.configBrake();
     }
 

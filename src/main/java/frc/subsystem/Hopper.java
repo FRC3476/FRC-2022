@@ -112,6 +112,13 @@ public final class Hopper extends AbstractSubsystem {
     }
 
     /**
+     * Toggles disableEject
+     */
+    public void setEjectOverride(boolean ejectOverride) {
+        disableEject = ejectOverride;
+    }
+
+    /**
      * Updates state of outtake based on color sensor and intake direction
      */
     private void updateOuttakeState() {

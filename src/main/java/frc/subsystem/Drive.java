@@ -672,7 +672,7 @@ public final class Drive extends AbstractSubsystem {
 
         turnPID.setSetpoint(goal.position);
 
-        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(30)) {
+        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
             turnPID.reset();
         }
         lastTurnUpdate = Timer.getFPGATimestamp();
@@ -832,8 +832,7 @@ public final class Drive extends AbstractSubsystem {
         System.out.println("Turning to " + degrees);
         setRotation(degrees);
         while (!isTurningDone()) {
-            Thread.onSpinWait();
-            if (Thread.interrupted()) throw new InterruptedException("Interrupted while turning");
+            Thread.sleep(20);
         }
     }
 }
