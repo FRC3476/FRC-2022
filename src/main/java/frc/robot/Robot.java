@@ -706,12 +706,22 @@ public class Robot extends TimedRobot {
     }
 
     private ControllerDriveInputs getControllerDriveInputs() {
-        if (xbox.getRawButton(Controller.XboxButtons.X)) {
-            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                    -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+        if (useFieldRelative) {
+            if (xbox.getRawButton(Controller.XboxButtons.X)) {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+            } else {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+            }
         } else {
-            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                    -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+            if (xbox.getRawButton(Controller.XboxButtons.X)) {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+            } else {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+            }
         }
     }
 
