@@ -530,9 +530,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 120) {
-            timeOfFlightFrames = ((0.02 / 30) * (distance - 120)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.02 / 30) * (distance - 113)) + (22.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.071 / 30) * (distance - 120)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.071 / 30) * (distance - 113)) + (22.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
