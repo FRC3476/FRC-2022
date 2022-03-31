@@ -96,7 +96,7 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-    private @NotNull final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+    private @NotNull static final SwerveDriveKinematics SWERVE_DRIVE_KINEMATICS = new SwerveDriveKinematics(
             Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION,
             Constants.SWERVE_RIGHT_FRONT_LOCATION,
@@ -276,8 +276,8 @@ public final class Drive extends AbstractSubsystem {
         return swerveDriveMotors[motorNum].getSelectedSensorVelocity() * Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
     }
 
-    public @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
-        return swerveKinematics;
+    public static @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
+        return SWERVE_DRIVE_KINEMATICS;
     }
 
     public synchronized void setDriveState(@NotNull DriveState driveState) {
@@ -349,7 +349,7 @@ public final class Drive extends AbstractSubsystem {
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
-        SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+        SwerveModuleState[] moduleStates = SWERVE_DRIVE_KINEMATICS.toSwerveModuleStates(chassisSpeeds);
 
         boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 ||
                 chassisSpeeds.vyMetersPerSecond != 0 ||
@@ -614,14 +614,14 @@ public final class Drive extends AbstractSubsystem {
         return isAiming;
     }
 
-    public synchronized void setRotation(Rotation2d angle) {
+    public void setRotation(Rotation2d angle) {
         wantedHeading = angle;
         driveState = DriveState.TURN;
         rotateAuto = true;
         isAiming = !isTurningDone();
     }
 
-    public synchronized void setRotation(double angle) {
+    public void setRotation(double angle) {
         setRotation(Rotation2d.fromDegrees(angle));
     }
 

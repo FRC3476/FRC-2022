@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
@@ -50,6 +51,8 @@ public final class RobotTracker extends AbstractSubsystem {
     private double maxGyroRoll = 0;
     private double minGyroRoll = 0;
 
+    private final @NotNull SwerveDriveKinematics swerveDriveKinematics = Drive.getSwerveDriveKinematics();
+
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private Translation2d acceleration = new Translation2d();
@@ -70,7 +73,7 @@ public final class RobotTracker extends AbstractSubsystem {
 //                (Constants.ROBOT_TRACKER_PERIOD * 2) / 1000.0d); //Only update every other tick
 
         swerveDriveOdometry = new SwerveDriveOdometry(
-                drive.getSwerveDriveKinematics(),
+                swerveDriveKinematics,
                 gyroSensor.getRotation2d(),
                 new Pose2d()
 
@@ -151,14 +154,15 @@ public final class RobotTracker extends AbstractSubsystem {
         }
 
         if (updateNextTick) {
-            updateOdometry(time, rawGyroSensor, drive.getSwerveModuleStates());
+            SwerveModuleState[] swerveModuleStates = drive.getSwerveModuleStates();
+            updateOdometry(time, rawGyroSensor, swerveModuleStates);
             lock.writeLock().lock();
             try {
                 latestEstimatedPose = swerveDriveOdometry.getPoseMeters();
                 //gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
 
                 latestChassisSpeeds = getRotatedSpeeds(
-                        drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
+                        swerveDriveKinematics.toChassisSpeeds(swerveModuleStates),
                         getGyroAngle());
 
                 latencyCompensatedChassisSpeeds = latestChassisSpeeds;
