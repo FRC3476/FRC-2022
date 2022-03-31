@@ -166,7 +166,7 @@ public final class Constants {
 
     public static final double DEFAULT_TURN_P = 12.0;
     public static final double DEFAULT_TURN_I = 15.0;
-    public static final double DEFAULT_TURN_D = 0.5;
+    public static final double DEFAULT_TURN_D = 0.25;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
