@@ -595,7 +595,7 @@ public class Robot extends TimedRobot {
             hopper.toggleEjectOverride();
         }
 
-        if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
+        if (xbox.getRisingEdge(XboxButtons.LEFT_CLICK) || xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
