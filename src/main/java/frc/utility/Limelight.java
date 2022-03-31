@@ -38,10 +38,12 @@ public final class Limelight extends AbstractSubsystem {
     }
 
 
-    volatile double angle = -38;
+    volatile Rotation cameraRotation = new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(-38), 0,
+            0);
+
     volatile double hOffset = 43;
     volatile double depthOffset = 34.5;
-    volatile double centerOffset = 6.9;
+    volatile Vector3D centerOffset = new Vector3D(0, 0, 6.9);
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();
@@ -158,8 +160,10 @@ public final class Limelight extends AbstractSubsystem {
         limelightGuiTable = NetworkTableInstance.getDefault().getTable(name + "gui");
 
         NetworkTableEntry angleTable = limelightGuiTable.getEntry("angle");
-        angleTable.setDouble(angle);
-        angleTable.addListener(event -> angle = event.getEntry().getDouble(0),
+        angleTable.setDouble(cameraRotation.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0]);
+        angleTable.addListener(event -> cameraRotation
+                        = new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
+                        Math.toRadians(event.getEntry().getDouble(0)), 0, 0),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         NetworkTableEntry hOffsetTable = limelightGuiTable.getEntry("hOffset");
@@ -173,8 +177,8 @@ public final class Limelight extends AbstractSubsystem {
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
         NetworkTableEntry centerOffsetTable = limelightGuiTable.getEntry("centerOffset");
-        centerOffsetTable.setDouble(centerOffset);
-        centerOffsetTable.addListener(event -> centerOffset = event.getEntry().getDouble(0),
+        centerOffsetTable.setDouble(centerOffset.getZ());
+        centerOffsetTable.addListener(event -> centerOffset = new Vector3D(0, 0, event.getEntry().getDouble(0)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 
@@ -330,6 +334,7 @@ public final class Limelight extends AbstractSubsystem {
             0, 0, 1
     );
 
+    private static final MatBuilder<N3, N1> THREE_BY_ONE_MAT_BUILDER = new MatBuilder<>(Nat.N3(), Nat.N1());
     /**
      * @return The Correct distance from the limelight to the target in IN. This correctly compensates for the angle of the camera
      * to ensure a consistent distance as the robot rotates.
@@ -342,11 +347,7 @@ public final class Limelight extends AbstractSubsystem {
             double py = targetPosInCameraPixels.y;
             double px = targetPosInCameraPixels.x;
 
-            Matrix<N3, N1> cameraUnitVector = CAMERA_MATRIX_INVERSE.times(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(px, py, 1));
-
-
-            Rotation cameraRotation =
-                    new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(angle), 0, 0);
+            Matrix<N3, N1> cameraUnitVector = CAMERA_MATRIX_INVERSE.times(THREE_BY_ONE_MAT_BUILDER.fill(px, py, 1));
 
             Vector3D vector3D = new Vector3D(
                     cameraUnitVector.get(0, 0),
@@ -360,10 +361,10 @@ public final class Limelight extends AbstractSubsystem {
             double k = hOffset / goalDir.getY();
 
             return goalDir.scalarMultiply(k)
-                    .add(new Vector3D(0, 0, centerOffset) //5.875
-                            .add(new Vector3D(Math.sin(angle) * depthOffset, 0, Math.cos(angle) * depthOffset)));
+                    .add(centerOffset) //5.875
+                    .add(new Vector3D(Math.sin(angle) * depthOffset, 0, Math.cos(angle) * depthOffset));
         } else {
-            return new Vector3D(0, 0, 0);
+            return Vector3D.ZERO;
         }
     }
 
