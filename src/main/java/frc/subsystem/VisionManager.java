@@ -135,7 +135,7 @@ public final class VisionManager extends AbstractSubsystem {
         double targetAngle = angleOf(aimToPosition).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
-        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + (justShot ? 0.0 : 0.1));
+        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + 0.1);
         double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
 
         drive.updateTurn(controllerDriveInputs,
@@ -181,7 +181,7 @@ public final class VisionManager extends AbstractSubsystem {
                     checksPassedLastTime = true;
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " "
-                                    + visionLookUpTable.getShooterPreset(Units.metersToInches(getDistanceToTarget())));
+                                    + aimToPosition.getNorm());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();

@@ -41,8 +41,8 @@ public final class Limelight extends AbstractSubsystem {
     volatile Rotation cameraRotation = new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(-38), 0,
             0);
 
-    volatile double hOffset = 43;
-    volatile double depthOffset = 34.5;
+    volatile double hOffset = 38;
+    volatile double depthOffset = 44;
     volatile Vector3D centerOffset = new Vector3D(0, 0, 6.9);
 
     public static @NotNull Limelight getInstance(String name) {
