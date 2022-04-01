@@ -177,6 +177,7 @@ public final class Climber extends AbstractSubsystem {
         LOWER_ELEVATOR_ARM_TILL_PIVOT_ARM_CONTACT(
                 new ClimbStep(
                         (cl) -> {
+                            cl.setBrakeState(BrakeState.FREE);
                             cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
                             cl.setClawState(ClawState.UNLATCHED);
                         },
@@ -187,6 +188,7 @@ public final class Climber extends AbstractSubsystem {
 
                 new ClimbStep(
                         (cl) -> {
+                            cl.setBrakeState(BrakeState.FREE);
                             cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
                             cl.setClawState(ClawState.UNLATCHED);
                         },
@@ -401,8 +403,27 @@ public final class Climber extends AbstractSubsystem {
                         },
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() - (0.3 * CLIMBER_ENCODER_TICKS_PER_INCH) < CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION,
                         // TODO: Determine if we want this
-                        (cl) -> {},
+                        (cl) -> {
+                            cl.stopClimberMotor();
+                            cl.setBrakeState(BrakeState.BRAKING);
+                        },
                         true
+                )
+        ),
+
+        WAIT_FOR_BRAKE_TIME(
+                new ClimbStep(
+                        (cl) -> cl.data = Timer.getFPGATimestamp(),
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.3,
+                        (cl) -> {},
+                        false
+                ),
+
+                new ClimbStep(
+                        (cl) -> cl.data = Timer.getFPGATimestamp(),
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.3,
+                        (cl) -> {},
+                        false
                 )
         ),
 
