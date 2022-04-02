@@ -83,6 +83,7 @@ public final class Climber extends AbstractSubsystem {
 
     private boolean isPaused = false;
     private double pausedClimberSetpoint;
+    private @NotNull BrakeState pausedBrakeState = BrakeState.BRAKING;
     private ControlMode pausedClimberMode;
 
     private boolean sensorClimb = true;
@@ -616,6 +617,7 @@ public final class Climber extends AbstractSubsystem {
         } else {
             pausedClimberSetpoint = climberMotor.getClosedLoopTarget();
         }
+        pausedBrakeState = getBrakeState();
         climberMotor.set(ControlMode.PercentOutput, 0);
         setBrakeState(BrakeState.BRAKING);
     }
@@ -634,7 +636,7 @@ public final class Climber extends AbstractSubsystem {
      */
     public synchronized void resumeClimb() {
         isPaused = false;
-        setBrakeState(BrakeState.FREE);
+        setBrakeState(pausedBrakeState);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
         otherPivotingArmMustContactByTime = Double.MAX_VALUE;
     }
