@@ -219,7 +219,7 @@ public final class Constants {
 
     //Hopper Constants
     public static final int HOPPER_PERIOD = 10;
-    public static final double HOPPER_SPEED = .5;
+    public static final double HOPPER_SPEED = 1.0;
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
     public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
