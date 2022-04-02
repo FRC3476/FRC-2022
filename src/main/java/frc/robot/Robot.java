@@ -184,7 +184,6 @@ public class Robot extends TimedRobot {
     private final Intake intake = Intake.getInstance();
     private final Shooter shooter = Shooter.getInstance();
     private final Climber climber = Climber.getInstance();
-    private final VisionManager visionManager = VisionManager.getInstance();
 
     //Inputs
     private final static Controller xbox = new Controller(0);
@@ -236,7 +235,7 @@ public class Robot extends TimedRobot {
                             ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
                                     ShooterConfig.class);
                             Collections.sort(shooterConfig.getShooterConfigs());
-                            visionManager.setShooterConfig(shooterConfig);
+                            VisionManager.getInstance().setShooterConfig(shooterConfig);
                             System.out.println(shooterConfig.getShooterConfigs());
                         } catch (IOException e) {
                             //Should never happen. The gui should never upload invalid data.
@@ -352,6 +351,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        VisionManager visionManager = VisionManager.getInstance();
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
         if (!DriverStation.isEnabled()) {
             xbox.update();
@@ -521,6 +521,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
+        VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
         stick.update();
         buttonPanel.update();
@@ -670,6 +671,7 @@ public class Robot extends TimedRobot {
     }
 
     private void runShooter() {
+        VisionManager visionManager = VisionManager.getInstance();
         if (buttonPanel.getRisingEdge(1)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
         } else if (buttonPanel.getRisingEdge(2)) {
@@ -833,7 +835,7 @@ public class Robot extends TimedRobot {
         hopper.start();
         shooter.start();
         climber.start();
-        visionManager.start();
+        VisionManager.getInstance().start();
         DashboardHandler.getInstance().start();
     }
 
