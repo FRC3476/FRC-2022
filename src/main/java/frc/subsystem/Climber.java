@@ -91,6 +91,7 @@ public final class Climber extends AbstractSubsystem {
     private boolean advanceStep = false;
     private boolean skipChecks = false;
     private boolean ranEndAction = false;
+    private boolean startingClimb = true;
 
     public enum ClawState {
         LATCHED, UNLATCHED
@@ -159,15 +160,16 @@ public final class Climber extends AbstractSubsystem {
                 new ClimbStep(
                         (cl) -> {},
                         (cl) -> {
+                            if (cl.startingClimb) return true;
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (Math.abs(gyro.getRoll()) < 15 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 2) {
+                            if (Math.abs(gyro.getRoll()) < 15 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 5) {
                                 return true;
                             } else {
                                 return gyro.getRoll() > 20 && gyro.getRoll() < 40 &&
                                         RobotTracker.getInstance().getGyroRollVelocity() > 0;
                             }
                         },
-                        (cl) -> {},
+                        (cl) -> cl.startingClimb = false,
                         false
                 )
         ),
@@ -649,6 +651,7 @@ public final class Climber extends AbstractSubsystem {
         setBrakeState(BrakeState.FREE);
         setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
+        startingClimb = true;
     }
 
     /**
@@ -668,6 +671,7 @@ public final class Climber extends AbstractSubsystem {
      * This method will also work regardless of whether the robot is in step-by-mode or not.
      */
     public synchronized void forceAdvanceStep() {
+        if (isPaused) resumeClimb();
         advanceStep = true;
         skipChecks = true;
     }

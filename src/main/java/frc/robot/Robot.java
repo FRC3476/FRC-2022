@@ -626,7 +626,7 @@ public class Robot extends TimedRobot {
             climber.setClimberMotor(0);
         }
 
-        if (buttonPanel.getRisingEdge(12)) {
+        if (buttonPanel.getRisingEdge(12) && buttonPanel.getRawButton(9)) {
             climber.forceAdvanceStep();
         }
 
@@ -644,6 +644,7 @@ public class Robot extends TimedRobot {
         }
 
         if (buttonPanel.getRisingEdge(11)) {
+            climber.stopClimb();
             climber.stopClimb();
         }
 
