@@ -415,14 +415,14 @@ public final class Climber extends AbstractSubsystem {
         WAIT_FOR_BRAKE_TIME(
                 new ClimbStep(
                         (cl) -> cl.data = Timer.getFPGATimestamp(),
-                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.1,
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.25,
                         (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0),
                         false
                 ),
 
                 new ClimbStep(
                         (cl) -> cl.data = Timer.getFPGATimestamp(),
-                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.1,
+                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.25,
                         (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0),
                         false
                 )
