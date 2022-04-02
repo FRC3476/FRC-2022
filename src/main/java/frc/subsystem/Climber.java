@@ -590,6 +590,8 @@ public final class Climber extends AbstractSubsystem {
      * Starts the automated climb sequence and deactivates the brake.
      */
     public synchronized void startClimb() {
+        isPaused = false;
+        otherPivotingArmMustContactByTime = Double.MAX_VALUE;
         climbState = ClimbState.START_CLIMB;
         setBrakeState(BrakeState.FREE);
     }
@@ -638,9 +640,9 @@ public final class Climber extends AbstractSubsystem {
      */
     public synchronized void resumeClimb() {
         isPaused = false;
+        otherPivotingArmMustContactByTime = Double.MAX_VALUE;
         setBrakeState(pausedBrakeState);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
-        otherPivotingArmMustContactByTime = Double.MAX_VALUE;
     }
 
     /**
