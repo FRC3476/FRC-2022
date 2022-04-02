@@ -197,8 +197,9 @@ public final class VisionManager extends AbstractSubsystem {
                     lastPrintTime = Timer.getFPGATimestamp();
                     checksPassedLastTime = true;
                     System.out.println(
-                            "Shooting at " + (150 - DriverStation.getMatchTime()) + " "
-                                    + Units.metersToInches(aimToPosition.getNorm()));
+                            "Shooting at " + (150 - DriverStation.getMatchTime()) + "Distance:  "
+                                    + Units.metersToInches(aimToPosition.getNorm()) + " "
+                                    + "Accel: " + getAccel().getNorm());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
