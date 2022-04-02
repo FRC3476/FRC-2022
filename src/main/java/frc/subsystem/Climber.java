@@ -647,6 +647,7 @@ public final class Climber extends AbstractSubsystem {
      * Sets the climber in the correct state to initiate a climb and moves the elevator arm to the up above the high bar.
      */
     public synchronized void deployClimb() {
+        timesRun = 0;
         climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_DEPLOY_HEIGHT);
         setBrakeState(BrakeState.FREE);
         setClawState(ClawState.UNLATCHED);
@@ -710,13 +711,13 @@ public final class Climber extends AbstractSubsystem {
 
 
         if (!isPaused) {
-            if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
-                    && climberMotor.getSelectedSensorVelocity() < 0) {
-                stopClimb();
-            } else if (climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_ELEVATOR_HEIGHT
-                    && climberMotor.getSelectedSensorVelocity() > 0) {
-                stopClimb();
-            }
+//            if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
+//                    && climberMotor.getSelectedSensorVelocity() < 0) {
+//                stopClimb();
+//            } else if (climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_ELEVATOR_HEIGHT
+//                    && climberMotor.getSelectedSensorVelocity() > 0) {
+//                stopClimb();
+//            }
 
             if (currentClimbStep.waitCondition.apply(this)) {
                 currentClimbStep.endAction.accept(this);
