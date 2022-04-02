@@ -26,15 +26,18 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.MAX_SHOOT_SPEED;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
-    private static final @NotNull VisionManager instance = new VisionManager();
+    private static final ReentrantReadWriteLock VISION_MANGER_INSTANCE_LOCK = new ReentrantReadWriteLock();
+    private static VisionManager instance;
 
     private final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
     private final @NotNull Limelight limelight = Limelight.getInstance();
@@ -53,7 +56,21 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     public static @NotNull VisionManager getInstance() {
-        return instance;
+        VISION_MANGER_INSTANCE_LOCK.readLock().lock();
+        try {
+            if (instance != null) {
+                return instance;
+            }
+        } finally {
+            VISION_MANGER_INSTANCE_LOCK.readLock().unlock();
+        }
+
+        VISION_MANGER_INSTANCE_LOCK.writeLock().lock();
+        try {
+            return Objects.requireNonNullElseGet(instance, () -> instance = new VisionManager());
+        } finally {
+            VISION_MANGER_INSTANCE_LOCK.writeLock().unlock();
+        }
     }
 
     @Override
