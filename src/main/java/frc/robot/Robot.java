@@ -374,7 +374,6 @@ public class Robot extends TimedRobot {
         climber.configBrake();
         enabled.setBoolean(true);
         drive.configBrake();
-        drive.resetAuto();
 
         networkAutoLock.lock();
         try {

@@ -33,6 +33,7 @@ import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -52,16 +53,21 @@ public final class Drive extends AbstractSubsystem {
     final @NotNull NetworkTableEntry turnMaxAcceleration = SmartDashboard.getEntry("TurnMaxAcceleration");
 
     public void resetAuto() {
-        ProfiledPIDController autoTurnPIDController
-                = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
-        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
-        autoTurnPIDController.setTolerance(Math.toRadians(10));
+        swerveAutoControllerLock.lock();
+        try {
+            ProfiledPIDController autoTurnPIDController
+                    = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
+            autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
+            autoTurnPIDController.setTolerance(Math.toRadians(10));
 
-        swerveAutoController = new HolonomicDriveController(
-                new PIDController(3, 0, 0),
-                new PIDController(3, 0, 0),
-                autoTurnPIDController);
-        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+            swerveAutoController = new HolonomicDriveController(
+                    new PIDController(3, 0, 0),
+                    new PIDController(3, 0, 0),
+                    autoTurnPIDController);
+            swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+        } finally {
+            swerveAutoControllerLock.unlock();
+        }
     }
 
     public enum DriveState {
@@ -518,7 +524,8 @@ public final class Drive extends AbstractSubsystem {
 
     double autoStartTime;
 
-    private @NotNull HolonomicDriveController swerveAutoController;
+    private final ReentrantLock swerveAutoControllerLock = new ReentrantLock();
+    private @Nullable HolonomicDriveController swerveAutoController;
 
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
@@ -557,6 +564,8 @@ public final class Drive extends AbstractSubsystem {
                 targetHeading = VisionManager.getInstance().getAngleToTarget();
             }
 
+            if (swerveAutoController == null) resetAuto();
+            if (swerveAutoController == null) return;
             ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
                     RobotTracker.getInstance().getLastEstimatedPoseMeters(),
                     goal,
