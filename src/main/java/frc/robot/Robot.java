@@ -651,7 +651,6 @@ public class Robot extends TimedRobot {
 
         if (buttonPanel.getRisingEdge(11)) {
             climber.stopClimb();
-            climber.stopClimb();
         }
 
 
