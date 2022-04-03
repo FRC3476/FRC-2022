@@ -627,7 +627,8 @@ public final class Shooter extends AbstractSubsystem {
                 if (
                         ((feederWheelState == FeederWheelState.FORWARD)
                                 && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
-                                && (Timer.getFPGATimestamp() > SECOND_BALL_SHOOT_DELAY + lastShotTime)
+                                && (Timer.getFPGATimestamp() > (VisionManager.getInstance().getDistanceToTarget() < 80 ?
+                                0.5 : SECOND_BALL_SHOOT_DELAY) + lastShotTime)
                                 || feederChecksDisabled))
                 ) {
                     feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
