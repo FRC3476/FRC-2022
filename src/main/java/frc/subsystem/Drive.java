@@ -554,6 +554,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
+    double nextAllowedPrintError = 0;
     private void updateRamsete() {
         currentAutoTrajectoryLock.lock();
         try {
@@ -566,15 +567,21 @@ public final class Drive extends AbstractSubsystem {
 
             if (swerveAutoController == null) resetAuto();
             if (swerveAutoController == null) return;
-            ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
-                    RobotTracker.getInstance().getLastEstimatedPoseMeters(),
-                    goal,
-                    targetHeading);
-
-            swerveDrive(adjustedSpeeds);
-            if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
-                setDriveState(DriveState.DONE);
-                stopMovement();
+            try {
+                ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
+                        RobotTracker.getInstance().getLastEstimatedPoseMeters(),
+                        goal,
+                        targetHeading);
+                swerveDrive(adjustedSpeeds);
+                if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
+                    setDriveState(DriveState.DONE);
+                    stopMovement();
+                }
+            } catch (NullPointerException exception) {
+                if (Timer.getFPGATimestamp() > nextAllowedPrintError) {
+                    exception.printStackTrace();
+                    nextAllowedPrintError = Timer.getFPGATimestamp() + 2;
+                }
             }
         } finally {
             currentAutoTrajectoryLock.unlock();
