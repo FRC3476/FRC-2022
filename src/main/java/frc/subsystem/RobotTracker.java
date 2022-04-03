@@ -29,8 +29,6 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private static @NotNull RobotTracker instance = new RobotTracker();
 
-    private final Drive drive = Drive.getInstance();
-
     public static @NotNull RobotTracker getInstance() {
         return RobotTracker.instance;
     }
@@ -142,6 +140,7 @@ public final class RobotTracker extends AbstractSubsystem {
      */
     @Override
     public void update() {
+        final Drive drive = Drive.getInstance();
         double time = WPIUtilJNI.now() * 1.0e-6; // seconds
 
         Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
@@ -364,6 +363,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
 
     public void resetPosition(@NotNull Pose2d pose, @NotNull Rotation2d gyroAngle) {
+        final Drive drive = Drive.getInstance();
         lock.writeLock().lock();
         try {
 
@@ -372,7 +372,7 @@ public final class RobotTracker extends AbstractSubsystem {
             latestEstimatedPose = pose;
 
             latestChassisSpeeds = getRotatedSpeeds(
-                    drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
+                    Drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
                     latestEstimatedPose.getRotation());
 
             latencyCompensatedChassisSpeeds = latestChassisSpeeds;

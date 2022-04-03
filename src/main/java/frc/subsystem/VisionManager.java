@@ -39,11 +39,7 @@ public final class VisionManager extends AbstractSubsystem {
     private static final ReentrantReadWriteLock VISION_MANGER_INSTANCE_LOCK = new ReentrantReadWriteLock();
     private static VisionManager instance;
 
-    private final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
     private final @NotNull Limelight limelight = Limelight.getInstance();
-    private final @NotNull Drive drive = Drive.getInstance();
-    private final @NotNull Shooter shooter = Shooter.getInstance();
-    private final @NotNull BlinkinLED blinkinLED = BlinkinLED.getInstance();
 
     public final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
 
@@ -80,6 +76,10 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Override
     public void logData() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
+        final @NotNull Drive drive = Drive.getInstance();
+        final @NotNull Shooter shooter = Shooter.getInstance();
+
         logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
         logData("Rotation Target", getAngleToTarget().getDegrees());
 
@@ -137,13 +137,13 @@ public final class VisionManager extends AbstractSubsystem {
 
 
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
+        final @NotNull Drive drive = Drive.getInstance();
+        final @NotNull Shooter shooter = Shooter.getInstance();
 
         double timeFromLastShoot = Timer.getFPGATimestamp() - shooter.getLastShotTime();
         double shooterLookAheadTime = 0.15 - timeFromLastShoot;
-        boolean justShot = false;
         if (shooterLookAheadTime < 0) {
             shooterLookAheadTime = 0.15;
-            justShot = true;
         }
 
         double turnDelay = 0.0;
@@ -169,6 +169,8 @@ public final class VisionManager extends AbstractSubsystem {
 
 
     public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
+        final @NotNull Drive drive = Drive.getInstance();
+
         Optional<Translation2d> visionTranslation = getVisionTranslation();
         Translation2d relativeGoalPos;
         if (visionTranslation.isPresent()) {
@@ -182,6 +184,10 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
+        final @NotNull Drive drive = Drive.getInstance();
+        final @NotNull Shooter shooter = Shooter.getInstance();
+
         //@formatter:off
         if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians())
                     < getAllowedTurnError(aimToPosition.getNorm())
@@ -230,6 +236,8 @@ public final class VisionManager extends AbstractSubsystem {
      * @param distanceToTarget the distance to the target (in meters)
      */
     public void updateShooterState(double distanceToTarget) {
+        final @NotNull Shooter shooter = Shooter.getInstance();
+
         logData("Shooter Distance to Target", Units.metersToInches(distanceToTarget));
         shooter.set(visionLookUpTable.getShooterPreset(Units.metersToInches(distanceToTarget)));
     }
@@ -239,8 +247,11 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     public Translation2d getRobotVel() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
+        final @NotNull Drive drive = Drive.getInstance();
+
         Rotation2d rotation2d = robotTracker.getGyroAngle();
-        ChassisSpeeds chassisSpeeds = drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates());
+        ChassisSpeeds chassisSpeeds = Drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates());
         return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond).rotateBy(rotation2d);
     }
 
@@ -270,6 +281,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return current relative translation of the robot based on the robot tracker
      */
     private Translation2d getRelativeGoalTranslation() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         return robotTracker.getLatencyCompedPoseMeters().getTranslation()
                 .plus(robotPositionOffset)
                 .minus(Constants.GOAL_POSITION);
@@ -281,6 +293,7 @@ public final class VisionManager extends AbstractSubsystem {
      * You need to call {@link #forceVisionOn(Object)} before calling this method.
      */
     public void forceUpdatePose() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         Optional<Translation2d> visionTranslation = getVisionTranslation();
         visionTranslation.ifPresent(
                 translation2d -> {
@@ -332,6 +345,7 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Contract(pure = true)
     public @NotNull Rotation2d getLatencyCompedLimelightRotation() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         return robotTracker.getGyroRotation(getLimelightTime());
     }
 
@@ -387,6 +401,9 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Override
     public void update() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
+        final @NotNull BlinkinLED blinkinLED = BlinkinLED.getInstance();
+
         robotPositionOffset = new Translation2d();
         Translation2d relativeGoalPos = getRelativeGoalTranslation();
 
@@ -451,6 +468,9 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @SuppressWarnings({"unused", "BusyWait"})
     public void shootBalls(double numBalls) throws InterruptedException {
+        final @NotNull Drive drive = Drive.getInstance();
+        final @NotNull Shooter shooter = Shooter.getInstance();
+
         forceVisionOn(this);
         if (drive.driveState == DriveState.RAMSETE) {
             drive.setAutoAiming(true);
@@ -573,6 +593,7 @@ public final class VisionManager extends AbstractSubsystem {
 
 
     private Translation2d getAccel() {
+        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         return robotTracker.getAcceleration();
     }
 }

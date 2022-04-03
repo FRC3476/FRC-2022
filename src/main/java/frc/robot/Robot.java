@@ -174,17 +174,6 @@ public class Robot extends TimedRobot {
 
     public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
-    //Subsystems
-    private final RobotTracker robotTracker = RobotTracker.getInstance();
-    private final Drive drive = Drive.getInstance();
-    private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
-    private final Limelight limelight = Limelight.getInstance();
-    private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
-    private final Hopper hopper = Hopper.getInstance();
-    private final Intake intake = Intake.getInstance();
-    private final Shooter shooter = Shooter.getInstance();
-    private final Climber climber = Climber.getInstance();
-
     //Inputs
     private final static Controller xbox = new Controller(0);
     private final static Controller stick = new Controller(1);
@@ -254,6 +243,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+        final RobotTracker robotTracker = RobotTracker.getInstance();
+        final Limelight limelight = Limelight.getInstance();
+        final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
+
 
         if (autoPath.getString(null) != null) {
             autoPathListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
@@ -370,6 +363,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        final Drive drive = Drive.getInstance();
+        final Climber climber = Climber.getInstance();
+
         startSubsystems();
         climber.configBrake();
         enabled.setBoolean(true);
@@ -500,6 +496,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
+        final Drive drive = Drive.getInstance();
+        final Hopper hopper = Hopper.getInstance();
+        final Climber climber = Climber.getInstance();
+
         startSubsystems();
         climber.configBrake();
         enabled.setBoolean(true);
@@ -520,6 +520,13 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
+        final RobotTracker robotTracker = RobotTracker.getInstance();
+        final Drive drive = Drive.getInstance();
+        final Hopper hopper = Hopper.getInstance();
+        final Intake intake = Intake.getInstance();
+        final Shooter shooter = Shooter.getInstance();
+        final Climber climber = Climber.getInstance();
+
         VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
         stick.update();
@@ -689,9 +696,9 @@ public class Robot extends TimedRobot {
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
     private void doNormalDriving() {
+        final Drive drive = Drive.getInstance();
+
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
-
-
         if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {
@@ -734,7 +741,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         killAuto();
-        drive.configCoast();
+        Drive.getInstance().configCoast();
         enabled.setBoolean(false);
     }
 
@@ -750,7 +757,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testInit() {
-        drive.configCoast();
+        Drive.getInstance().configCoast();
     }
 
     /**
@@ -761,6 +768,12 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
+
+        final Drive drive = Drive.getInstance();
+        final Hopper hopper = Hopper.getInstance();
+        final Intake intake = Intake.getInstance();
+        final Shooter shooter = Shooter.getInstance();
+        final Climber climber = Climber.getInstance();
 
         // Climber Test Controls
         if (stick.getRisingEdge(9)) {
@@ -829,18 +842,20 @@ public class Robot extends TimedRobot {
 
     private void startSubsystems() {
         System.out.println("Starting Subsystems");
-        robotTracker.start();
-        drive.start();
-        intake.start();
-        hopper.start();
-        shooter.start();
-        climber.start();
+        RobotTracker.getInstance().start();
+        Drive.getInstance().start();
+        Intake.getInstance().start();
+        Hopper.getInstance().start();
+        Shooter.getInstance().start();
+        Climber.getInstance().start();
         VisionManager.getInstance().start();
         DashboardHandler.getInstance().start();
     }
 
     public void killAuto() {
         System.out.println("Killing Auto");
+        final Drive drive = Drive.getInstance();
+
         if (selectedAuto != null) {
             assert autoThread != null;
             System.out.println("2");
