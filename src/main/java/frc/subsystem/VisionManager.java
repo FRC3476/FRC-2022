@@ -567,7 +567,7 @@ public final class VisionManager extends AbstractSubsystem {
         double distance = Units.metersToInches(translation2d.getNorm());
 
         double timeOfFlightFrames;
-        if (distance < 120) {
+        if (distance < 113) {
             timeOfFlightFrames = ((0.02 / 30) * (distance - 113)) + (22.0 / 30);
         } else {
             timeOfFlightFrames = ((0.071 / 30) * (distance - 113)) + (22.0 / 30);
