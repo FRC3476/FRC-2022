@@ -340,7 +340,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return The allowed turn error in radians
      */
     private double getAllowedTurnError(double distance) {
-        return Math.tan((Constants.GOAL_RADIUS * 0.6) / distance);
+        return Math.tan((Constants.GOAL_RADIUS * 0.5) / distance);
     }
 
     @Contract(pure = true)
