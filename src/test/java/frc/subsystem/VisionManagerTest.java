@@ -13,7 +13,7 @@ class VisionManagerTest {
     void getVelocityAdjustedRelativeTranslation() {
 
         Random random = new Random(719479);
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000000; i++) {
             Translation2d goalPos = new Translation2d((random.nextDouble() * 20) - 10, (random.nextDouble() * 20) - 10);
             Translation2d robotVelocity = new Translation2d((random.nextDouble() * 10) - 5, (random.nextDouble() * 10) - 5);
             Translation2d fakeGoal = VisionManager.getInstance().getVelocityAdjustedRelativeTranslation(goalPos, robotVelocity);

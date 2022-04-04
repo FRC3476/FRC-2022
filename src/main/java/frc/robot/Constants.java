@@ -42,7 +42,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(1.5, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(2, 2); //TODO: CHANGE
     // This is in inches
     public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
@@ -164,9 +164,9 @@ public final class Constants {
 
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = 8.0;
-    public static final double DEFAULT_TURN_I = 0.0;
-    public static final double DEFAULT_TURN_D = 0.0;
+    public static final double DEFAULT_TURN_P = 12.0;
+    public static final double DEFAULT_TURN_I = 15.0;
+    public static final double DEFAULT_TURN_D = 0.4;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
@@ -207,7 +207,7 @@ public final class Constants {
      */
     public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(MAX_SHOOT_SPEED, 2);
 
-   /**
+    /**
      * This GOAL RADIUS is used to calculate the turn error
      */
     public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
@@ -228,11 +228,38 @@ public final class Constants {
 
 
     //Hopper Constants
-    public static final int HOPPER_PERIOD = 200;
-    public static final double HOPPER_SPEED = 1;
+    public static final int HOPPER_PERIOD = 10;
+    public static final double HOPPER_SPEED = 1.0;
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
+    public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
+    // Outtake Constants
+    public static final int OUTTAKE_CAN_ID = 60;
+    public static final double OUTTAKE_REDUCTION = (3.0 / 1.0);
+    public static final int OUTTAKE_CURRENT_LIMIT = 20;
+    public static final int OUTTAKE_MEASUREMENT_PERIOD_MS = 200;
+    public static final double OUTTAKE_VERTICAL_OFFSET_THRESHOLD = 0;
+
+    /**
+     * Outtake's speed when automatically ejecting balls
+     */
+    public static final double OUTTAKE_AUTO_EJECTION_SPEED = .5;
+
+    /**
+     * Outtake's speed when manually ejecting balls
+     */
+    public static final double OUTTAKE_MANUAL_EJECTION_SPEED = 1;
+
+    /**
+     * Outtake's speed when intaking balls
+     */
+    public static final double OUTTAKE_SPEED = -.5;
+
+    /**
+     * Outtake will run for this time (Sec) after color sensor trigger
+     */
+    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000d;
 
     // Shooter Constants
 
@@ -261,6 +288,9 @@ public final class Constants {
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
     public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 150;
+
+    public static final int SHOOTER_EJECT_SPEED = 750;
+    public static final double HOOD_EJECT_ANGLE = 53;
 
     /**
      * Conversion from Falcon Sensor Units / 100ms to RPM 2048 is Sensor Units Per Revolution 600 Converts From Time of 100ms to 1
@@ -478,7 +508,7 @@ public final class Constants {
     /**
      * Length to grab on high and traversal bars
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 4.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
@@ -492,9 +522,19 @@ public final class Constants {
     public static final int INTAKE_PERIOD = 50;
     public static final int INTAKE_SOLENOID_CHANNEL = 3;
     public static final int INTAKE_MOTOR_DEVICE_ID = 40;
-    public static final double INTAKE_MOTOR_SPEED = -1;
     public static final double INTAKE_OPEN_TIME = 0.0;
 
+    /**
+     * Intake Speed when intaking balls
+     */
+    public static final double INTAKE_SPEED = -1;
+
+    /**
+     * Intake speed when ejecting balls
+     */
+    public static final double INTAKE_EJECTION_SPEED = -.5;
+
     public static final int WEB_DASHBOARD_PORT = 5802;
+
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
 }

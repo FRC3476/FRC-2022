@@ -3,19 +3,15 @@ package frc.subsystem;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
-import frc.utility.Serializer;
 import frc.utility.Timer;
 import frc.utility.net.DashboardConnection;
 import frc.utility.net.PacketHandler;
-import frc.utility.net.SendableLog;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -69,13 +65,14 @@ public final class DashboardHandler extends AbstractSubsystem {
 
     private DashboardHandler(int period) {
         super(period);
+        receivingSocket = null; //Disables networking code
 
-        try {
-            receivingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
-            receivingSocket.setSoTimeout(5);
-        } catch (SocketException e) {
-            DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
-        }
+//        try {
+//            receivingSocket = new DatagramSocket(WEB_DASHBOARD_PORT);
+//            receivingSocket.setSoTimeout(5);
+//        } catch (SocketException e) {
+//            DriverStation.reportError("Could not create socket for listening for data from web dashboard", false);
+//        }
     }
 
     public void log(@NotNull String key, @NotNull Object value) {
@@ -99,73 +96,66 @@ public final class DashboardHandler extends AbstractSubsystem {
     }
 
     public void pushLog() {
+        String json;
+        LOG_DATA_MAP_LOCK.writeLock().lock(); // Ensure that no other writes happen while we're serializing
         try {
-            String json;
-            LOG_DATA_MAP_LOCK.writeLock().lock(); // Ensure that no other writes happen while we're serializing
-            try {
-                SendableLog log = new SendableLog(LOG_DATA_MAP);
-                json = 'd' + Serializer.serializeToString(log);
+            //SendableLog log = new SendableLog(LOG_DATA_MAP);
+            //json = 'd' + Serializer.serializeToString(log);
 
-                for (Map.Entry<String, Object> entry : LOG_DATA_MAP_OBJECTS.entrySet()) {
-                    //@formatter:off
-                    String key = entry.getKey();
-                    Class<?> cl = entry.getValue().getClass();
-                    Object value = entry.getValue();
-                    if (cl.equals(Integer.class)) SmartDashboard.putNumber(key, (int) value);
-                    else if (cl.equals(Double.class)) SmartDashboard.putNumber(key, (double) value);
-                    else if (cl.equals(Short.class)) SmartDashboard.putNumber(key, (short) value);
-                    else if (cl.equals(Long.class)) SmartDashboard.putNumber(key, (long) value);
-                    else if (cl.equals(Float.class)) SmartDashboard.putNumber(key, (float) value);
-                    else if (cl.equals(Byte.class)) SmartDashboard.putNumber(key, (byte) value);
-                    else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(key, (boolean) value);
-                    else if (cl.equals(String.class)) SmartDashboard.putString(key, (String) value);
-                    else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(key, (Double[]) value);
-                    else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(key, (Boolean[]) value);
-                    else if (cl.equals(String[].class)) SmartDashboard.putStringArray(key, (String[]) value);
-                    else SmartDashboard.putString(key, value.toString());
-                    //@formatter:on
-                }
-            } finally {
-                LOG_DATA_MAP_LOCK.writeLock().unlock();
+            for (Map.Entry<String, Object> entry : LOG_DATA_MAP_OBJECTS.entrySet()) {
+                //@formatter:off
+                String key = entry.getKey();
+                Class<?> cl = entry.getValue().getClass();
+                Object value = entry.getValue();
+                if (cl.equals(Integer.class)) SmartDashboard.putNumber(key, (int) value);
+                else if (cl.equals(Double.class)) SmartDashboard.putNumber(key, (double) value);
+                else if (cl.equals(Short.class)) SmartDashboard.putNumber(key, (short) value);
+                else if (cl.equals(Long.class)) SmartDashboard.putNumber(key, (long) value);
+                else if (cl.equals(Float.class)) SmartDashboard.putNumber(key, (float) value);
+                else if (cl.equals(Byte.class)) SmartDashboard.putNumber(key, (byte) value);
+                else if (cl.equals(Boolean.class)) SmartDashboard.putBoolean(key, (boolean) value);
+                else if (cl.equals(String.class)) SmartDashboard.putString(key, (String) value);
+                else if (cl.equals(Double[].class)) SmartDashboard.putNumberArray(key, (Double[]) value);
+                else if (cl.equals(Boolean[].class)) SmartDashboard.putBooleanArray(key, (Boolean[]) value);
+                else if (cl.equals(String[].class)) SmartDashboard.putStringArray(key, (String[]) value);
+                else SmartDashboard.putString(key, value.toString());
+                //@formatter:on
             }
-
-            synchronized (dashboardConnections) {
-                Iterator<DashboardConnection> iterator = dashboardConnections.values().iterator();
-                while (iterator.hasNext()) {
-                    DashboardConnection entry = iterator.next();
-                    if (Timer.getFPGATimestamp() > entry.timeoutTime) {
-                        // If we haven't received a keepalive in a while, remove the connection
-                        entry.close();
-                        iterator.remove();
-                        System.out.println("closing packet: " + entry.datagramSocket.getInetAddress() + " timed out");
-                    } else {
-                        byte[] bytes = json.getBytes(StandardCharsets.ISO_8859_1);
-                        try {
-                            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
-
-                            entry.datagramSocket.send(packet);
-                            System.out.println(
-                                    "sending packet of " + packet.getLength() + " length to " + entry.datagramSocket.getInetAddress());
-                        } catch (PortUnreachableException e) {
-                            System.out.println("closing packet: " + entry.datagramSocket.getInetAddress() + " got an error");
-                            entry.close();
-                            iterator.remove(); // Remove the connection if it's unreachable
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            if (Timer.getFPGATimestamp() > nextAllowedErrorTime) { // Don't spam the driver station
-                DriverStation.reportError("Could not send data to web dashboard", false);
-                nextAllowedErrorTime = Timer.getFPGATimestamp() + 5;
-            }
+        } finally {
+            LOG_DATA_MAP_LOCK.writeLock().unlock();
         }
+
+//            synchronized (dashboardConnections) {
+//                Iterator<DashboardConnection> iterator = dashboardConnections.values().iterator();
+//                while (iterator.hasNext()) {
+//                    DashboardConnection entry = iterator.next();
+//                    if (Timer.getFPGATimestamp() > entry.timeoutTime) {
+//                        // If we haven't received a keepalive in a while, remove the connection
+//                        entry.close();
+//                        iterator.remove();
+//                        System.out.println("closing packet: " + entry.datagramSocket.getInetAddress() + " timed out");
+//                    } else {
+//                        byte[] bytes = json.getBytes(StandardCharsets.ISO_8859_1);
+//                        try {
+//                            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+//
+//                            entry.datagramSocket.send(packet);
+//                            System.out.println(
+//                                    "sending packet of " + packet.getLength() + " length to " + entry.datagramSocket.getInetAddress());
+//                        } catch (PortUnreachableException e) {
+//                            System.out.println("closing packet: " + entry.datagramSocket.getInetAddress() + " got an error");
+//                            entry.close();
+//                            iterator.remove(); // Remove the connection if it's unreachable
+//                        }
+//                    }
+//                }
+//            }
     }
 
     byte[] receivedBytes = new byte[65535];
 
     private void handleDashboardPackets() {
-        if (receivingSocket == null) return;
+        if (receivingSocket == null || true) return;
 
         for (int i = 0; i < 100; i++) { // Receive up to 100 packets at a time
             try {

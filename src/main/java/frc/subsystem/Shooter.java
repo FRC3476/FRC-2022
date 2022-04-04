@@ -12,7 +12,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -26,6 +25,8 @@ import frc.utility.controllers.LazyTalonFX;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
 
+import static frc.robot.Constants.*;
+
 /**
  * Shooter class controls the shooter flywheel, feeder wheel, and variable hood Has motor control wrappers for setting velocity
  * and position for respective parts.
@@ -36,9 +37,6 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public final class Shooter extends AbstractSubsystem {
-
-    // PID TUNING
-    final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
 
     final @NotNull NetworkTableEntry shooterP = SmartDashboard.getEntry("ShooterPIDP");
     final @NotNull NetworkTableEntry shooterI = SmartDashboard.getEntry("ShooterPIDI");
@@ -55,7 +53,6 @@ public final class Shooter extends AbstractSubsystem {
 
     // Feeder
     private final LazyTalonFX feederWheel;
-    private double forceFeederOnTime;
 
     // Hood
     private final LazyCANSparkMax hoodMotor;
@@ -84,8 +81,7 @@ public final class Shooter extends AbstractSubsystem {
     public boolean isFiring() {
         return shooterState == ShooterState.ON &&
                 ((feederWheelState == FeederWheelState.FORWARD)
-                        && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed()) || feederChecksDisabled)
-                        || Timer.getFPGATimestamp() < forceFeederOnTime);
+                        && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed()) || feederChecksDisabled));
     }
 
     // Declarations of Modes and States
@@ -556,31 +552,6 @@ public final class Shooter extends AbstractSubsystem {
         feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
     }
 
-    private double feederLockPosition = 0;
-
-    public void lockFeederWheel() {
-
-        // Initializes feederLockPosition if it has not been set before
-        if (feederLockPosition == 0) {
-            feederLockPosition = feederWheel.getSelectedSensorPosition();
-        }
-
-//        // Will lock feeder to position when locking starts
-//        if (Math.abs(feederWheel.getSelectedSensorVelocity() * Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM) <
-//                Constants.FEEDER_WHEEL_LOCK_SPEED_RPM) {
-//            feederWheel.set(ControlMode.Position, feederLockPosition);
-//        } else {
-//            // Resets the lockPosition when not locking
-//            feederLockPosition = feederWheel.getSelectedSensorPosition();
-//            feederWheel.set(ControlMode.PercentOutput, 0);
-//        }
-
-        feederWheel.set(ControlMode.Position, feederLockPosition);
-        logData("Feeder Lock Pos ", feederLockPosition);
-        logData("Feeder lock pos time ", Timer.getFPGATimestamp());
-        //feederWheel.set(ControlMode.PercentOutput, 0);
-    }
-
     public void setHoodZero() {
         System.out.println(" Setting Zero " + hoodAbsoluteEncoder.configGetMagnetOffset() + " -> 90");
         hoodAbsoluteEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
@@ -588,8 +559,11 @@ public final class Shooter extends AbstractSubsystem {
                 -(-hoodAbsoluteEncoder.getAbsolutePosition() - hoodAbsoluteEncoder.configGetMagnetOffset()) - 90);
     }
 
-    private double nextAllowedShootTime = 0;
-    private double rumbleTime = 0;
+    public double getLastShotTime() {
+        return lastShotTime;
+    }
+
+    private volatile double lastShotTime = 0;
 
     /**
      * Update Method for Shooter.
@@ -623,7 +597,6 @@ public final class Shooter extends AbstractSubsystem {
 
                 if (feederWheelState == FeederWheelState.REVERSE) {
                     feederWheel.set(ControlMode.PercentOutput, -Constants.FEEDER_WHEEL_SPEED);
-                    feederLockPosition = feederWheel.getSelectedSensorPosition();
                 } else {
                     if (runFeederWheelReversed) {
                         feederWheel.set(ControlMode.PercentOutput, -0.3);
@@ -637,6 +610,7 @@ public final class Shooter extends AbstractSubsystem {
                 break;
 
             case ON:
+
                 shooterWheelMaster.set(ControlMode.Velocity,
                         desiredShooterSpeed * Constants.SET_SHOOTER_SPEED_CONVERSION_FACTOR); // Sets shooter motor to desired shooter
 
@@ -644,26 +618,25 @@ public final class Shooter extends AbstractSubsystem {
                     moveHoodMotor(); // Sets Motor to travel to desired hood angle
                 }
 
-                if (nextAllowedShootTime > Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY + 0.2) {
+                if (lastShotTime > Timer.getFPGATimestamp()) {
                     //Check to make sure we don't accidentally do anything dumb and prevent us from shooting. It checks if the
                     //nextAllowedShootTime is greater than the current time plus the delay time which should never happen
-                    nextAllowedShootTime = Timer.getFPGATimestamp();
+                    lastShotTime = Timer.getFPGATimestamp();
                 }
 
-                if ((feederWheelState == FeederWheelState.FORWARD)
-                        && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
-                        && (Timer.getFPGATimestamp() > nextAllowedShootTime)
-                        || feederChecksDisabled)
+                if (
+                        ((feederWheelState == FeederWheelState.FORWARD)
+                                && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
+                                && (Timer.getFPGATimestamp() > (VisionManager.getInstance().getDistanceToTarget() < 80 ?
+                                0.5 : SECOND_BALL_SHOOT_DELAY) + lastShotTime)
+                                || feederChecksDisabled))
                 ) {
-                    feederWheel.set(ControlMode.PercentOutput, Constants.FEEDER_WHEEL_SPEED);
-                    feederLockPosition = feederWheel.getSelectedSensorPosition();
-                    forceFeederOnTime = Timer.getFPGATimestamp() + Constants.FEEDER_CHANGE_STATE_DELAY_SEC;
-                    nextAllowedShootTime = Timer.getFPGATimestamp() + Constants.SECOND_BALL_SHOOT_DELAY;
-                    rumbleTime = Timer.getFPGATimestamp() + Constants.RUMBLE_DELAY;
+                    feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
+                    lastShotTime = Timer.getFPGATimestamp();
                     Robot.setRumble(RumbleType.kLeftRumble, 0);
                 } else {
                     // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
-                    if (Timer.getFPGATimestamp() > forceFeederOnTime) {
+                    if (Timer.getFPGATimestamp() > lastShotTime + FEEDER_CHANGE_STATE_DELAY_SEC) {
                         if (runFeederWheelReversed) {
                             feederWheel.set(ControlMode.PercentOutput, -0.3);
                         } else {
@@ -671,8 +644,9 @@ public final class Shooter extends AbstractSubsystem {
                         }
                     }
 
-                    if (Timer.getFPGATimestamp() > rumbleTime && rumbleTime < Timer.getFPGATimestamp() + Constants.RUMBLE_TIME) {
-                        Robot.setRumble(RumbleType.kLeftRumble, 1);
+                    if (Timer.getFPGATimestamp() > lastShotTime + RUMBLE_DELAY
+                            && Timer.getFPGATimestamp() < lastShotTime + RUMBLE_DELAY + RUMBLE_TIME) {
+                        Robot.setRumble(RumbleType.kLeftRumble, 0.25);
                     } else {
                         Robot.setRumble(RumbleType.kLeftRumble, 0);
                     }

@@ -27,12 +27,14 @@ import frc.utility.Limelight.LedMode;
 import frc.utility.Limelight.StreamingMode;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
+import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.State;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -51,6 +53,8 @@ import java.util.function.Consumer;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
+
+    public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
@@ -122,6 +126,31 @@ public class Robot extends TimedRobot {
     @NotNull
     private BuddyAutoRight buddyAutoRight;
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HideCargoBlue hideCargoBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HideCargoRed hideCargoRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private BuddyAutoLeftHideBlue buddyAutoLeftHideBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private BuddyAutoLeftHideRed buddyAutoLeftHideRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HangerCargoBlue hangerCargoBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private HangerCargoRed hangerCargoRed;
+
+
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
     @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
@@ -133,27 +162,19 @@ public class Robot extends TimedRobot {
     @NotNull private static final String SHOOT_ONLY_RIGHT = "Shoot Only Right";
     @NotNull private static final String SHOOT_ONLY_MID = "Shoot Only Mid";
     @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
+    @NotNull private static final String HIDE_CARGO = "Hide Cargo";
+    @NotNull private static final String BUDDY_AUTO_LEFT_HIDE = "Buddy Auto Left Hide";
+    @NotNull private static final String HANGER_CARGO = "Hanger Cargo";
+
 
     private static final String RESET_POSE = "Reset Pose";
 
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
 
+    @NotNull public static final String RED = "RED";
+    @NotNull public static final String BLUE = "BLUE";
 
-    @NotNull private static final String RED = "RED";
-    @NotNull private static final String BLUE = "BLUE";
-
-    private final SendableChooser<String> sideChooser = new SendableChooser<>();
-
-    //Subsystems
-    private final RobotTracker robotTracker = RobotTracker.getInstance();
-    private final Drive drive = Drive.getInstance();
-    private final BlinkinLED blinkinLED = BlinkinLED.getInstance();
-    private final Limelight limelight = Limelight.getInstance();
-    private final Hopper hopper = Hopper.getInstance();
-    private final Intake intake = Intake.getInstance();
-    private final Shooter shooter = Shooter.getInstance();
-    private final Climber climber = Climber.getInstance();
-    private final VisionManager visionManager = VisionManager.getInstance();
+    public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
     //Inputs
     private final static Controller xbox = new Controller(0);
@@ -205,7 +226,7 @@ public class Robot extends TimedRobot {
                             ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
                                     ShooterConfig.class);
                             Collections.sort(shooterConfig.getShooterConfigs());
-                            visionManager.setShooterConfig(shooterConfig);
+                            VisionManager.getInstance().setShooterConfig(shooterConfig);
                             System.out.println(shooterConfig.getShooterConfigs());
                         } catch (IOException e) {
                             //Should never happen. The gui should never upload invalid data.
@@ -224,6 +245,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+        final RobotTracker robotTracker = RobotTracker.getInstance();
+        final Limelight limelight = Limelight.getInstance();
+        final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
+
 
         if (autoPath.getString(null) != null) {
             autoPathListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
@@ -251,6 +276,13 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> fiveBallRed = new FiveBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> sixBallRed = new SixBallRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideCargoBlue = new HideCargoBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hideCargoRed = new HideCargoRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> buddyAutoLeftHideBlue = new BuddyAutoLeftHideBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> buddyAutoLeftHideRed = new BuddyAutoLeftHideRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hangerCargoBlue = new HangerCargoBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> hangerCargoRed = new HangerCargoRed()).thenRun(this::incrementLoadedAutos);
+
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -263,6 +295,9 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(SHOOT_ONLY_LEFT, SHOOT_ONLY_LEFT);
         autoChooser.addOption(SHOOT_ONLY_MID, SHOOT_ONLY_MID);
         autoChooser.addOption(SHOOT_ONLY_RIGHT, SHOOT_ONLY_RIGHT);
+        autoChooser.addOption(HIDE_CARGO, HIDE_CARGO);
+        autoChooser.addOption(HANGER_CARGO, HANGER_CARGO);
+        autoChooser.addOption(BUDDY_AUTO_LEFT_HIDE, BUDDY_AUTO_LEFT_HIDE);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
@@ -270,7 +305,6 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", autoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);
 
-        startSubsystems();
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
@@ -284,7 +318,11 @@ public class Robot extends TimedRobot {
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
+        startSubsystems();
         limelight.setLedMode(LedMode.OFF);
+        intakeLimelight.setLedMode(LedMode.OFF);
+
+        limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -294,7 +332,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 10) {
+        if (loadedAutos.incrementAndGet() == 16) {
             loadingAutos = false;
         }
     }
@@ -308,17 +346,32 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        VisionManager visionManager = VisionManager.getInstance();
         SmartDashboard.putNumber("Match Timestamp", DriverStation.getMatchTime());
+        if (!DriverStation.isEnabled()) {
+            xbox.update();
+            stick.update();
+            buttonPanel.update();
+        }
+
+        if (stick.getRawButton(4)) {
+            visionManager.forceVisionOn(resettingPoseVisionOn);
+            visionManager.forceUpdatePose();
+        } else {
+            visionManager.unForceVisionOn(resettingPoseVisionOn);
+        }
     }
 
 
     @Override
     public void autonomousInit() {
+        final Drive drive = Drive.getInstance();
+        final Climber climber = Climber.getInstance();
+
         startSubsystems();
         climber.configBrake();
         enabled.setBoolean(true);
         drive.configBrake();
-        drive.resetAuto();
 
         networkAutoLock.lock();
         try {
@@ -357,6 +410,15 @@ public class Robot extends TimedRobot {
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
+                        case HIDE_CARGO:
+                            selectedAuto = hideCargoBlue;
+                            break;
+                        case BUDDY_AUTO_LEFT_HIDE:
+                            selectedAuto = buddyAutoLeftHideBlue;
+                            break;
+                        case HANGER_CARGO:
+                            selectedAuto = hangerCargoBlue;
+                            break;
                         default:
                             selectedAuto = shootAndMoveRight;
                             break;
@@ -393,6 +455,15 @@ public class Robot extends TimedRobot {
                         case BUDDY_AUTO_LEFT:
                             selectedAuto = buddyAutoLeft;
                             break;
+                        case HIDE_CARGO:
+                            selectedAuto = hideCargoRed;
+                            break;
+                        case BUDDY_AUTO_LEFT_HIDE:
+                            selectedAuto = buddyAutoLeftHideRed;
+                            break;
+                        case HANGER_CARGO:
+                            selectedAuto = hangerCargoRed;
+                            break;
                         default:
                             selectedAuto = shootAndMoveRight;
                             break;
@@ -427,6 +498,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
+        final Drive drive = Drive.getInstance();
+        final Hopper hopper = Hopper.getInstance();
+        final Climber climber = Climber.getInstance();
+
         startSubsystems();
         climber.configBrake();
         enabled.setBoolean(true);
@@ -434,6 +509,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
+        hopper.setEjectOverride(false);
         drive.configBrake();
     }
 
@@ -445,11 +521,26 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
+        final RobotTracker robotTracker = RobotTracker.getInstance();
+        final Drive drive = Drive.getInstance();
+        final Hopper hopper = Hopper.getInstance();
+        final Intake intake = Intake.getInstance();
+        final Shooter shooter = Shooter.getInstance();
+        final Climber climber = Climber.getInstance();
+
+        VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
         stick.update();
         buttonPanel.update();
 
-        if (xbox.getRawAxis(2) > 0.1) {
+        // Hood Eject
+        if (buttonPanel.getRawButton(6)) {
+            shooter.setFeederChecksDisabled(true);
+            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+            shooter.setFiring(true);
+        } else if (xbox.getRawAxis(2) > 0.1) {
+            shooter.setFeederChecksDisabled(false);
             if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
@@ -462,6 +553,7 @@ public class Robot extends TimedRobot {
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
+            shooter.setFeederChecksDisabled(false);
             shooter.setFiring(false);
             shooter.setSpeed(0);
             visionManager.unForceVisionOn(driverForcingVisionOn);
@@ -508,17 +600,15 @@ public class Robot extends TimedRobot {
             robotTracker.resetPosition(new Pose2d(robotTracker.getLastEstimatedPoseMeters().getTranslation(), new Rotation2d(0)));
         }
 
-        if (xbox.getRisingEdge(Controller.XboxButtons.START)) {
+        // Override outtake to always intake
+        if (buttonPanel.getRisingEdge(5)) {
+            hopper.toggleEjectOverride();
+        }
+
+        if (xbox.getRisingEdge(XboxButtons.LEFT_CLICK) || xbox.getRisingEdge(Controller.XboxButtons.START)) {
             useFieldRelative = !useFieldRelative;
             System.out.println("Field relative: " + useFieldRelative);
             SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
-        }
-
-        if (stick.getRawButton(4)) {
-            visionManager.forceVisionOn(resettingPoseVisionOn);
-            visionManager.forceUpdatePose();
-        } else {
-            visionManager.unForceVisionOn(resettingPoseVisionOn);
         }
 
 //        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
@@ -545,7 +635,7 @@ public class Robot extends TimedRobot {
             climber.setClimberMotor(0);
         }
 
-        if (buttonPanel.getRisingEdge(12)) {
+        if (buttonPanel.getRisingEdge(12) && buttonPanel.getRawButton(9)) {
             climber.forceAdvanceStep();
         }
 
@@ -590,6 +680,7 @@ public class Robot extends TimedRobot {
     }
 
     private void runShooter() {
+        VisionManager visionManager = VisionManager.getInstance();
         if (buttonPanel.getRisingEdge(1)) {
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
         } else if (buttonPanel.getRisingEdge(2)) {
@@ -600,15 +691,16 @@ public class Robot extends TimedRobot {
     }
 
     private boolean isTryingToRunShooterFromButtonPanel() {
-        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(3);
+        return buttonPanel.getRawButton(1) || buttonPanel.getRawButton(2) || buttonPanel.getRawButton(
+                3) || buttonPanel.getRawButton(6);
     }
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
     private void doNormalDriving() {
+        final Drive drive = Drive.getInstance();
+
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
-
-
         if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {
@@ -626,12 +718,22 @@ public class Robot extends TimedRobot {
     }
 
     private ControllerDriveInputs getControllerDriveInputs() {
-        if (xbox.getRawButton(Controller.XboxButtons.X)) {
-            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                    -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+        if (useFieldRelative) {
+            if (xbox.getRawButton(Controller.XboxButtons.X)) {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+            } else {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+            }
         } else {
-            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                    -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+            if (xbox.getRawButton(Controller.XboxButtons.X)) {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+            } else {
+                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+            }
         }
     }
 
@@ -641,7 +743,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         killAuto();
-        drive.configCoast();
+        Drive.getInstance().configCoast();
         enabled.setBoolean(false);
     }
 
@@ -657,7 +759,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testInit() {
-        drive.configCoast();
+        Drive.getInstance().configCoast();
     }
 
     /**
@@ -668,6 +770,12 @@ public class Robot extends TimedRobot {
         xbox.update();
         stick.update();
         buttonPanel.update();
+
+        final Drive drive = Drive.getInstance();
+        final Hopper hopper = Hopper.getInstance();
+        final Intake intake = Intake.getInstance();
+        final Shooter shooter = Shooter.getInstance();
+        final Climber climber = Climber.getInstance();
 
         // Climber Test Controls
         if (stick.getRisingEdge(9)) {
@@ -736,17 +844,20 @@ public class Robot extends TimedRobot {
 
     private void startSubsystems() {
         System.out.println("Starting Subsystems");
-        robotTracker.start();
-        drive.start();
-        intake.start();
-        hopper.start();
-        shooter.start();
-        climber.start();
-        visionManager.start();
+        RobotTracker.getInstance().start();
+        Drive.getInstance().start();
+        Intake.getInstance().start();
+        Hopper.getInstance().start();
+        Shooter.getInstance().start();
+        Climber.getInstance().start();
+        VisionManager.getInstance().start();
+        DashboardHandler.getInstance().start();
     }
 
     public void killAuto() {
         System.out.println("Killing Auto");
+        final Drive drive = Drive.getInstance();
+
         if (selectedAuto != null) {
             assert autoThread != null;
             System.out.println("2");
@@ -780,5 +891,6 @@ public class Robot extends TimedRobot {
     public void simulationInit() {
         ClassInformationSender.updateReflectionInformation(
                 new File(OsUtil.getUserConfigDirectory("AutoBuilder") + "/robotCodeData.json"));
+        VisionLookUpTable.getInstance().printShooterConfig();
     }
 }

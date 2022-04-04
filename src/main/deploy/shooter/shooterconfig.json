@@ -1,28 +1,32 @@
 {
   "shooterConfigs" : [ {
-    "hoodEjectAngle" : 68.0,
-    "flywheelSpeed" : 1700.0,
-    "distance" : 40.0
+    "hoodEjectAngle" : 70.0,
+    "flywheelSpeed" : 1800.0,
+    "distance" : 45.0
   }, {
     "hoodEjectAngle" : 62.0,
     "flywheelSpeed" : 1700.0,
-    "distance" : 60.0
+    "distance" : 62.0
   }, {
     "hoodEjectAngle" : 56.0,
     "flywheelSpeed" : 1700.0,
-    "distance" : 82.0
+    "distance" : 81.0
   }, {
     "hoodEjectAngle" : 56.0,
-    "flywheelSpeed" : 1800.0,
-    "distance" : 106.0
+    "flywheelSpeed" : 1900.0,
+    "distance" : 101.0
   }, {
     "hoodEjectAngle" : 53.0,
-    "flywheelSpeed" : 1800.0,
-    "distance" : 115.0
+    "flywheelSpeed" : 1900.0,
+    "distance" : 109.0
   }, {
     "hoodEjectAngle" : 51.0,
     "flywheelSpeed" : 1900.0,
-    "distance" : 120.0
+    "distance" : 113.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 1900.0,
+    "distance" : 124.0
   }, {
     "hoodEjectAngle" : 51.0,
     "flywheelSpeed" : 2000.0,
@@ -34,38 +38,38 @@
   }, {
     "hoodEjectAngle" : 51.0,
     "flywheelSpeed" : 2200.0,
-    "distance" : 157.0
-  }, {
-    "hoodEjectAngle" : 51.0,
-    "flywheelSpeed" : 2200.0,
-    "distance" : 175.0
+    "distance" : 160.0
   }, {
     "hoodEjectAngle" : 51.0,
     "flywheelSpeed" : 2300.0,
-    "distance" : 190.0
+    "distance" : 173.0
   }, {
     "hoodEjectAngle" : 51.0,
     "flywheelSpeed" : 2400.0,
-    "distance" : 200.0
+    "distance" : 181.0
   }, {
     "hoodEjectAngle" : 51.0,
-    "flywheelSpeed" : 2500.0,
-    "distance" : 210.0
+    "flywheelSpeed" : 2400.0,
+    "distance" : 190.0
   }, {
     "hoodEjectAngle" : 51.0,
-    "flywheelSpeed" : 2600.0,
-    "distance" : 225.0
+    "flywheelSpeed" : 2450.0,
+    "distance" : 202.0
+  }, {
+    "hoodEjectAngle" : 51.0,
+    "flywheelSpeed" : 2550.0,
+    "distance" : 224.0
   }, {
     "hoodEjectAngle" : 51.0,
     "flywheelSpeed" : 2700.0,
-    "distance" : 250.0
+    "distance" : 241.0
   }, {
     "hoodEjectAngle" : 51.0,
-    "flywheelSpeed" : 2800.0,
-    "distance" : 270.0
+    "flywheelSpeed" : 3000.0,
+    "distance" : 265.0
   }, {
     "hoodEjectAngle" : 51.0,
-    "flywheelSpeed" : 2900.0,
-    "distance" : 299.0
+    "flywheelSpeed" : 3200.0,
+    "distance" : 300.0
   } ]
 }

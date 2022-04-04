@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.subsystem.Hopper.OuttakeState;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
@@ -50,6 +51,7 @@ public final class Intake extends AbstractSubsystem {
         SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotor.get());
         SmartDashboard.putNumber("Intake Current", intakeMotor.getOutputCurrent());
         SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
+        logData("Wanted Intake State", wantedIntakeState);
     }
 
 
@@ -90,7 +92,7 @@ public final class Intake extends AbstractSubsystem {
         INTAKE, EJECT, OFF
     }
 
-    IntakeState wantedIntakeState = IntakeState.OFF;
+    private IntakeState wantedIntakeState = IntakeState.OFF;
 
     public synchronized void setWantedIntakeState(IntakeState intakeState) {
         wantedIntakeState = intakeState;
@@ -99,11 +101,15 @@ public final class Intake extends AbstractSubsystem {
     private void setIntakeState(IntakeState intakeState) {
         switch (intakeState) {
             case INTAKE:
-                intakeMotor.set(Constants.INTAKE_MOTOR_SPEED);
+                if (Hopper.getInstance().getOuttakeState() == OuttakeState.AUTO_EJECT) {
+                    intakeMotor.set(Constants.INTAKE_EJECTION_SPEED);
+                } else {
+                    intakeMotor.set(Constants.INTAKE_SPEED);
+                }
                 break;
 
             case EJECT:
-                intakeMotor.set(-Constants.INTAKE_MOTOR_SPEED);
+                intakeMotor.set(-Constants.INTAKE_SPEED);
                 break;
 
             case OFF:

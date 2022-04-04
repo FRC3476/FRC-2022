@@ -34,6 +34,7 @@ import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -53,16 +54,21 @@ public final class Drive extends AbstractSubsystem {
     final @NotNull NetworkTableEntry turnMaxAcceleration = SmartDashboard.getEntry("TurnMaxAcceleration");
 
     public void resetAuto() {
-        ProfiledPIDController autoTurnPIDController
-                = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
-        autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
-        autoTurnPIDController.setTolerance(Math.toRadians(10));
-        
-        swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
-        swerveAutoController = new HolonomicDriveController(
-                new PIDController(3, 0, 0),
-                new PIDController(3, 0, 0),
-                autoTurnPIDController);
+        swerveAutoControllerLock.lock();
+        try {
+            ProfiledPIDController autoTurnPIDController
+                    = new ProfiledPIDController(8, 0, 0.01, new TrapezoidProfile.Constraints(4, 4));
+            autoTurnPIDController.enableContinuousInput(-Math.PI, Math.PI);
+            autoTurnPIDController.setTolerance(Math.toRadians(10));
+
+            swerveAutoController = new HolonomicDriveController(
+                    new PIDController(3, 0, 0),
+                    new PIDController(3, 0, 0),
+                    autoTurnPIDController);
+            swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
+        } finally {
+            swerveAutoControllerLock.unlock();
+        }
     }
 
     public enum DriveState {
@@ -77,11 +83,10 @@ public final class Drive extends AbstractSubsystem {
         return INSTANCE;
     }
 
-    private final @NotNull ProfiledPIDController turnPID;
+    private final @NotNull PIDController turnPID;
 
     {
-        turnPID = new ProfiledPIDController(DEFAULT_TURN_P, DEFAULT_TURN_I, DEFAULT_TURN_D,
-                new TrapezoidProfile.Constraints(DEFAULT_TURN_MAX_VELOCITY, DEFAULT_TURN_MAX_ACCELERATION)); //P=1.0
+        turnPID = new PIDController(DEFAULT_TURN_P, DEFAULT_TURN_I, DEFAULT_TURN_D); //P=1.0
         // OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -98,7 +103,7 @@ public final class Drive extends AbstractSubsystem {
 
     private boolean isAiming = false;
 
-    private @NotNull final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+    private @NotNull static final SwerveDriveKinematics SWERVE_DRIVE_KINEMATICS = new SwerveDriveKinematics(
             Constants.SWERVE_LEFT_FRONT_LOCATION,
             Constants.SWERVE_LEFT_BACK_LOCATION,
             Constants.SWERVE_RIGHT_FRONT_LOCATION,
@@ -209,16 +214,16 @@ public final class Drive extends AbstractSubsystem {
         turnD.addListener(event -> turnPID.setD(event.getEntry().getDouble(Constants.DEFAULT_TURN_D)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        turnMaxVelocity.addListener(event -> turnPID.setConstraints(
-                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_VELOCITY),
-                                turnMaxAcceleration.getDouble(6))),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
-        turnMaxAcceleration.addListener(
-                event -> turnPID.setConstraints(
-                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_ACCELERATION),
-                                turnMaxAcceleration.getDouble(6))),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+//        turnMaxVelocity.addListener(event -> turnPID.setConstraints(
+//                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_VELOCITY),
+//                                turnMaxAcceleration.getDouble(6))),
+//                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+//
+//        turnMaxAcceleration.addListener(
+//                event -> turnPID.setConstraints(
+//                        new TrapezoidProfile.Constraints(turnMaxVelocity.getDouble(DEFAULT_TURN_MAX_ACCELERATION),
+//                                turnMaxAcceleration.getDouble(6))),
+//                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 
         useFieldRelative = true;
@@ -278,8 +283,8 @@ public final class Drive extends AbstractSubsystem {
         return swerveDriveMotors[motorNum].getSelectedSensorVelocity() * Constants.FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM * Constants.SWERVE_DRIVE_MOTOR_REDUCTION;
     }
 
-    public @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
-        return swerveKinematics;
+    public static @NotNull SwerveDriveKinematics getSwerveDriveKinematics() {
+        return SWERVE_DRIVE_KINEMATICS;
     }
 
     public synchronized void setDriveState(@NotNull DriveState driveState) {
@@ -290,7 +295,7 @@ public final class Drive extends AbstractSubsystem {
         setDriveState(DriveState.TELEOP);
     }
 
-    synchronized public SwerveModuleState @NotNull [] getSwerveModuleStates() {
+    public @NotNull SwerveModuleState[] getSwerveModuleStates() {
         SwerveModuleState[] swerveModuleState = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             SwerveModuleState moduleState = new SwerveModuleState(
@@ -351,7 +356,7 @@ public final class Drive extends AbstractSubsystem {
         SmartDashboard.putNumber("Drive Command Y Velocity", chassisSpeeds.vyMetersPerSecond);
         SmartDashboard.putNumber("Drive Command Rotation", chassisSpeeds.omegaRadiansPerSecond);
 
-        SwerveModuleState[] moduleStates = swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+        SwerveModuleState[] moduleStates = SWERVE_DRIVE_KINEMATICS.toSwerveModuleStates(chassisSpeeds);
 
         boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 ||
                 chassisSpeeds.vyMetersPerSecond != 0 ||
@@ -424,7 +429,7 @@ public final class Drive extends AbstractSubsystem {
     @Contract(mutates = "param")
     @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
         double dt;
-        if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 4) {
+        if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 20) {
             // If the dt is a lot greater than our nominal dt reset the acceleration limiting
             // (ex. we've been disabled for a while)
             lastRequestedVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
@@ -520,7 +525,8 @@ public final class Drive extends AbstractSubsystem {
 
     double autoStartTime;
 
-    private @NotNull HolonomicDriveController swerveAutoController;
+    private final ReentrantLock swerveAutoControllerLock = new ReentrantLock();
+    private @Nullable HolonomicDriveController swerveAutoController;
 
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
@@ -549,6 +555,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
+    double nextAllowedPrintError = 0;
     private void updateRamsete() {
         currentAutoTrajectoryLock.lock();
         try {
@@ -559,15 +566,23 @@ public final class Drive extends AbstractSubsystem {
                 targetHeading = VisionManager.getInstance().getAngleToTarget();
             }
 
-            ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
-                    RobotTracker.getInstance().getLastEstimatedPoseMeters(),
-                    goal,
-                    targetHeading);
-
-            swerveDrive(adjustedSpeeds);
-            if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
-                setDriveState(DriveState.DONE);
-                stopMovement();
+            if (swerveAutoController == null) resetAuto();
+            if (swerveAutoController == null) return;
+            try {
+                ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
+                        RobotTracker.getInstance().getLastEstimatedPoseMeters(),
+                        goal,
+                        targetHeading);
+                swerveDrive(adjustedSpeeds);
+                if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
+                    setDriveState(DriveState.DONE);
+                    stopMovement();
+                }
+            } catch (NullPointerException exception) {
+                if (Timer.getFPGATimestamp() > nextAllowedPrintError) {
+                    exception.printStackTrace();
+                    nextAllowedPrintError = Timer.getFPGATimestamp() + 2;
+                }
             }
         } finally {
             currentAutoTrajectoryLock.unlock();
@@ -636,7 +651,12 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void setAutoRotation(@NotNull Rotation2d rotation) {
-        autoTargetHeading = rotation;
+        currentAutoTrajectoryLock.lock();
+        try {
+            autoTargetHeading = rotation;
+        } finally {
+            currentAutoTrajectoryLock.unlock();
+        }
         System.out.println("new rotation" + rotation.getDegrees());
     }
 
@@ -686,21 +706,24 @@ public final class Drive extends AbstractSubsystem {
         return isAiming;
     }
 
-    public synchronized void setRotation(Rotation2d angle) {
+    public void setRotation(Rotation2d angle) {
         wantedHeading = angle;
         driveState = DriveState.TURN;
         rotateAuto = true;
         isAiming = !isTurningDone();
     }
 
-    public synchronized void setRotation(double angle) {
+    public void setRotation(double angle) {
         setRotation(Rotation2d.fromDegrees(angle));
     }
 
 
-    public synchronized boolean isTurningDone() {
-        double error = wantedHeading.minus(RobotTracker.getInstance().getGyroAngle()).getDegrees();
-        return (Math.abs(error) < Constants.MAX_TURN_ERROR);
+    public boolean isTurningDone() {
+        Rotation2d currentHeading = RobotTracker.getInstance().getGyroAngle();
+        synchronized (this) {
+            double error = wantedHeading.minus(currentHeading).getDegrees();
+            return (Math.abs(error) < Constants.MAX_TURN_ERROR);
+        }
     }
 
     double turnMinSpeed = 0;
@@ -746,14 +769,14 @@ public final class Drive extends AbstractSubsystem {
             if (driveState != DriveState.TURN) setDriveState(DriveState.TELEOP);
         }
 
-        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
-            turnPID.reset(RobotTracker.getInstance().getGyroAngle().getRadians(),
-                    RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond);
+
+        turnPID.setSetpoint(goal.position);
+
+        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
+            turnPID.reset();
         }
-
-
         lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians(), goal);
+        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + goal.velocity;
 
 //        System.out.println(
 //                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
@@ -918,7 +941,7 @@ public final class Drive extends AbstractSubsystem {
         System.out.println("Turning to " + degrees);
         setRotation(degrees);
         while (!isTurningDone()) {
-            Thread.onSpinWait();
+            Thread.sleep(20);
         }
     }
 
