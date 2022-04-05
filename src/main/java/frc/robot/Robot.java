@@ -149,6 +149,30 @@ public class Robot extends TimedRobot {
     @NotNull
     private HangerCargoRed hangerCargoRed;
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private OutsideClimbBlue outsideClimbBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private MidClimbBlue midClimbBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private InsideClimbBlue insideClimbBlue;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private OutsideClimbRed outsideClimbRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private MidClimbRed midClimbRed;
+
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private InsideClimbRed insideClimbRed;
+
 
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
@@ -164,11 +188,14 @@ public class Robot extends TimedRobot {
     @NotNull private static final String HIDE_CARGO = "Hide Cargo";
     @NotNull private static final String BUDDY_AUTO_LEFT_HIDE = "Buddy Auto Left Hide";
     @NotNull private static final String HANGER_CARGO = "Hanger Cargo";
-
+    @NotNull private static final String OUTSIDE_CLIMB = "Outside Climb";
+    @NotNull private static final String MID_CLIMB = "Mid Climb";
+    @NotNull private static final String INSIDE_CLIMB = "Inside Climb";
 
     private static final String RESET_POSE = "Reset Pose";
 
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
+    private final SendableChooser<String> climbAutoChooser = new SendableChooser<>();
 
     @NotNull public static final String RED = "RED";
     @NotNull public static final String BLUE = "BLUE";
@@ -281,6 +308,12 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> buddyAutoLeftHideRed = new BuddyAutoLeftHideRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> hangerCargoBlue = new HangerCargoBlue()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> hangerCargoRed = new HangerCargoRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> outsideClimbRed = new OutsideClimbRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> midClimbRed = new MidClimbRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> insideClimbRed = new InsideClimbRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> outsideClimbBlue = new OutsideClimbBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> midClimbBlue = new MidClimbBlue()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> insideClimbBlue = new InsideClimbBlue()).thenRun(this::incrementLoadedAutos);
 
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
@@ -298,10 +331,15 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(HANGER_CARGO, HANGER_CARGO);
         autoChooser.addOption(BUDDY_AUTO_LEFT_HIDE, BUDDY_AUTO_LEFT_HIDE);
 
+        climbAutoChooser.setDefaultOption(OUTSIDE_CLIMB, OUTSIDE_CLIMB);
+        climbAutoChooser.addOption(MID_CLIMB, MID_CLIMB);
+        climbAutoChooser.addOption(INSIDE_CLIMB, INSIDE_CLIMB);
+
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
 
         SmartDashboard.putData("Auto choices", autoChooser);
+        SmartDashboard.putData("Climb Auto choices", climbAutoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);
 
         robotTracker.resetGyro();
@@ -331,7 +369,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 16) {
+        if (loadedAutos.incrementAndGet() == 22) {
             loadingAutos = false;
         }
     }
