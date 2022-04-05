@@ -532,6 +532,14 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
+
+        /** Hood Lineup
+         * Will run a separate thread that locks drive movement and executes an auto thread to line up to bar
+         */
+        if (stick.getRawButton(4)) { // TODO: Make sure drivers are ok with button placement
+
+        }
+
         // Hood Eject
         if (buttonPanel.getRawButton(6)) {
             shooter.setFeederChecksDisabled(true);
@@ -708,7 +716,7 @@ public class Robot extends TimedRobot {
         } else {
             controllerDriveInputs = getControllerDriveInputs();
         }
-        
+
         if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {
