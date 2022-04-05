@@ -696,8 +696,19 @@ public class Robot extends TimedRobot {
 
     private void doNormalDriving() {
         final Drive drive = Drive.getInstance();
+        ControllerDriveInputs controllerDriveInputs;
 
-        ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+        // Will use slow movements if using the xbox D-Pad
+        if (xbox.getPOV() != -1) {
+            double povInRads = Math.toDegrees(xbox.getPOV());
+
+            // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
+            controllerDriveInputs = new ControllerDriveInputs(Math.cos(povInRads), Math.sin(povInRads),
+                    getControllerDriveInputs().getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
+        } else {
+            controllerDriveInputs = getControllerDriveInputs();
+        }
+        
         if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {

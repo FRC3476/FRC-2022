@@ -138,6 +138,7 @@ public final class Constants {
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
+    public static final double DRIVE_ROTATION_LOW_SPEED_MODIFIER = .5;
 
     /**
      * Allowed Turn Error in degrees.
