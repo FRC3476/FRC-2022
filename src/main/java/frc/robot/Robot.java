@@ -533,11 +533,22 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
 
-        /** Hood Lineup
+        // TODO: Make sure drivers are ok with button placements
+        /** Climb Rotation lineup
+         * Rotation is linked to the auto lineup in order to make sure that both are not pressed at the same time
+         */
+        if (stick.getRawButton(6)) {
+            if (sideChooser.getSelected().equals(BLUE)) {
+                drive.setRotation(Constants.BLUE_CLIMB_LINEUP_ANGLE);
+            } else {
+                drive.setRotation(Constants.RED_CLIMB_LINEUP_ANGLE);
+            }
+        }
+        /** Climb Lineup
          * Will run a separate thread that locks drive movement and executes an auto thread to line up to bar
          */
-        if (stick.getRawButton(4)) { // TODO: Make sure drivers are ok with button placement
-
+        else if (stick.getRisingEdge(5)) {
+            climber.deployClimb();
         }
 
         // Hood Eject

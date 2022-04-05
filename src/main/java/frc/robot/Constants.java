@@ -163,6 +163,9 @@ public final class Constants {
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
 
+    public static final double BLUE_CLIMB_LINEUP_ANGLE = 180;
+    public static final double RED_CLIMB_LINEUP_ANGLE = 0;
+
     // TurnPID
 
     public static final double DEFAULT_TURN_P = 12.0;
