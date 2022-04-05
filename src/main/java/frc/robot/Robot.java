@@ -77,6 +77,7 @@ public class Robot extends TimedRobot {
 
     //Auto
     @Nullable TemplateAuto selectedAuto;
+    @Nullable TemplateAuto selectedClimbAuto;
     @Nullable Thread autoThread;
 
     //We block the robot from starting until these are initialized
