@@ -174,6 +174,16 @@ public class Robot extends TimedRobot {
 
     public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
+    @NotNull public static final String CLIMBER = "Climber";
+    @NotNull public static final String GRAPPLE_CLIMBER = "Grapple Climber";
+
+    public static final SendableChooser<String> climbChooser = new SendableChooser<>();
+    private static String climbMode = CLIMBER;
+
+    public static synchronized String getClimbMode() {
+        return climbMode;
+    }
+
     //Inputs
     private final static Controller xbox = new Controller(0);
     private final static Controller stick = new Controller(1);
@@ -300,8 +310,12 @@ public class Robot extends TimedRobot {
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
 
+        climbChooser.setDefaultOption(CLIMBER, CLIMBER);
+        climbChooser.addOption(GRAPPLE_CLIMBER, GRAPPLE_CLIMBER);
+
         SmartDashboard.putData("Auto choices", autoChooser);
         SmartDashboard.putData("Red or Blue", sideChooser);
+        SmartDashboard.putData("Climb Mode", climbChooser);
 
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
@@ -502,6 +516,7 @@ public class Robot extends TimedRobot {
         final GrappleClimber grappleClimber = GrappleClimber.getInstance();
 
         startSubsystems();
+        climbMode = climbChooser.getSelected();
         climber.configBrake();
         enabled.setBoolean(true);
         useFieldRelative = true;
@@ -851,6 +866,13 @@ public class Robot extends TimedRobot {
         VisionManager.getInstance().start();
         DashboardHandler.getInstance().start();
         GrappleClimber.getInstance().start();
+
+        // Decides  which climber to start based on sendable chooser
+        if (climbChooser != null && climbChooser.getSelected() == GRAPPLE_CLIMBER) {
+            GrappleClimber.getInstance().start();
+        } else {
+            Climber.getInstance().start();
+        }
     }
 
     public void killAuto() {
