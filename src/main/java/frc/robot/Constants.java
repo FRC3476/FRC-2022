@@ -531,4 +531,7 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
+
+    // Grapple Climber Constants
+    public static final int GRAPPLE_CLIMBER_PERIOD = 50;
 }
