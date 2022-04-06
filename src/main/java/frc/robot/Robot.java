@@ -647,6 +647,12 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
+        // Will terminate climb auto thread if any stick movement happens
+        if (Math.abs(getControllerDriveInputs().getX()) > Constants.CLIMB_AUTO_TERMINATE_STICK_THRESHOLD ||
+                Math.abs(getControllerDriveInputs().getX()) > Constants.CLIMB_AUTO_TERMINATE_STICK_THRESHOLD) {
+            OrangeUtility.safeInterrupt(climbAutoThread);
+        }
+
 
         // TODO: Make sure drivers are ok with button placements
         /** Climb Rotation lineup
