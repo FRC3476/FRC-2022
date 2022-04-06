@@ -573,6 +573,8 @@ public final class Drive extends AbstractSubsystem {
 
 
     double nextAllowedPrintError = 0;
+
+    @SuppressWarnings("ProhibitedExceptionCaught")
     private void updateRamsete() {
         currentAutoTrajectoryLock.lock();
         try {
