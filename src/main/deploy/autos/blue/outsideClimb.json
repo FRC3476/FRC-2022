@@ -1,5 +1,20 @@
 {
   "autonomousSteps" : [ {
+    "type" : "script",
+    "script" : "Climber.deployClimb",
+    "closed" : false,
+    "valid" : true,
+    "sendableScript" : {
+      "delayType" : "NONE",
+      "delay" : 0.0,
+      "commands" : [ {
+        "methodName" : "frc.subsystem.Climber.deployClimb",
+        "args" : [ ],
+        "argTypes" : [ ],
+        "reflection" : true
+      } ]
+    }
+  }, {
     "type" : "trajectory",
     "states" : [ {
       "time" : 0.0,
@@ -1576,7 +1591,7 @@
     } ],
     "reversed" : false,
     "color" : 4.470581,
-    "closed" : false,
+    "closed" : true,
     "velocityStart" : 0.0,
     "velocityEnd" : 0.0,
     "constraints" : [ ]

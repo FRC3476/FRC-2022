@@ -640,7 +640,6 @@ public class Robot extends TimedRobot {
          * Will run a separate thread that executes an auto thread to line up to bar
          */
         else if (stick.getRisingEdge(6) && allowClimbAuto) {
-            climber.deployClimb();
 
             try {
                 climbAutoThread.start();
