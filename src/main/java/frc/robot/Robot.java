@@ -618,7 +618,7 @@ public class Robot extends TimedRobot {
 
         // Will terminate climb auto thread if any stick movement happens
         if (getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
-            OrangeUtility.safeInterrupt(autoThread);
+            killAuto();
         }
 
 
@@ -642,7 +642,7 @@ public class Robot extends TimedRobot {
                 }
                 /** Will kill climb auto thread */
             } else if (stick.getRisingEdge(7)) {
-                OrangeUtility.safeInterrupt(autoThread);
+                killAuto();
             }
         }
 
