@@ -700,13 +700,18 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "Climber.deployClimb",
+    "script" : "Drive.setRotation 0\nClimber.deployClimb",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
       "delayType" : "NONE",
       "delay" : 0.0,
       "commands" : [ {
+        "methodName" : "frc.subsystem.Drive.setRotation",
+        "args" : [ "0" ],
+        "argTypes" : [ "double" ],
+        "reflection" : true
+      }, {
         "methodName" : "frc.subsystem.Climber.deployClimb",
         "args" : [ ],
         "argTypes" : [ ],
@@ -806,7 +811,7 @@
     } ],
     "reversed" : false,
     "color" : 44.70587,
-    "closed" : true,
+    "closed" : false,
     "velocityStart" : 0.0,
     "velocityEnd" : 0.0,
     "constraints" : [ ]
