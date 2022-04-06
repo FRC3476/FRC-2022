@@ -54,8 +54,6 @@ public class Robot extends TimedRobot {
 
     public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
-    private static volatile boolean runningClimbAuto = false;
-
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
     final @NotNull NetworkTable autoDataTable = instance.getTable("autodata");
@@ -376,10 +374,6 @@ public class Robot extends TimedRobot {
         }
     }
 
-    public static synchronized boolean isRunningAuto() {
-        return DriverStation.isAutonomous() || runningClimbAuto;
-    }
-
     /**
      * This function is called every robot packet, no matter the mode. Use this for items like diagnostics that you want ran
      * during disabled, autonomous, teleoperated and test.
@@ -402,19 +396,6 @@ public class Robot extends TimedRobot {
             visionManager.forceUpdatePose();
         } else {
             visionManager.unForceVisionOn(resettingPoseVisionOn);
-        }
-
-        // Checks whether to enable or disable auto flag
-        if (autoThread.isAlive() || !autoThread.isInterrupted()) {
-            if (isTeleopEnabled()) {
-                runningClimbAuto = true;
-            } else if (!isTeleopEnabled() && runningClimbAuto) {
-                // Safety check to make sure that climbAuto gets killed
-                OrangeUtility.safeInterrupt(autoThread);
-                runningClimbAuto = false;
-            }
-        } else {
-            runningClimbAuto = false;
         }
     }
 
@@ -829,7 +810,7 @@ public class Robot extends TimedRobot {
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
     private void doNormalDriving() {
-        if (!isRunningAuto()) {
+        if (!DriverStation.isAutonomous()) {
             final Drive drive = Drive.getInstance();
             ControllerDriveInputs controllerDriveInputs;
 

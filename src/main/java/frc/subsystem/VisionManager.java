@@ -9,7 +9,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.subsystem.BlinkinLED.BlinkinLedMode;
 import frc.subsystem.BlinkinLED.LedStatus;
 import frc.subsystem.Drive.DriveState;
@@ -439,7 +438,7 @@ public final class VisionManager extends AbstractSubsystem {
                 if (limelight.areCornersTouchingEdge()) {
                     logData("Using Vision Info", "Corners touching edge");
                 } else {
-                    if (!Robot.isRunningAuto()) {
+                    if (!DriverStation.isAutonomous()) {
                         robotTracker.addVisionMeasurement(robotTranslation,
                                 getLimelightTime());
                     }
