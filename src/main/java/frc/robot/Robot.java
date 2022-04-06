@@ -53,11 +53,13 @@ public class Robot extends TimedRobot {
     public boolean useFieldRelative = false;
 
     public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
-    
+
     /**
      * Flag that can be set false if error occurs in loading autos
      */
-    public boolean allowClimbAuto = true;
+    private boolean allowClimbAuto = true;
+
+    private static volatile boolean runningClimbAuto = false;
 
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
@@ -380,6 +382,10 @@ public class Robot extends TimedRobot {
         }
     }
 
+    public static synchronized boolean isRunningAuto() {
+        return DriverStation.isAutonomous() || runningClimbAuto;
+    }
+
     /**
      * This function is called every robot packet, no matter the mode. Use this for items like diagnostics that you want ran
      * during disabled, autonomous, teleoperated and test.
@@ -402,6 +408,19 @@ public class Robot extends TimedRobot {
             visionManager.forceUpdatePose();
         } else {
             visionManager.unForceVisionOn(resettingPoseVisionOn);
+        }
+        
+        // Checks whether to enable or disable auto flag
+        if (climbAutoThread.isAlive() || !climbAutoThread.isInterrupted()) {
+            runningClimbAuto = true;
+
+            // Safety check to make sure that climbAuto gets killed
+            if (!isTeleopEnabled()) {
+                OrangeUtility.safeInterrupt(climbAutoThread);
+                runningClimbAuto = false;
+            }
+        } else {
+            runningClimbAuto = false;
         }
     }
 
