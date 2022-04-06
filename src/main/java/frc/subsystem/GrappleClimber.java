@@ -3,10 +3,10 @@ package frc.subsystem;
 import frc.robot.Constants;
 
 public class GrappleClimber extends AbstractSubsystem {
-    // Singleon Setup
-    private GrappleClimber instance = new GrappleClimber();
+    // Singleton Setup
+    private static GrappleClimber instance = new GrappleClimber();
 
-    public GrappleClimber getInstance() {
+    public static GrappleClimber getInstance() {
         return instance;
     }
 
