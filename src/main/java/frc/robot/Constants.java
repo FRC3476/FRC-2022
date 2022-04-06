@@ -8,6 +8,11 @@ import edu.wpi.first.math.util.Units;
 
 public final class Constants {
 
+    // 2048 sensor units per revolution
+    public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
+    public static final double FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM = 600 / 2048.0d;
+    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
+
     // Logging Period
     /**
      * Every subsystem will log one for every 20 update periods
@@ -71,7 +76,6 @@ public final class Constants {
     public static final double SWERVE_DRIVE_I = 0.00;
     public static final double SWERVE_DRIVE_F = 0.00;
     public static final double SWERVE_DRIVE_INTEGRAL_ZONE = 0.00;
-    public static final double SWERVE_DRIVE_RAMP_RATE = 0.1;
 
     public static final int SWERVE_MOTOR_PID_TIMEOUT_MS = 50;
 
@@ -140,6 +144,11 @@ public final class Constants {
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
     public static final double DRIVE_ROTATION_LOW_SPEED_MODIFIER = .5;
 
+    public static final double SWERVE_ACCELERATION =
+            ((360 * 5 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
+
+    public static final double SWERVE_CRUISE_VELOCITY =
+            ((360 * 6.5 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
     /**
      * Allowed Turn Error in degrees.
      */
@@ -151,11 +160,6 @@ public final class Constants {
      * Allowed Turn Error in degrees.
      */
     public static final double MAX_PID_STOP_SPEED = 100;
-
-    // 2048 sensor units per revolution
-    public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
-    public static final double FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM = 600 / 2048.0d;
-    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
 
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;

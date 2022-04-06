@@ -172,7 +172,8 @@ public final class Drive extends AbstractSubsystem {
             swerveMotors[i].config_kD(0, Constants.SWERVE_DRIVE_D, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kI(0, Constants.SWERVE_DRIVE_I, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kF(0, Constants.SWERVE_DRIVE_F, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
-            swerveMotors[i].configClosedloopRamp(Constants.SWERVE_DRIVE_RAMP_RATE, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
+            swerveMotors[i].configMotionAcceleration(Constants.SWERVE_ACCELERATION, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
+            swerveMotors[i].configMotionCruiseVelocity(Constants.SWERVE_CRUISE_VELOCITY, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_IntegralZone(0, Constants.SWERVE_DRIVE_INTEGRAL_ZONE);
 
             // Sets current limits for motors
@@ -265,7 +266,7 @@ public final class Drive extends AbstractSubsystem {
      * @param position the target position in degrees (0-360)
      */
     private void setSwerveMotorPosition(int motorNum, double position) {
-        swerveMotors[motorNum].set(ControlMode.Position, ((position * Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) /
+        swerveMotors[motorNum].set(ControlMode.MotionMagic, ((position * Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) /
                 Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360);
     }
 
@@ -379,15 +380,13 @@ public final class Drive extends AbstractSubsystem {
 
             double angleDiff = getAngleDiff(targetAngle, currentAngle);
 
-            if (Math.abs(angleDiff) < 0.1 || !rotate) {
-                swerveMotors[i].set(ControlMode.Velocity, 0);
-            } else {
+            if (Math.abs(angleDiff) > 0.1 && rotate) { // Only  update the setpoint if we're already there and moving
                 setSwerveMotorPosition(i, getRelativeSwervePosition(i) + angleDiff);
             }
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, 0);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getRelativeSwervePosition(i) + angleDiff);
@@ -476,14 +475,33 @@ public final class Drive extends AbstractSubsystem {
         return commandedVelocity;
     }
 
+    private final double[] lastWheelSpeeds = new double[4];
+    private final double[] lastWheelSpeedsTime = new double[4];
+
     /**
      * Sets the motor voltage
      *
-     * @param module       The module to set the voltage on
-     * @param velocity     The target velocity
-     * @param acceleration The acceleration to use
+     * @param module   The module to set the voltage on
+     * @param velocity The target velocity
      */
-    public void setMotorSpeed(int module, double velocity, double acceleration) {
+    public void setMotorSpeed(int module, double velocity) {
+        if (module < 0 || module > 3) {
+            throw new IllegalArgumentException("Module must be between 0 and 3");
+        }
+
+        /*
+         * This might have issues in certain situations (ie. when the wheel speed switches directions from optimization), but
+         * it should be fine since we'll only see that for one iteration.
+         */
+        double currentTime = Timer.getFPGATimestamp();
+        double dt = currentTime - lastWheelSpeedsTime[module];
+        double acceleration = (velocity - lastWheelSpeeds[module]) / dt;
+        lastWheelSpeeds[module] = velocity;
+        lastWheelSpeedsTime[module] = currentTime;
+        if (dt > 0.15) {
+            acceleration = 0;
+        }
+
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
         swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
@@ -555,6 +573,8 @@ public final class Drive extends AbstractSubsystem {
 
 
     double nextAllowedPrintError = 0;
+
+    @SuppressWarnings("ProhibitedExceptionCaught")
     private void updateRamsete() {
         currentAutoTrajectoryLock.lock();
         try {

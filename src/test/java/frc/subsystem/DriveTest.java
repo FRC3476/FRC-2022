@@ -38,7 +38,7 @@ public class DriveTest {
     }
 
     @Test
-    void testStopMovement() throws NoSuchFieldException, IllegalAccessException {
+    void testStopMovement1() throws NoSuchFieldException, IllegalAccessException {
         Field currentRobotState = RobotTracker.class.getDeclaredField("latencyCompensatedChassisSpeeds");
         currentRobotState.setAccessible(true);
         currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
@@ -48,14 +48,66 @@ public class DriveTest {
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
+        Timer.setTime(55.2);
+
+        drive.stopMovement();
+
+        drive.update();
+
+        for (int i = 0; i < drive.swerveMotors.length; i++) {
+            assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
+        }
+    }
+
+    /**
+     * Test that the acceleration limit is working
+     */
+    @Test
+    void testStopMovement2() throws NoSuchFieldException, IllegalAccessException {
+        Field currentRobotState = RobotTracker.class.getDeclaredField("latencyCompensatedChassisSpeeds");
+        currentRobotState.setAccessible(true);
+        currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
+
+        Timer.setTime(55);
+        drive.swerveDrive(new ChassisSpeeds(1, 1, 0.0));
+        for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
+            assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
+        }
+        Timer.setTime(55.01);
+
+        drive.stopMovement();
+
+        drive.update();
+
+        for (int i = 0; i < drive.swerveMotors.length; i++) {
+            assertNotEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
+        }
+    }
+
+    /**
+     * Test that the acceleration limit is working
+     */
+    @Test
+    void testStopMovement3() throws NoSuchFieldException, IllegalAccessException {
+        Field currentRobotState = RobotTracker.class.getDeclaredField("latencyCompensatedChassisSpeeds");
+        currentRobotState.setAccessible(true);
+        currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
+
+        Timer.setTime(55);
+        drive.swerveDrive(new ChassisSpeeds(0.2, 0.2, 0.0));
+        for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
+            assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
+        }
         Timer.setTime(55.1);
 
         drive.stopMovement();
 
         drive.update();
-        
+
+
         for (int i = 0; i < drive.swerveMotors.length; i++) {
-            assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
+            double expectedVoltage = Constants.DRIVE_FEEDFORWARD[i].calculate(0, -Math.hypot(0.2, 0.2) / 0.1) / 12;
+            assertEquals(expectedVoltage, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
         }
     }
 

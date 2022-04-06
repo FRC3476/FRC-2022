@@ -248,12 +248,8 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     public Translation2d getRobotVel() {
-        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        final @NotNull Drive drive = Drive.getInstance();
-
-        Rotation2d rotation2d = robotTracker.getGyroAngle();
-        ChassisSpeeds chassisSpeeds = Drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates());
-        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond).rotateBy(rotation2d);
+        ChassisSpeeds chassisSpeeds = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
     }
 
     /**

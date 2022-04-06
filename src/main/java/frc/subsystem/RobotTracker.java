@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static frc.robot.Constants.GRAVITY;
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
 
 public final class RobotTracker extends AbstractSubsystem {
@@ -160,9 +161,9 @@ public final class RobotTracker extends AbstractSubsystem {
                 latestEstimatedPose = swerveDriveOdometry.getPoseMeters();
                 //gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
 
-                latestChassisSpeeds = getRotatedSpeeds(
-                        swerveDriveKinematics.toChassisSpeeds(swerveModuleStates),
-                        getGyroAngle());
+                latestChassisSpeeds =
+                        rotateChassisToFieldRelativeSpeeds(swerveDriveKinematics.toChassisSpeeds(swerveModuleStates),
+                                getGyroAngle());
 
                 latencyCompensatedChassisSpeeds = latestChassisSpeeds;
                 currentOdometryTime = Timer.getFPGATimestamp();
@@ -176,9 +177,10 @@ public final class RobotTracker extends AbstractSubsystem {
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
 
 
-                acceleration = new Translation2d(getGyro().getWorldLinearAccelX(), getGyro().getWorldLinearAccelY())
-                        .rotateBy(gyroSensor.getRotation2d().unaryMinus())
-                        .rotateBy(getGyroAngle());
+                acceleration = new Translation2d(getGyro().getWorldLinearAccelX() * GRAVITY,
+                        getGyro().getWorldLinearAccelY() * GRAVITY)
+                        .rotateBy(gyroSensor.getRotation2d().unaryMinus()) // Remove the rotation that the navx already applies
+                        .rotateBy(getGyroAngle()); // Rotate the acceleration to the field's frame of reference
 
                 if (maxGyroRoll < lastGyroRoll) {
                     maxGyroRoll = lastGyroRoll;
@@ -234,7 +236,7 @@ public final class RobotTracker extends AbstractSubsystem {
 //            //@formatter:off
 //            Pose2d latestEstimatedPose = swerveDriveOdometry.getEstimatedPosition();
 //
-//            ChassisSpeeds latestChassisSpeeds = getRotatedSpeeds(drive.getSwerveDriveKinematics().toChassisSpeeds(swerveModuleStates),
+//            ChassisSpeeds latestChassisSpeeds = rotateChassisToFieldRelativeSpeeds(drive.getSwerveDriveKinematics().toChassisSpeeds(swerveModuleStates),
 //                    latestEstimatedPose.getRotation());
 //            final MutableTranslation2d velocity = new MutableTranslation2d(latestChassisSpeeds.vxMetersPerSecond, latestChassisSpeeds.vyMetersPerSecond);
 //            final MutableTranslation2d latencyCompensatedTranslation = new MutableTranslation2d(latestEstimatedPose.getTranslation());
@@ -282,10 +284,13 @@ public final class RobotTracker extends AbstractSubsystem {
      *
      * @return The field relative ChassisSpeeds.
      */
-    @Contract(pure = true)
-    private ChassisSpeeds getRotatedSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
+    @Contract(mutates = "param1")
+    private ChassisSpeeds rotateChassisToFieldRelativeSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
         Translation2d velocity = new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond).rotateBy(rotation);
-        return new ChassisSpeeds(velocity.getX(), velocity.getY(), speeds.omegaRadiansPerSecond);
+        speeds.vxMetersPerSecond = velocity.getX();
+        speeds.vyMetersPerSecond = velocity.getY();
+
+        return speeds;
     }
 
     private final Comparator<Map.Entry<Double, Rotation2d>> comparator = Comparator.comparingDouble(Entry::getKey);
@@ -371,7 +376,7 @@ public final class RobotTracker extends AbstractSubsystem {
             swerveDriveOdometry.resetPosition(pose, gyroAngle);
             latestEstimatedPose = pose;
 
-            latestChassisSpeeds = getRotatedSpeeds(
+            latestChassisSpeeds = rotateChassisToFieldRelativeSpeeds(
                     Drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates()),
                     latestEstimatedPose.getRotation());
 
@@ -431,7 +436,7 @@ public final class RobotTracker extends AbstractSubsystem {
     }
 
     /**
-     * Returns the current velocity of the robot on the field.
+     * Returns the current velocity of the robot relative to the field.
      * <p>
      * This method gets uses data from the accelerometer and gyroscope to compensate for the tracking latency.
      *
