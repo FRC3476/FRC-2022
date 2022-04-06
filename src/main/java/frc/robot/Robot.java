@@ -86,7 +86,6 @@ public class Robot extends TimedRobot {
     @Nullable TemplateAuto selectedAuto;
     @Nullable TemplateAuto selectedClimbAuto;
     @Nullable Thread autoThread;
-    @Nullable Thread climbAutoThread;
 
     //We block the robot from starting until these are initialized
     @SuppressWarnings("NotNullFieldNotInitialized")
@@ -411,12 +410,12 @@ public class Robot extends TimedRobot {
         }
 
         // Checks whether to enable or disable auto flag
-        if (climbAutoThread.isAlive() || !climbAutoThread.isInterrupted()) {
-            runningClimbAuto = true;
-
-            // Safety check to make sure that climbAuto gets killed
-            if (!isTeleopEnabled()) {
-                OrangeUtility.safeInterrupt(climbAutoThread);
+        if (autoThread.isAlive() || !autoThread.isInterrupted()) {
+            if (isTeleopEnabled()) {
+                runningClimbAuto = true;
+            } else if (!isTeleopEnabled() && runningClimbAuto) {
+                // Safety check to make sure that climbAuto gets killed
+                OrangeUtility.safeInterrupt(autoThread);
                 runningClimbAuto = false;
             }
         } else {
@@ -623,7 +622,7 @@ public class Robot extends TimedRobot {
 
         selectedClimbAuto.reset();
 
-        climbAutoThread = new Thread(selectedClimbAuto);
+        autoThread = new Thread(selectedClimbAuto);
     }
 
     private final Object driverForcingVisionOn = new Object();
@@ -650,7 +649,7 @@ public class Robot extends TimedRobot {
         // Will terminate climb auto thread if any stick movement happens
         if (Math.abs(getControllerDriveInputs().getX()) > Constants.CLIMB_AUTO_TERMINATE_STICK_THRESHOLD ||
                 Math.abs(getControllerDriveInputs().getX()) > Constants.CLIMB_AUTO_TERMINATE_STICK_THRESHOLD) {
-            OrangeUtility.safeInterrupt(climbAutoThread);
+            OrangeUtility.safeInterrupt(autoThread);
         }
 
 
@@ -667,13 +666,13 @@ public class Robot extends TimedRobot {
             else if (stick.getRisingEdge(6) && allowClimbAuto) {
 
                 try {
-                    climbAutoThread.start();
+                    autoThread.start();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 /** Will kill climb auto thread */
             } else if (stick.getRisingEdge(7)) {
-                OrangeUtility.safeInterrupt(climbAutoThread);
+                OrangeUtility.safeInterrupt(autoThread);
             }
         }
 
