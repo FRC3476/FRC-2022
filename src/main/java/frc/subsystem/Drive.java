@@ -387,7 +387,7 @@ public final class Drive extends AbstractSubsystem {
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, 0);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getRelativeSwervePosition(i) + angleDiff);
@@ -476,14 +476,33 @@ public final class Drive extends AbstractSubsystem {
         return commandedVelocity;
     }
 
+    private final double[] lastWheelSpeeds = new double[4];
+    private final double[] lastWheelSpeedsTime = new double[4];
+
     /**
      * Sets the motor voltage
      *
-     * @param module       The module to set the voltage on
-     * @param velocity     The target velocity
-     * @param acceleration The acceleration to use
+     * @param module   The module to set the voltage on
+     * @param velocity The target velocity
      */
-    public void setMotorSpeed(int module, double velocity, double acceleration) {
+    public void setMotorSpeed(int module, double velocity) {
+        if (module < 0 || module > 3) {
+            throw new IllegalArgumentException("Module must be between 0 and 3");
+        }
+
+        /*
+         * This might have issues in certain situations (ie. when the wheel speed switches directions from optimization), but
+         * it should be fine since we'll only see that for one iteration.
+         */
+        double currentTime = Timer.getFPGATimestamp();
+        double dt = currentTime - lastWheelSpeedsTime[module];
+        double acceleration = (velocity - lastWheelSpeeds[module]) / dt;
+        lastWheelSpeeds[module] = velocity;
+        lastWheelSpeedsTime[module] = currentTime;
+        if (dt > 0.15) {
+            acceleration = 0;
+        }
+
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor
         swerveDriveMotors[module].set(ControlMode.PercentOutput, ffv / Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
