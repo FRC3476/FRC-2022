@@ -657,26 +657,23 @@ public class Robot extends TimedRobot {
         // TODO: Make sure drivers are ok with button placements
         /** Climb Rotation lineup
          * Rotation is linked to the auto lineup in order to make sure that both are not pressed at the same time
-         */
-        if (stick.getRawButton(5)) {
-            drive.setRotation(Constants.CLIMB_LINEUP_ANGLE);
-        }
-        /** Climb Lineup
-         * Will run a separate thread that executes an auto thread to line up to bar
-         */
-        else if (stick.getRisingEdge(6) && allowClimbAuto) {
-
-            try {
-                climbAutoThread.start();
-            } catch (Exception e) {
-                e.printStackTrace();
+         */{
+            if (stick.getRawButton(5)) {
+                drive.setRotation(Constants.CLIMB_LINEUP_ANGLE);
             }
-            /** Will kill climb auto thread */
-        } else if (stick.getRisingEdge(7)) {
-            if (climbAutoThread != null) {
-                climbAutoThread.interrupt();
-            } else {
-                System.out.println("Climb auto thread is null. Can not terminate.");
+            /** Climb Lineup
+             * Will run a separate thread that executes an auto thread to line up to bar
+             */
+            else if (stick.getRisingEdge(6) && allowClimbAuto) {
+
+                try {
+                    climbAutoThread.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                /** Will kill climb auto thread */
+            } else if (stick.getRisingEdge(7)) {
+                OrangeUtility.safeInterrupt(climbAutoThread);
             }
         }
 
