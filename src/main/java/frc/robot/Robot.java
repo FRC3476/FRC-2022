@@ -409,7 +409,7 @@ public class Robot extends TimedRobot {
         } else {
             visionManager.unForceVisionOn(resettingPoseVisionOn);
         }
-        
+
         // Checks whether to enable or disable auto flag
         if (climbAutoThread.isAlive() || !climbAutoThread.isInterrupted()) {
             runningClimbAuto = true;
@@ -840,32 +840,34 @@ public class Robot extends TimedRobot {
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
     private void doNormalDriving() {
-        final Drive drive = Drive.getInstance();
-        ControllerDriveInputs controllerDriveInputs;
+        if (!isRunningAuto()) {
+            final Drive drive = Drive.getInstance();
+            ControllerDriveInputs controllerDriveInputs;
 
-        // Will use slow movements if using the xbox D-Pad
-        if (xbox.getPOV() != -1) {
-            double povInRads = Math.toDegrees(xbox.getPOV());
+            // Will use slow movements if using the xbox D-Pad
+            if (xbox.getPOV() != -1) {
+                double povInRads = Math.toDegrees(xbox.getPOV());
 
-            // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
-            controllerDriveInputs = new ControllerDriveInputs(Math.cos(povInRads), Math.sin(povInRads),
-                    getControllerDriveInputs().getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
-        } else {
-            controllerDriveInputs = getControllerDriveInputs();
-        }
-
-        if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
-                && drive.getSpeedSquared() < 0.1) {
-            if (xbox.getRawButton(XboxButtons.Y)) {
-                drive.doHold();
+                // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
+                controllerDriveInputs = new ControllerDriveInputs(Math.cos(povInRads), Math.sin(povInRads),
+                        getControllerDriveInputs().getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
             } else {
-                drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
+                controllerDriveInputs = getControllerDriveInputs();
             }
-        } else {
-            if (useFieldRelative) {
-                drive.swerveDriveFieldRelative(controllerDriveInputs);
+
+            if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
+                    && drive.getSpeedSquared() < 0.1) {
+                if (xbox.getRawButton(XboxButtons.Y)) {
+                    drive.doHold();
+                } else {
+                    drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
+                }
             } else {
-                drive.swerveDrive(controllerDriveInputs);
+                if (useFieldRelative) {
+                    drive.swerveDriveFieldRelative(controllerDriveInputs);
+                } else {
+                    drive.swerveDrive(controllerDriveInputs);
+                }
             }
         }
     }
