@@ -77,7 +77,6 @@ public class Robot extends TimedRobot {
 
     //Auto
     @Nullable TemplateAuto selectedAuto;
-    @Nullable TemplateAuto selectedClimbAuto;
     @Nullable Thread autoThread;
 
     //We block the robot from starting until these are initialized
@@ -552,47 +551,68 @@ public class Robot extends TimedRobot {
 
         // Shuffleboard chooser now assigns the selected climb auto
 
-        System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
-
-        if (sideChooser.getSelected().equals(BLUE)) {
-            switch (climbAutoChooser.getSelected()) {
-                case OUTSIDE_CLIMB:
-                    selectedClimbAuto = outsideClimbBlue;
-                    break;
-
-                case MID_CLIMB:
-                    selectedClimbAuto = midClimbBlue;
-                    break;
-
-                case INSIDE_CLIMB:
-                    selectedClimbAuto = insideClimbBlue;
-                    break;
-
-                default:
-                    selectedClimbAuto = outsideClimbBlue;
-                    break;
-            }
-        } else {
-            switch (climbAutoChooser.getSelected()) {
-                case OUTSIDE_CLIMB:
-                    selectedClimbAuto = outsideClimbRed;
-                    break;
-
-                case MID_CLIMB:
-                    selectedClimbAuto = midClimbRed;
-                    break;
-
-                case INSIDE_CLIMB:
-                    selectedClimbAuto = insideClimbRed;
-                    break;
-
-                default:
-                    selectedClimbAuto = outsideClimbRed;
-                    break;
-            }
+        networkAutoLock.lock();
+        try {
+            networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
+        } finally {
+            networkAutoLock.unlock();
         }
 
-        autoThread = new Thread(selectedClimbAuto);
+        System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
+
+        networkAutoLock.lock();
+
+        try {
+            if (networkAuto == null) {
+                // Using local autos
+                if (sideChooser.getSelected().equals(BLUE)) {
+                    switch (climbAutoChooser.getSelected()) {
+                        // Blue autos
+                        case OUTSIDE_CLIMB:
+                            selectedAuto = outsideClimbBlue;
+                            break;
+
+                        case MID_CLIMB:
+                            selectedAuto = midClimbBlue;
+                            break;
+
+                        case INSIDE_CLIMB:
+                            selectedAuto = insideClimbBlue;
+                            break;
+
+                        default:
+                            selectedAuto = outsideClimbBlue;
+                            break;
+                    }
+                } else {
+                    switch (climbAutoChooser.getSelected()) {
+                        // Red autos
+                        case OUTSIDE_CLIMB:
+                            selectedAuto = outsideClimbRed;
+                            break;
+
+                        case MID_CLIMB:
+                            selectedAuto = midClimbRed;
+                            break;
+
+                        case INSIDE_CLIMB:
+                            selectedAuto = insideClimbRed;
+                            break;
+
+                        default:
+                            selectedAuto = outsideClimbRed;
+                            break;
+                    }
+                }
+            } else {
+                // Using network autos
+                selectedAuto = networkAuto;
+            }
+        } finally {
+            networkAutoLock.unlock();
+        }
+
+        autoThread = new Thread(selectedAuto);
     }
 
     private final Object driverForcingVisionOn = new Object();
