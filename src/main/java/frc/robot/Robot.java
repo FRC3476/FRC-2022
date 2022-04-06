@@ -636,7 +636,8 @@ public class Robot extends TimedRobot {
 
                 try {
                     autoThread.start();
-                } catch (Exception e) {
+                } catch (NullPointerException e) {
+                    System.out.println("Auto thread (run from teleop) is null");
                     e.printStackTrace();
                 }
                 /** Will kill climb auto thread */
