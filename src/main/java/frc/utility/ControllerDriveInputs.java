@@ -2,7 +2,7 @@ package frc.utility;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ControllerDriveInputs {
+public class ControllerDriveInputs implements Comparable<ControllerDriveInputs> {
 
     private double x, y, rotation;
 
@@ -99,5 +99,16 @@ public class ControllerDriveInputs {
         y = distCubed * Math.sin(angle);
         rotation = rotation * rotation * rotation;
         return this;
+    }
+
+    @Override
+    public int compareTo(@NotNull ControllerDriveInputs controllerDriveInputs) {
+        if (this.getX() + this.getY() > controllerDriveInputs.getX() + controllerDriveInputs.getY()) {
+            return 1;
+        } else if (this.getX() + this.getY() == controllerDriveInputs.getX() + controllerDriveInputs.getY()) {
+            return 0;
+        } else {
+            return -1;
+        }
     }
 }
