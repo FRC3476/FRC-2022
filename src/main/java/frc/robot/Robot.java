@@ -747,7 +747,7 @@ public class Robot extends TimedRobot {
 //        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {
 //            visionManager.adjustShooterHoodBias(0.5);
 //        }
-        
+
         if (stick.getRisingEdge(9)) {
             climber.toggleClaw();
         }
@@ -828,21 +828,40 @@ public class Robot extends TimedRobot {
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
+    private boolean slowMovement = false;
+
+    /**
+     * Checks to see if slow movement controls or slow movement flag is true. Adjusts movement for these purposes
+     *
+     * @param controllerDriveInputs The controllerDrive input you want to modify
+     */
+    private void checkSlowMovement(ControllerDriveInputs controllerDriveInputs) {
+
+        // Will use slow movements if using the xbox D-Pad
+        if (xbox.getPOV() != -1) {
+            slowMovement = true;
+            double povRads = Math.toRadians(xbox.getPOV());
+
+            // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
+            controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads), Math.sin(povRads),
+                    controllerDriveInputs.getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
+        } else if (slowMovement && controllerDriveInputs.equals(NO_MOTION_CONTROLLER_INPUTS)) {
+            // If D-Pad movement has been used in the past without the use of normal movement, we will continue to use
+            // slow turning when not moving
+            controllerDriveInputs = new ControllerDriveInputs(0, 0,
+                    controllerDriveInputs.getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
+        } else {
+            // If using normal inputs, resets slow movement flag and uses normal inputs
+            slowMovement = false;
+        }
+    }
+
     private void doNormalDriving() {
         if (!DriverStation.isAutonomous()) {
             final Drive drive = Drive.getInstance();
-            ControllerDriveInputs controllerDriveInputs;
 
-            // Will use slow movements if using the xbox D-Pad
-            if (xbox.getPOV() != -1) {
-                double povRads = Math.toRadians(xbox.getPOV());
-
-                // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
-                controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads), Math.sin(povRads),
-                        getControllerDriveInputs().getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
-            } else {
-                controllerDriveInputs = getControllerDriveInputs();
-            }
+            ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+            checkSlowMovement(controllerDriveInputs);
 
             if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                     && drive.getSpeedSquared() < 0.1) {
@@ -945,7 +964,7 @@ public class Robot extends TimedRobot {
         if (buttonPanel.getRisingEdge(11)) {
             climber.stopClimb();
         }
-        
+
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
 
             // Makes sure that these two buttons are held down for one second before running process
