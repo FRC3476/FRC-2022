@@ -815,10 +815,10 @@ public class Robot extends TimedRobot {
 
             // Will use slow movements if using the xbox D-Pad
             if (xbox.getPOV() != -1) {
-                double povInRads = Math.toDegrees(xbox.getPOV());
+                double povRads = Math.toRadians(xbox.getPOV());
 
                 // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
-                controllerDriveInputs = new ControllerDriveInputs(Math.cos(povInRads), Math.sin(povInRads),
+                controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads), Math.sin(povRads),
                         getControllerDriveInputs().getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
             } else {
                 controllerDriveInputs = getControllerDriveInputs();
