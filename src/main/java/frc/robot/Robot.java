@@ -591,9 +591,7 @@ public class Robot extends TimedRobot {
                     break;
             }
         }
-
-        selectedClimbAuto.reset();
-
+        
         autoThread = new Thread(selectedClimbAuto);
     }
 
