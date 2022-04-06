@@ -172,7 +172,8 @@ public final class Drive extends AbstractSubsystem {
             swerveMotors[i].config_kD(0, Constants.SWERVE_DRIVE_D, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kI(0, Constants.SWERVE_DRIVE_I, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kF(0, Constants.SWERVE_DRIVE_F, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
-            swerveMotors[i].configClosedloopRamp(Constants.SWERVE_DRIVE_RAMP_RATE, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
+            swerveMotors[i].configMotionAcceleration(Constants.SWERVE_ACCELERATION, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
+            swerveMotors[i].configMotionCruiseVelocity(Constants.SWERVE_CRUISE_VELOCITY, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_IntegralZone(0, Constants.SWERVE_DRIVE_INTEGRAL_ZONE);
 
             // Sets current limits for motors
@@ -265,7 +266,7 @@ public final class Drive extends AbstractSubsystem {
      * @param position the target position in degrees (0-360)
      */
     private void setSwerveMotorPosition(int motorNum, double position) {
-        swerveMotors[motorNum].set(ControlMode.Position, ((position * Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) /
+        swerveMotors[motorNum].set(ControlMode.MotionMagic, ((position * Constants.FALCON_ENCODER_TICKS_PER_ROTATIONS) /
                 Constants.SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360);
     }
 
@@ -379,9 +380,7 @@ public final class Drive extends AbstractSubsystem {
 
             double angleDiff = getAngleDiff(targetAngle, currentAngle);
 
-            if (Math.abs(angleDiff) < 0.1 || !rotate) {
-                swerveMotors[i].set(ControlMode.Velocity, 0);
-            } else {
+            if (Math.abs(angleDiff) > 0.1 && rotate) { // Only  update the setpoint if we're already there and moving
                 setSwerveMotorPosition(i, getRelativeSwervePosition(i) + angleDiff);
             }
 
