@@ -591,7 +591,7 @@ public class Robot extends TimedRobot {
                     break;
             }
         }
-        
+
         autoThread = new Thread(selectedClimbAuto);
     }
 
@@ -617,7 +617,7 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         // Will terminate climb auto thread if any stick movement happens
-        if (getControllerDriveInputs().compareTo(NO_MOTION_CONTROLLER_INPUTS) == 0) {
+        if (getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
             OrangeUtility.safeInterrupt(autoThread);
         }
 
