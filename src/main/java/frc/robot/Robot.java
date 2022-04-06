@@ -54,11 +54,6 @@ public class Robot extends TimedRobot {
 
     public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
-    /**
-     * Flag that can be set false if error occurs in loading autos
-     */
-    private boolean allowClimbAuto = true;
-
     private static volatile boolean runningClimbAuto = false;
 
     //GUI
@@ -616,10 +611,6 @@ public class Robot extends TimedRobot {
             }
         }
 
-        if (selectedClimbAuto == null) {
-            allowClimbAuto = false;
-        }
-
         selectedClimbAuto.reset();
 
         autoThread = new Thread(selectedClimbAuto);
@@ -662,7 +653,7 @@ public class Robot extends TimedRobot {
             /** Climb Lineup
              * Will run a separate thread that executes an auto thread to line up to bar
              */
-            else if (stick.getRisingEdge(6) && allowClimbAuto) {
+            else if (stick.getRisingEdge(6)) {
 
                 try {
                     autoThread.start();
