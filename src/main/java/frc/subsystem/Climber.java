@@ -9,6 +9,8 @@ import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonSRX;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -57,10 +59,31 @@ class ClimbStep {
 
 public final class Climber extends AbstractSubsystem {
 
-    private static final Climber INSTANCE = new Climber();
+    private static Climber INSTANCE;
 
-    public static Climber getInstance() {
-        return INSTANCE;
+    private static final ReentrantReadWriteLock CLIMBER_INSTANCE_LOCK = new ReentrantReadWriteLock();
+
+    // Safe Lazy Initialization. Initializes itself when first called
+    public static @NotNull Climber getInstance() {
+        if (Constants.GRAPPLE_CLIMB) {
+            throw new IllegalStateException();
+        }
+
+        CLIMBER_INSTANCE_LOCK.readLock().lock();
+        try {
+            if (INSTANCE != null) {
+                return INSTANCE;
+            }
+        } finally {
+            CLIMBER_INSTANCE_LOCK.readLock().unlock();
+        }
+
+        CLIMBER_INSTANCE_LOCK.writeLock().lock();
+        try {
+            return Objects.requireNonNullElseGet(INSTANCE, () -> INSTANCE = new Climber());
+        } finally {
+            CLIMBER_INSTANCE_LOCK.writeLock().unlock();
+        }
     }
 
     private final @NotNull LazyTalonSRX climberMotor;
