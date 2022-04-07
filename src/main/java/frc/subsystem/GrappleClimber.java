@@ -1,10 +1,13 @@
 package frc.subsystem;
 
+import edu.wpi.first.wpilibj.Solenoid;
 import frc.robot.Constants;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static frc.utility.Pneumatics.getPneumaticsHub;
 
 public class GrappleClimber extends AbstractSubsystem {
     // Singleton Setup
@@ -35,8 +38,18 @@ public class GrappleClimber extends AbstractSubsystem {
         }
     }
 
+    private Solenoid openSolenoid;
+    private Solenoid closedSolenoid;
+    private Solenoid lineupSolenoid;
+    private Solenoid ropeCoilSolenoid;
+
     private GrappleClimber() {
         super(Constants.GRAPPLE_CLIMBER_PERIOD, 1);
+
+        openSolenoid = getPneumaticsHub().makeSolenoid(Constants.OPEN_GRAPPLE_SOL_ID);
+        closedSolenoid = getPneumaticsHub().makeSolenoid(Constants.CLOSED_GRAPPLE_SOL_ID);
+        lineupSolenoid = getPneumaticsHub().makeSolenoid(Constants.LINEUP_GRAPPLE_SOL_ID);
+        ropeCoilSolenoid = getPneumaticsHub().makeSolenoid(Constants.ROPE_COIL_GRAPPLE_SOL_ID);
     }
 
     @Override

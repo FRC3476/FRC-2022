@@ -502,6 +502,7 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
 
         startSubsystems();
+
         if (!Constants.GRAPPLE_CLIMB) {
             Climber.getInstance().configBrake();
         }
@@ -529,7 +530,7 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-        Climber climber;
+        final Climber climber;
 
         if (!Constants.GRAPPLE_CLIMB) {
             climber = Climber.getInstance();

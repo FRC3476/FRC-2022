@@ -540,4 +540,8 @@ public final class Constants {
      * contents of Climber Constructor
      */
     public static final boolean GRAPPLE_CLIMB = true;
+    public static final int OPEN_GRAPPLE_SOL_ID = 10;
+    public static final int CLOSED_GRAPPLE_SOL_ID = 9;
+    public static final int LINEUP_GRAPPLE_SOL_ID = 8;
+    public static final int ROPE_COIL_GRAPPLE_SOL_ID = 7;
 }
