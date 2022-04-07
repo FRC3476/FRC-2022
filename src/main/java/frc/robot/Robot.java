@@ -499,7 +499,6 @@ public class Robot extends TimedRobot {
         final Drive drive = Drive.getInstance();
         final Hopper hopper = Hopper.getInstance();
         final Climber climber = Climber.getInstance();
-        final GrappleClimber grappleClimber = GrappleClimber.getInstance();
 
         startSubsystems();
         climber.configBrake();
@@ -850,8 +849,6 @@ public class Robot extends TimedRobot {
         Climber.getInstance().start();
         VisionManager.getInstance().start();
         DashboardHandler.getInstance().start();
-        GrappleClimber.getInstance().start();
-        Climber.getInstance().start();
     }
 
     public void killAuto() {
