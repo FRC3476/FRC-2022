@@ -63,25 +63,20 @@ public final class Climber extends AbstractSubsystem {
         return INSTANCE;
     }
 
-    private LazyTalonSRX climberMotor;
-    private LazyTalonSRX climberMotor2;
+    private final @NotNull LazyTalonSRX climberMotor;
+    private final @NotNull LazyTalonSRX climberMotor2;
 
-    private DigitalInput elevatorArmContactSwitchA;
-    private DigitalInput elevatorArmContactSwitchB;
+    private final @NotNull DigitalInput elevatorArmContactSwitchA;
+    private final @NotNull DigitalInput elevatorArmContactSwitchB;
 
-    private DigitalInput pivotingArmContactSwitchA;
-    private DigitalInput pivotingArmContactSwitchB;
-    private DigitalInput pivotingArmLatchedSwitchA;
-    private DigitalInput pivotingArmLatchedSwitchB;
+    private final @NotNull DigitalInput pivotingArmContactSwitchA;
+    private final @NotNull DigitalInput pivotingArmContactSwitchB;
+    private final @NotNull DigitalInput pivotingArmLatchedSwitchA;
+    private final @NotNull DigitalInput pivotingArmLatchedSwitchB;
 
-    private Solenoid latchSolenoid;
-    private Solenoid pivotSolenoid;
-    private Solenoid brakeSolenoid;
-
-    private Solenoid grappleOpenSolenoid;
-    private Solenoid grappleCloseSolenoid;
-    private Solenoid lineupSolenoid;
-    private Solenoid ropeCoilerSolenoid;
+    private final @NotNull Solenoid latchSolenoid;
+    private final @NotNull Solenoid pivotSolenoid;
+    private final @NotNull Solenoid brakeSolenoid;
 
     private double data;
 
@@ -112,38 +107,26 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public void setBrakeState(BrakeState brakeState) {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         brakeSolenoid.set(brakeState == BrakeState.FREE);
     }
 
     public void setClawState(ClawState clawState) {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         latchSolenoid.set(clawState == ClawState.UNLATCHED);
     }
 
     public void setPivotState(PivotState pivotState) {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         pivotSolenoid.set(pivotState == PivotState.PIVOTED);
     }
 
     public BrakeState getBrakeState() {
-        if (Constants.GRAPPLE_CLIMB) return BrakeState.FREE;
-
         return brakeSolenoid.get() ? BrakeState.BRAKING : BrakeState.FREE;
     }
 
     public ClawState getClawState() {
-        if (Constants.GRAPPLE_CLIMB) return ClawState.LATCHED;
-
         return latchSolenoid.get() ? ClawState.UNLATCHED : ClawState.LATCHED;
     }
 
     public PivotState getPivotState() {
-        if (Constants.GRAPPLE_CLIMB) return PivotState.INLINE;
-
         return pivotSolenoid.get() ? PivotState.PIVOTED : PivotState.INLINE;
     }
 
@@ -507,8 +490,6 @@ public final class Climber extends AbstractSubsystem {
      * @return true if both pivot arms are in contact with the bar
      */
     private boolean isPivotArmContactingBar() {
-        if (Constants.GRAPPLE_CLIMB) return false;
-
         if (pivotingArmContactSwitchA.get() || pivotingArmContactSwitchB.get()) {
             if (otherPivotingArmMustContactByTime > Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME) {
                 otherPivotingArmMustContactByTime = Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME;
@@ -531,8 +512,6 @@ public final class Climber extends AbstractSubsystem {
      * @return true if both pivot arms are in contact with the bar
      */
     private boolean isElevatorArmContactingBar() {
-        if (Constants.GRAPPLE_CLIMB) return false;
-
         if (elevatorArmContactSwitchA.get() || elevatorArmContactSwitchB.get()) {
             if (otherElevatorArmMustContactByTime > Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME) {
                 otherElevatorArmMustContactByTime = Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME;
@@ -553,74 +532,65 @@ public final class Climber extends AbstractSubsystem {
     private Climber() {
         super(Constants.CLIMBER_PERIOD, 1);
 
-        if (!Constants.GRAPPLE_CLIMB) {
-            climberMotor = new LazyTalonSRX(Constants.CLIMBER_MOTOR_ID);
-            climberMotor2 = new LazyTalonSRX(Constants.CLIMBER_MOTOR_2_ID);
-            climberMotor2.follow(climberMotor);
-            climberMotor.config_kF(0, Constants.CLIMBER_MOTOR_KF);
-            climberMotor.config_kP(0, Constants.CLIMBER_MOTOR_KP);
-            climberMotor.config_kI(0, Constants.CLIMBER_MOTOR_KI);
-            climberMotor.config_kD(0, Constants.CLIMBER_MOTOR_KD);
-            climberMotor.config_IntegralZone(0, Constants.CLIMBER_MOTOR_IZONE);
-            climberMotor.configMaxIntegralAccumulator(0, Constants.CLIMBER_MOTOR_MAX_IACCUMULATOR);
-            climberMotor.configPeakOutputForward(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-            climberMotor.configPeakOutputReverse(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-            climberMotor.setNeutralMode(NeutralMode.Brake);
-            climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
-                    Constants.CLIMBER_CURRENT_LIMIT, 0));
-            climberMotor2.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
-                    Constants.CLIMBER_CURRENT_LIMIT, 0));
+        climberMotor = new LazyTalonSRX(Constants.CLIMBER_MOTOR_ID);
+        climberMotor2 = new LazyTalonSRX(Constants.CLIMBER_MOTOR_2_ID);
+        climberMotor2.follow(climberMotor);
+        climberMotor.config_kF(0, Constants.CLIMBER_MOTOR_KF);
+        climberMotor.config_kP(0, Constants.CLIMBER_MOTOR_KP);
+        climberMotor.config_kI(0, Constants.CLIMBER_MOTOR_KI);
+        climberMotor.config_kD(0, Constants.CLIMBER_MOTOR_KD);
+        climberMotor.config_IntegralZone(0, Constants.CLIMBER_MOTOR_IZONE);
+        climberMotor.configMaxIntegralAccumulator(0, Constants.CLIMBER_MOTOR_MAX_IACCUMULATOR);
+        climberMotor.configPeakOutputForward(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        climberMotor.configPeakOutputReverse(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+        climberMotor.setNeutralMode(NeutralMode.Brake);
+        climberMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
+                Constants.CLIMBER_CURRENT_LIMIT, 0));
+        climberMotor2.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.CLIMBER_CURRENT_LIMIT,
+                Constants.CLIMBER_CURRENT_LIMIT, 0));
 
-            climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 20); // Default is 10ms
-            climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 25); // Default is 10ms
-            climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
-            climberMotor.setControlFramePeriod(ControlFrame.Control_3_General, 25);
-            climberMotor.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
-            climberMotor.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
+        climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 20); // Default is 10ms
+        climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 25); // Default is 10ms
+        climberMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        climberMotor.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        climberMotor.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        climberMotor.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
 
-            climberMotor.configMotionAcceleration(15 * CLIMBER_ENCODER_TICKS_PER_INCH);
-            climberMotor.configMotionCruiseVelocity(48 * CLIMBER_ENCODER_TICKS_PER_INCH);
-            climberMotor.configClosedloopRamp(0);
+        climberMotor.configMotionAcceleration(15 * CLIMBER_ENCODER_TICKS_PER_INCH);
+        climberMotor.configMotionCruiseVelocity(48 * CLIMBER_ENCODER_TICKS_PER_INCH);
+        climberMotor.configClosedloopRamp(0);
 
-            climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
-            climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 100); // Default is 10ms
-            climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
-            climberMotor2.setControlFramePeriod(ControlFrame.Control_3_General, 25);
-            climberMotor2.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
-            climberMotor2.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
+        climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 100); // Default is 10ms
+        climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 100); // Default is 10ms
+        climberMotor2.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 100); // Default is 50ms
+        climberMotor2.setControlFramePeriod(ControlFrame.Control_3_General, 25);
+        climberMotor2.setControlFramePeriod(ControlFrame.Control_4_Advanced, 25);
+        climberMotor2.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 500);
 
-            elevatorArmContactSwitchA = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
-            elevatorArmContactSwitchB = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
+        elevatorArmContactSwitchA = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
+        elevatorArmContactSwitchB = new DigitalInput(Constants.ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
 
-            pivotingArmContactSwitchA = new DigitalInput(Constants.PIVOTING_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
-            pivotingArmContactSwitchB = new DigitalInput(Constants.PIVOTING_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
-            pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
-            pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
+        pivotingArmContactSwitchA = new DigitalInput(Constants.PIVOTING_ARM_CONTACT_SWITCH_A_DIO_CHANNEL);
+        pivotingArmContactSwitchB = new DigitalInput(Constants.PIVOTING_ARM_CONTACT_SWITCH_B_DIO_CHANNEL);
+        pivotingArmLatchedSwitchA = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_A_DIO_CHANNEL);
+        pivotingArmLatchedSwitchB = new DigitalInput(Constants.PIVOTING_ARM_LATCHED_SWITCH_B_DIO_CHANNEL);
 
-            latchSolenoid = getPneumaticsHub().makeSolenoid(Constants.LATCH_SOLENOID_ID);
-            pivotSolenoid = getPneumaticsHub().makeSolenoid(Constants.PIVOT_SOLENOID_ID);
-            brakeSolenoid = getPneumaticsHub().makeSolenoid(Constants.BRAKE_SOLENOID_ID);
+        latchSolenoid = getPneumaticsHub().makeSolenoid(Constants.LATCH_SOLENOID_ID);
+        pivotSolenoid = getPneumaticsHub().makeSolenoid(Constants.PIVOT_SOLENOID_ID);
+        brakeSolenoid = getPneumaticsHub().makeSolenoid(Constants.BRAKE_SOLENOID_ID);
 
-            climberMotor.setInverted(true);
-            climberMotor2.setInverted(true);
+        climberMotor.setInverted(true);
+        climberMotor2.setInverted(true);
 
-            climberMotor.setSelectedSensorPosition(0);
+        climberMotor.setSelectedSensorPosition(0);
 
-            timesRun = 0;
-        } else {
-            grappleOpenSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_OPEN_SOL_ID);
-            grappleCloseSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_CLOSED_SOL_ID);
-            lineupSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_LINEUP_SOL_ID);
-            ropeCoilerSolenoid = getPneumaticsHub().makeSolenoid(Constants.ROPE_COIL_SOL_ID);
-        }
+        timesRun = 0;
     }
 
     /**
      * Starts the automated climb sequence and deactivates the brake.
      */
     public synchronized void startClimb() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         isPaused = false;
         otherPivotingArmMustContactByTime = Double.MAX_VALUE;
         climbState = ClimbState.START_CLIMB;
@@ -631,8 +601,6 @@ public final class Climber extends AbstractSubsystem {
      * Stops the climb and resets the climber state. Also activates the brake.
      */
     public synchronized void stopClimb() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         climbState = ClimbState.IDLE;
         climberMotor.set(ControlMode.PercentOutput, 0);
         setBrakeState(BrakeState.BRAKING);
@@ -647,8 +615,6 @@ public final class Climber extends AbstractSubsystem {
      * It first stores the current state of the climber in a variable, then sets stops the climber and activates the brake.
      */
     public synchronized void pauseClimb() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         isPaused = true;
         pausedClimberMode = climberMotor.getControlMode();
         if (pausedClimberMode == ControlMode.PercentOutput) {
@@ -667,8 +633,6 @@ public final class Climber extends AbstractSubsystem {
      * It sets the motor to Position Control mode and sets the setpoint to the current position.
      */
     private synchronized void stopClimberMotor() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         climberMotor.set(ControlMode.MotionMagic, climberMotor.getSelectedSensorPosition());
     }
 
@@ -676,8 +640,6 @@ public final class Climber extends AbstractSubsystem {
      * Resumes the climber from a paused state.
      */
     public synchronized void resumeClimb() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         isPaused = false;
         otherPivotingArmMustContactByTime = Double.MAX_VALUE;
         setBrakeState(pausedBrakeState);
@@ -688,8 +650,6 @@ public final class Climber extends AbstractSubsystem {
      * Sets the climber in the correct state to initiate a climb and moves the elevator arm to the up above the high bar.
      */
     public synchronized void deployClimb() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         timesRun = 0;
         climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_DEPLOY_HEIGHT);
         setBrakeState(BrakeState.FREE);
@@ -705,8 +665,6 @@ public final class Climber extends AbstractSubsystem {
      * Step-by-step mode must be enabled for this method to have an effect.
      */
     public synchronized void advanceStep() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         advanceStep = true;
     }
 
@@ -717,8 +675,6 @@ public final class Climber extends AbstractSubsystem {
      * This method will also work regardless of whether the robot is in step-by-mode or not.
      */
     public synchronized void forceAdvanceStep() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         if (isPaused) resumeClimb();
         advanceStep = true;
         skipChecks = true;
@@ -748,17 +704,16 @@ public final class Climber extends AbstractSubsystem {
 
     @Override
     public synchronized void update() {
-        if (Constants.GRAPPLE_CLIMB) {
-            ClimbStep currentClimbStep;
+        ClimbStep currentClimbStep;
 
-            if (sensorClimb) {
-                currentClimbStep = climbState.positionClimb;
-            } else {
-                currentClimbStep = climbState.sensorClimb;
-            }
+        if (sensorClimb) {
+            currentClimbStep = climbState.positionClimb;
+        } else {
+            currentClimbStep = climbState.sensorClimb;
+        }
 
 
-            if (!isPaused) {
+        if (!isPaused) {
 //            if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
 //                    && climberMotor.getSelectedSensorVelocity() < 0) {
 //                stopClimb();
@@ -767,35 +722,32 @@ public final class Climber extends AbstractSubsystem {
 //                stopClimb();
 //            }
 
-                if (currentClimbStep.waitCondition.apply(this)) {
-                    currentClimbStep.endAction.accept(this);
-                    ranEndAction = true;
-                }
-
-                if (skipChecks || (currentClimbStep.waitCondition.apply(this) && !stepByStep)) {
-                    if (!ranEndAction) currentClimbStep.endAction.accept(this);
-                    do {
-                        climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
-                        if (climbState == ClimbState.IDLE && timesRun < 1) {
-                            climbState = ClimbState.START_CLIMB;
-                            timesRun++;
-                        }
-
-                        if (sensorClimb) {
-                            currentClimbStep = climbState.positionClimb;
-                        } else {
-                            currentClimbStep = climbState.sensorClimb;
-                        }
-                    } while (!currentClimbStep.runInStepByStep && stepByStep);
-
-                    currentClimbStep.startAction.accept(this);
-                    advanceStep = false;
-                    skipChecks = false;
-                    ranEndAction = false;
-                }
+            if (currentClimbStep.waitCondition.apply(this)) {
+                currentClimbStep.endAction.accept(this);
+                ranEndAction = true;
             }
-        } else {
 
+            if (skipChecks || (currentClimbStep.waitCondition.apply(this) && !stepByStep)) {
+                if (!ranEndAction) currentClimbStep.endAction.accept(this);
+                do {
+                    climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
+                    if (climbState == ClimbState.IDLE && timesRun < 1) {
+                        climbState = ClimbState.START_CLIMB;
+                        timesRun++;
+                    }
+
+                    if (sensorClimb) {
+                        currentClimbStep = climbState.positionClimb;
+                    } else {
+                        currentClimbStep = climbState.sensorClimb;
+                    }
+                } while (!currentClimbStep.runInStepByStep && stepByStep);
+
+                currentClimbStep.startAction.accept(this);
+                advanceStep = false;
+                skipChecks = false;
+                ranEndAction = false;
+            }
         }
     }
 
@@ -803,8 +755,6 @@ public final class Climber extends AbstractSubsystem {
      * @param percentOutput The percent output to set the climber motor to. Will automatically activate/deactivate the brake
      */
     public void setClimberMotor(double percentOutput) {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         isPaused = true;
         climbState = ClimbState.IDLE;
         setBrakeState(Math.abs(percentOutput) < 1.0E-2 ? BrakeState.BRAKING : BrakeState.FREE);
@@ -818,8 +768,6 @@ public final class Climber extends AbstractSubsystem {
      * moves the climber down until it stall at the bottom. Press reset button to run again.
      */
     public synchronized void stallIntoBottom() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         if (minRunTime == -1) minRunTime = Timer.getFPGATimestamp() + 0.2;
         if (hasStalledIntoBottom) {
             setClimberMotor(0);
@@ -838,8 +786,6 @@ public final class Climber extends AbstractSubsystem {
      * Toggles the latch that is on the pivot arm.
      */
     public void toggleClaw() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         isPaused = true;
         climbState = ClimbState.IDLE;
         setClawState(getClawState() == ClawState.UNLATCHED ? ClawState.LATCHED : ClawState.UNLATCHED);
@@ -849,8 +795,6 @@ public final class Climber extends AbstractSubsystem {
      * Toggles the pivot arm in and out. Also pauses the climber motor.
      */
     public void togglePivot() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         isPaused = true;
         climbState = ClimbState.IDLE;
         setPivotState(getPivotState() == PivotState.INLINE ? PivotState.PIVOTED : PivotState.INLINE);
@@ -866,71 +810,59 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public boolean isPivotingArmLatched() {
-        if (Constants.GRAPPLE_CLIMB) return false;
-
         return isPivotingArmLatchedSwitchA() && isElevatorArmContactSwitchB();
     }
 
     public boolean isPivotingArmLatchedSwitchA() {
-        if (Constants.GRAPPLE_CLIMB) return false;
-
         return pivotingArmLatchedSwitchA.get();
     }
 
     public boolean isElevatorArmContactSwitchB() {
-        if (Constants.GRAPPLE_CLIMB) return false;
-
         return pivotingArmLatchedSwitchB.get();
     }
 
     @Override
     public void logData() {
-        if (Constants.GRAPPLE_CLIMB) {
-            logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
-            logData("Climber Motor Position IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
-            logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
-            logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
-            logData("Climber Motor Current", climberMotor.getStatorCurrent());
-            logData("Climber Motor 2 Current", climberMotor2.getStatorCurrent());
-            logData("Climber Motor Current Limit", Constants.CLIMBER_CURRENT_LIMIT);
+        logData("Climber Motor Position", climberMotor.getSelectedSensorPosition());
+        logData("Climber Motor Position IN", climberMotor.getSelectedSensorPosition() / CLIMBER_ENCODER_TICKS_PER_INCH);
+        logData("Climber Motor Velocity", climberMotor.getSelectedSensorVelocity());
+        logData("Climber Motor Percent Output", climberMotor.getMotorOutputPercent());
+        logData("Climber Motor Current", climberMotor.getStatorCurrent());
+        logData("Climber Motor 2 Current", climberMotor2.getStatorCurrent());
+        logData("Climber Motor Current Limit", Constants.CLIMBER_CURRENT_LIMIT);
 
-            logData("Elevator Arm Contact Switch A", elevatorArmContactSwitchA.get());
-            logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get());
-            logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get());
-            logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
-            logData("Pivoting Arm Contact Switch A", isPivotingArmLatchedSwitchA());
-            logData("Pivoting Arm Contact Switch B", isElevatorArmContactSwitchB());
-            logData("Pivoting Arm Latched", isPivotingArmLatched());
+        logData("Elevator Arm Contact Switch A", elevatorArmContactSwitchA.get());
+        logData("Elevator Arm Contact Switch B", elevatorArmContactSwitchB.get());
+        logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get());
+        logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
+        logData("Pivoting Arm Contact Switch A", isPivotingArmLatchedSwitchA());
+        logData("Pivoting Arm Contact Switch B", isElevatorArmContactSwitchB());
+        logData("Pivoting Arm Latched", isPivotingArmLatched());
 
-            logData("Pivot Solenoid State", getPivotState().toString());
-            logData("Latch Solenoid State", getClawState().toString());
-            logData("Brake Solenoid State", getBrakeState().toString());
+        logData("Pivot Solenoid State", getPivotState().toString());
+        logData("Latch Solenoid State", getClawState().toString());
+        logData("Brake Solenoid State", getBrakeState().toString());
 
-            logData("Climber Is Paused", isPaused);
-            logData("Climber Is Step By Step", stepByStep);
-            logData("Current Climber State", climbState.toString());
-            logData("Climb Times Run", timesRun);
+        logData("Climber Is Paused", isPaused);
+        logData("Climber Is Step By Step", stepByStep);
+        logData("Current Climber State", climbState.toString());
+        logData("Climb Times Run", timesRun);
 
 
-            if (sensorClimb) {
-                logData("Current Climber WaitCondition", climbState.positionClimb.waitCondition.apply(this));
-            } else {
-                logData("Current Climber WaitCondition", climbState.sensorClimb.waitCondition.apply(this));
-            }
+        if (sensorClimb) {
+            logData("Current Climber WaitCondition", climbState.positionClimb.waitCondition.apply(this));
+        } else {
+            logData("Current Climber WaitCondition", climbState.sensorClimb.waitCondition.apply(this));
         }
     }
 
     public void configCoast() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         climberMotor.setNeutralMode(NeutralMode.Coast);
         climberMotor2.setNeutralMode(NeutralMode.Coast);
         setBrakeState(BrakeState.FREE);
     }
 
     public void configBrake() {
-        if (Constants.GRAPPLE_CLIMB) return;
-
         climberMotor.setNeutralMode(NeutralMode.Coast);
         climberMotor2.setNeutralMode(NeutralMode.Coast);
         setBrakeState(BrakeState.BRAKING);
