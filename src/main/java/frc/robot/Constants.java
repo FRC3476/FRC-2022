@@ -534,4 +534,10 @@ public final class Constants {
 
     // Grapple Climber Constants
     public static final int GRAPPLE_CLIMBER_PERIOD = 50;
+
+    /**
+     * Flag to enable grapple climb If true, will not start Climber subsystem, instead will start GrappleClimber Will not run
+     * contents of Climber Constructor
+     */
+    public static final boolean GRAPPLE_CLIMB = true;
 }

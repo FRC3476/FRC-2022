@@ -56,6 +56,7 @@ class ClimbStep {
 }
 
 public final class Climber extends AbstractSubsystem {
+
     private static final Climber INSTANCE = new Climber();
 
     public static Climber getInstance() {
