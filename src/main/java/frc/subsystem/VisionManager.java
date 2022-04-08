@@ -193,7 +193,7 @@ public final class VisionManager extends AbstractSubsystem {
                     < getAllowedTurnError(aimToPosition.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
-                && getAccel().getNorm() < 0.75
+                && getAccel().getNorm() < 7.4
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
                 && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
             //@formatter:on
@@ -350,8 +350,8 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private double getLimelightTime() {
-        double limelightTime = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
-        logData("Limelight Latency", (limelight.getLatency() / 1000) + (11.0 / 1000));
+        double limelightTime = limelight.getTimestamp();
+        logData("Limelight Latency", Timer.getFPGATimestamp() - limelightTime);
         return limelightTime;
     }
 

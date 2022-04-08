@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import com.google.common.collect.EvictingQueue;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,6 +14,7 @@ import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
 import frc.robot.Constants;
 import frc.utility.Timer;
+import frc.utility.tracking.TimestampedPose;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static frc.robot.Constants.GRAVITY;
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class RobotTracker extends AbstractSubsystem {
 
     private final @NotNull AHRS gyroSensor;
@@ -55,6 +58,10 @@ public final class RobotTracker extends AbstractSubsystem {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private Translation2d acceleration = new Translation2d();
+
+    private final @NotNull EvictingQueue<TimestampedPose> poseHistory = EvictingQueue.create(50);
+
+    private @NotNull Translation2d positionOffset = new Translation2d();
 
 
     private RobotTracker() {
@@ -96,7 +103,28 @@ public final class RobotTracker extends AbstractSubsystem {
      *                              source or sync the epochs.
      */
     public void addVisionMeasurement(Translation2d visionRobotPoseMeters, double timestampSeconds) {
-        resetPosition(visionRobotPoseMeters);
+        lock.writeLock().lock();
+        try {
+            TimestampedPose beforePose = null;
+            TimestampedPose afterPose;
+
+            while (true) {
+                afterPose = poseHistory.peek();
+                if (afterPose == null) return;
+                if (afterPose.timestamp > timestampSeconds) {
+                    if (beforePose == null) return;
+                    double percent = (timestampSeconds - beforePose.timestamp) / (afterPose.timestamp - beforePose.timestamp);
+                    Pose2d interpolatedPose = beforePose.pose.interpolate(afterPose.pose, percent);
+                    positionOffset = visionRobotPoseMeters.minus(interpolatedPose.getTranslation());
+                    return;
+                } else {
+                    beforePose = poseHistory.poll();
+                    if (beforePose == null) return;
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
 //        try {
 //            swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
 //        } catch (RuntimeException e) {
@@ -158,7 +186,12 @@ public final class RobotTracker extends AbstractSubsystem {
             updateOdometry(time, rawGyroSensor, swerveModuleStates);
             lock.writeLock().lock();
             try {
-                latestEstimatedPose = swerveDriveOdometry.getPoseMeters();
+                Pose2d robotTrackerPose = swerveDriveOdometry.getPoseMeters();
+                poseHistory.add(new TimestampedPose(time, robotTrackerPose));
+
+                latestEstimatedPose = new Pose2d(robotTrackerPose.getTranslation().plus(positionOffset),
+                        robotTrackerPose.getRotation());
+
                 //gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
 
                 latestChassisSpeeds =
@@ -371,7 +404,7 @@ public final class RobotTracker extends AbstractSubsystem {
         final Drive drive = Drive.getInstance();
         lock.writeLock().lock();
         try {
-
+            positionOffset = new Translation2d();
             gyroOffset = pose.getRotation().minus(gyroAngle);
             swerveDriveOdometry.resetPosition(pose, gyroAngle);
             latestEstimatedPose = pose;

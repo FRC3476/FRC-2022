@@ -238,6 +238,13 @@ public final class Limelight extends AbstractSubsystem {
     }
 
     /**
+     * @return The timeStamp of the last processed frame
+     */
+    public double getTimestamp() {
+        return lastUpdate - (getLatency() + 11) / 1000;
+    }
+
+    /**
      * Sets limelight’s LED state
      */
     public void setLedMode(@NotNull LedMode ledMode) {
