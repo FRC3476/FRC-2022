@@ -5,7 +5,6 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
-import edu.wpi.first.wpilibj.DigitalGlitchFilter;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -90,10 +89,7 @@ public final class Hopper extends AbstractSubsystem {
         outtakeWheels.disableVoltageCompensation();
         outtakeWheels.burnFlash();
 
-        var glitchFilter = new DigitalGlitchFilter();
         beamBreak = new DigitalInput(Constants.BEAM_BREAK_DIO_ID);
-        glitchFilter.setPeriodNanoSeconds(1000000); //= 1ms
-        glitchFilter.add(beamBreak);
     }
 
     /**
