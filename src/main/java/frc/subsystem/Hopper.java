@@ -5,6 +5,8 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.wpilibj.DigitalGlitchFilter;
+import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Intake.IntakeSolState;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
+import static frc.robot.Constants.HOPPER_SPEED;
 
 public final class Hopper extends AbstractSubsystem {
 
@@ -26,6 +29,9 @@ public final class Hopper extends AbstractSubsystem {
     private double lastDetectionTime;
     private boolean disableEject = false;
     private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
+
+    private final DigitalInput beamBreak;
+    private double lastBeamBreakOpenTime = 0;
 
     public static Hopper getInstance() {
         return INSTANCE;
@@ -83,6 +89,11 @@ public final class Hopper extends AbstractSubsystem {
 
         outtakeWheels.disableVoltageCompensation();
         outtakeWheels.burnFlash();
+
+        var glitchFilter = new DigitalGlitchFilter();
+        beamBreak = new DigitalInput(Constants.BEAM_BREAK_DIO_ID);
+        glitchFilter.setPeriodNanoSeconds(1000000); //= 1ms
+        glitchFilter.add(beamBreak);
     }
 
     /**
@@ -172,10 +183,19 @@ public final class Hopper extends AbstractSubsystem {
         return currentBallColor;
     }
 
+
+    public double getLastBeamBreakOpenTime() {
+        return lastBeamBreakOpenTime;
+    }
+
     @Override
     public void update() {
         updateAllianceColor();
         updateOuttakeState();
+
+        if (beamBreak.get()) {
+            lastBeamBreakOpenTime = Timer.getFPGATimestamp();
+        }
 
         // Outtake motor control
 
@@ -198,19 +218,24 @@ public final class Hopper extends AbstractSubsystem {
         // Hopper Motor Control
         switch (wantedHopperState) {
             case ON:
-                hopperMotor.set(Constants.HOPPER_SPEED);
+                hopperMotor.set(HOPPER_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = true;
                 break;
             case OFF:
-                hopperMotor.set(0);
-                Shooter.getInstance().runFeederWheelReversed = false;
+                if (beamBreak.get()) {
+                    hopperMotor.set(HOPPER_SPEED);
+                    Shooter.getInstance().runFeederWheelReversed = true;
+                } else {
+                    hopperMotor.set(0);
+                    Shooter.getInstance().runFeederWheelReversed = false;
+                }
                 break;
             case REVERSE:
-                hopperMotor.set(-Constants.HOPPER_SPEED);
+                hopperMotor.set(-HOPPER_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
             case SLOW:
-                hopperMotor.set(Constants.HOPPER_SPEED / 2);
+                hopperMotor.set(HOPPER_SPEED / 2);
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
         }

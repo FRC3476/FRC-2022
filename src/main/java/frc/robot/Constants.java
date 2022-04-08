@@ -228,6 +228,8 @@ public final class Constants {
     public static final int HOPPER_CURRENT_LIMIT = 35;
     public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
+    public static final int BEAM_BREAK_DIO_ID = 7;
+
     // Outtake Constants
     public static final int OUTTAKE_CAN_ID = 60;
     public static final double OUTTAKE_REDUCTION = (3.0 / 1.0);
@@ -537,4 +539,5 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
+    public static final double BEAM_BREAK_EJECT_TIME = 1.5;
 }

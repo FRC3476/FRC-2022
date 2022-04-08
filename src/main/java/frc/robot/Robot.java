@@ -534,10 +534,7 @@ public class Robot extends TimedRobot {
 
         // Hood Eject
         if (buttonPanel.getRawButton(6)) {
-            shooter.setFeederChecksDisabled(true);
-            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
-            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
-            shooter.setFiring(true);
+            doShooterEject();
         } else if (xbox.getRawAxis(2) > 0.1) {
             shooter.setFeederChecksDisabled(false);
             if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
@@ -552,9 +549,14 @@ public class Robot extends TimedRobot {
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
-            shooter.setFeederChecksDisabled(false);
-            shooter.setFiring(false);
-            shooter.setSpeed(0);
+            if (hopper.getLastBeamBreakOpenTime() > Timer.getFPGATimestamp() + Constants.BEAM_BREAK_EJECT_TIME) {
+                //Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
+                doShooterEject();
+            } else {
+                shooter.setFeederChecksDisabled(false);
+                shooter.setFiring(false);
+                shooter.setSpeed(0);
+            }
             visionManager.unForceVisionOn(driverForcingVisionOn);
             if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
@@ -674,6 +676,14 @@ public class Robot extends TimedRobot {
         if (stick.getRisingEdge(2)) {
             shooter.setFeederChecksDisabled(!shooter.isFeederChecksDisabled());
         }
+    }
+
+    private void doShooterEject() {
+        final Shooter shooter = Shooter.getInstance();
+        shooter.setFeederChecksDisabled(true);
+        shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+        shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+        shooter.setFiring(true);
     }
 
     private void runShooter() {
