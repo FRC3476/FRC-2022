@@ -544,11 +544,12 @@ public final class Drive extends AbstractSubsystem {
 
     private final ReentrantLock swerveAutoControllerLock = new ReentrantLock();
     private @Nullable HolonomicDriveController swerveAutoController;
+    boolean swerveAutoControllerInitialized = false;
 
     public void setAutoPath(Trajectory trajectory) {
         currentAutoTrajectoryLock.lock();
         try {
-            resetAuto();
+            swerveAutoControllerInitialized = false;
             setDriveState(DriveState.RAMSETE);
             this.currentAutoTrajectory = trajectory;
             this.isAutoAiming = false;
@@ -578,6 +579,12 @@ public final class Drive extends AbstractSubsystem {
     private void updateRamsete() {
         currentAutoTrajectoryLock.lock();
         try {
+            if (!swerveAutoControllerInitialized) {
+                resetAuto();
+                assert currentAutoTrajectory != null;
+                swerveAutoControllerInitialized = true;
+            }
+
             Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
 
             Rotation2d targetHeading = autoTargetHeading;
@@ -585,9 +592,12 @@ public final class Drive extends AbstractSubsystem {
                 targetHeading = VisionManager.getInstance().getAngleToTarget();
             }
 
-            if (swerveAutoController == null) resetAuto();
-            if (swerveAutoController == null) return;
             try {
+                if (swerveAutoController == null) {
+                    DriverStation.reportError("swerveAutoController is null",
+                            Thread.getAllStackTraces().get(Thread.currentThread()));
+                    resetAuto();
+                }
                 ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
                         RobotTracker.getInstance().getLastEstimatedPoseMeters(),
                         goal,
