@@ -316,7 +316,13 @@ public final class Constants {
      * The time that the feeder must be on before it is allowed to turn off
      */
     public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
+
+    /**
+     * inches
+     */
+    public static final double SLOW_SHOOT_DISTANCE_THRESHOLD = 40;
     public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
+    public static final double SECOND_BALL_SHOOT_DELAY_SLOW = 0.4;
     public static final double RUMBLE_DELAY = 0.1666666667;
     public static final double RUMBLE_TIME = 0.25;
 

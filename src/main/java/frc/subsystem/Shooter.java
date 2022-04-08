@@ -628,15 +628,15 @@ public final class Shooter extends AbstractSubsystem {
                 if (
                         ((feederWheelState == FeederWheelState.FORWARD)
                                 && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
-                                && (Timer.getFPGATimestamp() > (VisionManager.getInstance().getDistanceToTarget() < 80 ?
-                                0.5 : SECOND_BALL_SHOOT_DELAY) + lastShotTime)
+                                && (Timer.getFPGATimestamp() >
+                                (VisionManager.getInstance().getDistanceToTarget() < SLOW_SHOOT_DISTANCE_THRESHOLD ?
+                                        SECOND_BALL_SHOOT_DELAY_SLOW : SECOND_BALL_SHOOT_DELAY) + lastShotTime)
                                 || feederChecksDisabled))
                 ) {
                     feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
                     lastShotTime = Timer.getFPGATimestamp();
                     Robot.setRumble(RumbleType.kLeftRumble, 0);
                 } else {
-                    // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > lastShotTime + FEEDER_CHANGE_STATE_DELAY_SEC) {
                         if (runFeederWheelReversed) {
                             feederWheel.set(ControlMode.PercentOutput, -0.3);
