@@ -632,7 +632,7 @@ public class Robot extends TimedRobot {
                 climber.togglePivot();
             }
 
-            if (stick.getRawButton(11) &&) {
+            if (stick.getRawButton(11)) {
                 System.out.println("going up");
                 climber.setClimberMotor(0.5);
             } else if (stick.getRawButton(12)) {
