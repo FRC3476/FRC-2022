@@ -2,6 +2,8 @@ package frc.utility;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class ControllerDriveInputs {
 
     private double x, y, rotation;
@@ -101,11 +103,17 @@ public class ControllerDriveInputs {
         return this;
     }
 
-    /**
-     * Checks if the magnitude of the driveInput vector is the same
-     */
-    public boolean equals(@NotNull ControllerDriveInputs controllerDriveInputs) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ControllerDriveInputs that = (ControllerDriveInputs) o;
+        return Double.compare(that.x, x) == 0 && Double.compare(that.y, y) == 0 && Double.compare(
+                that.rotation, rotation) == 0;
+    }
 
-        return this.getX() + this.getY() == controllerDriveInputs.getX() + controllerDriveInputs.getY();
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, rotation);
     }
 }

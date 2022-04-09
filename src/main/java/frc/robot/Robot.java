@@ -571,7 +571,7 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         // Will terminate climb auto thread if any stick movement happens
-        if (getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+        if (!getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
