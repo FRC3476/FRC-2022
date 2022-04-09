@@ -65,9 +65,6 @@ public final class Climber extends AbstractSubsystem {
 
     // Safe Lazy Initialization. Initializes itself when first called
     public static @NotNull Climber getInstance() {
-        if (Constants.GRAPPLE_CLIMB) {
-            throw new IllegalStateException();
-        }
 
         CLIMBER_INSTANCE_LOCK.readLock().lock();
         try {
@@ -80,6 +77,10 @@ public final class Climber extends AbstractSubsystem {
 
         CLIMBER_INSTANCE_LOCK.writeLock().lock();
         try {
+            if (Constants.GRAPPLE_CLIMB) {
+                throw new IllegalStateException();
+            }
+
             return Objects.requireNonNullElseGet(INSTANCE, () -> INSTANCE = new Climber());
         } finally {
             CLIMBER_INSTANCE_LOCK.writeLock().unlock();

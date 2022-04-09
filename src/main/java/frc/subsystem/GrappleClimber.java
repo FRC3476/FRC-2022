@@ -17,9 +17,6 @@ public class GrappleClimber extends AbstractSubsystem {
 
     // Safe Lazy Initialization. Initializes itself when first called
     public static @NotNull GrappleClimber getInstance() {
-        if (!Constants.GRAPPLE_CLIMB) {
-            throw new IllegalStateException();
-        }
 
         GRAPPLE_INSTANCE_LOCK.readLock().lock();
         try {
@@ -32,6 +29,10 @@ public class GrappleClimber extends AbstractSubsystem {
 
         GRAPPLE_INSTANCE_LOCK.writeLock().lock();
         try {
+            if (!Constants.GRAPPLE_CLIMB) {
+                throw new IllegalStateException();
+            }
+
             return Objects.requireNonNullElseGet(instance, () -> instance = new GrappleClimber());
         } finally {
             GRAPPLE_INSTANCE_LOCK.writeLock().unlock();
