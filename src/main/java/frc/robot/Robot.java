@@ -537,17 +537,18 @@ public class Robot extends TimedRobot {
             doShooterEject();
         } else if (xbox.getRawAxis(2) > 0.1) {
             shooter.setFeederChecksDisabled(false);
-        } else if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
-            shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
-            shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-            shooter.setFiring(true);
-            hopper.setHopperState(Hopper.HopperState.ON);
-            doNormalDriving();
-            drive.doHold();
-            visionManager.unForceVisionOn(driverForcingVisionOn);
-        } else {
-            visionManager.forceVisionOn(driverForcingVisionOn);
-            visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+                shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+                shooter.setSpeed(shooterPreset.getFlywheelSpeed());
+                shooter.setFiring(true);
+                hopper.setHopperState(Hopper.HopperState.ON);
+                doNormalDriving();
+                drive.doHold();
+                visionManager.unForceVisionOn(driverForcingVisionOn);
+            } else {
+                visionManager.forceVisionOn(driverForcingVisionOn);
+                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+            }
         } else {
             if (hopper.getLastBeamBreakOpenTime() > Timer.getFPGATimestamp() + Constants.BEAM_BREAK_EJECT_TIME) {
                 //Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
@@ -557,6 +558,7 @@ public class Robot extends TimedRobot {
                 shooter.setFiring(false);
                 shooter.setSpeed(0);
             }
+            
             visionManager.unForceVisionOn(driverForcingVisionOn);
             if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
