@@ -60,7 +60,7 @@ public class GrappleClimber extends AbstractSubsystem {
     private void resetSolenoids() {
         openSolenoid.set(true);
         closedSolenoid.set(true);
-        ropeCoilSolenoid.set(true);`
+        ropeCoilSolenoid.set(true);
     }
 
     public void toggleGrappleLineup() {
