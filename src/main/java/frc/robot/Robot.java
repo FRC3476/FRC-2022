@@ -571,7 +571,7 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         // Will terminate climb auto thread if any stick movement happens
-        if (!getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+        if (autoThread != null && !getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
@@ -819,7 +819,7 @@ public class Robot extends TimedRobot {
             // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
             controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads), Math.sin(povRads),
                     controllerDriveInputs.getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
-        } else if (slowMovement && controllerDriveInputs.equals(NO_MOTION_CONTROLLER_INPUTS)) {
+        } else if (slowMovement && controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0) {
             // If D-Pad movement has been used in the past without the use of normal movement, we will continue to use
             // slow turning when not moving
             controllerDriveInputs = new ControllerDriveInputs(0, 0,
@@ -833,7 +833,8 @@ public class Robot extends TimedRobot {
     }
 
     private void doNormalDriving() {
-        if (!autoThread.isAlive()) {
+
+        if (autoThread == null || !autoThread.isAlive()) {
             final Drive drive = Drive.getInstance();
 
             ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();

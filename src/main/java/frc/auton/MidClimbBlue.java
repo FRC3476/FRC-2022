@@ -7,6 +7,6 @@ import java.io.File;
 
 public class MidClimbBlue extends AbstractGuiAuto {
     public MidClimbBlue() {
-        super(new File(Filesystem.getDeployDirectory().getPath() + "/autos/blue/midClimbBlue.json"));
+        super(new File(Filesystem.getDeployDirectory().getPath() + "/autos/blue/midClimb.json"));
     }
 }
