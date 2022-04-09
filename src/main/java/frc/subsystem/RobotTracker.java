@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.SPI;
 import frc.robot.Constants;
 import frc.utility.Timer;
@@ -116,7 +115,7 @@ public final class RobotTracker extends AbstractSubsystem {
                 if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
                     return;
                 } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
-                    return;
+                    positionOffset = visionRobotPoseMeters.minus(timestampedPoses.get(index - 1).pose.getTranslation());
                 } else {
                     double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
                             (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
@@ -173,7 +172,7 @@ public final class RobotTracker extends AbstractSubsystem {
     @Override
     public void update() {
         final Drive drive = Drive.getInstance();
-        double time = WPIUtilJNI.now() * 1.0e-6; // seconds
+        double time = Timer.getFPGATimestamp(); // seconds
 
         Rotation2d rawGyroSensor = gyroSensor.getRotation2d();
         synchronized (previousGyroRotations) {
@@ -203,7 +202,6 @@ public final class RobotTracker extends AbstractSubsystem {
                                 getGyroAngle());
 
                 latencyCompensatedChassisSpeeds = latestChassisSpeeds;
-                currentOdometryTime = Timer.getFPGATimestamp();
 
                 gyroPitchVelocity = (RobotTracker.getInstance().getGyro().getPitch() - lastGyroPitch)
                         / ((double) (ROBOT_TRACKER_PERIOD * 2) / 1000);
@@ -214,9 +212,9 @@ public final class RobotTracker extends AbstractSubsystem {
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
 
 
-                acceleration = new Translation2d(prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond,
-                        prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond).times(
-                        ROBOT_TRACKER_PERIOD * 2);
+                acceleration = new Translation2d(prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vxMetersPerSecond,
+                        prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond)
+                        .times(1 / (time - currentOdometryTime)); // currentOdometryTime is the last loop time
 
                 if (maxGyroRoll < lastGyroRoll) {
                     maxGyroRoll = lastGyroRoll;
@@ -225,6 +223,8 @@ public final class RobotTracker extends AbstractSubsystem {
                 if (minGyroRoll > lastGyroRoll) {
                     minGyroRoll = lastGyroRoll;
                 }
+
+                currentOdometryTime = Timer.getFPGATimestamp();
             } finally {
                 lock.writeLock().unlock();
             }
@@ -520,6 +520,10 @@ public final class RobotTracker extends AbstractSubsystem {
 
             logData("Min Gyro Roll", minGyroRoll);
             logData("Max Gyro Roll", maxGyroRoll);
+
+            logData("Acceleration", acceleration.getNorm());
+            logData("Acceleration X", acceleration.getX());
+            logData("Acceleration Y", acceleration.getY());
 
 
 //        SmartDashboard.putNumber("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());

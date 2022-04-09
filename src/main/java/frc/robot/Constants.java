@@ -177,7 +177,7 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared
      */
-    public static final double MAX_ACCELERATION = 20;
+    public static final double MAX_ACCELERATION = 16;
 
     /**
      * Units are in Radians per Second Squared
@@ -540,4 +540,5 @@ public final class Constants {
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
     public static final double BEAM_BREAK_EJECT_TIME = 1.5;
+    public static final int MAX_BAD_VISION_ITERATIONS = 45;
 }

@@ -545,9 +545,7 @@ public class Robot extends TimedRobot {
             doShooterEject();
         } else if (xbox.getRawAxis(2) > 0.1) {
             shooter.setFeederChecksDisabled(false);
-            if (!doShootWhileMove) {
-                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
-            } else if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
