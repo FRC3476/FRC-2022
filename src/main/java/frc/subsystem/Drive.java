@@ -124,6 +124,9 @@ public final class Drive extends AbstractSubsystem {
 
     final @NotNull CANCoder[] swerveCanCoders = new CANCoder[4];
 
+
+    public volatile boolean slowerAccel = false;
+
     private Drive() {
         super(Constants.DRIVE_PERIOD, 5);
 
@@ -455,7 +458,7 @@ public final class Drive extends AbstractSubsystem {
         }
         lastLoopTime = Timer.getFPGATimestamp();
 
-        double maxVelocityChange = Constants.MAX_ACCELERATION * dt;
+        double maxVelocityChange = (slowerAccel ? Constants.MAX_SHOOT_ACCELERATION : Constants.MAX_ACCELERATION) * dt;
         double maxAngularVelocityChange = Constants.MAX_ANGULAR_ACCELERATION * dt;
 
         //field relative

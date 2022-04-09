@@ -180,6 +180,11 @@ public final class Constants {
     public static final double MAX_ACCELERATION = 16;
 
     /**
+     * Units are in Meters Per Second Squared
+     */
+    public static final double MAX_SHOOT_ACCELERATION = 8;
+
+    /**
      * Units are in Radians per Second Squared
      */
     public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 22);
