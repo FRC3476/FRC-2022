@@ -605,7 +605,7 @@ public class Robot extends TimedRobot {
             shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!(xbox.getRawAxis(2) > 0.1) || !xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            if (!((xbox.getRawAxis(2) > 0.1) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
                 // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
