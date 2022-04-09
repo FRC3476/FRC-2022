@@ -91,10 +91,10 @@ public final class Constants {
      * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827)};
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5)};
 
 
     /**
@@ -177,12 +177,12 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared
      */
-    public static final double MAX_ACCELERATION = 22;
+    public static final double MAX_ACCELERATION = 13;
 
     /**
      * Units are in Radians per Second Squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 27);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 22);
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);

@@ -172,7 +172,7 @@ public final class Drive extends AbstractSubsystem {
             swerveMotors[i].config_kD(0, Constants.SWERVE_DRIVE_D, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kI(0, Constants.SWERVE_DRIVE_I, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_kF(0, Constants.SWERVE_DRIVE_F, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
-            swerveMotors[i].configMotionAcceleration(Constants.SWERVE_ACCELERATION, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
+            //swerveMotors[i].configMotionAcceleration(Constants.SWERVE_ACCELERATION, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].configMotionCruiseVelocity(Constants.SWERVE_CRUISE_VELOCITY, Constants.SWERVE_MOTOR_PID_TIMEOUT_MS);
             swerveMotors[i].config_IntegralZone(0, Constants.SWERVE_DRIVE_INTEGRAL_ZONE);
 
@@ -203,7 +203,7 @@ public final class Drive extends AbstractSubsystem {
         turnI.setDouble(Constants.DEFAULT_TURN_I);
         turnD.setDouble(Constants.DEFAULT_TURN_D);
         turnMaxVelocity.setDouble(DEFAULT_TURN_MAX_VELOCITY);
-        turnMaxAcceleration.setDouble(DEFAULT_TURN_MAX_ACCELERATION);
+        //turnMaxAcceleration.setDouble(DEFAULT_TURN_MAX_ACCELERATION);
 
         turnP.addListener(event -> turnPID.setP(event.getEntry().getDouble(Constants.DEFAULT_TURN_P)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
@@ -349,7 +349,7 @@ public final class Drive extends AbstractSubsystem {
 
     public void swerveDrive(ChassisSpeeds chassisSpeeds) {
 
-        chassisSpeeds = limitAcceleration(chassisSpeeds);
+        Translation2d acceleration = limitAcceleration(chassisSpeeds);
 
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
@@ -363,13 +363,24 @@ public final class Drive extends AbstractSubsystem {
                 chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_HIGH_SPEED_M);
-        setSwerveModuleStates(moduleStates, rotate);
+        setSwerveModuleStates(moduleStates, rotate, acceleration);
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate) {
+        setSwerveModuleStates(moduleStates, rotate, new Translation2d());
+    }
+
+    public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, Translation2d acceleration) {
+        acceleration = acceleration.rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
+        double accelNorm = acceleration.getNorm();
         for (int i = 0; i < 4; i++) {
             SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
                     Rotation2d.fromDegrees(getWheelRotation(i)));
+            double rotatedAccel = accelNorm;
+            if (!(Math.abs(targetState.angle.minus(moduleStates[i].angle).getDegrees()) < 5)) {
+                rotatedAccel = -rotatedAccel;
+            }
+
             //SwerveModuleState targetState = moduleStates[i];
             // TODO: flip the acceleration if we flip the module
             double targetAngle = targetState.angle.getDegrees() % 360;
@@ -386,7 +397,7 @@ public final class Drive extends AbstractSubsystem {
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, rotatedAccel);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getRelativeSwervePosition(i) + angleDiff);
@@ -425,7 +436,7 @@ public final class Drive extends AbstractSubsystem {
      * @return an acceleration limited chassis speeds
      */
     @Contract(mutates = "param")
-    @NotNull ChassisSpeeds limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
+    @NotNull Translation2d limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
         double dt;
         if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 20) {
             // If the dt is a lot greater than our nominal dt reset the acceleration limiting
@@ -442,37 +453,40 @@ public final class Drive extends AbstractSubsystem {
 
         Translation2d velocityCommand = new Translation2d(
                 commandedVelocity.vxMetersPerSecond, commandedVelocity.vyMetersPerSecond
-        );
+        ).rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
 
         Translation2d lastVelocityCommand = new Translation2d(
                 lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond
-        );
+        ).rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
 
         Translation2d velocityChange = velocityCommand.minus(lastVelocityCommand);
         double velocityChangeAngle = Math.atan2(velocityChange.getY(), velocityChange.getX()); //Radians
 
+        Translation2d limitedVelocityVectorChange = velocityChange;
         // Check if velocity change exceeds max limit
         if (velocityChange.getNorm() > maxVelocityChange) {
             // Get limited velocity vector difference in cartesian coordinate system
-            Translation2d limitedVelocityVectorChange = new Translation2d(maxVelocityChange, new Rotation2d(velocityChangeAngle));
+            limitedVelocityVectorChange = new Translation2d(maxVelocityChange, new Rotation2d(velocityChangeAngle));
             Translation2d limitedVelocityVector = lastVelocityCommand.plus(limitedVelocityVectorChange);
 
-            commandedVelocity.vyMetersPerSecond = limitedVelocityVector.getX();
-            commandedVelocity.vyMetersPerSecond = limitedVelocityVector.getY();
+            Translation2d limitedVelocityVectorRotated =
+                    limitedVelocityVector.rotateBy(RobotTracker.getInstance().getGyroAngle());
+
+            commandedVelocity.vxMetersPerSecond = limitedVelocityVectorRotated.getX();
+            commandedVelocity.vyMetersPerSecond = limitedVelocityVectorRotated.getY();
         }
 
         // Checks if requested change in Angular Velocity is greater than allowed
         if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond)
                 > maxAngularVelocityChange) {
             // Add the lastCommandVelocity and the maxAngularVelocityChange (changed to have the same sign as the actual change)
-            commandedVelocity.omegaRadiansPerSecond =
-                    lastRequestedVelocity.omegaRadiansPerSecond +
-                            Math.copySign(maxAngularVelocityChange,
-                                    commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
+            commandedVelocity.omegaRadiansPerSecond = lastRequestedVelocity.omegaRadiansPerSecond +
+                    Math.copySign(maxAngularVelocityChange,
+                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
         }
 
         lastRequestedVelocity = commandedVelocity; // save our current commanded velocity to be used in next iteration
-        return commandedVelocity;
+        return limitedVelocityVectorChange;
     }
 
     private final double[] lastWheelSpeeds = new double[4];
@@ -484,23 +498,23 @@ public final class Drive extends AbstractSubsystem {
      * @param module   The module to set the voltage on
      * @param velocity The target velocity
      */
-    public void setMotorSpeed(int module, double velocity) {
+    public void setMotorSpeed(int module, double velocity, double acceleration) {
         if (module < 0 || module > 3) {
             throw new IllegalArgumentException("Module must be between 0 and 3");
         }
 
-        /*
-         * This might have issues in certain situations (ie. when the wheel speed switches directions from optimization), but
-         * it should be fine since we'll only see that for one iteration.
-         */
-        double currentTime = Timer.getFPGATimestamp();
-        double dt = currentTime - lastWheelSpeedsTime[module];
-        double acceleration = (velocity - lastWheelSpeeds[module]) / dt;
-        lastWheelSpeeds[module] = velocity;
-        lastWheelSpeedsTime[module] = currentTime;
-        if (dt > 0.15) {
-            acceleration = 0;
-        }
+//        /*
+//         * This might have issues in certain situations (ie. when the wheel speed switches directions from optimization), but
+//         * it should be fine since we'll only see that for one iteration.
+//         */
+//        double currentTime = Timer.getFPGATimestamp();
+//        double dt = currentTime - lastWheelSpeedsTime[module];
+//        double acceleration = (velocity - lastWheelSpeeds[module]) / dt;
+//        lastWheelSpeeds[module] = velocity;
+//        lastWheelSpeedsTime[module] = currentTime;
+//        if (dt > 0.15) {
+//            acceleration = 0;
+//        }
 
         double ffv = Constants.DRIVE_FEEDFORWARD[module].calculate(velocity, acceleration);
         // Converts ffv voltage to percent output and sets it to motor

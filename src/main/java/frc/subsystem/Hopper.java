@@ -189,7 +189,7 @@ public final class Hopper extends AbstractSubsystem {
         updateAllianceColor();
         updateOuttakeState();
 
-        if (beamBreak.get()) {
+        if (isBeamBroken()) {
             lastBeamBreakOpenTime = Timer.getFPGATimestamp();
         }
 
@@ -218,7 +218,7 @@ public final class Hopper extends AbstractSubsystem {
                 Shooter.getInstance().runFeederWheelReversed = true;
                 break;
             case OFF:
-                if (beamBreak.get()) {
+                if (isBeamBroken()) {
                     hopperMotor.set(HOPPER_SPEED);
                     Shooter.getInstance().runFeederWheelReversed = true;
                 } else {
@@ -235,6 +235,10 @@ public final class Hopper extends AbstractSubsystem {
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
         }
+    }
+
+    private boolean isBeamBroken() {
+        return false;
     }
 
     public void setHopperState(HopperState hopperState) {
