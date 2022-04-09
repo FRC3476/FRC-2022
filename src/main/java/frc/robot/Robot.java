@@ -537,6 +537,7 @@ public class Robot extends TimedRobot {
         // Toggle for shoot while move mode
         if (stick.getRisingEdge(8)) {
             doShootWhileMove = !doShootWhileMove;
+            SmartDashboard.putBoolean("Do Shoot while move", doShootWhileMove);
         }
 
         // Hood Eject
