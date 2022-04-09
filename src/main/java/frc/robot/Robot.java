@@ -533,17 +533,21 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
 
+        // Shooting / Moving control block
         if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            // If trying to shoot with left bumper (stop and shoot)
+            shooter.setFeederChecksDisabled(false);
             hopper.setHopperState(Hopper.HopperState.ON);
             visionManager.autoTurnRobotToTarget(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
         } else if (buttonPanel.getRawButton(6)) {
-
-            // Hood Eject
+            // If trying to Hood Eject
             doShooterEject();
             doNormalDriving();
         } else if (xbox.getRawAxis(2) > 0.1) {
+            // If attempting to shoot with left trigger
             shooter.setFeederChecksDisabled(false);
-            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+            if (isTryingToRunShooterFromButtonPanel()) {
+                //If shooting from button (no vision)
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
@@ -552,37 +556,40 @@ public class Robot extends TimedRobot {
                 drive.doHold();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
+                // Do Shooting while moving (using vision)
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             if (hopper.getLastBeamBreakOpenTime() > Timer.getFPGATimestamp() + Constants.BEAM_BREAK_EJECT_TIME) {
-                //Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
+                // Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
                 doShooterEject();
             } else {
+                // Not trying to do anything else with shooter will stop all action with it
                 shooter.setFeederChecksDisabled(false);
                 shooter.setFiring(false);
                 shooter.setSpeed(0);
             }
 
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot
-                // to be
-                // driven
+            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) {
+                // If we're climbing don't allow the robot to be driven
                 doNormalDriving();
             } else {
-                // Stop the robot from moving
+                // Stop the robot from moving if doing no action with it
                 drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
             }
         }
 
         runShooter();
 
+        // Intake solenoid control
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
         }
 
+        // Intake and hopper motor control
         if (xbox.getRawAxis(3) > 0.1) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
@@ -598,7 +605,7 @@ public class Robot extends TimedRobot {
             shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!(xbox.getRawAxis(2) > 0.1) || !xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            if (!((xbox.getRawAxis(2) > 0.1) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
                 // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
@@ -625,7 +632,8 @@ public class Robot extends TimedRobot {
 //        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {
 //            visionManager.adjustShooterHoodBias(0.5);
 //        }
-        
+
+        // Climber controls
         if (stick.getRisingEdge(9)) {
             climber.toggleClaw();
         }
@@ -687,6 +695,8 @@ public class Robot extends TimedRobot {
             shooter.setFeederChecksDisabled(!shooter.isFeederChecksDisabled());
         }
     }
+
+    // Utility methods
 
     private void doShooterEject() {
         final Shooter shooter = Shooter.getInstance();
