@@ -531,15 +531,23 @@ public class Robot extends TimedRobot {
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
         final Climber climber;
+        final GrappleClimber grappleClimber;
 
         if (!Constants.GRAPPLE_CLIMB) {
             climber = Climber.getInstance();
+        } else {
+            grappleClimber = GrappleClimber.getInstance();
         }
 
         VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
         stick.update();
         buttonPanel.update();
+
+        // Deploys grapple lineup
+        if (stick.getRisingEdge(7)) {
+            grappleClimber.toggleGrappleLineup();
+        }
 
         // Hood Eject
         if (buttonPanel.getRawButton(6)) {

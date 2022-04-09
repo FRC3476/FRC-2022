@@ -39,18 +39,32 @@ public class GrappleClimber extends AbstractSubsystem {
         }
     }
 
-    private Solenoid openSolenoid;
-    private Solenoid closedSolenoid;
-    private Solenoid lineupSolenoid;
-    private Solenoid ropeCoilSolenoid;
+    private @NotNull Solenoid openSolenoid;
+    private @NotNull Solenoid closedSolenoid;
+    private @NotNull Solenoid lineupSolenoid;
+    private @NotNull Solenoid ropeCoilSolenoid;
 
     private GrappleClimber() {
         super(Constants.GRAPPLE_CLIMBER_PERIOD, 1);
 
+        // Creating solenoids
         openSolenoid = getPneumaticsHub().makeSolenoid(Constants.OPEN_GRAPPLE_SOL_ID);
         closedSolenoid = getPneumaticsHub().makeSolenoid(Constants.CLOSED_GRAPPLE_SOL_ID);
         lineupSolenoid = getPneumaticsHub().makeSolenoid(Constants.LINEUP_GRAPPLE_SOL_ID);
         ropeCoilSolenoid = getPneumaticsHub().makeSolenoid(Constants.ROPE_COIL_GRAPPLE_SOL_ID);
+
+        resetSolenoids();
+    }
+
+    // Sets solenoids to opposite state so they can return back to default when about to launch
+    private void resetSolenoids() {
+        openSolenoid.set(true);
+        closedSolenoid.set(true);
+        ropeCoilSolenoid.set(true);`
+    }
+
+    public void toggleGrappleLineup() {
+        lineupSolenoid.set(!lineupSolenoid.get());
     }
 
     @Override
