@@ -809,7 +809,7 @@ public class Robot extends TimedRobot {
      *
      * @param controllerDriveInputs The controllerDrive input you want to modify
      */
-    private void checkSlowMovement(ControllerDriveInputs controllerDriveInputs) {
+    private ControllerDriveInputs checkSlowMovement(ControllerDriveInputs controllerDriveInputs) {
 
         // Will use slow movements if using the xbox D-Pad
         if (xbox.getPOV() != -1) {
@@ -828,14 +828,15 @@ public class Robot extends TimedRobot {
             // If using normal inputs, resets slow movement flag and uses normal inputs
             slowMovement = false;
         }
+
+        return controllerDriveInputs;
     }
 
     private void doNormalDriving() {
-        if (!DriverStation.isAutonomous()) {
+        if (!autoThread.isAlive()) {
             final Drive drive = Drive.getInstance();
 
             ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
-            checkSlowMovement(controllerDriveInputs);
 
             if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                     && drive.getSpeedSquared() < 0.1) {
@@ -857,19 +858,19 @@ public class Robot extends TimedRobot {
     private ControllerDriveInputs getControllerDriveInputs() {
         if (useFieldRelative) {
             if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
             } else {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
             }
         } else {
             if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
             } else {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
+                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
+                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
             }
         }
     }
