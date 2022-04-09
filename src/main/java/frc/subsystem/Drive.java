@@ -349,7 +349,7 @@ public final class Drive extends AbstractSubsystem {
 
     public void swerveDrive(ChassisSpeeds chassisSpeeds) {
 
-        Translation2d acceleration = limitAcceleration(chassisSpeeds);
+        Translation2d accelerationFR = limitAcceleration(chassisSpeeds);
 
 
         SmartDashboard.putNumber("Drive Command X Velocity", chassisSpeeds.vxMetersPerSecond);
@@ -363,7 +363,7 @@ public final class Drive extends AbstractSubsystem {
                 chassisSpeeds.omegaRadiansPerSecond != 0;
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_HIGH_SPEED_M);
-        setSwerveModuleStates(moduleStates, rotate, acceleration);
+        setSwerveModuleStates(moduleStates, rotate, accelerationFR);
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate) {
@@ -371,7 +371,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, Translation2d acceleration) {
-        acceleration = acceleration.rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
+        acceleration = toRobotRelative(acceleration);
         double accelNorm = acceleration.getNorm();
         for (int i = 0; i < 4; i++) {
             SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
@@ -422,7 +422,8 @@ public final class Drive extends AbstractSubsystem {
         return angleDiff;
     }
 
-    @NotNull ChassisSpeeds lastRequestedVelocity = new ChassisSpeeds(0, 0, 0);
+    @NotNull Translation2d lastRequestedVelocity = new Translation2d();
+    double lastRequestedRotation = 0;
 
     private double lastLoopTime = 0;
 
@@ -432,8 +433,8 @@ public final class Drive extends AbstractSubsystem {
      * Limits the acceleration by ensuring that the difference between the command and previous velocity doesn't exceed a set
      * value
      *
-     * @param commandedVelocity Desired velocity (The chassis speeds is mutated to the limited acceleration)
-     * @return an acceleration limited chassis speeds
+     * @param commandedVelocity Desired velocity (The chassis speeds is mutated to the limited acceleration) (robot centric)
+     * @return The requested acceleration of the robot (field centric)
      */
     @Contract(mutates = "param")
     @NotNull Translation2d limitAcceleration(@NotNull ChassisSpeeds commandedVelocity) {
@@ -441,7 +442,13 @@ public final class Drive extends AbstractSubsystem {
         if ((Timer.getFPGATimestamp() - lastLoopTime) > ((double) Constants.DRIVE_PERIOD / 1000) * 20) {
             // If the dt is a lot greater than our nominal dt reset the acceleration limiting
             // (ex. we've been disabled for a while)
-            lastRequestedVelocity = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+            ChassisSpeeds currentChassisSpeeds = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+            lastRequestedVelocity = new Translation2d(
+                    currentChassisSpeeds.vxMetersPerSecond,
+                    currentChassisSpeeds.vyMetersPerSecond
+            );
+
+            lastRequestedRotation = currentChassisSpeeds.omegaRadiansPerSecond;
             dt = (double) Constants.DRIVE_PERIOD / 1000;
         } else {
             dt = Timer.getFPGATimestamp() - lastLoopTime;
@@ -451,42 +458,64 @@ public final class Drive extends AbstractSubsystem {
         double maxVelocityChange = Constants.MAX_ACCELERATION * dt;
         double maxAngularVelocityChange = Constants.MAX_ANGULAR_ACCELERATION * dt;
 
-        Translation2d velocityCommand = new Translation2d(
-                commandedVelocity.vxMetersPerSecond, commandedVelocity.vyMetersPerSecond
-        ).rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
+        //field relative
+        Translation2d velocityCommand = toFieldRelative(
+                new Translation2d(commandedVelocity.vxMetersPerSecond, commandedVelocity.vyMetersPerSecond
+                ));
 
-        Translation2d lastVelocityCommand = new Translation2d(
-                lastRequestedVelocity.vxMetersPerSecond, lastRequestedVelocity.vyMetersPerSecond
-        ).rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
-
-        Translation2d velocityChange = velocityCommand.minus(lastVelocityCommand);
+        Translation2d velocityChange = velocityCommand.minus(lastRequestedVelocity);
         double velocityChangeAngle = Math.atan2(velocityChange.getY(), velocityChange.getX()); //Radians
 
         Translation2d limitedVelocityVectorChange = velocityChange;
+        Translation2d limitedVelocityVector = velocityCommand;
         // Check if velocity change exceeds max limit
         if (velocityChange.getNorm() > maxVelocityChange) {
             // Get limited velocity vector difference in cartesian coordinate system
             limitedVelocityVectorChange = new Translation2d(maxVelocityChange, new Rotation2d(velocityChangeAngle));
-            Translation2d limitedVelocityVector = lastVelocityCommand.plus(limitedVelocityVectorChange);
+            limitedVelocityVector = lastRequestedVelocity.plus(limitedVelocityVectorChange);
 
-            Translation2d limitedVelocityVectorRotated =
-                    limitedVelocityVector.rotateBy(RobotTracker.getInstance().getGyroAngle());
+            //robot relative
+            Translation2d limitedVelocityVectorRotated = toRobotRelative(limitedVelocityVector);
 
             commandedVelocity.vxMetersPerSecond = limitedVelocityVectorRotated.getX();
             commandedVelocity.vyMetersPerSecond = limitedVelocityVectorRotated.getY();
         }
 
         // Checks if requested change in Angular Velocity is greater than allowed
-        if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond)
+        if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedRotation)
                 > maxAngularVelocityChange) {
             // Add the lastCommandVelocity and the maxAngularVelocityChange (changed to have the same sign as the actual change)
-            commandedVelocity.omegaRadiansPerSecond = lastRequestedVelocity.omegaRadiansPerSecond +
+            commandedVelocity.omegaRadiansPerSecond = lastRequestedRotation +
                     Math.copySign(maxAngularVelocityChange,
-                            commandedVelocity.omegaRadiansPerSecond - lastRequestedVelocity.omegaRadiansPerSecond);
+                            commandedVelocity.omegaRadiansPerSecond - lastRequestedRotation);
         }
 
-        lastRequestedVelocity = commandedVelocity; // save our current commanded velocity to be used in next iteration
-        return limitedVelocityVectorChange;
+
+        // save our current commanded velocity to be used in next iteration
+        lastRequestedRotation = commandedVelocity.omegaRadiansPerSecond;
+        lastRequestedVelocity = limitedVelocityVector;//field
+
+        return limitedVelocityVectorChange;//field
+    }
+
+    /**
+     * Converts a field relative velocity to be robot relative
+     *
+     * @param fieldRelativeTranslation a field relative velocity
+     * @return a robot relative velocity
+     */
+    private Translation2d toRobotRelative(Translation2d fieldRelativeTranslation) {
+        return fieldRelativeTranslation.rotateBy(RobotTracker.getInstance().getGyroAngle().unaryMinus());
+    }
+
+    /**
+     * Converts a robot relative velocity to be field relative
+     *
+     * @param robotRelativeTranslation a field relative velocity
+     * @return a field relative velocity
+     */
+    private Translation2d toFieldRelative(Translation2d robotRelativeTranslation) {
+        return robotRelativeTranslation.rotateBy(RobotTracker.getInstance().getGyroAngle());
     }
 
     private final double[] lastWheelSpeeds = new double[4];
