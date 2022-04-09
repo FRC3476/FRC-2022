@@ -547,72 +547,6 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
         hopper.setEjectOverride(false);
         drive.configBrake();
-
-
-        // Shuffleboard chooser now assigns the selected climb auto
-
-        networkAutoLock.lock();
-        try {
-            networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
-        } finally {
-            networkAutoLock.unlock();
-        }
-
-        System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
-
-        networkAutoLock.lock();
-
-        try {
-            if (networkAuto == null) {
-                // Using local autos
-                if (sideChooser.getSelected().equals(BLUE)) {
-                    switch (climbAutoChooser.getSelected()) {
-                        // Blue autos
-                        case OUTSIDE_CLIMB:
-                            selectedAuto = outsideClimbBlue;
-                            break;
-
-                        case MID_CLIMB:
-                            selectedAuto = midClimbBlue;
-                            break;
-
-                        case INSIDE_CLIMB:
-                            selectedAuto = insideClimbBlue;
-                            break;
-
-                        default:
-                            selectedAuto = outsideClimbBlue;
-                            break;
-                    }
-                } else {
-                    switch (climbAutoChooser.getSelected()) {
-                        // Red autos
-                        case OUTSIDE_CLIMB:
-                            selectedAuto = outsideClimbRed;
-                            break;
-
-                        case MID_CLIMB:
-                            selectedAuto = midClimbRed;
-                            break;
-
-                        case INSIDE_CLIMB:
-                            selectedAuto = insideClimbRed;
-                            break;
-
-                        default:
-                            selectedAuto = outsideClimbRed;
-                            break;
-                    }
-                }
-            } else {
-                // Using network autos
-                selectedAuto = networkAuto;
-            }
-        } finally {
-            networkAutoLock.unlock();
-        }
-
-        autoThread = new Thread(selectedAuto);
     }
 
     private final Object driverForcingVisionOn = new Object();
@@ -654,12 +588,52 @@ public class Robot extends TimedRobot {
              */
             else if (stick.getRisingEdge(6)) {
 
-                try {
-                    autoThread.start();
-                } catch (NullPointerException e) {
-                    System.out.println("Auto thread (run from teleop) is null");
-                    e.printStackTrace();
+                System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
+
+                // Using local autos
+                if (sideChooser.getSelected().equals(BLUE)) {
+                    switch (climbAutoChooser.getSelected()) {
+                        // Blue autos
+                        case OUTSIDE_CLIMB:
+                            selectedAuto = outsideClimbBlue;
+                            break;
+
+                        case MID_CLIMB:
+                            selectedAuto = midClimbBlue;
+                            break;
+
+                        case INSIDE_CLIMB:
+                            selectedAuto = insideClimbBlue;
+                            break;
+
+                        default:
+                            selectedAuto = outsideClimbBlue;
+                            break;
+                    }
+                } else {
+                    switch (climbAutoChooser.getSelected()) {
+                        // Red autos
+                        case OUTSIDE_CLIMB:
+                            selectedAuto = outsideClimbRed;
+                            break;
+
+                        case MID_CLIMB:
+                            selectedAuto = midClimbRed;
+                            break;
+
+                        case INSIDE_CLIMB:
+                            selectedAuto = insideClimbRed;
+                            break;
+
+                        default:
+                            selectedAuto = outsideClimbRed;
+                            break;
+                    }
                 }
+
+                autoThread = new Thread(selectedAuto);
+                autoThread.start();
+                
                 /** Will kill climb auto thread */
             } else if (stick.getRisingEdge(7)) {
                 killAuto();
