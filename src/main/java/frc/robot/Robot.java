@@ -51,6 +51,8 @@ import java.util.function.Consumer;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
+    private boolean doShootWhileMove;
+    private boolean endShootHold = false;
 
     public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
@@ -532,17 +534,25 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
+        // Toggle for shoot while move mode
+        if (stick.getRisingEdge(8)) {
+            doShootWhileMove = !doShootWhileMove;
+        }
+
         // Hood Eject
         if (buttonPanel.getRawButton(6)) {
             doShooterEject();
         } else if (xbox.getRawAxis(2) > 0.1) {
             shooter.setFeederChecksDisabled(false);
-            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+            if (!doShootWhileMove) {
+                visionManager.autoTurnRobotToTarget(getControllerDriveInputs(), useFieldRelative);
+            } else if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
+                drive.doHold();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
                 visionManager.forceVisionOn(driverForcingVisionOn);
