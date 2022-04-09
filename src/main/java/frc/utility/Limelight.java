@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static frc.robot.Robot.IS_PRACTICE;
+
 /**
  * This class is used to get data from the limelight network tables
  */
@@ -159,18 +161,19 @@ public final class Limelight extends AbstractSubsystem {
         limelightGuiTable = NetworkTableInstance.getDefault().getTable(name + "gui");
 
         cameraRotation = new LiveEditableValue<>(
-                new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(-38), 0, 0),
+                new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
+                        Math.toRadians(IS_PRACTICE ? -37.5 : -38), 0, 0),
                 limelightGuiTable.getEntry("angle"),
                 (value) ->
                         new Rotation(
                                 RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
                                 Math.toRadians((Double) value), 0, 0),
                 (value) ->
-                        value.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0]
+                        Math.toDegrees(value.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0])
         );
-        hOffset = new LiveEditableValue<>(38.0, limelightGuiTable.getEntry("hOffset"));
-        depthOffset = new LiveEditableValue<>(44.0, limelightGuiTable.getEntry("depthOffset"));
-        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, 6.9),
+        hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 38.0, limelightGuiTable.getEntry("hOffset"));
+        depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 44.0, limelightGuiTable.getEntry("depthOffset"));
+        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 6.9),
                 limelightGuiTable.getEntry("centerOffset"),
                 (value) -> new Vector3D(0, 0, (Double) value),
                 Vector3D::getZ);

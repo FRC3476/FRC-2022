@@ -320,6 +320,12 @@ public class Robot extends TimedRobot {
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
 
+        if (IS_PRACTICE) {
+            for (int i = 0; i < 10; i++) {
+                System.out.println("USING PRACTICE BOT CONFIG");
+            }
+        }
+
         limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
