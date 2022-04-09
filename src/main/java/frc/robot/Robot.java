@@ -51,8 +51,6 @@ import java.util.function.Consumer;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
-    private boolean doShootWhileMove;
-    private boolean endShootHold = false;
 
     public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
@@ -534,12 +532,6 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
-        // Toggle for shoot while move mode
-        if (stick.getRisingEdge(8)) {
-            doShootWhileMove = !doShootWhileMove;
-            SmartDashboard.putBoolean("Do Shoot while move", doShootWhileMove);
-        }
-
         // Hood Eject
         if (buttonPanel.getRawButton(6)) {
             doShooterEject();
@@ -566,6 +558,7 @@ public class Robot extends TimedRobot {
                 shooter.setFiring(false);
                 shooter.setSpeed(0);
             }
+            
             visionManager.unForceVisionOn(driverForcingVisionOn);
             if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
                 // driven
@@ -715,9 +708,13 @@ public class Robot extends TimedRobot {
 
     private void doNormalDriving() {
         final Drive drive = Drive.getInstance();
+        final VisionManager visionManager = VisionManager.getInstance();
 
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
-        if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
+
+        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            visionManager.autoTurnRobotToTarget(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+        } else if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {
                 drive.doHold();
