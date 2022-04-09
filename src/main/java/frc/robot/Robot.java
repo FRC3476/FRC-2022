@@ -532,9 +532,15 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
-        // Hood Eject
-        if (buttonPanel.getRawButton(6)) {
+
+        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            hopper.setHopperState(Hopper.HopperState.ON);
+            visionManager.autoTurnRobotToTarget(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+        } else if (buttonPanel.getRawButton(6)) {
+
+            // Hood Eject
             doShooterEject();
+            doNormalDriving();
         } else if (xbox.getRawAxis(2) > 0.1) {
             shooter.setFeederChecksDisabled(false);
             if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
@@ -558,9 +564,10 @@ public class Robot extends TimedRobot {
                 shooter.setFiring(false);
                 shooter.setSpeed(0);
             }
-            
+
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
+            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot
+                // to be
                 // driven
                 doNormalDriving();
             } else {
@@ -712,9 +719,7 @@ public class Robot extends TimedRobot {
 
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
 
-        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
-            visionManager.autoTurnRobotToTarget(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
-        } else if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
+        if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {
                 drive.doHold();
