@@ -623,53 +623,55 @@ public class Robot extends TimedRobot {
 //            visionManager.adjustShooterHoodBias(0.5);
 //        }
 
-        if (stick.getRisingEdge(9) && !Constants.GRAPPLE_CLIMB) {
-            climber.toggleClaw();
-        }
-
-        if (stick.getRisingEdge(10) && !Constants.GRAPPLE_CLIMB) {
-            climber.togglePivot();
-        }
-
-        if (stick.getRawButton(11) && !Constants.GRAPPLE_CLIMB) {
-            System.out.println("going up");
-            climber.setClimberMotor(0.5);
-        } else if (stick.getRawButton(12) && !Constants.GRAPPLE_CLIMB) {
-            System.out.println("going down");
-            climber.setClimberMotor(-0.5);
-        } else if (!Constants.GRAPPLE_CLIMB && ((stick.getFallingEdge(11) || stick.getFallingEdge(
-                12) && !Constants.GRAPPLE_CLIMB))) {
-            climber.setClimberMotor(0);
-        }
-
-        if (buttonPanel.getRisingEdge(12) && buttonPanel.getRawButton(9) && !Constants.GRAPPLE_CLIMB) {
-            climber.forceAdvanceStep();
-        }
-
-        if (buttonPanel.getRisingEdge(9) && !Constants.GRAPPLE_CLIMB) {
-            if (climber.getClimbState() == ClimbState.IDLE) {
-                climber.startClimb();
-            } else {
-                climber.resumeClimb();
-                climber.advanceStep();
+        if (!Constants.GRAPPLE_CLIMB) {
+            if (stick.getRisingEdge(9)) {
+                climber.toggleClaw();
             }
-        } else if (buttonPanel.getFallingEdge(9) && !Constants.GRAPPLE_CLIMB) {
-            climber.pauseClimb();
-        } else if (buttonPanel.getRawButton(9)) {
-            //drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
-        }
 
-        if (buttonPanel.getRisingEdge(11) && !Constants.GRAPPLE_CLIMB) {
-            climber.stopClimb();
-        }
+            if (stick.getRisingEdge(10)) {
+                climber.togglePivot();
+            }
+
+            if (stick.getRawButton(11) &&) {
+                System.out.println("going up");
+                climber.setClimberMotor(0.5);
+            } else if (stick.getRawButton(12)) {
+                System.out.println("going down");
+                climber.setClimberMotor(-0.5);
+            } else if (stick.getFallingEdge(11) || stick.getFallingEdge(
+                    12)) {
+                climber.setClimberMotor(0);
+            }
+
+            if (buttonPanel.getRisingEdge(12) && buttonPanel.getRawButton(9)) {
+                climber.forceAdvanceStep();
+            }
+
+            if (buttonPanel.getRisingEdge(9)) {
+                if (climber.getClimbState() == ClimbState.IDLE) {
+                    climber.startClimb();
+                } else {
+                    climber.resumeClimb();
+                    climber.advanceStep();
+                }
+            } else if (buttonPanel.getFallingEdge(9)) {
+                climber.pauseClimb();
+            } else if (buttonPanel.getRawButton(9)) {
+                //drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
+            }
+
+            if (buttonPanel.getRisingEdge(11)) {
+                climber.stopClimb();
+            }
 
 
-        if (buttonPanel.getRisingEdge(10) && !Constants.GRAPPLE_CLIMB) {
-            climber.setStepByStep(!climber.isStepByStep());
-        }
+            if (buttonPanel.getRisingEdge(10)) {
+                climber.setStepByStep(!climber.isStepByStep());
+            }
 
-        if (stick.getRisingEdge(3) && !Constants.GRAPPLE_CLIMB) {
-            climber.deployClimb();
+            if (stick.getRisingEdge(3)) {
+                climber.deployClimb();
+            }
         }
 
         //TODO: Debug why this does not work
@@ -786,33 +788,33 @@ public class Robot extends TimedRobot {
 
         if (!Constants.GRAPPLE_CLIMB) {
             climber = Climber.getInstance();
-        }
 
-        // Climber Test Controls
-        if (stick.getRisingEdge(9) && !Constants.GRAPPLE_CLIMB) {
-            climber.toggleClaw();
-        }
 
-        if (stick.getRisingEdge(10) && !Constants.GRAPPLE_CLIMB) {
-            climber.togglePivot();
-        }
+            // Climber Test Controls
+            if (stick.getRisingEdge(9)) {
+                climber.toggleClaw();
+            }
 
-        if (stick.getRawButton(11) && !Constants.GRAPPLE_CLIMB) {
-            System.out.println("going up");
-            climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (stick.getRawButton(12) && !Constants.GRAPPLE_CLIMB) {
-            System.out.println("going down");
-            climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (buttonPanel.getRawButton(9) && !Constants.GRAPPLE_CLIMB) {
-            climber.stallIntoBottom();
-        } else if (!Constants.GRAPPLE_CLIMB && (stick.getFallingEdge(11) || stick.getFallingEdge(
-                12) || buttonPanel.getFallingEdge(
-                9))) {
-            climber.setClimberMotor(0);
-        }
+            if (stick.getRisingEdge(10)) {
+                climber.togglePivot();
+            }
 
-        if (buttonPanel.getRisingEdge(11) && !Constants.GRAPPLE_CLIMB) {
-            climber.stopClimb();
+            if (stick.getRawButton(11)) {
+                System.out.println("going up");
+                climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+            } else if (stick.getRawButton(12)) {
+                System.out.println("going down");
+                climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+            } else if (buttonPanel.getRawButton(9)) {
+                climber.stallIntoBottom();
+            } else if ((stick.getFallingEdge(11) || stick.getFallingEdge(12) ||
+                    buttonPanel.getFallingEdge(9))) {
+                climber.setClimberMotor(0);
+            }
+
+            if (buttonPanel.getRisingEdge(11)) {
+                climber.stopClimb();
+            }
         }
         
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
