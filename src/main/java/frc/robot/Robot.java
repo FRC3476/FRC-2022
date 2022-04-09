@@ -633,7 +633,7 @@ public class Robot extends TimedRobot {
 
                 autoThread = new Thread(selectedAuto);
                 autoThread.start();
-                
+
                 /** Will kill climb auto thread */
             } else if (stick.getRisingEdge(7)) {
                 killAuto();
@@ -997,9 +997,7 @@ public class Robot extends TimedRobot {
 
         if (selectedAuto != null) {
             assert autoThread != null;
-            System.out.println("2");
             autoThread.interrupt();
-            System.out.println("3");
             double nextStackTracePrint = Timer.getFPGATimestamp() + 1;
             while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
                 if (Timer.getFPGATimestamp() > nextStackTracePrint) {
@@ -1014,11 +1012,8 @@ public class Robot extends TimedRobot {
 
                 OrangeUtility.sleep(10);
             }
-            System.out.println("4");
             drive.stopMovement();
-            System.out.println("5");
             drive.setTeleop();
-            System.out.println("6");
         } else {
             System.out.println("Auto is null");
         }
