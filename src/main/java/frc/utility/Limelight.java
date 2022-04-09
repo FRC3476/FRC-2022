@@ -241,7 +241,8 @@ public final class Limelight extends AbstractSubsystem {
      * @return The timeStamp of the last processed frame
      */
     public double getTimestamp() {
-        return lastUpdate - (getLatency() + 11) / 1000;
+        return Timer.getFPGATimestamp();
+        //return lastUpdate - ((0) / 1000);
     }
 
     /**
@@ -369,6 +370,11 @@ public final class Limelight extends AbstractSubsystem {
         }
     }
 
+    /**
+     * Top right is (0,0)
+     *
+     * @return
+     */
     public Vector2d[] getCorners() {
         double[] corners = limelightTable.getEntry("tcornxy").getDoubleArray(EMPTY_DOUBLE_ARRAY);
         Vector2d[] processedCorners = new Vector2d[corners.length / 2];
@@ -383,7 +389,7 @@ public final class Limelight extends AbstractSubsystem {
     public boolean areCornersTouchingEdge() {
         Vector2d[] corners = getCorners();
         for (Vector2d corner : corners) {
-            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 0 || corner.y > 240 - 15) {
+            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 15 || corner.y > 240) {
 
                 return true;
             }

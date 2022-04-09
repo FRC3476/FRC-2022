@@ -22,8 +22,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
-import static frc.robot.Constants.GRAVITY;
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -105,21 +105,24 @@ public final class RobotTracker extends AbstractSubsystem {
     public void addVisionMeasurement(Translation2d visionRobotPoseMeters, double timestampSeconds) {
         lock.writeLock().lock();
         try {
-            TimestampedPose beforePose = null;
-            TimestampedPose afterPose;
+            List<TimestampedPose> timestampedPoses = poseHistory.stream().collect(Collectors.toUnmodifiableList());
+            int index = Collections.binarySearch(timestampedPoses, new TimestampedPose(timestampSeconds, new Pose2d()));
 
-            while (true) {
-                afterPose = poseHistory.peek();
-                if (afterPose == null) return;
-                if (afterPose.timestamp > timestampSeconds) {
-                    if (beforePose == null) return;
-                    double percent = (timestampSeconds - beforePose.timestamp) / (afterPose.timestamp - beforePose.timestamp);
-                    Pose2d interpolatedPose = beforePose.pose.interpolate(afterPose.pose, percent);
-                    positionOffset = visionRobotPoseMeters.minus(interpolatedPose.getTranslation());
+            if (index < 0) { //Convert the binary search index into an actual index
+                index = -(index + 1);
+            }
+
+            if (!timestampedPoses.isEmpty()) {
+                if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
+                    return;
+                } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
                     return;
                 } else {
-                    beforePose = poseHistory.poll();
-                    if (beforePose == null) return;
+                    double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
+                            (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
+                    positionOffset =
+                            visionRobotPoseMeters.minus(timestampedPoses.get(index - 1).pose.interpolate(
+                                    timestampedPoses.get(index).pose, percentIn).getTranslation());
                 }
             }
         } finally {
@@ -194,6 +197,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
                 //gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
 
+                ChassisSpeeds prevChassisSpeeds = latestChassisSpeeds;
                 latestChassisSpeeds =
                         rotateChassisToFieldRelativeSpeeds(swerveDriveKinematics.toChassisSpeeds(swerveModuleStates),
                                 getGyroAngle());
@@ -210,10 +214,9 @@ public final class RobotTracker extends AbstractSubsystem {
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
 
 
-                acceleration = new Translation2d(getGyro().getWorldLinearAccelX() * GRAVITY,
-                        getGyro().getWorldLinearAccelY() * GRAVITY)
-                        .rotateBy(gyroSensor.getRotation2d().unaryMinus()) // Remove the rotation that the navx already applies
-                        .rotateBy(getGyroAngle()); // Rotate the acceleration to the field's frame of reference
+                acceleration = new Translation2d(prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond,
+                        prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond).times(
+                        ROBOT_TRACKER_PERIOD * 2);
 
                 if (maxGyroRoll < lastGyroRoll) {
                     maxGyroRoll = lastGyroRoll;
@@ -333,12 +336,12 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * Will also delete the gyro measurements that are older than the current time.
      *
-     * @param time the time of the measurement
+     * @param timestampSeconds the time of the measurement
      * @return the state of the gyro at the specified time
      */
-    public Rotation2d getGyroRotation(double time) {
-        synchronized (previousGyroRotations) {
-            List<Map.Entry<Double, Rotation2d>> list = previousGyroRotations;
+    public Rotation2d getGyroRotation(double timestampSeconds) {
+        lock.readLock().lock();
+        try {
 
 //        if (list.isEmpty()) {
 //            System.out.println(list);
@@ -351,21 +354,28 @@ public final class RobotTracker extends AbstractSubsystem {
 //            throw new IllegalArgumentException("Time is too far in the past");
 //        }
 
-            //int index = list.size() - ((int) ((Timer.getFPGATimestamp() - time) * 100));
-            int index = Collections.binarySearch(list, Map.entry(time, zero), comparator);
-            logData("Using index for rotation", index);
-            if (index < 0) index = -index - 1;
+            List<TimestampedPose> timestampedPoses = poseHistory.stream().collect(Collectors.toUnmodifiableList());
+            int index = Collections.binarySearch(timestampedPoses, new TimestampedPose(timestampSeconds, new Pose2d()));
 
-            if (list.size() < 2) {
-                return getGyroAngle();
+            if (index < 0) { //Convert the binary search index into an actual index
+                index = -(index + 1);
             }
-            if (index >= list.size()) {
-                return list.get(list.size() - 1).getValue().plus(gyroOffset);
-            }
-            //if (index - 1 > list.size() || index < 0) return getGyroAngle();
 
-            logData("Using Index Timer", list.get(index).getKey() - Timer.getFPGATimestamp());
-            return list.get(index).getValue().plus(gyroOffset);
+            if (!timestampedPoses.isEmpty()) {
+                if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
+                    return timestampedPoses.get(0).pose.getRotation();
+                } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
+                    return timestampedPoses.get(timestampedPoses.size() - 1).pose.getRotation();
+                } else {
+                    double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
+                            (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
+                    return timestampedPoses.get(index - 1).pose.interpolate(
+                            timestampedPoses.get(index).pose, percentIn).getRotation();
+                }
+            }
+            return getGyroAngle();
+        } finally {
+            lock.readLock().unlock();
         }
     }
 

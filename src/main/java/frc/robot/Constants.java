@@ -177,7 +177,7 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared
      */
-    public static final double MAX_ACCELERATION = 13;
+    public static final double MAX_ACCELERATION = 20;
 
     /**
      * Units are in Radians per Second Squared

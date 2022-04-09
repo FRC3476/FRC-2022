@@ -782,7 +782,7 @@ public final class Drive extends AbstractSubsystem {
             }
         }
 
-        logData("Turn Position Error", Math.toDegrees(goal.position - RobotTracker.getInstance().getGyroAngle().getRadians()));
+        logData("Turn Position Error", Math.toDegrees(turnPID.getPositionError()));
         logData("Turn Actual Speed", curSpeed);
         logData("Turn PID Command", pidDeltaSpeed);
         logData("Turn Min Speed", turnMinSpeed);
