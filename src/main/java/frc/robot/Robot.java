@@ -530,14 +530,6 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-        final Climber climber;
-        final GrappleClimber grappleClimber;
-
-        if (!Constants.GRAPPLE_CLIMB) {
-            climber = Climber.getInstance();
-        } else {
-            grappleClimber = GrappleClimber.getInstance();
-        }
 
         VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
@@ -545,8 +537,8 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         // Deploys grapple lineup
-        if (stick.getRisingEdge(7)) {
-            grappleClimber.toggleGrappleLineup();
+        if (stick.getRisingEdge(7) && Constants.GRAPPLE_CLIMB) {
+            GrappleClimber.getInstance().toggleGrappleLineup();
         }
 
         // Hood Eject
@@ -573,7 +565,9 @@ public class Robot extends TimedRobot {
             shooter.setFiring(false);
             shooter.setSpeed(0);
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (Constants.GRAPPLE_CLIMB || climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
+            if (!Constants.GRAPPLE_CLIMB && (Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance()
+                    .isPaused())) { // If we're
+                // climbing don't allow the robot to be
                 // driven
                 doNormalDriving();
             } else {
@@ -632,6 +626,8 @@ public class Robot extends TimedRobot {
 //        }
 
         if (!Constants.GRAPPLE_CLIMB) {
+            Climber climber = Climber.getInstance();
+
             if (stick.getRisingEdge(9)) {
                 climber.toggleClaw();
             }
@@ -792,10 +788,9 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-        Climber climber;
 
         if (!Constants.GRAPPLE_CLIMB) {
-            climber = Climber.getInstance();
+            Climber climber = Climber.getInstance();
 
 
             // Climber Test Controls
@@ -861,7 +856,7 @@ public class Robot extends TimedRobot {
         }
 
         if (buttonPanel.getRisingEdge(8) && !Constants.GRAPPLE_CLIMB) {
-            climber.selfTest();
+            Climber.getInstance().selfTest();
         }
     }
 
