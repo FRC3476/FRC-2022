@@ -43,6 +43,11 @@ import static frc.robot.Constants.*;
 
 public final class Drive extends AbstractSubsystem {
 
+    /**
+     * Last requested field relative acceleration
+     */
+    public @NotNull volatile Translation2d lastAcceleration = new Translation2d();
+
     // PID TUNING
     final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
 
@@ -88,6 +93,7 @@ public final class Drive extends AbstractSubsystem {
         turnPID = new PIDController(DEFAULT_TURN_P, DEFAULT_TURN_I, DEFAULT_TURN_D); //P=1.0
         // OR 0.8
         turnPID.enableContinuousInput(-Math.PI, Math.PI);
+        turnPID.setIntegratorRange(-Math.PI * 2 * 4, Math.PI * 2 * 4);
     }
 
     public @NotNull DriveState driveState;
@@ -123,6 +129,8 @@ public final class Drive extends AbstractSubsystem {
      */
 
     final @NotNull CANCoder[] swerveCanCoders = new CANCoder[4];
+
+    public volatile @NotNull Constants.AccelerationLimits accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
 
     private Drive() {
         super(Constants.DRIVE_PERIOD, 5);
@@ -364,6 +372,8 @@ public final class Drive extends AbstractSubsystem {
 
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, DRIVE_HIGH_SPEED_M);
         setSwerveModuleStates(moduleStates, rotate, accelerationFR);
+
+        lastAcceleration = accelerationFR;
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate) {
@@ -455,7 +465,7 @@ public final class Drive extends AbstractSubsystem {
         }
         lastLoopTime = Timer.getFPGATimestamp();
 
-        double maxVelocityChange = Constants.MAX_ACCELERATION * dt;
+        double maxVelocityChange = accelerationLimit.acceleration * dt;
         double maxAngularVelocityChange = Constants.MAX_ANGULAR_ACCELERATION * dt;
 
         //field relative
@@ -841,7 +851,6 @@ public final class Drive extends AbstractSubsystem {
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getStatorCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
         }
-
         logData("Drive State", driveState.toString());
     }
 

@@ -6,7 +6,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 
+import java.io.File;
+import java.nio.file.Files;
+
 public final class Constants {
+
+    public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
     // 2048 sensor units per revolution
     public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
@@ -169,16 +174,23 @@ public final class Constants {
     public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = 12.0;
+    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 12.0;
     public static final double DEFAULT_TURN_I = 15.0;
     public static final double DEFAULT_TURN_D = 0.4;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
-    /**
-     * Units are in Meters Per Second Squared
-     */
-    public static final double MAX_ACCELERATION = 16;
+    public enum AccelerationLimits {
+        NORMAL_DRIVING(20),
+        SHOOT_AND_MOVE(6),
+        STOP_AND_SHOOT(12);
+
+        public double acceleration;
+
+        AccelerationLimits(double acceleration) {
+            this.acceleration = acceleration;
+        }
+    }
 
     /**
      * Units are in Radians per Second Squared
@@ -271,7 +283,7 @@ public final class Constants {
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
-    public static final double DEFAULT_SHOOTER_P = 0.035;
+    public static final double DEFAULT_SHOOTER_P = IS_PRACTICE ? 0.034 : 0.035;
     public static final double DEFAULT_SHOOTER_I = 0.000;
     public static final double DEFAULT_SHOOTER_D = 0.000;
     public static final double DEFAULT_SHOOTER_F = 0.069664;
@@ -318,7 +330,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = IS_PRACTICE ? 0.15 : 0.1;
 
     /**
      * inches
@@ -343,7 +355,7 @@ public final class Constants {
     // Hood Constants
 
     public static final double HOOD_MAX_ANGLE = 90;
-    public static final double HOOD_MIN_ANGLE = 53;
+    public static final double HOOD_MIN_ANGLE = IS_PRACTICE ? 50.5 : 53;
     /**
      * Amount of degrees the hood turns per NEO550 rotation
      */
@@ -540,6 +552,7 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
-    public static final double BEAM_BREAK_EJECT_TIME = 1.5;
+    public static final double BEAM_BREAK_EJECT_TIME = 0.75;
+    public static final double MIN_AUTO_EJECT_TIME = 0.5;
     public static final int MAX_BAD_VISION_ITERATIONS = 45;
 }
