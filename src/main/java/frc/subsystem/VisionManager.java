@@ -179,6 +179,58 @@ public final class VisionManager extends AbstractSubsystem {
         tryToShoot(relativeGoalPos, 0, true);
     }
 
+    Translation2d stopAndShootStartPosition;
+    ChassisSpeeds stopAndShootStartVelocities;
+
+    public void stopAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
+        final @NotNull Drive drive = Drive.getInstance();
+
+        // Resets start position
+        if (stopAndShootStartPosition == null) {
+            if (getVisionTranslation().isPresent())
+            // Vision based translation
+            {
+                stopAndShootStartPosition = getVisionTranslation().get();
+            } else
+            // Odometry based translation
+            {
+                stopAndShootStartPosition =
+                        RobotTracker.getInstance().getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset);
+            }
+
+            // Gets the start chassis speeds
+            stopAndShootStartVelocities = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+        }
+
+        // Uses kinematics to estimate the end x and y components of the translation of the change from start to no movement
+        double estimatedXChange = (-stopAndShootStartVelocities.vxMetersPerSecond *
+                stopAndShootStartVelocities.vxMetersPerSecond) / (2.0 * Constants.MAX_ACCELERATION);
+
+        double estimatedYChange = (-stopAndShootStartVelocities.vyMetersPerSecond *
+                stopAndShootStartVelocities.vyMetersPerSecond) / (2.0 * Constants.MAX_ACCELERATION);
+
+        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        Translation2d relativeGoalPos;
+        if (visionTranslation.isPresent()) {
+            relativeGoalPos = visionTranslation.get().minus(
+                    GOAL_POSITION.minus(new Translation2d(estimatedXChange, estimatedYChange)));
+        } else {
+            relativeGoalPos = getRelativeGoalTranslation().minus(new Translation2d(estimatedXChange, estimatedYChange));
+        }
+
+        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos), fieldRelative, getAllowedTurnError());
+        updateShooterState(relativeGoalPos.getNorm());
+        tryToShoot(relativeGoalPos, 0, true);
+
+        // Current velocity and angular velocity
+        ChassisSpeeds currentChassisSpeeds = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+
+        // Resets start position if standing still
+        if (currentChassisSpeeds.vxMetersPerSecond == 0 && currentChassisSpeeds.vyMetersPerSecond == 0) {
+            stopAndShootStartPosition = null;
+        }
+    }
+
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         final @NotNull Drive drive = Drive.getInstance();
