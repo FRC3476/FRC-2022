@@ -19,6 +19,7 @@ import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
+import frc.subsystem.Hopper.HopperState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.Limelight.LedMode;
@@ -52,6 +53,7 @@ import static frc.robot.Constants.IS_PRACTICE;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
+    private double hoodEjectUntilTime = 0;
 
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
@@ -571,8 +573,15 @@ public class Robot extends TimedRobot {
             }
         } else {
             drive.slowerAccel = false;
-            if (hopper.getLastBeamBreakOpenTime() > Timer.getFPGATimestamp() + Constants.BEAM_BREAK_EJECT_TIME) {
+            if (Timer.getFPGATimestamp() - hopper.getLastBeamBreakOpenTime() > Constants.BEAM_BREAK_EJECT_TIME ||
+                    Timer.getFPGATimestamp() < hoodEjectUntilTime) {
                 // Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
+                if (Timer.getFPGATimestamp() - hopper.getLastBeamBreakOpenTime() > Constants.BEAM_BREAK_EJECT_TIME
+                        && !(Timer.getFPGATimestamp() < hoodEjectUntilTime)) {
+                    hoodEjectUntilTime = Timer.getFPGATimestamp() + Constants.MIN_AUTO_EJECT_TIME;
+                    hopper.resetBeamBreakOpenTime();
+                }
+                shooter.setFeederChecksDisabled(false);
                 doShooterEject();
             } else {
                 // Not trying to do anything else with shooter will stop all action with it
@@ -603,7 +612,11 @@ public class Robot extends TimedRobot {
         if (xbox.getRawAxis(3) > 0.1) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
-            hopper.setHopperState(Hopper.HopperState.ON);
+            if (Timer.getFPGATimestamp() > hoodEjectUntilTime) {
+                hopper.setHopperState(Hopper.HopperState.ON);
+            } else {
+                hopper.setHopperState(HopperState.OFF);
+            }
         } else if (buttonPanel.getRawButton(8) || xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
             // Sets intake to eject without controlling hopper
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);

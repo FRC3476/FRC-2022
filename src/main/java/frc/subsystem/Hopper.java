@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Intake.IntakeSolState;
+import frc.subsystem.Shooter.FeederWheelState;
+import frc.subsystem.Shooter.ShooterState;
 import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
@@ -16,8 +18,7 @@ import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
-import static frc.robot.Constants.HOPPER_SPEED;
+import static frc.robot.Constants.*;
 
 public final class Hopper extends AbstractSubsystem {
 
@@ -34,6 +35,10 @@ public final class Hopper extends AbstractSubsystem {
 
     public static Hopper getInstance() {
         return INSTANCE;
+    }
+
+    public void resetBeamBreakOpenTime() {
+        lastBeamBreakOpenTime = Timer.getFPGATimestamp();
     }
 
     public enum HopperState {
@@ -218,7 +223,9 @@ public final class Hopper extends AbstractSubsystem {
                 Shooter.getInstance().runFeederWheelReversed = true;
                 break;
             case OFF:
-                if (isBeamBroken()) {
+                if (isBeamBroken() &&
+                        !(Shooter.getInstance().getFeederWheelState() == FeederWheelState.FORWARD &&
+                                Shooter.getInstance().getShooterState() == ShooterState.ON)) {
                     hopperMotor.set(HOPPER_SPEED);
                     Shooter.getInstance().runFeederWheelReversed = true;
                 } else {
@@ -241,7 +248,8 @@ public final class Hopper extends AbstractSubsystem {
      * @return True if the beam break is broken. (ie a ball is in the way)
      */
     private boolean isBeamBroken() {
-        return beamBreak.get();
+        if (IS_PRACTICE) return false;
+        return !beamBreak.get();
     }
 
     public void setHopperState(HopperState hopperState) {

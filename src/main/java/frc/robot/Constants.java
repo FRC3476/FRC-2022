@@ -549,6 +549,7 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
-    public static final double BEAM_BREAK_EJECT_TIME = 1.5;
+    public static final double BEAM_BREAK_EJECT_TIME = 0.75;
+    public static final double MIN_AUTO_EJECT_TIME = 0.5;
     public static final int MAX_BAD_VISION_ITERATIONS = 45;
 }
