@@ -116,6 +116,7 @@ public class DriveTest {
         }
     }
 
+    /*
     @Disabled("Limiting angular acceleration breaks test")
     void testLimitAcceleration() throws Exception {
         ChassisSpeeds commandedVelocity = null;
@@ -220,6 +221,8 @@ public class DriveTest {
         assertEquals(Constants.MAX_ACCELERATION * 0.05, velocity, DELTA);
         assertEquals(-15.5, limitedVelocity.omegaRadiansPerSecond, DELTA);
     }
+    */
+     
 
     @Test
     void testAngleDiff1() {
