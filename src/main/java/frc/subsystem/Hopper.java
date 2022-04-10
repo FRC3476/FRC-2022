@@ -189,7 +189,7 @@ public final class Hopper extends AbstractSubsystem {
         updateAllianceColor();
         updateOuttakeState();
 
-        if (isBeamBroken()) {
+        if (!isBeamBroken()) {
             lastBeamBreakOpenTime = Timer.getFPGATimestamp();
         }
 
@@ -237,8 +237,11 @@ public final class Hopper extends AbstractSubsystem {
         }
     }
 
+    /**
+     * @return True if the beam break is broken. (ie a ball is in the way)
+     */
     private boolean isBeamBroken() {
-        return false;
+        return beamBreak.get();
     }
 
     public void setHopperState(HopperState hopperState) {
@@ -274,6 +277,8 @@ public final class Hopper extends AbstractSubsystem {
         logData("Current Ball Color", getBallColor());
         logData("Eject Disabled", disableEject);
         logData("Hopper State", wantedHopperState);
+        logData("Is Beam Broken", isBeamBroken());
+        logData("Last Beam Break Open Time", getLastBeamBreakOpenTime());
     }
 
     @Override
