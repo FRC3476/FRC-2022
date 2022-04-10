@@ -767,7 +767,7 @@ public final class Climber extends AbstractSubsystem {
      * moves the climber down until it stall at the bottom. Press reset button to run again.
      */
     public synchronized void stallIntoBottom() {
-        if (minRunTime == -1) minRunTime = Timer.getFPGATimestamp() + 0.2;
+        if (minRunTime == -1) minRunTime = Timer.getFPGATimestamp() + 0.5;
         if (hasStalledIntoBottom) {
             setClimberMotor(0);
         } else {

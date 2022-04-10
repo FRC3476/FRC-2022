@@ -577,7 +577,8 @@ public class Robot extends TimedRobot {
         buttonPanel.update();
 
         // Will terminate climb auto thread if any stick movement happens
-        if (autoThread != null && !getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+        if (autoThread != null && autoThread.isAlive() && !getControllerDriveInputs().equals(
+                NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
@@ -852,13 +853,14 @@ public class Robot extends TimedRobot {
             double povRads = Math.toRadians(xbox.getPOV());
 
             // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
-            controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads), Math.sin(povRads),
-                    controllerDriveInputs.getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
+            controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads) * Constants.DRIVE_LOW_SPD_MOD,
+                    Math.sin(povRads) * Constants.DRIVE_LOW_SPD_MOD,
+                    controllerDriveInputs.getRotation() * Constants.DRIVE_LOW_SPD_MOD);
         } else if (slowMovement && controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0) {
             // If D-Pad movement has been used in the past without the use of normal movement, we will continue to use
             // slow turning when not moving
             controllerDriveInputs = new ControllerDriveInputs(0, 0,
-                    controllerDriveInputs.getRotation() * Constants.DRIVE_ROTATION_LOW_SPEED_MODIFIER);
+                    controllerDriveInputs.getRotation() * Constants.DRIVE_LOW_SPD_MOD);
         } else {
             // If using normal inputs, resets slow movement flag and uses normal inputs
             slowMovement = false;
