@@ -685,8 +685,7 @@ public class Robot extends TimedRobot {
             } else if (stick.getRawButton(12)) {
                 System.out.println("going down");
                 climber.setClimberMotor(-0.5);
-            } else if (stick.getFallingEdge(11) || stick.getFallingEdge(
-                    12)) {
+            } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
                 climber.setClimberMotor(0);
             }
 
