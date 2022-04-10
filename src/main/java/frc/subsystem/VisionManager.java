@@ -32,8 +32,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static frc.robot.Constants.GOAL_POSITION;
-import static frc.robot.Constants.MAX_SHOOT_SPEED;
+import static frc.robot.Constants.*;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
@@ -180,55 +179,16 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     Translation2d stopAndShootStartPosition;
-    ChassisSpeeds stopAndShootStartVelocities;
+    Translation2d stopAndShootStartVelocities;
 
     public void stopAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
+        Translation2d predictedTranslation = predictFutureTranslation(getRobotVel().getNorm() / MAX_ACCELERATION,
+                getRelativeGoalTranslation(), getRobotVel(), getAccel());
 
-        // Resets start position
-        if (stopAndShootStartPosition == null) {
-            if (getVisionTranslation().isPresent())
-            // Vision based translation
-            {
-                stopAndShootStartPosition = getVisionTranslation().get();
-            } else
-            // Odometry based translation
-            {
-                stopAndShootStartPosition =
-                        RobotTracker.getInstance().getLatencyCompedPoseMeters().getTranslation().plus(robotPositionOffset);
-            }
-
-            // Gets the start chassis speeds
-            stopAndShootStartVelocities = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
-        }
-
-        // Uses kinematics to estimate the end x and y components of the translation of the change from start to no movement
-        double estimatedXChange = (-stopAndShootStartVelocities.vxMetersPerSecond *
-                stopAndShootStartVelocities.vxMetersPerSecond) / (2.0 * Constants.MAX_ACCELERATION);
-
-        double estimatedYChange = (-stopAndShootStartVelocities.vyMetersPerSecond *
-                stopAndShootStartVelocities.vyMetersPerSecond) / (2.0 * Constants.MAX_ACCELERATION);
-
-        Optional<Translation2d> visionTranslation = getVisionTranslation();
-        Translation2d relativeGoalPos;
-        if (visionTranslation.isPresent()) {
-            relativeGoalPos = visionTranslation.get().minus(
-                    GOAL_POSITION.minus(new Translation2d(estimatedXChange, estimatedYChange)));
-        } else {
-            relativeGoalPos = getRelativeGoalTranslation().minus(new Translation2d(estimatedXChange, estimatedYChange));
-        }
-
-        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos), fieldRelative, getAllowedTurnError());
-        updateShooterState(relativeGoalPos.getNorm());
-        tryToShoot(relativeGoalPos, 0, true);
-
-        // Current velocity and angular velocity
-        ChassisSpeeds currentChassisSpeeds = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
-
-        // Resets start position if standing still
-        if (currentChassisSpeeds.vxMetersPerSecond == 0 && currentChassisSpeeds.vyMetersPerSecond == 0) {
-            stopAndShootStartPosition = null;
-        }
+        drive.updateTurn(controllerDriveInputs, angleOf(predictedTranslation), fieldRelative, getAllowedTurnError());
+        updateShooterState(predictedTranslation.getNorm());
+        tryToShoot(predictedTranslation, 0, true);
     }
 
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
