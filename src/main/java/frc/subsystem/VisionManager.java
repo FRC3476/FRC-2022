@@ -218,7 +218,7 @@ public final class VisionManager extends AbstractSubsystem {
             //@formatter:on
             shooter.setFiring(true);
             if (shooter.isFiring()) {
-                if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
+                if (!checksPassedLastTime && lastPrintTime + 1 < Timer.getFPGATimestamp()) {
                     lastPrintTime = Timer.getFPGATimestamp();
                     checksPassedLastTime = true;
                     System.out.println(
