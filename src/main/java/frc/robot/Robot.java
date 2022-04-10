@@ -17,6 +17,7 @@ import frc.auton.*;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
+import frc.robot.Constants.AccelerationLimits;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.subsystem.Hopper.HopperState;
@@ -543,13 +544,13 @@ public class Robot extends TimedRobot {
         // Shooting / Moving control block
         if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
             // If trying to shoot with left bumper (stop and shoot)
-            drive.slowerAccel = false;
+            drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
             shooter.setFeederChecksDisabled(false);
             hopper.setHopperState(Hopper.HopperState.ON);
             visionManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
         } else if (buttonPanel.getRawButton(6)) {
             // If trying to Hood Eject
-            drive.slowerAccel = false;
+            drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
             doShooterEject();
             doNormalDriving();
         } else if (xbox.getRawAxis(2) > 0.1) {
@@ -557,7 +558,7 @@ public class Robot extends TimedRobot {
             shooter.setFeederChecksDisabled(false);
             if (isTryingToRunShooterFromButtonPanel()) {
                 //If shooting from button (no vision)
-                drive.slowerAccel = false;
+                drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
@@ -567,12 +568,12 @@ public class Robot extends TimedRobot {
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
                 // Do Shooting while moving (using vision)
-                drive.slowerAccel = true;
+                drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
-            drive.slowerAccel = false;
+            drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
             if (Timer.getFPGATimestamp() - hopper.getLastBeamBreakOpenTime() > Constants.BEAM_BREAK_EJECT_TIME ||
                     Timer.getFPGATimestamp() < hoodEjectUntilTime) {
                 // Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time

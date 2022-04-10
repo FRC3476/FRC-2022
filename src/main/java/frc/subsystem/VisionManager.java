@@ -183,7 +183,8 @@ public final class VisionManager extends AbstractSubsystem {
 
     public void stopAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
-        Translation2d predictedTranslation = predictFutureTranslation(getRobotVel().getNorm() / MAX_ACCELERATION,
+        Translation2d predictedTranslation = predictFutureTranslation(
+                getRobotVel().getNorm() / drive.accelerationLimit.acceleration,
                 getRelativeGoalTranslation(), getRobotVel(), getAccel());
 
         drive.updateTurn(controllerDriveInputs, angleOf(predictedTranslation), fieldRelative, getAllowedTurnError());

@@ -179,15 +179,17 @@ public final class Constants {
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
-    /**
-     * Units are in Meters Per Second Squared
-     */
-    public static final double MAX_ACCELERATION = 20;
+    public enum AccelerationLimits {
+        NORMAL_DRIVING(20),
+        SHOOT_AND_MOVE(6),
+        STOP_AND_SHOOT(12);
 
-    /**
-     * Units are in Meters Per Second Squared
-     */
-    public static final double MAX_SHOOT_ACCELERATION = 6;
+        public double acceleration;
+
+        AccelerationLimits(double acceleration) {
+            this.acceleration = acceleration;
+        }
+    }
 
     /**
      * Units are in Radians per Second Squared
