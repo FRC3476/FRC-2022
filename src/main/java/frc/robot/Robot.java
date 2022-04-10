@@ -513,6 +513,8 @@ public class Robot extends TimedRobot {
 
         if (!Constants.GRAPPLE_CLIMB) {
             Climber.getInstance().configBrake();
+        } else {
+            GrappleClimber.getInstance().resetSolenoids();
         }
 
         enabled.setBoolean(true);
@@ -547,7 +549,7 @@ public class Robot extends TimedRobot {
 
         // Deploys grapple lineup
         if (stick.getRisingEdge(7) && Constants.GRAPPLE_CLIMB) {
-            GrappleClimber.getInstance().toggleGrappleLineup();
+            GrappleClimber.getInstance().armGrappleClimb();
         }
 
         // Shooting / Moving control block

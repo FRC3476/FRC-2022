@@ -39,32 +39,37 @@ public class GrappleClimber extends AbstractSubsystem {
         }
     }
 
-    private @NotNull Solenoid openSolenoid;
-    private @NotNull Solenoid closedSolenoid;
-    private @NotNull Solenoid lineupSolenoid;
-    private @NotNull Solenoid ropeCoilSolenoid;
+    /**
+     * Comprises the big solenoid that lifts the robot and the small solenoid that lets go of the grapple
+     */
+    private @NotNull Solenoid triggerSolenoid;
+
+    /**
+     * Comprises the solenoid that controls the lineup bar and the small solenoid that drops control down to the trigger solenoid
+     */
+    private @NotNull Solenoid armSolenoid;
 
     private GrappleClimber() {
         super(Constants.GRAPPLE_CLIMBER_PERIOD, 1);
 
         // Creating solenoids
-        openSolenoid = getPneumaticsHub().makeSolenoid(Constants.OPEN_GRAPPLE_SOL_ID);
-        closedSolenoid = getPneumaticsHub().makeSolenoid(Constants.CLOSED_GRAPPLE_SOL_ID);
-        lineupSolenoid = getPneumaticsHub().makeSolenoid(Constants.LINEUP_GRAPPLE_SOL_ID);
-        ropeCoilSolenoid = getPneumaticsHub().makeSolenoid(Constants.ROPE_COIL_GRAPPLE_SOL_ID);
-
-        resetSolenoids();
+        triggerSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_TRIGGER_SOL_ID);
+        armSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_ARM_SOL_ID);
     }
 
-    // Sets solenoids to opposite state so they can return back to default when about to launch
-    private void resetSolenoids() {
-        openSolenoid.set(true);
-        closedSolenoid.set(true);
-        ropeCoilSolenoid.set(true);
+    /**
+     * Sets solenoids to opposite state so they can return back to default when about to launch
+     */
+    public void resetSolenoids() {
+        triggerSolenoid.set(true);
+        armSolenoid.set(false);
     }
 
-    public void toggleGrappleLineup() {
-        lineupSolenoid.set(!lineupSolenoid.get());
+    /**
+     * deploys lineup bar and arms grapple
+     */
+    public void armGrappleClimb() {
+        armSolenoid.set(true);
     }
 
     @Override
