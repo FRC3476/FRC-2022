@@ -212,7 +212,7 @@ public final class VisionManager extends AbstractSubsystem {
                     < Math.toRadians(8)
                 && getAccel().getNorm() < 7.4
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
-                && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3
+                && (Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE
                 && loopsWithBadVision.get() < Constants.MAX_BAD_VISION_ITERATIONS) {
             //@formatter:on
             shooter.setFiring(true);
@@ -619,6 +619,8 @@ public final class VisionManager extends AbstractSubsystem {
 
     private Translation2d getAccel() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        return ZERO;
+        return Drive.getInstance().lastAcceleration;
+        //return robotTracker.getAcceleration();
+        //return ZERO;
     }
 }

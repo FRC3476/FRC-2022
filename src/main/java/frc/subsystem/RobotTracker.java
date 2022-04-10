@@ -59,6 +59,8 @@ public final class RobotTracker extends AbstractSubsystem {
     private Translation2d acceleration = new Translation2d();
 
     private final @NotNull EvictingQueue<TimestampedPose> poseHistory = EvictingQueue.create(50);
+    private final @NotNull EvictingQueue<ChassisSpeeds> chassisSpeedsHistory = EvictingQueue.create(50);
+
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
@@ -195,11 +197,10 @@ public final class RobotTracker extends AbstractSubsystem {
                         robotTrackerPose.getRotation());
 
                 //gyroOffset = latestEstimatedPose.getRotation().minus(rawGyroSensor);
-
-                ChassisSpeeds prevChassisSpeeds = latestChassisSpeeds;
                 latestChassisSpeeds =
                         rotateChassisToFieldRelativeSpeeds(swerveDriveKinematics.toChassisSpeeds(swerveModuleStates),
                                 getGyroAngle());
+                chassisSpeedsHistory.add(latestChassisSpeeds);
 
                 latencyCompensatedChassisSpeeds = latestChassisSpeeds;
 
@@ -212,9 +213,17 @@ public final class RobotTracker extends AbstractSubsystem {
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
 
 
-                acceleration = new Translation2d(prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vxMetersPerSecond,
-                        prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond)
-                        .times(1 / (time - currentOdometryTime)); // currentOdometryTime is the last loop time
+                if (chassisSpeedsHistory.size() > 12) {
+                    ChassisSpeeds prevChassisSpeeds =
+                            (ChassisSpeeds) chassisSpeedsHistory.toArray()[chassisSpeedsHistory.size() - 11];
+                    acceleration = new Translation2d(
+                            prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vxMetersPerSecond,
+                            prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond)
+                            .times(1 / (0.02 * 10)); // currentOdometryTime is the last loop time
+                } else {
+                    acceleration = new Translation2d();
+                }
+
 
                 if (maxGyroRoll < lastGyroRoll) {
                     maxGyroRoll = lastGyroRoll;

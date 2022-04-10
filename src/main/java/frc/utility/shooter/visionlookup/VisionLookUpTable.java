@@ -2,7 +2,6 @@ package frc.utility.shooter.visionlookup;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.Robot;
 import frc.utility.Serializer;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +11,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static frc.robot.Constants.IS_PRACTICE;
 
 public final class VisionLookUpTable {
 
@@ -28,12 +29,12 @@ public final class VisionLookUpTable {
 
         try {
             File shooterDataFile = new File(Filesystem.getDeployDirectory().getPath() +
-                    (Robot.IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json"));
+                    (IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json"));
             shooterConfig = (ShooterConfig) Serializer.deserializeFromFile(shooterDataFile, ShooterConfig.class);
             System.out.println("Successfully loaded shooter config from the file");
         } catch (IOException e) {
             DriverStation.reportError("Failed to load shooter config from " +
-                            (Robot.IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json") +
+                            (IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json") +
                             "Using default values",
                     e.getStackTrace());
             shooterConfig = new ShooterConfig();
