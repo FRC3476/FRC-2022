@@ -358,6 +358,12 @@ public class Robot extends TimedRobot {
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
 
+        if (IS_PRACTICE) {
+            for (int i = 0; i < 10; i++) {
+                System.out.println("USING PRACTICE BOT CONFIG");
+            }
+        }
+
         limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
@@ -579,37 +585,37 @@ public class Robot extends TimedRobot {
         // TODO: Make sure drivers are ok with button placements
         /** Climb Rotation lineup
          * Rotation is linked to the auto lineup in order to make sure that both are not pressed at the same time
-         */{
-            if (stick.getRawButton(5)) {
-                drive.setRotation(Constants.CLIMB_LINEUP_ANGLE);
-            }
-            /** Climb Lineup
-             * Will run a separate thread that executes an auto thread to line up to bar
-             */
-            else if (stick.getRisingEdge(6)) {
+         */
+        if (stick.getRawButton(5)) {
+            drive.setRotation(Constants.CLIMB_LINEUP_ANGLE);
+        }
+        /** Climb Lineup
+         * Will run a separate thread that executes an auto thread to line up to bar
+         */
+        if (stick.getRisingEdge(6)) {
 
-                System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
+            System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
 
-                // Using local autos
-                if (sideChooser.getSelected().equals(BLUE)) {
-                    switch (climbAutoChooser.getSelected()) {
-                        // Blue autos
-                        case OUTSIDE_CLIMB:
-                            selectedAuto = outsideClimbBlue;
-                            break;
+            // Using local autos
+            if (sideChooser.getSelected().equals(BLUE)) {
+                switch (climbAutoChooser.getSelected()) {
+                    // Blue autos
+                    case OUTSIDE_CLIMB:
+                        selectedAuto = outsideClimbBlue;
+                        break;
 
-                        case MID_CLIMB:
-                            selectedAuto = midClimbBlue;
-                            break;
+                    case MID_CLIMB:
+                        selectedAuto = midClimbBlue;
+                        break;
 
-                        case INSIDE_CLIMB:
-                            selectedAuto = insideClimbBlue;
-                            break;
+                    case INSIDE_CLIMB:
+                        selectedAuto = insideClimbBlue;
+                        break;
 
-                        default:
-                            selectedAuto = outsideClimbBlue;
-                            break;
-                    }
+                    default:
+                        selectedAuto = outsideClimbBlue;
+                        break;
+                }
                 } else {
                     switch (climbAutoChooser.getSelected()) {
                         // Red autos
@@ -629,57 +635,73 @@ public class Robot extends TimedRobot {
                             selectedAuto = outsideClimbRed;
                             break;
                     }
-                }
-
-                autoThread = new Thread(selectedAuto);
-                autoThread.start();
-
-                /** Will kill climb auto thread */
-            } else if (stick.getRisingEdge(7)) {
-                killAuto();
             }
+
+            autoThread = new Thread(selectedAuto);
+            autoThread.start();
+
+            /** Will kill climb auto thread */
+        } else if (stick.getRisingEdge(7)) {
+            killAuto();
         }
 
-        // Hood Eject
-        if (buttonPanel.getRawButton(6)) {
-            shooter.setFeederChecksDisabled(true);
-            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
-            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
-            shooter.setFiring(true);
-        } else if (xbox.getRawAxis(2) > 0.1) {
+        // Shooting / Moving control block
+        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            // If trying to shoot with left bumper (stop and shoot)
             shooter.setFeederChecksDisabled(false);
-            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+            hopper.setHopperState(Hopper.HopperState.ON);
+            visionManager.autoTurnRobotToTarget(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+        } else if (buttonPanel.getRawButton(6)) {
+            // If trying to Hood Eject
+            doShooterEject();
+            doNormalDriving();
+        } else if (xbox.getRawAxis(2) > 0.1) {
+            // If attempting to shoot with left trigger
+            shooter.setFeederChecksDisabled(false);
+            if (isTryingToRunShooterFromButtonPanel()) {
+                //If shooting from button (no vision)
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
+                drive.doHold();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
+                // Do Shooting while moving (using vision)
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
-            shooter.setFeederChecksDisabled(false);
-            shooter.setFiring(false);
-            shooter.setSpeed(0);
+            if (hopper.getLastBeamBreakOpenTime() > Timer.getFPGATimestamp() + Constants.BEAM_BREAK_EJECT_TIME) {
+                // Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
+                doShooterEject();
+            } else {
+                // Not trying to do anything else with shooter will stop all action with it
+                shooter.setFeederChecksDisabled(false);
+                shooter.setFiring(false);
+                shooter.setSpeed(0);
+            }
+
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) { // If we're climbing don't allow the robot to be
-                // driven
+            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) {
+                // If we're climbing don't allow the robot to be driven
                 doNormalDriving();
             } else {
-                // Stop the robot from moving
+                // Stop the robot from moving if doing no action with it
                 drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
             }
         }
 
         runShooter();
 
+        // Intake solenoid control
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
         }
 
+        // Intake and hopper motor control
         if (xbox.getRawAxis(3) > 0.1) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
@@ -695,7 +717,8 @@ public class Robot extends TimedRobot {
             shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!(xbox.getRawAxis(2) > 0.1)) { // Only turn off the hopper if we're not shooting
+            if (!((xbox.getRawAxis(2) > 0.1) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
+                // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
         }
@@ -722,6 +745,8 @@ public class Robot extends TimedRobot {
 //            visionManager.adjustShooterHoodBias(0.5);
 //        }
 
+
+        // Climber controls
         if (stick.getRisingEdge(9)) {
             climber.toggleClaw();
         }
@@ -782,6 +807,16 @@ public class Robot extends TimedRobot {
         if (stick.getRisingEdge(2)) {
             shooter.setFeederChecksDisabled(!shooter.isFeederChecksDisabled());
         }
+    }
+
+    // Utility methods
+
+    private void doShooterEject() {
+        final Shooter shooter = Shooter.getInstance();
+        shooter.setFeederChecksDisabled(true);
+        shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+        shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+        shooter.setFiring(true);
     }
 
     private void runShooter() {

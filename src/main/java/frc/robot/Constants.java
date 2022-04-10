@@ -91,10 +91,10 @@ public final class Constants {
      * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827)};
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5)};
 
 
     /**
@@ -145,10 +145,10 @@ public final class Constants {
     public static final double DRIVE_ROTATION_LOW_SPEED_MODIFIER = .5;
 
     public static final double SWERVE_ACCELERATION =
-            ((360 * 5 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
+            ((360 * 15 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
 
     public static final double SWERVE_CRUISE_VELOCITY =
-            ((360 * 6.5 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
+            ((360 * 7 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
     /**
      * Allowed Turn Error in degrees.
      */
@@ -179,12 +179,12 @@ public final class Constants {
     /**
      * Units are in Meters Per Second Squared
      */
-    public static final double MAX_ACCELERATION = 22;
+    public static final double MAX_ACCELERATION = 16;
 
     /**
      * Units are in Radians per Second Squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 27);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 22);
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
@@ -229,6 +229,8 @@ public final class Constants {
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
     public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
+
+    public static final int BEAM_BREAK_DIO_ID = 7;
 
     // Outtake Constants
     public static final int OUTTAKE_CAN_ID = 60;
@@ -318,7 +320,13 @@ public final class Constants {
      * The time that the feeder must be on before it is allowed to turn off
      */
     public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
+
+    /**
+     * inches
+     */
+    public static final double SLOW_SHOOT_DISTANCE_THRESHOLD = 40;
     public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
+    public static final double SECOND_BALL_SHOOT_DELAY_SLOW = 0.4;
     public static final double RUMBLE_DELAY = 0.1666666667;
     public static final double RUMBLE_TIME = 0.25;
 
@@ -533,4 +541,6 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
+    public static final double BEAM_BREAK_EJECT_TIME = 1.5;
+    public static final int MAX_BAD_VISION_ITERATIONS = 45;
 }
