@@ -867,7 +867,7 @@ public class Robot extends TimedRobot {
             double povRads = Math.toRadians(xbox.getPOV());
 
             // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
-            controllerDriveInputs = new ControllerDriveInputs(Math.cos(povRads) * Constants.DRIVE_LOW_SPD_MOD,
+            controllerDriveInputs = new ControllerDriveInputs(-Math.cos(povRads) * Constants.DRIVE_LOW_SPD_MOD,
                     Math.sin(povRads) * Constants.DRIVE_LOW_SPD_MOD,
                     controllerDriveInputs.getRotation() * Constants.DRIVE_LOW_SPD_MOD);
         } else if (slowMovement && controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0) {
