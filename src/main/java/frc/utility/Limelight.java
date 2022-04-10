@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static frc.robot.Robot.IS_PRACTICE;
+import static frc.robot.Constants.IS_PRACTICE;
 
 /**
  * This class is used to get data from the limelight network tables

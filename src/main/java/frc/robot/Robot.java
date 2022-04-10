@@ -32,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.State;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +40,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+
+import static frc.robot.Constants.IS_PRACTICE;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as described in the
@@ -51,8 +52,6 @@ import java.util.function.Consumer;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
-
-    public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
 
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
