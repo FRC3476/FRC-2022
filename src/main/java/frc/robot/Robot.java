@@ -544,7 +544,7 @@ public class Robot extends TimedRobot {
             // If trying to shoot with left bumper (stop and shoot)
             shooter.setFeederChecksDisabled(false);
             hopper.setHopperState(Hopper.HopperState.ON);
-            visionManager.autoTurnRobotToTarget(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+            visionManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
         } else if (buttonPanel.getRawButton(6)) {
             // If trying to Hood Eject
             doShooterEject();
