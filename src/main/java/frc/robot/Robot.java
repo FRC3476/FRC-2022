@@ -17,8 +17,10 @@ import frc.auton.*;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
+import frc.robot.Constants.AccelerationLimits;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
+import frc.subsystem.Hopper.HopperState;
 import frc.utility.*;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.Limelight.LedMode;
@@ -32,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.State;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +42,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+
+import static frc.robot.Constants.IS_PRACTICE;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as described in the
@@ -51,8 +54,7 @@ import java.util.function.Consumer;
 public class Robot extends TimedRobot {
 
     public boolean useFieldRelative = false;
-
-    public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
+    private double hoodEjectUntilTime = 0;
 
     //GUI
     final @NotNull NetworkTableInstance instance = NetworkTableInstance.getDefault();
@@ -320,6 +322,12 @@ public class Robot extends TimedRobot {
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
 
+        if (IS_PRACTICE) {
+            for (int i = 0; i < 10; i++) {
+                System.out.println("USING PRACTICE BOT CONFIG");
+            }
+        }
+
         limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
@@ -536,57 +544,91 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
+
         // Deploys grapple lineup
         if (stick.getRisingEdge(7) && Constants.GRAPPLE_CLIMB) {
             GrappleClimber.getInstance().toggleGrappleLineup();
         }
 
-        // Hood Eject
-        if (buttonPanel.getRawButton(6)) {
-            shooter.setFeederChecksDisabled(true);
-            shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
-            shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
-            shooter.setFiring(true);
-        } else if (xbox.getRawAxis(2) > 0.1) {
+        // Shooting / Moving control block
+        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+            // If trying to shoot with left bumper (stop and shoot)
+            drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
             shooter.setFeederChecksDisabled(false);
-            if (isTryingToRunShooterFromButtonPanel()) { //If vision is off
+            hopper.setHopperState(Hopper.HopperState.ON);
+            visionManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+        } else if (buttonPanel.getRawButton(6)) {
+            // If trying to Hood Eject
+            drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
+            doShooterEject();
+            doNormalDriving();
+        } else if (xbox.getRawAxis(2) > 0.1) {
+            // If attempting to shoot with left trigger
+            shooter.setFeederChecksDisabled(false);
+            if (isTryingToRunShooterFromButtonPanel()) {
+                //If shooting from button (no vision)
+                drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
                 shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
                 shooter.setSpeed(shooterPreset.getFlywheelSpeed());
                 shooter.setFiring(true);
                 hopper.setHopperState(Hopper.HopperState.ON);
                 doNormalDriving();
+                drive.doHold();
                 visionManager.unForceVisionOn(driverForcingVisionOn);
             } else {
+                // Do Shooting while moving (using vision)
+                drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
                 visionManager.forceVisionOn(driverForcingVisionOn);
                 visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
-            shooter.setFeederChecksDisabled(false);
-            shooter.setFiring(false);
-            shooter.setSpeed(0);
+            drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
+            if (Timer.getFPGATimestamp() - hopper.getLastBeamBreakOpenTime() > Constants.BEAM_BREAK_EJECT_TIME ||
+                    Timer.getFPGATimestamp() < hoodEjectUntilTime) {
+                // Eject a ball if the there has been a 3rd ball detected in the hopper for a certain amount of time
+                if (Timer.getFPGATimestamp() - hopper.getLastBeamBreakOpenTime() > Constants.BEAM_BREAK_EJECT_TIME
+                        && !(Timer.getFPGATimestamp() < hoodEjectUntilTime)) {
+                    hoodEjectUntilTime = Timer.getFPGATimestamp() + Constants.MIN_AUTO_EJECT_TIME;
+                    hopper.resetBeamBreakOpenTime();
+                }
+                shooter.setFeederChecksDisabled(false);
+                doShooterEject();
+            } else {
+                // Not trying to do anything else with shooter will stop all action with it
+                shooter.setFeederChecksDisabled(false);
+                shooter.setFiring(false);
+                shooter.setSpeed(0);
+            }
+
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (!Constants.GRAPPLE_CLIMB && (Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance()
-                    .isPaused())) { // If we're
-                // climbing don't allow the robot to be
-                // driven
+
+            if (!Constants.GRAPPLE_CLIMB &&
+                    (Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused())) {
+                // If we're climbing don't allow the robot to be driven
                 doNormalDriving();
             } else {
-                // Stop the robot from moving
+                // Stop the robot from moving if doing no action with it
                 drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
             }
         }
 
         runShooter();
 
+        // Intake solenoid control
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
             intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
                     Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
         }
 
+        // Intake and hopper motor control
         if (xbox.getRawAxis(3) > 0.1) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
-            hopper.setHopperState(Hopper.HopperState.ON);
+            if (Timer.getFPGATimestamp() > hoodEjectUntilTime) {
+                hopper.setHopperState(Hopper.HopperState.ON);
+            } else {
+                hopper.setHopperState(HopperState.OFF);
+            }
         } else if (buttonPanel.getRawButton(8) || xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
             // Sets intake to eject without controlling hopper
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
@@ -598,7 +640,8 @@ public class Robot extends TimedRobot {
             shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!(xbox.getRawAxis(2) > 0.1)) { // Only turn off the hopper if we're not shooting
+            if (!((xbox.getRawAxis(2) > 0.1) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
+                // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
         }
@@ -692,6 +735,16 @@ public class Robot extends TimedRobot {
         }
     }
 
+    // Utility methods
+
+    private void doShooterEject() {
+        final Shooter shooter = Shooter.getInstance();
+        shooter.setFeederChecksDisabled(true);
+        shooter.setSpeed(Constants.SHOOTER_EJECT_SPEED);
+        shooter.setHoodPosition(Constants.HOOD_EJECT_ANGLE);
+        shooter.setFiring(true);
+    }
+
     private void runShooter() {
         VisionManager visionManager = VisionManager.getInstance();
         if (buttonPanel.getRisingEdge(1)) {
@@ -712,8 +765,10 @@ public class Robot extends TimedRobot {
 
     private void doNormalDriving() {
         final Drive drive = Drive.getInstance();
+        final VisionManager visionManager = VisionManager.getInstance();
 
         ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+
         if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
                 && drive.getSpeedSquared() < 0.1) {
             if (xbox.getRawButton(XboxButtons.Y)) {
