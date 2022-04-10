@@ -32,8 +32,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static frc.robot.Constants.GOAL_POSITION;
-import static frc.robot.Constants.MAX_SHOOT_SPEED;
+import static frc.robot.Constants.*;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
@@ -200,7 +199,7 @@ public final class VisionManager extends AbstractSubsystem {
                     < Math.toRadians(8)
                 && getAccel().getNorm() < 7.4
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
-                && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3
+                && (Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE
                 && loopsWithBadVision.get() < Constants.MAX_BAD_VISION_ITERATIONS) {
             //@formatter:on
             shooter.setFiring(true);
