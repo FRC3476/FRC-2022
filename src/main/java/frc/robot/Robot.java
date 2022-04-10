@@ -582,14 +582,6 @@ public class Robot extends TimedRobot {
             killAuto();
         }
 
-
-        // TODO: Make sure drivers are ok with button placements
-        /** Climb Rotation lineup
-         * Rotation is linked to the auto lineup in order to make sure that both are not pressed at the same time
-         */
-        if (stick.getRawButton(5)) {
-            drive.setRotation(Constants.CLIMB_LINEUP_ANGLE);
-        }
         /** Climb Lineup
          * Will run a separate thread that executes an auto thread to line up to bar
          */
@@ -647,7 +639,11 @@ public class Robot extends TimedRobot {
         }
 
         // Shooting / Moving control block
-        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+
+        // Climb lineup
+        if (stick.getRawButton(5)) {
+            drive.updateTurn(getControllerDriveInputs(), Constants.CLIMB_LINEUP_ANGLE, useFieldRelative, 0);
+        } else if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
             // If trying to shoot with left bumper (stop and shoot)
             shooter.setFeederChecksDisabled(false);
             hopper.setHopperState(Hopper.HopperState.ON);

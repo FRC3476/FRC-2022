@@ -166,8 +166,7 @@ public final class Constants {
     public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
-    public static final double CLIMB_LINEUP_ANGLE = 180;
-
+    public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
     public static final double DEFAULT_TURN_P = 12.0;
