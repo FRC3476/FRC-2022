@@ -173,7 +173,7 @@ public final class Constants {
 
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = 12.0;
+    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 12.0;
     public static final double DEFAULT_TURN_I = 15.0;
     public static final double DEFAULT_TURN_D = 0.4;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
@@ -329,7 +329,7 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.1;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = IS_PRACTICE ? 0.15 : 0.1;
 
     /**
      * inches
