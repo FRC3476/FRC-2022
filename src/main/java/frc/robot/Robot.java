@@ -218,22 +218,24 @@ public class Robot extends TimedRobot {
 
     Consumer<EntryNotification> shooterGuiListener = event ->
             deserializerExecutor.execute(() -> {
-                        System.out.println("start parsing shooter config");
                         //Set networktable entries for the loading circle
                         shooterConfigStatusEntry.setDouble(2);
                         shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
                         try {
-                            ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
+                            ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(
+                                    shooterConfigEntry.getString(null),
                                     ShooterConfig.class);
+                            if (shooterConfig.getShooterConfigs().size() < 3) {
+                                System.out.println(
+                                        "Shooter config was too small to load size=" + shooterConfig.getShooterConfigs().size());
+                                return;
+                            }
                             Collections.sort(shooterConfig.getShooterConfigs());
                             VisionManager.getInstance().setShooterConfig(shooterConfig);
-                            System.out.println(shooterConfig.getShooterConfigs());
                         } catch (IOException e) {
                             //Should never happen. The gui should never upload invalid data.
                             DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
                         }
-
-                        System.out.println("done parsing shooter config");
                         //Set networktable entries for the loading circle
                         shooterConfigStatusEntry.setDouble(1);
                         shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);

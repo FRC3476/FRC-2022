@@ -180,7 +180,7 @@ public final class Constants {
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
     public enum AccelerationLimits {
-        NORMAL_DRIVING(20),
+        NORMAL_DRIVING(24),
         SHOOT_AND_MOVE(6),
         STOP_AND_SHOOT(12);
 
