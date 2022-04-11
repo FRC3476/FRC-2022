@@ -6,7 +6,6 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -605,15 +604,7 @@ public class Robot extends TimedRobot {
             }
 
             visionManager.unForceVisionOn(driverForcingVisionOn);
-
-            if (!Constants.GRAPPLE_CLIMB &&
-                    (Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused())) {
-                // If we're climbing don't allow the robot to be driven
-                doNormalDriving();
-            } else {
-                // Stop the robot from moving if doing no action with it
-                drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
-            }
+            doNormalDriving();
         }
 
         runShooter();
