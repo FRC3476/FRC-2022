@@ -675,10 +675,8 @@ public class Robot extends TimedRobot {
             }
 
             if (stick.getRawButton(11)) {
-                System.out.println("going up");
                 climber.setClimberMotor(0.5);
             } else if (stick.getRawButton(12)) {
-                System.out.println("going down");
                 climber.setClimberMotor(-0.5);
             } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
                 climber.setClimberMotor(0);
@@ -852,10 +850,8 @@ public class Robot extends TimedRobot {
             }
 
             if (stick.getRawButton(11)) {
-                System.out.println("going up");
                 climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
             } else if (stick.getRawButton(12)) {
-                System.out.println("going down");
                 climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
             } else if (buttonPanel.getRawButton(9)) {
                 climber.stallIntoBottom();
