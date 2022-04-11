@@ -562,6 +562,7 @@ public final class Constants {
     public static final boolean GRAPPLE_CLIMB = true;
     public static final int GRAPPLE_TRIGGER_SOL_ID = 0;
     public static final int GRAPPLE_ARM_SOL_ID = 1;
+    public static final int BIG_CLIMBER_SOLENOID_ID = 2;
 
     public static final double BEAM_BREAK_EJECT_TIME = 0.75;
     public static final double MIN_AUTO_EJECT_TIME = 0.5;

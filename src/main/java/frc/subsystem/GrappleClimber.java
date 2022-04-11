@@ -42,12 +42,17 @@ public class GrappleClimber extends AbstractSubsystem {
     /**
      * Comprises the big solenoid that lifts the robot and the small solenoid that lets go of the grapple
      */
-    private @NotNull Solenoid triggerSolenoid;
+    private final @NotNull Solenoid triggerSolenoid;
 
     /**
-     * Comprises the solenoid that controls the lineup bar and the small solenoid that drops control down to the trigger solenoid
+     * The small solenoid that retracts to launch the grapple
      */
-    private @NotNull Solenoid armSolenoid;
+    private final @NotNull Solenoid armSolenoid;
+
+    /**
+     * The small solenoid that retracts to launch the grapple
+     */
+    private final @NotNull Solenoid bigClimbingSolenoid;
 
     private GrappleClimber() {
         super(Constants.GRAPPLE_CLIMBER_PERIOD, 1);
@@ -55,6 +60,7 @@ public class GrappleClimber extends AbstractSubsystem {
         // Creating solenoids
         triggerSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_TRIGGER_SOL_ID);
         armSolenoid = getPneumaticsHub().makeSolenoid(Constants.GRAPPLE_ARM_SOL_ID);
+        bigClimbingSolenoid = getPneumaticsHub().makeSolenoid(Constants.BIG_CLIMBER_SOLENOID_ID);
     }
 
     /**
@@ -63,6 +69,7 @@ public class GrappleClimber extends AbstractSubsystem {
     public void resetSolenoids() {
         triggerSolenoid.set(true);
         armSolenoid.set(false);
+        bigClimbingSolenoid.set(true);
     }
 
     /**
