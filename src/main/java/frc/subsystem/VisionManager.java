@@ -28,10 +28,10 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static frc.robot.Constants.GOAL_POSITION;
-import static frc.robot.Constants.MAX_SHOOT_SPEED;
+import static frc.robot.Constants.*;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
@@ -48,6 +48,7 @@ public final class VisionManager extends AbstractSubsystem {
 
     private VisionManager() {
         super(Constants.VISION_MANAGER_PERIOD, 4);
+        logData("IS VISION GOOD", true);
     }
 
     public static @NotNull VisionManager getInstance() {
@@ -117,12 +118,6 @@ public final class VisionManager extends AbstractSubsystem {
         double allowedTurnError = getAllowedTurnError(aimToPosition.getNorm());
 
         logData("Allowed Turn Error", allowedTurnError);
-        logData("Is Robot Allowed Shoot Aiming",
-                Math.abs((angleOf(getRelativeGoalTranslation())
-                        .minus(robotTracker.getGyroAngle())).getRadians())
-                        < allowedTurnError);
-
-        logData("Acceleration", getAccel().getNorm());
     }
 
 
@@ -173,23 +168,47 @@ public final class VisionManager extends AbstractSubsystem {
         tryToShoot(relativeGoalPos, 0, true);
     }
 
+    Translation2d stopAndShootStartPosition;
+    Translation2d stopAndShootStartVelocities;
+
+    public void stopAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
+        final @NotNull Drive drive = Drive.getInstance();
+        Translation2d predictedTranslation = predictFutureTranslation(
+                getRobotVel().getNorm() / drive.accelerationLimit.acceleration,
+                getRelativeGoalTranslation(), getRobotVel(), getAccel());
+
+        drive.updateTurn(controllerDriveInputs, angleOf(predictedTranslation), fieldRelative, getAllowedTurnError());
+        updateShooterState(predictedTranslation.getNorm());
+        tryToShoot(predictedTranslation, 0, true);
+    }
+
     private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         final @NotNull Drive drive = Drive.getInstance();
         final @NotNull Shooter shooter = Shooter.getInstance();
+
+        logData("Is allowed Shoot Turn Speed",
+                Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
+                        < Math.toRadians(8));
+
+        logData("Is Robot Allowed Shoot Aiming",
+                Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians())
+                        < getAllowedTurnError(aimToPosition.getNorm()));
+        logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < 7.4);
 
         //@formatter:off
         if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians())
                     < getAllowedTurnError(aimToPosition.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
-                && getAccel().getNorm() < 0.75
+                && getAccel().getNorm() < 7.4
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
-                && Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) {
+                && ((Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE)
+                && loopsWithBadVision.get() < Constants.MAX_BAD_VISION_ITERATIONS) {
             //@formatter:on
             shooter.setFiring(true);
             if (shooter.isFiring()) {
-                if (!checksPassedLastTime && lastPrintTime + 0.5 < Timer.getFPGATimestamp()) {
+                if (!checksPassedLastTime && lastPrintTime + 1 < Timer.getFPGATimestamp()) {
                     lastPrintTime = Timer.getFPGATimestamp();
                     checksPassedLastTime = true;
                     System.out.println(
@@ -237,12 +256,8 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     public Translation2d getRobotVel() {
-        final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        final @NotNull Drive drive = Drive.getInstance();
-
-        Rotation2d rotation2d = robotTracker.getGyroAngle();
-        ChassisSpeeds chassisSpeeds = Drive.getSwerveDriveKinematics().toChassisSpeeds(drive.getSwerveModuleStates());
-        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond).rotateBy(rotation2d);
+        ChassisSpeeds chassisSpeeds = RobotTracker.getInstance().getLatencyCompedChassisSpeeds();
+        return new Translation2d(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond);
     }
 
     /**
@@ -287,6 +302,7 @@ public final class VisionManager extends AbstractSubsystem {
         Optional<Translation2d> visionTranslation = getVisionTranslation();
         visionTranslation.ifPresent(
                 translation2d -> {
+                    loopsWithBadVision.set(0);
                     robotTracker.addVisionMeasurement(
                             translation2d,
                             getLimelightTime());
@@ -344,8 +360,8 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private double getLimelightTime() {
-        double limelightTime = Timer.getFPGATimestamp(); //- (limelight.getLatency() / 1000.0) - (11.0 / 1000);
-        logData("Limelight Latency", (limelight.getLatency() / 1000) + (11.0 / 1000));
+        double limelightTime = limelight.getTimestamp();
+        logData("Limelight Latency", Timer.getFPGATimestamp() - limelightTime);
         return limelightTime;
     }
 
@@ -389,6 +405,8 @@ public final class VisionManager extends AbstractSubsystem {
     private final LedStatus limelightTooFarFromExpectedStatus = new LedStatus(BlinkinLedMode.SOLID_ORANGE, 100);
     private final LedStatus limelightNotVisibleStatus = new LedStatus(BlinkinLedMode.SOLID_RED_ORANGE, 100);
 
+    private final AtomicInteger loopsWithBadVision = new AtomicInteger(0);
+
     @Override
     public void update() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
@@ -426,23 +444,30 @@ public final class VisionManager extends AbstractSubsystem {
 
             logData("Tracker Translation X", trackerTranslation.getX());
             logData("Tracker Translation Y", trackerTranslation.getY());
+            if (limelight.areCornersTouchingEdge()) {
+                logData("Using Vision Info", "Corners touching edge");
+            } else {
+                if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
+                        robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
 
-            if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
-                    robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-                if (limelight.areCornersTouchingEdge()) {
-                    logData("Using Vision Info", "Corners touching edge");
-                } else {
                     if (!DriverStation.isAutonomous()) {
                         robotTracker.addVisionMeasurement(robotTranslation,
                                 getLimelightTime());
                     }
                     robotPositionOffset = new Translation2d();
                     logData("Using Vision Info", "Using Vision Info");
+                    loopsWithBadVision.set(0);
                     blinkinLED.setStatus(limelightUsingVisionStatus);
+                    logData("IS VISION GOOD", true);
+                } else {
+                    if (loopsWithBadVision.incrementAndGet() > Constants.MAX_BAD_VISION_ITERATIONS) {
+                        logData("IS VISION GOOD", false);
+                    } else {
+                        logData("IS VISION GOOD", true);
+                    }
+                    logData("Using Vision Info", "Position is too far from expected");
+                    blinkinLED.setStatus(limelightTooFarFromExpectedStatus);
                 }
-            } else {
-                logData("Using Vision Info", "Position is too far from expected");
-                blinkinLED.setStatus(limelightTooFarFromExpectedStatus);
             }
         } else {
             logData("Using Vision Info", "No target visible");
@@ -514,7 +539,7 @@ public final class VisionManager extends AbstractSubsystem {
                                                    Translation2d currentVelocity, Translation2d currentAcceleration) {
         return currentTranslation
                 .plus(currentVelocity.times(predictAheadTime))
-                .plus(currentTranslation.times(0.5 * predictAheadTime * predictAheadTime));
+                .plus(currentAcceleration.times(0.5 * predictAheadTime * predictAheadTime));
     }
 
     /**
@@ -581,9 +606,12 @@ public final class VisionManager extends AbstractSubsystem {
         );
     }
 
+    private final Translation2d ZERO = new Translation2d();
 
     private Translation2d getAccel() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        return robotTracker.getAcceleration();
+        return Drive.getInstance().lastAcceleration;
+        //return robotTracker.getAcceleration();
+        //return ZERO;
     }
 }

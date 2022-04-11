@@ -12,6 +12,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static frc.robot.Constants.IS_PRACTICE;
+
 public final class VisionLookUpTable {
 
     private final ReentrantLock shooterConfigLock = new ReentrantLock();
@@ -26,11 +28,14 @@ public final class VisionLookUpTable {
     private VisionLookUpTable() {
 
         try {
-            File shooterDataFile = new File(Filesystem.getDeployDirectory().getPath() + "/shooter/shooterconfig.json");
+            File shooterDataFile = new File(Filesystem.getDeployDirectory().getPath() +
+                    (IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json"));
             shooterConfig = (ShooterConfig) Serializer.deserializeFromFile(shooterDataFile, ShooterConfig.class);
             System.out.println("Successfully loaded shooter config from the file");
         } catch (IOException e) {
-            DriverStation.reportError("Failed to load shooter config from /shooter/shooterconfig.json. Using default values",
+            DriverStation.reportError("Failed to load shooter config from " +
+                            (IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json") +
+                            "Using default values",
                     e.getStackTrace());
             shooterConfig = new ShooterConfig();
             shooterConfig.getShooterConfigs().add(new ShooterPreset(47, 4800, 58));

@@ -295,6 +295,7 @@ public final class Shooter extends AbstractSubsystem {
         feederWheel.config_IntegralZone(0, Constants.FEEDER_WHEEL_I_ZONE);
         feederWheel.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.FEEDER_CURRENT_LIMIT,
                 Constants.FEEDER_TRIGGER_THRESHOLD_CURRENT, Constants.FEEDER_TRIGGER_THRESHOLD_TIME));
+        feederWheel.configVoltageCompSaturation(9);
 
         feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 200); // Default is 10ms
         feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 200); // Default is 10ms
@@ -627,15 +628,15 @@ public final class Shooter extends AbstractSubsystem {
                 if (
                         ((feederWheelState == FeederWheelState.FORWARD)
                                 && ((isHoodAtTargetAngle() && isShooterAtTargetSpeed())
-                                && (Timer.getFPGATimestamp() > (VisionManager.getInstance().getDistanceToTarget() < 80 ?
-                                0.5 : SECOND_BALL_SHOOT_DELAY) + lastShotTime)
+                                && (Timer.getFPGATimestamp() >
+                                (VisionManager.getInstance().getDistanceToTarget() < SLOW_SHOOT_DISTANCE_THRESHOLD ?
+                                        SECOND_BALL_SHOOT_DELAY_SLOW : SECOND_BALL_SHOOT_DELAY) + lastShotTime)
                                 || feederChecksDisabled))
                 ) {
                     feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_SPEED);
                     lastShotTime = Timer.getFPGATimestamp();
                     Robot.setRumble(RumbleType.kLeftRumble, 0);
                 } else {
-                    // Turn OFF Feeder Wheel if feederWheel has not been on in half a second
                     if (Timer.getFPGATimestamp() > lastShotTime + FEEDER_CHANGE_STATE_DELAY_SEC) {
                         if (runFeederWheelReversed) {
                             feederWheel.set(ControlMode.PercentOutput, -0.3);

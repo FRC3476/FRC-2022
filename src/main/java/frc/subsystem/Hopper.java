@@ -5,9 +5,12 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.subsystem.Intake.IntakeSolState;
+import frc.subsystem.Shooter.FeederWheelState;
+import frc.subsystem.Shooter.ShooterState;
 import frc.utility.Limelight;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
@@ -15,20 +18,27 @@ import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import static frc.robot.Constants.HOPPER_CURRENT_LIMIT;
+import static frc.robot.Constants.*;
 
 public final class Hopper extends AbstractSubsystem {
 
     private static @NotNull Hopper INSTANCE = new Hopper();
     private final @NotNull LazyCANSparkMax hopperMotor;
-    private RelativeEncoder outtakeWheelsQuadrature;
-    private LazyCANSparkMax outtakeWheels;
+    private final RelativeEncoder outtakeWheelsQuadrature;
+    private final LazyCANSparkMax outtakeWheels;
     private double lastDetectionTime;
     private boolean disableEject = false;
     private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
 
+    private final DigitalInput beamBreak;
+    private double lastBeamBreakOpenTime = 0;
+
     public static Hopper getInstance() {
         return INSTANCE;
+    }
+
+    public void resetBeamBreakOpenTime() {
+        lastBeamBreakOpenTime = Timer.getFPGATimestamp();
     }
 
     public enum HopperState {
@@ -83,6 +93,8 @@ public final class Hopper extends AbstractSubsystem {
 
         outtakeWheels.disableVoltageCompensation();
         outtakeWheels.burnFlash();
+
+        beamBreak = new DigitalInput(Constants.BEAM_BREAK_DIO_ID);
     }
 
     /**
@@ -172,10 +184,19 @@ public final class Hopper extends AbstractSubsystem {
         return currentBallColor;
     }
 
+
+    public double getLastBeamBreakOpenTime() {
+        return lastBeamBreakOpenTime;
+    }
+
     @Override
     public void update() {
         updateAllianceColor();
         updateOuttakeState();
+
+        if (!isBeamBroken()) {
+            lastBeamBreakOpenTime = Timer.getFPGATimestamp();
+        }
 
         // Outtake motor control
 
@@ -198,22 +219,37 @@ public final class Hopper extends AbstractSubsystem {
         // Hopper Motor Control
         switch (wantedHopperState) {
             case ON:
-                hopperMotor.set(Constants.HOPPER_SPEED);
+                hopperMotor.set(HOPPER_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = true;
                 break;
             case OFF:
-                hopperMotor.set(0);
-                Shooter.getInstance().runFeederWheelReversed = false;
+                if (isBeamBroken() &&
+                        !(Shooter.getInstance().getFeederWheelState() == FeederWheelState.FORWARD &&
+                                Shooter.getInstance().getShooterState() == ShooterState.ON)) {
+                    hopperMotor.set(HOPPER_SPEED);
+                    Shooter.getInstance().runFeederWheelReversed = true;
+                } else {
+                    hopperMotor.set(0);
+                    Shooter.getInstance().runFeederWheelReversed = false;
+                }
                 break;
             case REVERSE:
-                hopperMotor.set(-Constants.HOPPER_SPEED);
+                hopperMotor.set(-HOPPER_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
             case SLOW:
-                hopperMotor.set(Constants.HOPPER_SPEED / 2);
+                hopperMotor.set(HOPPER_SPEED / 2);
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
         }
+    }
+
+    /**
+     * @return True if the beam break is broken. (ie a ball is in the way)
+     */
+    private boolean isBeamBroken() {
+        if (IS_PRACTICE) return false;
+        return !beamBreak.get();
     }
 
     public void setHopperState(HopperState hopperState) {
@@ -249,6 +285,8 @@ public final class Hopper extends AbstractSubsystem {
         logData("Current Ball Color", getBallColor());
         logData("Eject Disabled", disableEject);
         logData("Hopper State", wantedHopperState);
+        logData("Is Beam Broken", isBeamBroken());
+        logData("Last Beam Break Open Time", getLastBeamBreakOpenTime());
     }
 
     @Override

@@ -6,7 +6,17 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 
+import java.io.File;
+import java.nio.file.Files;
+
 public final class Constants {
+
+    public static final boolean IS_PRACTICE = Files.exists(new File("/home/lvuser/practice").toPath());
+
+    // 2048 sensor units per revolution
+    public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
+    public static final double FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM = 600 / 2048.0d;
+    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
 
     // Logging Period
     /**
@@ -71,7 +81,6 @@ public final class Constants {
     public static final double SWERVE_DRIVE_I = 0.00;
     public static final double SWERVE_DRIVE_F = 0.00;
     public static final double SWERVE_DRIVE_INTEGRAL_ZONE = 0.00;
-    public static final double SWERVE_DRIVE_RAMP_RATE = 0.1;
 
     public static final int SWERVE_MOTOR_PID_TIMEOUT_MS = 50;
 
@@ -87,10 +96,10 @@ public final class Constants {
      * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.55827)};
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
+            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5)};
 
 
     /**
@@ -139,6 +148,11 @@ public final class Constants {
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
 
+    public static final double SWERVE_ACCELERATION =
+            ((360 * 15 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
+
+    public static final double SWERVE_CRUISE_VELOCITY =
+            ((360 * 7 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
     /**
      * Allowed Turn Error in degrees.
      */
@@ -151,11 +165,6 @@ public final class Constants {
      */
     public static final double MAX_PID_STOP_SPEED = 100;
 
-    // 2048 sensor units per revolution
-    public static final double FALCON_ENCODER_TICKS_PER_ROTATIONS = 2048;
-    public static final double FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM = 600 / 2048.0d;
-    public static final double SWERVE_MOTOR_POSITION_CONVERSION_FACTOR = 1 / 12.8;
-
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
@@ -164,21 +173,28 @@ public final class Constants {
 
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = 12.0;
+    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 12.0;
     public static final double DEFAULT_TURN_I = 15.0;
     public static final double DEFAULT_TURN_D = 0.4;
     public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
-    /**
-     * Units are in Meters Per Second Squared
-     */
-    public static final double MAX_ACCELERATION = 22;
+    public enum AccelerationLimits {
+        NORMAL_DRIVING(24),
+        SHOOT_AND_MOVE(6),
+        STOP_AND_SHOOT(12);
+
+        public double acceleration;
+
+        AccelerationLimits(double acceleration) {
+            this.acceleration = acceleration;
+        }
+    }
 
     /**
      * Units are in Radians per Second Squared
      */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 27);
+    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 22);
 
     /**
      * Angular offset of the intake limelight (degrees)
@@ -234,6 +250,8 @@ public final class Constants {
     public static final int HOPPER_CURRENT_LIMIT = 35;
     public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
+    public static final int BEAM_BREAK_DIO_ID = 7;
+
     // Outtake Constants
     public static final int OUTTAKE_CAN_ID = 60;
     public static final double OUTTAKE_REDUCTION = (3.0 / 1.0);
@@ -274,7 +292,7 @@ public final class Constants {
     public static final int HOOD_HOME_SWITCH_DIO_ID = 6;
 
     // Shooter PID & Misc
-    public static final double DEFAULT_SHOOTER_P = 0.035;
+    public static final double DEFAULT_SHOOTER_P = IS_PRACTICE ? 0.034 : 0.035;
     public static final double DEFAULT_SHOOTER_I = 0.000;
     public static final double DEFAULT_SHOOTER_D = 0.000;
     public static final double DEFAULT_SHOOTER_F = 0.069664;
@@ -321,8 +339,14 @@ public final class Constants {
     /**
      * The time that the feeder must be on before it is allowed to turn off
      */
-    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = 0.05;
+    public static final double FEEDER_CHANGE_STATE_DELAY_SEC = IS_PRACTICE ? 0.15 : 0.1;
+
+    /**
+     * inches
+     */
+    public static final double SLOW_SHOOT_DISTANCE_THRESHOLD = 40;
     public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
+    public static final double SECOND_BALL_SHOOT_DELAY_SLOW = 0.4;
     public static final double RUMBLE_DELAY = 0.1666666667;
     public static final double RUMBLE_TIME = 0.25;
 
@@ -340,7 +364,7 @@ public final class Constants {
     // Hood Constants
 
     public static final double HOOD_MAX_ANGLE = 90;
-    public static final double HOOD_MIN_ANGLE = 53;
+    public static final double HOOD_MIN_ANGLE = IS_PRACTICE ? 50.5 : 53;
     /**
      * Amount of degrees the hood turns per NEO550 rotation
      */
@@ -537,4 +561,7 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
+    public static final double BEAM_BREAK_EJECT_TIME = 0.75;
+    public static final double MIN_AUTO_EJECT_TIME = 0.5;
+    public static final int MAX_BAD_VISION_ITERATIONS = 45;
 }

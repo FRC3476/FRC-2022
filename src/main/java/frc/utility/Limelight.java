@@ -8,11 +8,11 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import frc.subsystem.AbstractSubsystem;
+import frc.utility.net.editing.LiveEditableValue;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static frc.robot.Constants.IS_PRACTICE;
 
 /**
  * This class is used to get data from the limelight network tables
@@ -38,12 +40,11 @@ public final class Limelight extends AbstractSubsystem {
     }
 
 
-    volatile Rotation cameraRotation = new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR, Math.toRadians(-38), 0,
-            0);
+    private final LiveEditableValue<Rotation> cameraRotation;
 
-    volatile double hOffset = 38;
-    volatile double depthOffset = 44;
-    volatile Vector3D centerOffset = new Vector3D(0, 0, 6.9);
+    private final LiveEditableValue<Double> hOffset;
+    private final LiveEditableValue<Double> depthOffset;
+    private final LiveEditableValue<Vector3D> centerOffset;
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();
@@ -159,27 +160,23 @@ public final class Limelight extends AbstractSubsystem {
         limelightTable = NetworkTableInstance.getDefault().getTable(name);
         limelightGuiTable = NetworkTableInstance.getDefault().getTable(name + "gui");
 
-        NetworkTableEntry angleTable = limelightGuiTable.getEntry("angle");
-        angleTable.setDouble(cameraRotation.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0]);
-        angleTable.addListener(event -> cameraRotation
-                        = new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
-                        Math.toRadians(event.getEntry().getDouble(0)), 0, 0),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
-        NetworkTableEntry hOffsetTable = limelightGuiTable.getEntry("hOffset");
-        hOffsetTable.setDouble(hOffset);
-        hOffsetTable.addListener(event -> hOffset = event.getEntry().getDouble(0),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
-        NetworkTableEntry depthOffsetTable = limelightGuiTable.getEntry("depthOffset");
-        depthOffsetTable.setDouble(depthOffset);
-        depthOffsetTable.addListener(event -> depthOffset = event.getEntry().getDouble(0),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
-        NetworkTableEntry centerOffsetTable = limelightGuiTable.getEntry("centerOffset");
-        centerOffsetTable.setDouble(centerOffset.getZ());
-        centerOffsetTable.addListener(event -> centerOffset = new Vector3D(0, 0, event.getEntry().getDouble(0)),
-                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+        cameraRotation = new LiveEditableValue<>(
+                new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
+                        Math.toRadians(IS_PRACTICE ? -37.5 : -38), 0, 0),
+                limelightGuiTable.getEntry("angle"),
+                (value) ->
+                        new Rotation(
+                                RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
+                                Math.toRadians((Double) value), 0, 0),
+                (value) ->
+                        Math.toDegrees(value.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0])
+        );
+        hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 38.0, limelightGuiTable.getEntry("hOffset"));
+        depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 44.0, limelightGuiTable.getEntry("depthOffset"));
+        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 6.9),
+                limelightGuiTable.getEntry("centerOffset"),
+                (value) -> new Vector3D(0, 0, (Double) value),
+                Vector3D::getZ);
 
 
         limelightTable.getEntry("tl").addListener(event -> lastUpdate = Timer.getFPGATimestamp(),
@@ -241,6 +238,14 @@ public final class Limelight extends AbstractSubsystem {
      */
     public double getLatency() {
         return limelightTable.getEntry("tl").getDouble(0);
+    }
+
+    /**
+     * @return The timeStamp of the last processed frame
+     */
+    public double getTimestamp() {
+        return Timer.getFPGATimestamp();
+        //return lastUpdate - ((0) / 1000);
     }
 
     /**
@@ -356,19 +361,24 @@ public final class Limelight extends AbstractSubsystem {
                     cameraUnitVector.get(2, 0)
             );
 
-            Vector3D goalDir = cameraRotation.applyTo(vector3D);
+            Vector3D goalDir = cameraRotation.get().applyTo(vector3D);
             double angle = Math.atan2(goalDir.getX(), goalDir.getZ());
 
-            double k = hOffset / goalDir.getY();
+            double k = hOffset.get() / goalDir.getY();
 
             return goalDir.scalarMultiply(k)
-                    .add(centerOffset) //5.875
-                    .add(new Vector3D(Math.sin(angle) * depthOffset, 0, Math.cos(angle) * depthOffset));
+                    .add(centerOffset.get()) //5.875
+                    .add(new Vector3D(Math.sin(angle) * depthOffset.get(), 0, Math.cos(angle) * depthOffset.get()));
         } else {
             return Vector3D.ZERO;
         }
     }
 
+    /**
+     * Top right is (0,0)
+     *
+     * @return
+     */
     public Vector2d[] getCorners() {
         double[] corners = limelightTable.getEntry("tcornxy").getDoubleArray(EMPTY_DOUBLE_ARRAY);
         Vector2d[] processedCorners = new Vector2d[corners.length / 2];
@@ -383,7 +393,7 @@ public final class Limelight extends AbstractSubsystem {
     public boolean areCornersTouchingEdge() {
         Vector2d[] corners = getCorners();
         for (Vector2d corner : corners) {
-            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 0 || corner.y > 240 - 15) {
+            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 15 || corner.y > 240) {
 
                 return true;
             }

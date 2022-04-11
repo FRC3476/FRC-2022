@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Constants;
 import frc.utility.Timer;
@@ -37,14 +38,82 @@ public class DriveTest {
 
     }
 
-    @Test
-    void testStopMovement() throws NoSuchFieldException, IllegalAccessException {
-        Field currentRobotState = RobotTracker.class.getDeclaredField("latencyCompensatedChassisSpeeds");
-        currentRobotState.setAccessible(true);
-        currentRobotState.set(robotTracker, new ChassisSpeeds(0, 0, 0));
+    @Disabled
+    void testStopMovement1() throws NoSuchFieldException, IllegalAccessException {
+        Field lastRequestedVelocity = Drive.class.getDeclaredField("lastRequestedVelocity");
+        lastRequestedVelocity.setAccessible(true);
+        lastRequestedVelocity.set(drive, new Translation2d());
+
+        Field lastRequestedRotation = Drive.class.getDeclaredField("lastRequestedRotation");
+        lastRequestedRotation.setAccessible(true);
+        lastRequestedRotation.set(drive, 0.0);
 
         Timer.setTime(55);
         drive.swerveDrive(new ChassisSpeeds(1, 1, 0.0));
+        for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
+            assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
+        }
+        Timer.setTime(55.14);
+
+        drive.stopMovement();
+
+        drive.update();
+
+        for (int i = 0; i < drive.swerveMotors.length; i++) {
+            assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
+        }
+    }
+
+    /**
+     * Test that the acceleration limit is working
+     */
+    @Test
+    void testStopMovement2() throws NoSuchFieldException, IllegalAccessException {
+        Field lastRequestedVelocity = Drive.class.getDeclaredField("lastRequestedVelocity");
+        lastRequestedVelocity.setAccessible(true);
+        lastRequestedVelocity.set(drive, new Translation2d(10, 10));
+
+        Field lastRequestedRotation = Drive.class.getDeclaredField("lastRequestedRotation");
+        lastRequestedRotation.setAccessible(true);
+        lastRequestedRotation.set(drive, 0.0);
+
+        Timer.setTime(54.9);
+        drive.swerveDrive(new ChassisSpeeds(10, 10, 0.0));
+
+        Timer.setTime(55);
+        drive.swerveDrive(new ChassisSpeeds(10, 10, 0.0));
+        for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
+            assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
+        }
+        Timer.setTime(55.01);
+
+        drive.stopMovement();
+
+        drive.update();
+
+        for (int i = 0; i < drive.swerveMotors.length; i++) {
+            assertNotEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
+        }
+    }
+
+    /**
+     * Test that the acceleration limit is working
+     */
+    @Disabled
+    void testStopMovement3() throws NoSuchFieldException, IllegalAccessException {
+        Field lastRequestedVelocity = Drive.class.getDeclaredField("lastRequestedVelocity");
+        lastRequestedVelocity.setAccessible(true);
+        lastRequestedVelocity.set(drive, new Translation2d(0.2, 0.2));
+
+        Field lastRequestedRotation = Drive.class.getDeclaredField("lastRequestedRotation");
+        lastRequestedRotation.setAccessible(true);
+        lastRequestedRotation.set(drive, 0.0);
+
+        Timer.setTime(54.9);
+        drive.swerveDrive(new ChassisSpeeds(0.2, 0.2, 0.0));
+
+        Timer.setTime(55);
+        drive.swerveDrive(new ChassisSpeeds(0.2, 0.2, 0.0));
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
@@ -53,12 +122,15 @@ public class DriveTest {
         drive.stopMovement();
 
         drive.update();
-        
+
+
         for (int i = 0; i < drive.swerveMotors.length; i++) {
-            assertEquals(0.0, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
+            double expectedVoltage = Constants.DRIVE_FEEDFORWARD[i].calculate(0, -Math.hypot(0.2, 0.2) / 0.1) / 12;
+            assertEquals(expectedVoltage, drive.swerveDriveMotors[i].getSetpoint(), DELTA);
         }
     }
 
+    /*
     @Disabled("Limiting angular acceleration breaks test")
     void testLimitAcceleration() throws Exception {
         ChassisSpeeds commandedVelocity = null;
@@ -163,6 +235,8 @@ public class DriveTest {
         assertEquals(Constants.MAX_ACCELERATION * 0.05, velocity, DELTA);
         assertEquals(-15.5, limitedVelocity.omegaRadiansPerSecond, DELTA);
     }
+
+     */
 
     @Test
     void testAngleDiff1() {
