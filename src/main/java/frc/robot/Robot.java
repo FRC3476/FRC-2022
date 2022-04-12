@@ -569,7 +569,7 @@ public class Robot extends TimedRobot {
     private final Object buttonPanelForcingVisionOn = new Object();
     private final Object resettingPoseVisionOn = new Object();
 
-    /**
+    /*
      * This function is called periodically during operator control.
      */
     @Override
@@ -585,15 +585,19 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
+
         // Will terminate climb auto thread if any stick movement happens
         if (autoThread != null && autoThread.isAlive() && !getControllerDriveInputs().equals(
                 NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
+
+        /*
+
         /** Climb Lineup
          * Will run a separate thread that executes an auto thread to line up to bar
-         */
+
         if (stick.getRisingEdge(6)) {
 
             System.out.println("Using Climb Auto: " + climbAutoChooser.getSelected());
@@ -642,10 +646,12 @@ public class Robot extends TimedRobot {
             autoThread = new Thread(selectedAuto);
             autoThread.start();
 
-            /** Will kill climb auto thread */
+            /** Will kill climb auto thread
         } else if (stick.getRisingEdge(7)) {
             killAuto();
         }
+
+        */
 
         // Deploys grapple lineup
         if (Constants.GRAPPLE_CLIMB
