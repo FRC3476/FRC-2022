@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -16,7 +17,6 @@ import frc.auton.*;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
-import frc.robot.Constants.AccelerationLimits;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.subsystem.Hopper.HopperState;
@@ -42,8 +42,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-import static frc.robot.Constants.CLIMBER_MOTOR_MAX_OUTPUT;
-import static frc.robot.Constants.IS_PRACTICE;
+import static frc.robot.Constants.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as described in the
@@ -605,7 +604,13 @@ public class Robot extends TimedRobot {
             }
 
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            doNormalDriving();
+            if (GRAPPLE_CLIMB || Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused()) {
+                // If we're climbing don't allow the robot to be driven
+                doNormalDriving();
+            } else {
+                // Stop the robot from moving if we're not issuing other commands to the drivebase
+                drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
+            }
         }
 
         runShooter();
