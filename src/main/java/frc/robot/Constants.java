@@ -181,7 +181,7 @@ public final class Constants {
     public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
     public enum AccelerationLimits {
-        NORMAL_DRIVING(20),
+        NORMAL_DRIVING(24),
         SHOOT_AND_MOVE(6),
         STOP_AND_SHOOT(12);
 
@@ -552,6 +552,19 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
+
+    // Grapple Climber Constants
+    public static final int GRAPPLE_CLIMBER_PERIOD = 50;
+
+    /**
+     * Flag to enable grapple climb If true, will not start Climber subsystem, instead will start GrappleClimber Will not run
+     * contents of Climber Constructor
+     */
+    public static final boolean GRAPPLE_CLIMB = true;
+    public static final int GRAPPLE_TRIGGER_SOL_ID = 0;
+    public static final int GRAPPLE_ARM_SOL_ID = 1;
+    public static final int BIG_CLIMBER_SOLENOID_ID = 2;
+
     public static final double BEAM_BREAK_EJECT_TIME = 0.75;
     public static final double MIN_AUTO_EJECT_TIME = 0.5;
     public static final int MAX_BAD_VISION_ITERATIONS = 45;

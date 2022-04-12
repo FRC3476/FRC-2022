@@ -17,7 +17,6 @@ import frc.auton.*;
 import frc.auton.guiauto.NetworkAuto;
 import frc.auton.guiauto.serialization.OsUtil;
 import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
-import frc.robot.Constants.AccelerationLimits;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.subsystem.Hopper.HopperState;
@@ -43,7 +42,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-import static frc.robot.Constants.IS_PRACTICE;
+import static frc.robot.Constants.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as described in the
@@ -245,22 +244,24 @@ public class Robot extends TimedRobot {
 
     Consumer<EntryNotification> shooterGuiListener = event ->
             deserializerExecutor.execute(() -> {
-                        System.out.println("start parsing shooter config");
                         //Set networktable entries for the loading circle
                         shooterConfigStatusEntry.setDouble(2);
                         shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
                         try {
-                            ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(shooterConfigEntry.getString(null),
+                            ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(
+                                    shooterConfigEntry.getString(null),
                                     ShooterConfig.class);
+                            if (shooterConfig.getShooterConfigs().size() < 3) {
+                                System.out.println(
+                                        "Shooter config was too small to load size=" + shooterConfig.getShooterConfigs().size());
+                                return;
+                            }
                             Collections.sort(shooterConfig.getShooterConfigs());
                             VisionManager.getInstance().setShooterConfig(shooterConfig);
-                            System.out.println(shooterConfig.getShooterConfigs());
                         } catch (IOException e) {
                             //Should never happen. The gui should never upload invalid data.
                             DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
                         }
-
-                        System.out.println("done parsing shooter config");
                         //Set networktable entries for the loading circle
                         shooterConfigStatusEntry.setDouble(1);
                         shooterConfigStatusIdEntry.setDouble(shooterConfigStatusIdEntry.getDouble(0) + 1);
@@ -410,10 +411,12 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         final Drive drive = Drive.getInstance();
-        final Climber climber = Climber.getInstance();
-
         startSubsystems();
-        climber.configBrake();
+
+        if (!Constants.GRAPPLE_CLIMB) {
+            Climber.getInstance().configBrake();
+        }
+
         enabled.setBoolean(true);
         drive.configBrake();
 
@@ -544,10 +547,15 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         final Drive drive = Drive.getInstance();
         final Hopper hopper = Hopper.getInstance();
-        final Climber climber = Climber.getInstance();
 
         startSubsystems();
-        climber.configBrake();
+
+        if (!Constants.GRAPPLE_CLIMB) {
+            Climber.getInstance().configBrake();
+        } else {
+            GrappleClimber.getInstance().resetSolenoids();
+        }
+
         enabled.setBoolean(true);
         useFieldRelative = true;
         SmartDashboard.putBoolean("Field Relative Enabled", true);
@@ -571,7 +579,6 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-        final Climber climber = Climber.getInstance();
 
         VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
@@ -640,6 +647,14 @@ public class Robot extends TimedRobot {
             killAuto();
         }
 
+        // Deploys grapple lineup
+        if (Constants.GRAPPLE_CLIMB
+                && (stick.getRisingEdge(7) || stick.getRisingEdge(8)) //We just pressed one of the two buttons
+                && (stick.getRawButton(7) || stick.getRawButton(8))) // Both buttons are pressed
+        {
+            GrappleClimber.getInstance().armGrappleClimb();
+        }
+
         // Shooting / Moving control block
 
         // Climb lineup
@@ -695,11 +710,11 @@ public class Robot extends TimedRobot {
             }
 
             visionManager.unForceVisionOn(driverForcingVisionOn);
-            if (climber.getClimbState() == ClimbState.IDLE || climber.isPaused()) {
+            if (GRAPPLE_CLIMB || Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused()) {
                 // If we're climbing don't allow the robot to be driven
                 doNormalDriving();
             } else {
-                // Stop the robot from moving if doing no action with it
+                // Stop the robot from moving if we're not issuing other commands to the drivebase
                 drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
             }
         }
@@ -761,53 +776,54 @@ public class Robot extends TimedRobot {
 //        }
 
 
-        // Climber controls
-        if (stick.getRisingEdge(9)) {
-            climber.toggleClaw();
-        }
+        if (!Constants.GRAPPLE_CLIMB) {
+            Climber climber = Climber.getInstance();
 
-        if (stick.getRisingEdge(10)) {
-            climber.togglePivot();
-        }
-
-        if (stick.getRawButton(11)) {
-            System.out.println("going up");
-            climber.setClimberMotor(0.5);
-        } else if (stick.getRawButton(12)) {
-            System.out.println("going down");
-            climber.setClimberMotor(-0.5);
-        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
-            climber.setClimberMotor(0);
-        }
-
-        if (buttonPanel.getRisingEdge(12) && buttonPanel.getRawButton(9)) {
-            climber.forceAdvanceStep();
-        }
-
-        if (buttonPanel.getRisingEdge(9)) {
-            if (climber.getClimbState() == ClimbState.IDLE) {
-                climber.startClimb();
-            } else {
-                climber.resumeClimb();
-                climber.advanceStep();
+            if (stick.getRisingEdge(9)) {
+                climber.toggleClaw();
             }
-        } else if (buttonPanel.getFallingEdge(9)) {
-            climber.pauseClimb();
-        } else if (buttonPanel.getRawButton(9)) {
-            //drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
-        }
 
-        if (buttonPanel.getRisingEdge(11)) {
-            climber.stopClimb();
-        }
+            if (stick.getRisingEdge(10)) {
+                climber.togglePivot();
+            }
+
+            if (stick.getRawButton(11)) {
+                climber.setClimberMotor(CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
+            } else if (stick.getRawButton(12)) {
+                climber.setClimberMotor(-CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
+            } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
+                climber.setClimberMotor(0);
+            }
+
+            if (buttonPanel.getRisingEdge(12) && buttonPanel.getRawButton(9)) {
+                climber.forceAdvanceStep();
+            }
+
+            if (buttonPanel.getRisingEdge(9)) {
+                if (climber.getClimbState() == ClimbState.IDLE) {
+                    climber.startClimb();
+                } else {
+                    climber.resumeClimb();
+                    climber.advanceStep();
+                }
+            } else if (buttonPanel.getFallingEdge(9)) {
+                climber.pauseClimb();
+            } else if (buttonPanel.getRawButton(9)) {
+                //drive.setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
+            }
+
+            if (buttonPanel.getRisingEdge(11)) {
+                climber.stopClimb();
+            }
 
 
-        if (buttonPanel.getRisingEdge(10)) {
-            climber.setStepByStep(!climber.isStepByStep());
-        }
+            if (buttonPanel.getRisingEdge(10)) {
+                climber.setStepByStep(!climber.isStepByStep());
+            }
 
-        if (stick.getRisingEdge(3)) {
-            climber.deployClimb();
+            if (stick.getRisingEdge(3)) {
+                climber.deployClimb();
+            }
         }
 
         //TODO: Debug why this does not work
@@ -965,31 +981,34 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-        final Climber climber = Climber.getInstance();
 
-        // Climber Test Controls
-        if (stick.getRisingEdge(9)) {
-            climber.toggleClaw();
-        }
+        if (!Constants.GRAPPLE_CLIMB) {
+            Climber climber = Climber.getInstance();
 
-        if (stick.getRisingEdge(10)) {
-            climber.togglePivot();
-        }
 
-        if (stick.getRawButton(11)) {
-            System.out.println("going up");
-            climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (stick.getRawButton(12)) {
-            System.out.println("going down");
-            climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-        } else if (buttonPanel.getRawButton(9)) {
-            climber.stallIntoBottom();
-        } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12) || buttonPanel.getFallingEdge(9)) {
-            climber.setClimberMotor(0);
-        }
+            // Climber Test Controls
+            if (stick.getRisingEdge(9)) {
+                climber.toggleClaw();
+            }
 
-        if (buttonPanel.getRisingEdge(11)) {
-            climber.stopClimb();
+            if (stick.getRisingEdge(10)) {
+                climber.togglePivot();
+            }
+
+            if (stick.getRawButton(11)) {
+                climber.setClimberMotor(CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
+            } else if (stick.getRawButton(12)) {
+                climber.setClimberMotor(-CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
+            } else if (buttonPanel.getRawButton(9)) {
+                climber.stallIntoBottom();
+            } else if ((stick.getFallingEdge(11) || stick.getFallingEdge(12) ||
+                    buttonPanel.getFallingEdge(9))) {
+                climber.setClimberMotor(0);
+            }
+
+            if (buttonPanel.getRisingEdge(11)) {
+                climber.stopClimb();
+            }
         }
 
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
@@ -1027,8 +1046,8 @@ public class Robot extends TimedRobot {
             shooter.selfTest();
         }
 
-        if (buttonPanel.getRisingEdge(8)) {
-            climber.selfTest();
+        if (buttonPanel.getRisingEdge(8) && !Constants.GRAPPLE_CLIMB) {
+            Climber.getInstance().selfTest();
         }
     }
 
@@ -1039,9 +1058,14 @@ public class Robot extends TimedRobot {
         Intake.getInstance().start();
         Hopper.getInstance().start();
         Shooter.getInstance().start();
-        Climber.getInstance().start();
         VisionManager.getInstance().start();
         DashboardHandler.getInstance().start();
+
+        if (Constants.GRAPPLE_CLIMB) {
+            GrappleClimber.getInstance().start();
+        } else {
+            Climber.getInstance().start();
+        }
     }
 
     public void killAuto() {
