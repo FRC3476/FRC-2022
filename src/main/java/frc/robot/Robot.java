@@ -42,6 +42,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
+import static frc.robot.Constants.CLIMBER_MOTOR_MAX_OUTPUT;
 import static frc.robot.Constants.IS_PRACTICE;
 
 /**
@@ -675,9 +676,9 @@ public class Robot extends TimedRobot {
             }
 
             if (stick.getRawButton(11)) {
-                climber.setClimberMotor(0.5);
+                climber.setClimberMotor(CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
             } else if (stick.getRawButton(12)) {
-                climber.setClimberMotor(-0.5);
+                climber.setClimberMotor(-CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
             } else if (stick.getFallingEdge(11) || stick.getFallingEdge(12)) {
                 climber.setClimberMotor(0);
             }
@@ -850,9 +851,9 @@ public class Robot extends TimedRobot {
             }
 
             if (stick.getRawButton(11)) {
-                climber.setClimberMotor(Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+                climber.setClimberMotor(CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
             } else if (stick.getRawButton(12)) {
-                climber.setClimberMotor(-Constants.CLIMBER_MOTOR_MAX_OUTPUT);
+                climber.setClimberMotor(-CLIMBER_MOTOR_MAX_OUTPUT * 0.5);
             } else if (buttonPanel.getRawButton(9)) {
                 climber.stallIntoBottom();
             } else if ((stick.getFallingEdge(11) || stick.getFallingEdge(12) ||
