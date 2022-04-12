@@ -626,7 +626,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
-    double nextAllowedPrintError = 0;
+    private double nextAllowedPrintError = 0;
 
     @SuppressWarnings("ProhibitedExceptionCaught")
     private void updateRamsete() {
@@ -652,7 +652,7 @@ public final class Drive extends AbstractSubsystem {
                     resetAuto();
                 }
                 ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
-                        RobotTracker.getInstance().getLastEstimatedPoseMeters(),
+                        RobotTracker.getInstance().getRawPose(),
                         goal,
                         targetHeading);
                 swerveDrive(adjustedSpeeds);

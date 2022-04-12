@@ -566,5 +566,5 @@ public final class Constants {
 
     public static final double BEAM_BREAK_EJECT_TIME = 0.75;
     public static final double MIN_AUTO_EJECT_TIME = 0.5;
-    public static final int MAX_BAD_VISION_ITERATIONS = 45;
+    public static final int MAX_BAD_VISION_ITERATIONS = 100 / (VISION_MANAGER_PERIOD);
 }
