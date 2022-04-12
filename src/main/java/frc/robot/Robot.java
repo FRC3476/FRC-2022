@@ -549,7 +549,10 @@ public class Robot extends TimedRobot {
 
 
         // Deploys grapple lineup
-        if (stick.getRisingEdge(7) && Constants.GRAPPLE_CLIMB) {
+        if (Constants.GRAPPLE_CLIMB
+                && (stick.getRisingEdge(7) || stick.getRisingEdge(8)) //We just pressed one of the two buttons
+                && (stick.getRawButton(7) || stick.getRawButton(8))) // Both buttons are pressed
+        {
             GrappleClimber.getInstance().armGrappleClimb();
         }
 
