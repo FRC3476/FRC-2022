@@ -147,7 +147,7 @@ public final class Constants {
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
-    public static final double DRIVE_LOW_SPD_MOD = .2;
+    public static final double DRIVE_LOW_SPEED_MOD = 0.5;
 
     public static final double SWERVE_ACCELERATION =
             ((360 * 15 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2

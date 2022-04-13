@@ -662,11 +662,7 @@ public class Robot extends TimedRobot {
         }
 
         // Shooting / Moving control block
-
-        // Climb lineup
-        if (stick.getRawButton(5)) {
-            drive.updateTurn(getControllerDriveInputs(), Constants.CLIMB_LINEUP_ANGLE, useFieldRelative, 0);
-        } else if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
+        if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
             // If trying to shoot with left bumper (stop and shoot)
             drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
             shooter.setFeederChecksDisabled(false);
@@ -718,7 +714,11 @@ public class Robot extends TimedRobot {
             visionManager.unForceVisionOn(driverForcingVisionOn);
             if (GRAPPLE_CLIMB || Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused()) {
                 // If we're climbing don't allow the robot to be driven
-                doNormalDriving();
+                if (usingDPad) {
+                    drive.updateTurn(getControllerDriveInputs(), Constants.CLIMB_LINEUP_ANGLE, useFieldRelative, 0);
+                } else {
+                    doNormalDriving();
+                }
             } else {
                 // Stop the robot from moving if we're not issuing other commands to the drivebase
                 drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
@@ -874,36 +874,7 @@ public class Robot extends TimedRobot {
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
-    private boolean slowMovement = false;
-
-    /**
-     * Checks to see if slow movement controls or slow movement flag is true. Adjusts movement for these purposes
-     *
-     * @param controllerDriveInputs The controllerDrive input you want to modify
-     */
-    private ControllerDriveInputs checkSlowMovement(ControllerDriveInputs controllerDriveInputs) {
-
-        // Will use slow movements if using the xbox D-Pad
-        if (xbox.getPOV() != -1) {
-            slowMovement = true;
-            double povRads = Math.toRadians(xbox.getPOV());
-
-            // Makes a new controllerDriveInput with the D-Pad inputs and lowers rotation speed
-            controllerDriveInputs = new ControllerDriveInputs(-Math.cos(povRads) * Constants.DRIVE_LOW_SPD_MOD,
-                    Math.sin(povRads) * Constants.DRIVE_LOW_SPD_MOD,
-                    controllerDriveInputs.getRotation() * Constants.DRIVE_LOW_SPD_MOD);
-        } else if (slowMovement && controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0) {
-            // If D-Pad movement has been used in the past without the use of normal movement, we will continue to use
-            // slow turning when not moving
-            controllerDriveInputs = new ControllerDriveInputs(0, 0,
-                    controllerDriveInputs.getRotation() * Constants.DRIVE_LOW_SPD_MOD);
-        } else {
-            // If using normal inputs, resets slow movement flag and uses normal inputs
-            slowMovement = false;
-        }
-
-        return controllerDriveInputs;
-    }
+    private boolean usingDPad = false;
 
     private void doNormalDriving() {
 
@@ -930,22 +901,20 @@ public class Robot extends TimedRobot {
     }
 
     private ControllerDriveInputs getControllerDriveInputs() {
-        if (useFieldRelative) {
-            if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
-            } else {
-                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
-            }
+        if (xbox.getRawButton(Controller.XboxButtons.X)) {
+            usingDPad = false;
+            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0), -xbox.getRawAxis(4))
+                    .applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+        } else if (xbox.getPOV() != -1) {
+            double povRads = Math.toRadians(xbox.getPOV());
+            usingDPad = true;
+            return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads), -xbox.getRawAxis(0))
+                    .applyDeadZone(0, 0, 0.2, 0)
+                    .squareInputs().scaleInputs(DRIVE_LOW_SPEED_MOD);
         } else {
-            if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs());
-            } else {
-                return checkSlowMovement(new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs());
-            }
+            usingDPad = false;
+            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0), -xbox.getRawAxis(4))
+                    .applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
         }
     }
 

@@ -116,4 +116,11 @@ public class ControllerDriveInputs {
     public int hashCode() {
         return Objects.hash(x, y, rotation);
     }
+
+    public ControllerDriveInputs scaleInputs(double scalar) {
+        x *= scalar;
+        y *= scalar;
+        rotation *= scalar;
+        return this;
+    }
 }
