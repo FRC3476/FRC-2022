@@ -559,7 +559,7 @@ public final class Constants {
      * Flag to enable grapple climb If true, will not start Climber subsystem, instead will start GrappleClimber Will not run
      * contents of Climber Constructor
      */
-    public static final boolean GRAPPLE_CLIMB = true;
+    public static final boolean GRAPPLE_CLIMB = false;
     public static final int GRAPPLE_TRIGGER_SOL_ID = 0;
     public static final int GRAPPLE_ARM_SOL_ID = 1;
     public static final int BIG_CLIMBER_SOLENOID_ID = 2;
