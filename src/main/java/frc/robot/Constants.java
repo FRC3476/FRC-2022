@@ -252,7 +252,7 @@ public final class Constants {
     /**
      * Outtake's speed when automatically ejecting balls
      */
-    public static final double OUTTAKE_AUTO_EJECTION_SPEED = .5;
+    public static final double OUTTAKE_AUTO_EJECTION_SPEED = 0.5;
 
     /**
      * Outtake's speed when manually ejecting balls
@@ -262,12 +262,12 @@ public final class Constants {
     /**
      * Outtake's speed when intaking balls
      */
-    public static final double OUTTAKE_SPEED = -.5;
+    public static final double OUTTAKE_SPEED = -0.5;
 
     /**
      * Outtake will run for this time (Sec) after color sensor trigger
      */
-    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000d;
+    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000.0d;
 
     // Shooter Constants
 
@@ -308,7 +308,7 @@ public final class Constants {
 
     public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (30.0 / 31.0);
 
-    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2d);
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2.0d);
 
     public static final double FEEDER_WHEEL_LOCK_SPEED_RPM = 1000;
 
@@ -428,7 +428,7 @@ public final class Constants {
     public static final double SHOOTER_TEST_SPEED_RPM = 3000;
 
     /**
-     * How long an individual test of a component should go on for in miliseconds
+     * How long an individual test of a component should go on for in milliseconds
      */
     public static final long TEST_TIME_MS = 5000;
 
@@ -515,7 +515,7 @@ public final class Constants {
     public static final double MAX_CLIMBER_EXTENSION = 27.07 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     * Length to grab onto mid bar
+     * Length to grab onto mid-bar
      */
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
