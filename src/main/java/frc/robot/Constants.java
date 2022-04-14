@@ -214,25 +214,6 @@ public final class Constants {
      */
     public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(MAX_SHOOT_SPEED, 2);
 
-    /**
-     * This GOAL RADIUS is used to calculate the turn error
-     */
-    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
-
-    public static final double GRAVITY = 9.80665;
-
-    /**
-     * Goal height in meters.
-     */
-    public static final double GOAL_HEIGHT = 2.64;
-    /**
-     * The height of the center of the Ejection point in meters.
-     */
-    public static final double SHOOTER_HEIGHT = 0.5; //TODO: Config
-
-    public static final double MAX_SHOOTER_RPM = 5500;
-    public static final double MAX_PREFER_SHOOTER_RPM = 4500;
-
 
     //Hopper Constants
     public static final int HOPPER_PERIOD = 10;
