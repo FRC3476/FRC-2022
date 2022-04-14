@@ -488,7 +488,7 @@ public final class Constants {
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
      */
-    public static final double ARM_PIVOT_DURATION = 1;
+    public static final double ARM_PIVOT_DURATION = 0.5;
 
     /**
      * How long it takes for the pivot pneumatic to close (become inline) (in seconds)
@@ -521,9 +521,14 @@ public final class Constants {
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     * Length to grab on high and traversal bars
+     * Length to grab on with front hooks
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_FRONT_HOOK = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    /**
+     * Length to grab with back hooks
+     */
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
