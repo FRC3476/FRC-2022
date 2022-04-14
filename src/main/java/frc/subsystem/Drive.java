@@ -834,9 +834,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void stopMovement() {
-        System.out.println("In StopMovement");
         setDriveState(DriveState.STOP);
-        System.out.println("Exiting StopMovement");
     }
 
     synchronized public boolean isFinished() {

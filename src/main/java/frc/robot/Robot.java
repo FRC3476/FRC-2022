@@ -149,7 +149,6 @@ public class Robot extends TimedRobot {
     @NotNull
     private HangerCargoRed hangerCargoRed;
 
-
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
     @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
@@ -164,7 +163,6 @@ public class Robot extends TimedRobot {
     @NotNull private static final String HIDE_CARGO = "Hide Cargo";
     @NotNull private static final String BUDDY_AUTO_LEFT_HIDE = "Buddy Auto Left Hide";
     @NotNull private static final String HANGER_CARGO = "Hanger Cargo";
-
 
     private static final String RESET_POSE = "Reset Pose";
 
@@ -283,7 +281,6 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> buddyAutoLeftHideRed = new BuddyAutoLeftHideRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> hangerCargoBlue = new HangerCargoBlue()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> hangerCargoRed = new HangerCargoRed()).thenRun(this::incrementLoadedAutos);
-
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -531,7 +528,7 @@ public class Robot extends TimedRobot {
     private final Object buttonPanelForcingVisionOn = new Object();
     private final Object resettingPoseVisionOn = new Object();
 
-    /**
+    /*
      * This function is called periodically during operator control.
      */
     @Override
@@ -547,6 +544,12 @@ public class Robot extends TimedRobot {
         stick.update();
         buttonPanel.update();
 
+
+        // Will terminate climb auto thread if any stick movement happens
+        if (autoThread != null && autoThread.isAlive() && !getControllerDriveInputs().equals(
+                NO_MOTION_CONTROLLER_INPUTS)) {
+            killAuto();
+        }
 
         // Deploys grapple lineup
         if (Constants.GRAPPLE_CLIMB
@@ -609,7 +612,11 @@ public class Robot extends TimedRobot {
             visionManager.unForceVisionOn(driverForcingVisionOn);
             if (GRAPPLE_CLIMB || Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused()) {
                 // If we're climbing don't allow the robot to be driven
-                doNormalDriving();
+                if (usingDPad) {
+                    drive.updateTurn(getControllerDriveInputs(), Constants.CLIMB_LINEUP_ANGLE, useFieldRelative, 0);
+                } else {
+                    doNormalDriving();
+                }
             } else {
                 // Stop the robot from moving if we're not issuing other commands to the drivebase
                 drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
@@ -671,6 +678,7 @@ public class Robot extends TimedRobot {
 //        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {
 //            visionManager.adjustShooterHoodBias(0.5);
 //        }
+
 
         if (!Constants.GRAPPLE_CLIMB) {
             Climber climber = Climber.getInstance();
@@ -764,45 +772,47 @@ public class Robot extends TimedRobot {
 
     private static final ControllerDriveInputs NO_MOTION_CONTROLLER_INPUTS = new ControllerDriveInputs(0, 0, 0);
 
+    private boolean usingDPad = false;
+
     private void doNormalDriving() {
-        final Drive drive = Drive.getInstance();
-        final VisionManager visionManager = VisionManager.getInstance();
 
-        ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+        if (autoThread == null || !autoThread.isAlive()) {
+            final Drive drive = Drive.getInstance();
 
-        if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
-                && drive.getSpeedSquared() < 0.1) {
-            if (xbox.getRawButton(XboxButtons.Y)) {
-                drive.doHold();
+            ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
+
+            if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
+                    && drive.getSpeedSquared() < 0.1) {
+                if (xbox.getRawButton(XboxButtons.Y)) {
+                    drive.doHold();
+                } else {
+                    drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
+                }
             } else {
-                drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
-            }
-        } else {
-            if (useFieldRelative) {
-                drive.swerveDriveFieldRelative(controllerDriveInputs);
-            } else {
-                drive.swerveDrive(controllerDriveInputs);
+                if (useFieldRelative) {
+                    drive.swerveDriveFieldRelative(controllerDriveInputs);
+                } else {
+                    drive.swerveDrive(controllerDriveInputs);
+                }
             }
         }
     }
 
     private ControllerDriveInputs getControllerDriveInputs() {
-        if (useFieldRelative) {
-            if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
-            } else {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
-            }
+        if (xbox.getRawButton(Controller.XboxButtons.X)) {
+            usingDPad = false;
+            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0), -xbox.getRawAxis(4))
+                    .applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
+        } else if (xbox.getPOV() != -1) {
+            double povRads = Math.toRadians(xbox.getPOV());
+            usingDPad = true;
+            return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads), -xbox.getRawAxis(0))
+                    .applyDeadZone(0, 0, 0.2, 0)
+                    .squareInputs().scaleInputs(DRIVE_LOW_SPEED_MOD);
         } else {
-            if (xbox.getRawButton(Controller.XboxButtons.X)) {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
-            } else {
-                return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0),
-                        -xbox.getRawAxis(4)).applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
-            }
+            usingDPad = false;
+            return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0), -xbox.getRawAxis(4))
+                    .applyDeadZone(0.05, 0.05, 0.2, 0.2).squareInputs();
         }
     }
 
@@ -873,7 +883,7 @@ public class Robot extends TimedRobot {
                 climber.stopClimb();
             }
         }
-        
+
         if (xbox.getRawButton(XboxButtons.X) && xbox.getRawButton(XboxButtons.B)) {
 
             // Makes sure that these two buttons are held down for one second before running process
@@ -937,9 +947,7 @@ public class Robot extends TimedRobot {
 
         if (selectedAuto != null) {
             assert autoThread != null;
-            System.out.println("2");
             autoThread.interrupt();
-            System.out.println("3");
             double nextStackTracePrint = Timer.getFPGATimestamp() + 1;
             while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
                 if (Timer.getFPGATimestamp() > nextStackTracePrint) {
@@ -954,11 +962,8 @@ public class Robot extends TimedRobot {
 
                 OrangeUtility.sleep(10);
             }
-            System.out.println("4");
             drive.stopMovement();
-            System.out.println("5");
             drive.setTeleop();
-            System.out.println("6");
         } else {
             System.out.println("Auto is null");
         }
