@@ -1,0 +1,10 @@
+{
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Auto choices": "String Chooser",
+      "/SmartDashboard/Climb Auto choices": "String Chooser",
+      "/SmartDashboard/Red or Blue": "String Chooser"
+    }
+  }
+}

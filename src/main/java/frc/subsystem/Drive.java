@@ -621,13 +621,19 @@ public final class Drive extends AbstractSubsystem {
      * Tells the robot to start aiming while driving the auto path
      */
     private volatile boolean isAutoAiming = false;
+    private volatile @NotNull TrapezoidProfile.State autoAimingRotationGoal = new TrapezoidProfile.State(0, 0);
 
     public void setAutoAiming(boolean autoAiming) {
         isAutoAiming = autoAiming;
     }
 
+    public void setAutoAiming(TrapezoidProfile.State autoAimingRotationGoal) {
+        isAutoAiming = true;
+        this.autoAimingRotationGoal = autoAimingRotationGoal;
+    }
 
-    double nextAllowedPrintError = 0;
+
+    private double nextAllowedPrintError = 0;
 
     @SuppressWarnings("ProhibitedExceptionCaught")
     private void updateRamsete() {
@@ -642,9 +648,7 @@ public final class Drive extends AbstractSubsystem {
             Trajectory.State goal = currentAutoTrajectory.sample(Timer.getFPGATimestamp() - autoStartTime);
 
             Rotation2d targetHeading = autoTargetHeading;
-            if (isAutoAiming) {
-                targetHeading = VisionManager.getInstance().getAngleToTarget();
-            }
+
 
             try {
                 if (swerveAutoController == null) {
@@ -653,9 +657,14 @@ public final class Drive extends AbstractSubsystem {
                     resetAuto();
                 }
                 ChassisSpeeds adjustedSpeeds = swerveAutoController.calculate(
-                        RobotTracker.getInstance().getLastEstimatedPoseMeters(),
+                        RobotTracker.getInstance().getRawPose(),
                         goal,
                         targetHeading);
+
+                if (isAutoAiming) {
+                    adjustedSpeeds.omegaRadiansPerSecond = getTurnPidDeltaSpeed(autoAimingRotationGoal);
+                }
+
                 swerveDrive(adjustedSpeeds);
                 if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
                     setDriveState(DriveState.DONE);
@@ -731,6 +740,18 @@ public final class Drive extends AbstractSubsystem {
         } else {
             swerveDriveFieldRelative(inputs);
         }
+    }
+
+    private double getTurnPidDeltaSpeed(@NotNull TrapezoidProfile.State autoAimingRotationGoal) {
+        turnPID.setSetpoint(autoAimingRotationGoal.position);
+
+        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
+            turnPID.reset();
+        }
+        lastTurnUpdate = Timer.getFPGATimestamp();
+        double pidDeltaSpeed = turnPID.calculate(
+                RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
+        return pidDeltaSpeed;
     }
 
     public void setAutoRotation(@NotNull Rotation2d rotation) {
@@ -809,8 +830,6 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
-    double turnMinSpeed = 0;
-
     /**
      * Default method when the x and y velocity and the target heading are not passed
      */
@@ -853,13 +872,7 @@ public final class Drive extends AbstractSubsystem {
         }
 
 
-        turnPID.setSetpoint(goal.position);
-
-        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
-            turnPID.reset();
-        }
-        lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + goal.velocity;
+        double pidDeltaSpeed = getTurnPidDeltaSpeed(goal);
 
 //        System.out.println(
 //                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
@@ -889,24 +902,15 @@ public final class Drive extends AbstractSubsystem {
             synchronized (this) {
                 isAiming = true;
             }
-            if (curSpeed < 0.5) {
-                //Updates every 20ms
-                turnMinSpeed = Math.min(turnMinSpeed + 0.1, 6);
-            } else {
-                turnMinSpeed = 2;
-            }
         }
 
         logData("Turn Position Error", Math.toDegrees(turnPID.getPositionError()));
         logData("Turn Actual Speed", curSpeed);
         logData("Turn PID Command", pidDeltaSpeed);
-        logData("Turn Min Speed", turnMinSpeed);
     }
 
     public void stopMovement() {
-        System.out.println("In StopMovement");
         setDriveState(DriveState.STOP);
-        System.out.println("Exiting StopMovement");
     }
 
     synchronized public boolean isFinished() {

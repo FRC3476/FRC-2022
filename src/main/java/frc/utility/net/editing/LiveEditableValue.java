@@ -25,7 +25,7 @@ public class LiveEditableValue<T> {
         this.value = defaultValue;
         this.entry = entry;
         entry.setValue(onWrite.apply(defaultValue));
-        entry.addListener(event -> onNTChange.apply(event.value.getValue()),
+        entry.addListener(event -> value = onNTChange.apply(event.value.getValue()),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
 

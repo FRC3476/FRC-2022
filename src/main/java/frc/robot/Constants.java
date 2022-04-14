@@ -147,6 +147,7 @@ public final class Constants {
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
+    public static final double DRIVE_LOW_SPEED_MOD = 0.5;
 
     public static final double SWERVE_ACCELERATION =
             ((360 * 15 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
@@ -170,7 +171,7 @@ public final class Constants {
     public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
-
+    public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
     public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 12.0;
@@ -262,7 +263,7 @@ public final class Constants {
     /**
      * Outtake's speed when automatically ejecting balls
      */
-    public static final double OUTTAKE_AUTO_EJECTION_SPEED = .5;
+    public static final double OUTTAKE_AUTO_EJECTION_SPEED = 0.5;
 
     /**
      * Outtake's speed when manually ejecting balls
@@ -272,12 +273,12 @@ public final class Constants {
     /**
      * Outtake's speed when intaking balls
      */
-    public static final double OUTTAKE_SPEED = -.5;
+    public static final double OUTTAKE_SPEED = -0.5;
 
     /**
      * Outtake will run for this time (Sec) after color sensor trigger
      */
-    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000d;
+    public static final double OUTTAKE_RUN_PERIOD = 50 / 1000.0d;
 
     // Shooter Constants
 
@@ -318,7 +319,7 @@ public final class Constants {
 
     public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR = (2048.0d / 600.0d) * (30.0 / 31.0);
 
-    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2d);
+    public static final double SET_SHOOTER_SPEED_CONVERSION_FACTOR_FEEDER = (2048.0d / 600.0d) * (2.0d);
 
     public static final double FEEDER_WHEEL_LOCK_SPEED_RPM = 1000;
 
@@ -438,7 +439,7 @@ public final class Constants {
     public static final double SHOOTER_TEST_SPEED_RPM = 3000;
 
     /**
-     * How long an individual test of a component should go on for in miliseconds
+     * How long an individual test of a component should go on for in milliseconds
      */
     public static final long TEST_TIME_MS = 5000;
 
@@ -525,7 +526,7 @@ public final class Constants {
     public static final double MAX_CLIMBER_EXTENSION = 27.07 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     * Length to grab onto mid bar
+     * Length to grab onto mid-bar
      */
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
@@ -561,7 +562,20 @@ public final class Constants {
     public static final int WEB_DASHBOARD_PORT = 5802;
 
     public static final int WEB_DASHBOARD_SEND_PERIOD_MS = 50;
+
+    // Grapple Climber Constants
+    public static final int GRAPPLE_CLIMBER_PERIOD = 50;
+
+    /**
+     * Flag to enable grapple climb If true, will not start Climber subsystem, instead will start GrappleClimber Will not run
+     * contents of Climber Constructor
+     */
+    public static final boolean GRAPPLE_CLIMB = false;
+    public static final int GRAPPLE_TRIGGER_SOL_ID = 0;
+    public static final int GRAPPLE_ARM_SOL_ID = 1;
+    public static final int BIG_CLIMBER_SOLENOID_ID = 2;
+
     public static final double BEAM_BREAK_EJECT_TIME = 0.75;
     public static final double MIN_AUTO_EJECT_TIME = 0.5;
-    public static final int MAX_BAD_VISION_ITERATIONS = 45;
+    public static final int MAX_BAD_VISION_ITERATIONS = 100 / (VISION_MANAGER_PERIOD);
 }

@@ -36,7 +36,19 @@ public final class RobotTracker extends AbstractSubsystem {
         return RobotTracker.instance;
     }
 
+    /**
+     * The pose of the robot at the last time the odometry was updated.
+     */
     private @NotNull Pose2d latestEstimatedPose = new Pose2d();
+
+    /**
+     * The estimated pose of the robot at the time of the last without vision updates.
+     */
+    private @NotNull Pose2d latestRawPose = new Pose2d();
+
+    /**
+     * The (field centric) chassis speeds of the robot at the last time the odometry was updated.
+     */
     private @NotNull ChassisSpeeds latestChassisSpeeds = new ChassisSpeeds();
 
     private @NotNull ChassisSpeeds latencyCompensatedChassisSpeeds = new ChassisSpeeds();
@@ -148,8 +160,13 @@ public final class RobotTracker extends AbstractSubsystem {
     /**
      * @return current rotation
      */
-    public synchronized Rotation2d getAngle() {
-        return latestEstimatedPose.getRotation();
+    public Rotation2d getAngle() {
+        lock.readLock().lock();
+        try {
+            return latestEstimatedPose.getRotation();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private final List<Map.Entry<Double, Rotation2d>> previousGyroRotations = new ArrayList<>(102); // 1s of data at 10ms per
@@ -192,6 +209,8 @@ public final class RobotTracker extends AbstractSubsystem {
             try {
                 Pose2d robotTrackerPose = swerveDriveOdometry.getPoseMeters();
                 poseHistory.add(new TimestampedPose(time, robotTrackerPose));
+
+                latestRawPose = robotTrackerPose;
 
                 latestEstimatedPose = new Pose2d(robotTrackerPose.getTranslation().plus(positionOffset),
                         robotTrackerPose.getRotation());
@@ -499,6 +518,16 @@ public final class RobotTracker extends AbstractSubsystem {
         lock.readLock().lock();
         try {
             return latencyCompensatedChassisSpeeds;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @Contract(pure = true)
+    public @NotNull Pose2d getRawPose() {
+        lock.readLock().lock();
+        try {
+            return latestRawPose;
         } finally {
             lock.readLock().unlock();
         }

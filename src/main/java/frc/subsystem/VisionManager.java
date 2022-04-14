@@ -12,6 +12,7 @@ import frc.subsystem.BlinkinLED.BlinkinLedMode;
 import frc.subsystem.BlinkinLED.LedStatus;
 import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
+import frc.subsystem.Shooter.FeederWheelState;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
@@ -23,6 +24,7 @@ import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -31,16 +33,17 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static frc.robot.Constants.*;
+import static frc.robot.Constants.GOAL_POSITION;
+import static frc.robot.Constants.IS_PRACTICE;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
     private static final ReentrantReadWriteLock VISION_MANGER_INSTANCE_LOCK = new ReentrantReadWriteLock();
-    private static VisionManager instance;
+    private static @Nullable VisionManager instance = null;
 
     private final @NotNull Limelight limelight = Limelight.getInstance();
 
-    public final VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
+    public final @NotNull VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
 
     public void setShooterConfig(ShooterConfig shooterConfig) {
         visionLookUpTable.setShooterConfig(shooterConfig);
@@ -120,8 +123,17 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Allowed Turn Error", allowedTurnError);
     }
 
-
     public void shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative) {
+        shootAndMove(controllerDriveInputs, useFieldRelative, true);
+    }
+
+    /**
+     * @param controllerDriveInputs The controller drive inputs to use
+     * @param useFieldRelative      Whether to use field relative
+     * @param sendDriveCommand      Whether to send the drive command to move the robot
+     * @return The turn command to send to the drive subsystem
+     */
+    public State shootAndMove(ControllerDriveInputs controllerDriveInputs, boolean useFieldRelative, boolean sendDriveCommand) {
         final @NotNull Drive drive = Drive.getInstance();
         final @NotNull Shooter shooter = Shooter.getInstance();
 
@@ -140,20 +152,24 @@ public final class VisionManager extends AbstractSubsystem {
         Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + 0.1);
         double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
 
-        drive.updateTurn(controllerDriveInputs,
-                new State(targetAngle, (futureTargetAngle - targetAngle) * 10),
-                useFieldRelative,
-                0);
+        State turnGoal = new State(targetAngle, (futureTargetAngle - targetAngle) * 10);
+        if (sendDriveCommand) {
+            drive.updateTurn(controllerDriveInputs,
+                    turnGoal,
+                    useFieldRelative,
+                    0);
+        }
 
 
         Translation2d aimChecksPosition = getAdjustedTranslation(shooterLookAheadTime);
         updateShooterState(aimChecksPosition.getNorm());
 
         tryToShoot(aimChecksPosition, (futureTargetAngle - targetAngle) * 10, false);
+        return turnGoal;
     }
 
 
-    public void autoTurnRobotToTarget(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
+    public void autoTurnAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
 
         Optional<Translation2d> visionTranslation = getVisionTranslation();
@@ -167,9 +183,6 @@ public final class VisionManager extends AbstractSubsystem {
         updateShooterState(relativeGoalPos.getNorm());
         tryToShoot(relativeGoalPos, 0, true);
     }
-
-    Translation2d stopAndShootStartPosition;
-    Translation2d stopAndShootStartVelocities;
 
     public void stopAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
@@ -449,11 +462,9 @@ public final class VisionManager extends AbstractSubsystem {
             } else {
                 if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
                         robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
+                    robotTracker.addVisionMeasurement(robotTranslation,
+                            getLimelightTime());
 
-                    if (!DriverStation.isAutonomous()) {
-                        robotTracker.addVisionMeasurement(robotTranslation,
-                                getLimelightTime());
-                    }
                     robotPositionOffset = new Translation2d();
                     logData("Using Vision Info", "Using Vision Info");
                     loopsWithBadVision.set(0);
@@ -487,32 +498,32 @@ public final class VisionManager extends AbstractSubsystem {
         final @NotNull Shooter shooter = Shooter.getInstance();
 
         forceVisionOn(this);
-        if (drive.driveState == DriveState.RAMSETE) {
-            drive.setAutoAiming(true);
-        } else {
-            autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
-        }
-        updateShooterState();
 
-        while ((drive.isAiming() || !shooter.isHoodAtTargetAngle() || !shooter.isShooterAtTargetSpeed() || drive.getSpeedSquared() > MAX_SHOOT_SPEED)) {
+
+        do {
             if (drive.driveState == DriveState.RAMSETE) {
-                drive.setAutoAiming(true);
+                drive.setAutoAiming(shootAndMove(CONTROLLER_DRIVE_NO_MOVEMENT, true, false));
             } else {
-                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+                autoTurnAndShoot(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
-            updateShooterState();
             Thread.sleep(10); // Will exit if interrupted
-        }
-        double shootUntilTime = Timer.getFPGATimestamp() + (numBalls * Constants.SHOOT_TIME_PER_BALL);
+        } while (shooter.getFeederWheelState() != FeederWheelState.FORWARD);
 
-        shooter.setFiring(true);
-        while (Timer.getFPGATimestamp() < shootUntilTime) {
+        double shootTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
+        double lastTime = Timer.getFPGATimestamp();
+        double timeShooting = 0;
+
+        while (timeShooting < shootTime) {
             if (drive.driveState == DriveState.RAMSETE) {
-                drive.setAutoAiming(true);
+                drive.setAutoAiming(shootAndMove(CONTROLLER_DRIVE_NO_MOVEMENT, true, false));
             } else {
-                autoTurnRobotToTarget(CONTROLLER_DRIVE_NO_MOVEMENT, true);
+                autoTurnAndShoot(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
-            updateShooterState();
+            double time = Timer.getFPGATimestamp();
+            if (shooter.getFeederWheelState() != FeederWheelState.FORWARD) {
+                timeShooting += time - lastTime;
+            }
+            lastTime = time;
             Thread.sleep(10); // Will exit if interrupted
         }
         unForceVisionOn(this);
@@ -606,7 +617,7 @@ public final class VisionManager extends AbstractSubsystem {
         );
     }
 
-    private final Translation2d ZERO = new Translation2d();
+    private static final Translation2d ZERO = new Translation2d();
 
     private Translation2d getAccel() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();

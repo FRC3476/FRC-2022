@@ -235,8 +235,7 @@ public class DriveTest {
         assertEquals(Constants.MAX_ACCELERATION * 0.05, velocity, DELTA);
         assertEquals(-15.5, limitedVelocity.omegaRadiansPerSecond, DELTA);
     }
-
-     */
+    */
 
     @Test
     void testAngleDiff1() {

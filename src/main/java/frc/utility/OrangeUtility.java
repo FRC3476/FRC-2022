@@ -287,19 +287,4 @@ public final class OrangeUtility {
     public static MutableTranslation2d getTranslation2d(ChassisSpeeds speeds) {
         return new MutableTranslation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
-
-    /**
-     * Resource locks interrupting threads and performs checks before interrupting
-     *
-     * @return if thread could be successfully interrupted
-     */
-    public static synchronized boolean safeInterrupt(Thread thread) {
-        if (thread != null && !thread.isInterrupted() && thread.isAlive()) {
-            thread.interrupt();
-            return true;
-        } else {
-            System.out.println("Can not interrupt thread: " + thread);
-            return false;
-        }
-    }
 }
