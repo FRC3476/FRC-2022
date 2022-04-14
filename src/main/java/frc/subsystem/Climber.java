@@ -110,8 +110,6 @@ public final class Climber extends AbstractSubsystem {
     private double pausedClimberSetpoint;
     private @NotNull BrakeState pausedBrakeState = BrakeState.BRAKING;
     private ControlMode pausedClimberMode;
-
-    private boolean sensorClimb = true;
     private boolean stepByStep = false;
     private boolean advanceStep = false;
     private boolean skipChecks = false;
@@ -161,13 +159,6 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> false,
                         (cl) -> {},
                         true
-                ),
-
-                new ClimbStep(
-                        (cl) -> {},
-                        (cl) -> false,
-                        (cl) -> {},
-                        true
                 )
         ),
 
@@ -175,13 +166,6 @@ public final class Climber extends AbstractSubsystem {
          * Will immediately transition to the next state to start the climb sequence.
          */
         START_CLIMB(
-                new ClimbStep(
-                        (cl) -> {},
-                        (cl) -> true,
-                        (cl) -> {},
-                        false
-                ),
-
                 new ClimbStep(
                         (cl) -> {},
                         (cl) -> {
@@ -206,17 +190,6 @@ public final class Climber extends AbstractSubsystem {
                 new ClimbStep(
                         (cl) -> {
                             cl.setBrakeState(BrakeState.FREE);
-                            cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT);
-                            cl.setClawState(ClawState.UNLATCHED);
-                        },
-                        Climber::isPivotArmContactingBar,
-                        Climber::stopClimberMotor,
-                        true
-                ),
-
-                new ClimbStep(
-                        (cl) -> {
-                            cl.setBrakeState(BrakeState.FREE);
                             cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION);
                             cl.setClawState(ClawState.UNLATCHED);
                         },
@@ -233,13 +206,6 @@ public final class Climber extends AbstractSubsystem {
          */
         LATCH_PIVOT_ARM(
                 new ClimbStep(
-                        (cl) -> cl.setClawState(ClawState.LATCHED),
-                        Climber::isPivotingArmLatched,
-                        (cl) -> {},
-                        true
-                ),
-
-                new ClimbStep(
                         (cl) -> {
                             cl.setClawState(ClawState.LATCHED);
                             cl.data = Timer.getFPGATimestamp() + 0.0;
@@ -255,18 +221,6 @@ public final class Climber extends AbstractSubsystem {
          * supporting the robot.
          */
         MOVE_WEIGHT_TO_PIVOT_ARM(
-                new ClimbStep(
-                        (cl) -> {
-                            //position when it is considered "unlatched"
-                            cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
-                            cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
-                        },
-                        (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR &&
-                                !cl.elevatorArmContactSwitchA.get() && !cl.elevatorArmContactSwitchB.get(),
-                        (cl) -> {},
-                        true
-                ),
-
                 new ClimbStep(
                         (cl) -> {
                             cl.data = cl.climberMotor.getSelectedSensorPosition() + Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
@@ -292,17 +246,6 @@ public final class Climber extends AbstractSubsystem {
                                 && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {},
                         true
-                ),
-
-                new ClimbStep(
-                        (cl) -> {
-                            cl.setPivotState(PivotState.PIVOTED);
-                            cl.data = Timer.getFPGATimestamp();
-                        },
-                        (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION
-                                && cl.climberMotor.getClosedLoopError() < Constants.CLIMBER_MOTOR_MAX_ERROR,
-                        (cl) -> {},
-                        true
                 )
         ),
 
@@ -310,16 +253,6 @@ public final class Climber extends AbstractSubsystem {
          * Uses the gyro to wait until the robot is swinging towards the field
          */
         WAIT_TILL_EXTENSION_IS_SAFE(
-                new ClimbStep(
-                        (cl) -> {},
-                        (cl) -> {
-                            AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return RobotTracker.getInstance().getGyroRollVelocity() > 0 && gyro.getRoll() > 42.5;
-                        }, // TODO: tune these values
-                        (cl) -> {},
-                        false
-                ),
-
                 new ClimbStep(
                         (cl) -> {},
                         (cl) -> {
@@ -341,13 +274,6 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {},
                         true
-                ),
-
-                new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION),
-                        (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
-                        (cl) -> {},
-                        true
                 )
         ),
 
@@ -364,17 +290,6 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_UNPIVOT_DURATION,
                         (cl) -> {},
                         true
-                ),
-
-                new ClimbStep(
-                        (cl) -> {
-                            cl.setPivotState(PivotState.INLINE);
-                            cl.data = Timer.getFPGATimestamp();
-                        },
-                        //TODO: Change the time
-                        (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.ARM_UNPIVOT_DURATION,
-                        (cl) -> {},
-                        true
                 )
         ),
 
@@ -382,17 +297,6 @@ public final class Climber extends AbstractSubsystem {
          * Waits for the gyro to report that the robot has stopped swinging.
          */
         WAIT_FOR_SWING_STOP(
-                new ClimbStep(
-                        (cl) -> {},
-                        (cl) -> {
-                            AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return gyro.getRoll() < 40.5 && Math.abs(
-                                    RobotTracker.getInstance().getGyroRollVelocity()) < 2.5; //TODO: Tune these values
-                        },
-                        (cl) -> {},
-                        false
-                ),
-
                 new ClimbStep(
                         (cl) -> {
                             cl.data = Double.MAX_VALUE;
@@ -418,13 +322,6 @@ public final class Climber extends AbstractSubsystem {
          */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
                 new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, -Constants.CLIMBER_MOTOR_MAX_OUTPUT),
-                        Climber::isElevatorArmContactingBar,
-                        Climber::stopClimberMotor,
-                        true
-                ),
-
-                new ClimbStep(
                         (cl) -> {
                             cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION);
                             Drive.getInstance().setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
@@ -445,13 +342,6 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> Timer.getFPGATimestamp() - cl.data > 0.25,
                         (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0),
                         false
-                ),
-
-                new ClimbStep(
-                        (cl) -> cl.data = Timer.getFPGATimestamp(),
-                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.25,
-                        (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0),
-                        false
                 )
         ),
 
@@ -464,22 +354,6 @@ public final class Climber extends AbstractSubsystem {
                             cl.setClawState(ClawState.UNLATCHED);
                             cl.data = Timer.getFPGATimestamp();
                         },
-                        (cl) -> {
-                            if (cl.isPivotingArmLatchedSwitchA() || cl.isElevatorArmContactSwitchB()) {
-                                cl.data = Timer.getFPGATimestamp();
-                            }
-                            return Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION
-                                    && !cl.pivotingArmContactSwitchA.get() && !cl.pivotingArmContactSwitchB.get();
-                        },
-                        (cl) -> {},
-                        true
-                ),
-
-                new ClimbStep(
-                        (cl) -> {
-                            cl.setClawState(ClawState.UNLATCHED);
-                            cl.data = Timer.getFPGATimestamp();
-                        },
                         (cl) -> Timer.getFPGATimestamp() - cl.data > Constants.PIVOT_ARM_UNLATCH_DURATION,
                         (cl) -> {},
                         true
@@ -487,23 +361,16 @@ public final class Climber extends AbstractSubsystem {
         );
 
         /**
-         * @param sensorClimb   The climb step to use when doing an automatic climb
-         * @param positionClimb The climb step to use when doing a manual climb, step by step
+         * @param climbStep The climb step to use when doing a manual climb, step by step
          */
-        ClimbState(ClimbStep sensorClimb, ClimbStep positionClimb) {
-            this.sensorClimb = sensorClimb;
-            this.positionClimb = positionClimb;
+        ClimbState(ClimbStep climbStep) {
+            this.climbStep = climbStep;
         }
-
-        /**
-         * The climb step to use when doing an automatic climb
-         */
-        final ClimbStep sensorClimb;
 
         /**
          * The climb step to use when doing a manual climb, step by step
          */
-        final ClimbStep positionClimb;
+        final ClimbStep climbStep;
     }
 
     double otherPivotingArmMustContactByTime = Double.MAX_VALUE;
@@ -704,13 +571,6 @@ public final class Climber extends AbstractSubsystem {
         skipChecks = true;
     }
 
-    /**
-     * @param sensorClimb set to true to enable step-by-step mode.
-     */
-    public synchronized void setSensorClimb(boolean sensorClimb) {
-        this.sensorClimb = sensorClimb;
-    }
-
     public synchronized void setStepByStep(boolean stepByStep) {
         this.stepByStep = stepByStep;
     }
@@ -719,22 +579,11 @@ public final class Climber extends AbstractSubsystem {
         return stepByStep;
     }
 
-    /**
-     * @return true if the climber is in step-by-step mode
-     */
-    public synchronized boolean isSensorClimb() {
-        return sensorClimb;
-    }
-
     @Override
     public synchronized void update() {
         ClimbStep currentClimbStep;
 
-        if (sensorClimb) {
-            currentClimbStep = climbState.positionClimb;
-        } else {
-            currentClimbStep = climbState.sensorClimb;
-        }
+        currentClimbStep = climbState.climbStep;
 
 
         if (!isPaused) {
@@ -760,11 +609,7 @@ public final class Climber extends AbstractSubsystem {
                         timesRun++;
                     }
 
-                    if (sensorClimb) {
-                        currentClimbStep = climbState.positionClimb;
-                    } else {
-                        currentClimbStep = climbState.sensorClimb;
-                    }
+                    currentClimbStep = climbState.climbStep;
                 } while (!currentClimbStep.runInStepByStep && stepByStep);
 
                 currentClimbStep.startAction.accept(this);
@@ -872,12 +717,7 @@ public final class Climber extends AbstractSubsystem {
         logData("Current Climber State", climbState.toString());
         logData("Climb Times Run", timesRun);
 
-
-        if (sensorClimb) {
-            logData("Current Climber WaitCondition", climbState.positionClimb.waitCondition.apply(this));
-        } else {
-            logData("Current Climber WaitCondition", climbState.sensorClimb.waitCondition.apply(this));
-        }
+        logData("Current Climber WaitCondition", climbState.climbStep.waitCondition.apply(this));
     }
 
     public void configCoast() {
