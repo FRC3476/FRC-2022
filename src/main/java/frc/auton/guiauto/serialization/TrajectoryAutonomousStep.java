@@ -45,6 +45,7 @@ public class TrajectoryAutonomousStep extends AbstractAutonomousStep {
         //If this is not how your autonomous code work you can change the implementation to fit your needs.
         //You just need to ensure that this thread will be blocked until the path is finished being driven.
 
+        Drive.getInstance().setAutoRotation(rotations.get(0).rotation);
         Drive.getInstance().setAutoPath(trajectory); //Send the auto to our drive class to be executed
         Drive.getInstance().setAutoRotation(rotations.get(0).rotation);
         int rotationIndex = 1; // Start at the second rotation (the first is the starting rotation)

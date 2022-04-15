@@ -579,8 +579,7 @@ public final class Drive extends AbstractSubsystem {
      * @param angle The angle to set the robot to
      */
     public void setAutoRotation(double angle) {
-        System.out.println("setting angle " + angle);
-        autoTargetHeading = Rotation2d.fromDegrees(angle);
+        setAutoRotation(Rotation2d.fromDegrees(angle));
     }
 
     /**

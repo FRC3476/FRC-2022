@@ -52,4 +52,10 @@ public final class MathUtil {
     public static double dist2(@NotNull MutableTranslation2d first, @NotNull MutableTranslation2d second) {
         return Math.pow(first.getX() - second.getX(), 2) + Math.pow(first.getY() - second.getY(), 2);
     }
+
+    public static double dist2(@NotNull Translation2d translation2d) {
+        double x = translation2d.getX();
+        double y = translation2d.getY();
+        return x * x + y * y;
+    }
 }
