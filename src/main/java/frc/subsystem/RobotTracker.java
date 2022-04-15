@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
+import static frc.utility.MathUtil.dist2;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class RobotTracker extends AbstractSubsystem {
@@ -131,21 +132,34 @@ public final class RobotTracker extends AbstractSubsystem {
                 if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
                     return;
                 } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
-                    positionOffset = visionRobotTranslationMeters.minus(timestampedPoses.get(index - 1).pose.getTranslation());
+                    Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.getTranslation().plus(
+                            positionOffset);
 
-                    Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.getTranslation();
-
-                    positionOffset =
-                            visionRobotTranslationMeters.minus(robotTrackerPosition).times(0.05).plus(robotTrackerPosition);
+                    Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
+                    if (dist2(diff) > 2 * 2) {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
+                    } else {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(0.1).plus(positionOffset);
+                    }
                 } else {
                     double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
                             (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
 
                     Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.interpolate(
-                            timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset);
+                                    timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset)
+                            .plus(positionOffset);
 
-                    positionOffset =
-                            visionRobotTranslationMeters.minus(robotTrackerPosition).times(0.05).plus(robotTrackerPosition);
+                    Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
+
+                    if (dist2(diff) > 2 * 2) {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
+                    } else {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(0.1).plus(positionOffset);
+                    }
                 }
             }
         } finally {
