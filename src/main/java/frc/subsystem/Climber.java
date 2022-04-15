@@ -341,7 +341,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> cl.data = Timer.getFPGATimestamp(),
                         (cl) -> Timer.getFPGATimestamp() - cl.data > 0.25,
                         (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0),
-                        false
+                        true
                 )
         ),
 
@@ -381,7 +381,7 @@ public final class Climber extends AbstractSubsystem {
      * @return true if both pivot arms are in contact with the bar
      */
     private boolean isPivotArmContactingBar() {
-        if (pivotingArmContactSwitchA.get() || pivotingArmContactSwitchB.get()) {
+        if (pivotingArmContactSwitchA.get() ^ pivotingArmContactSwitchB.get()) {
             if (otherPivotingArmMustContactByTime > Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME) {
                 otherPivotingArmMustContactByTime = Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME;
             } else if (Timer.getFPGATimestamp() > otherPivotingArmMustContactByTime) {
@@ -403,7 +403,7 @@ public final class Climber extends AbstractSubsystem {
      * @return true if both pivot arms are in contact with the bar
      */
     private boolean isElevatorArmContactingBar() {
-        if (elevatorArmContactSwitchA.get() || elevatorArmContactSwitchB.get()) {
+        if (elevatorArmContactSwitchA.get() ^ elevatorArmContactSwitchB.get()) {
             if (otherElevatorArmMustContactByTime > Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME) {
                 otherElevatorArmMustContactByTime = Timer.getFPGATimestamp() + Constants.MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME;
             } else if (Timer.getFPGATimestamp() > otherElevatorArmMustContactByTime) {
@@ -581,10 +581,7 @@ public final class Climber extends AbstractSubsystem {
 
     @Override
     public synchronized void update() {
-        ClimbStep currentClimbStep;
-
-        currentClimbStep = climbState.climbStep;
-
+        ClimbStep currentClimbStep = climbState.climbStep;
 
         if (!isPaused) {
 //            if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
@@ -600,7 +597,7 @@ public final class Climber extends AbstractSubsystem {
                 ranEndAction = true;
             }
 
-            if (skipChecks || (currentClimbStep.waitCondition.apply(this) && !stepByStep)) {
+            if (skipChecks || (currentClimbStep.waitCondition.apply(this) && (!stepByStep || advanceStep))) {
                 if (!ranEndAction) currentClimbStep.endAction.accept(this);
                 do {
                     climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
@@ -679,14 +676,14 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public boolean isPivotingArmLatched() {
-        return isPivotingArmLatchedSwitchA() && isElevatorArmContactSwitchB();
+        return isPivotingArmLatchedSwitchA() && isPivotingArmLatchedSwitchB();
     }
 
     public boolean isPivotingArmLatchedSwitchA() {
         return pivotingArmLatchedSwitchA.get();
     }
 
-    public boolean isElevatorArmContactSwitchB() {
+    public boolean isPivotingArmLatchedSwitchB() {
         return pivotingArmLatchedSwitchB.get();
     }
 
@@ -705,7 +702,7 @@ public final class Climber extends AbstractSubsystem {
         logData("Pivot Arm Contact Switch A", pivotingArmContactSwitchA.get());
         logData("Pivot Arm Contact Switch B", pivotingArmContactSwitchB.get());
         logData("Pivoting Arm Contact Switch A", isPivotingArmLatchedSwitchA());
-        logData("Pivoting Arm Contact Switch B", isElevatorArmContactSwitchB());
+        logData("Pivoting Arm Contact Switch B", isPivotingArmLatchedSwitchB());
         logData("Pivoting Arm Latched", isPivotingArmLatched());
 
         logData("Pivot Solenoid State", getPivotState().toString());
