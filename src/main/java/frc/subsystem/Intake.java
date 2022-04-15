@@ -4,12 +4,15 @@ import com.ctre.phoenix.motorcontrol.ControlFrame;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.subsystem.Hopper.OuttakeState;
 import frc.utility.OrangeUtility;
 import frc.utility.Timer;
+import frc.utility.controllers.LazyCANSparkMax;
 
 import static frc.utility.Pneumatics.getPneumaticsHub;
 
@@ -18,7 +21,8 @@ public final class Intake extends AbstractSubsystem {
     private static Intake instance = new Intake();
 
     private final Solenoid intakeSol;
-    private final TalonFX intakeMotor;
+    private LazyCANSparkMax intakeMotorSpark;
+    private TalonFX intakeMotorFalcon;
 
     private double allowIntakeRunTime = Double.MAX_VALUE;
 
@@ -29,14 +33,23 @@ public final class Intake extends AbstractSubsystem {
     private Intake() {
         super(Constants.INTAKE_PERIOD, 4);
         intakeSol = getPneumaticsHub().makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
-        intakeMotor = new TalonFX(Constants.INTAKE_MOTOR_DEVICE_ID);
+        if (Constants.IS_PRACTICE) {
+            intakeMotorSpark = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
+            intakeMotorSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+            intakeMotorSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+            intakeMotorSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+            intakeMotorSpark.setSmartCurrentLimit(30);
+            intakeMotorSpark.setControlFramePeriodMs(25);
+        } else {
+            intakeMotorFalcon = new TalonFX(Constants.INTAKE_MOTOR_DEVICE_ID);
 
-        intakeMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 97); // Default is 10ms
-        intakeMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 101); // Default is 10ms
-        intakeMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 103); // Default is 50ms
-        intakeMotor.setControlFramePeriod(ControlFrame.Control_3_General, 23);
-        intakeMotor.setControlFramePeriod(ControlFrame.Control_4_Advanced, 29);
-        intakeMotor.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 547);
+            intakeMotorFalcon.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 97); // Default is 10ms
+            intakeMotorFalcon.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 101); // Default is 10ms
+            intakeMotorFalcon.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 103); // Default is 50ms
+            intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_3_General, 23);
+            intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_4_Advanced, 29);
+            intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 547);
+        }
     }
 
     @Override
@@ -51,8 +64,8 @@ public final class Intake extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotor.getMotorOutputPercent());
-        SmartDashboard.putNumber("Intake Current", intakeMotor.getStatorCurrent());
+        SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotorSpark.get());
+        SmartDashboard.putNumber("Intake Current", intakeMotorSpark.getOutputCurrent());
         SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
         logData("Wanted Intake State", wantedIntakeState);
     }
@@ -61,6 +74,7 @@ public final class Intake extends AbstractSubsystem {
     @Override
     public void close() throws Exception {
         intakeSol.close();
+        intakeMotorSpark.close();
         instance = new Intake();
     }
 
@@ -100,22 +114,30 @@ public final class Intake extends AbstractSubsystem {
         wantedIntakeState = intakeState;
     }
 
+    private void setIntakeMotor(double speed) {
+        if (Constants.IS_PRACTICE) {
+            intakeMotorSpark.set(speed);
+        } else {
+            intakeMotorFalcon.set(ControlMode.PercentOutput, speed);
+        }
+    }
+
     private void setIntakeState(IntakeState intakeState) {
         switch (intakeState) {
             case INTAKE:
                 if (Hopper.getInstance().getOuttakeState() == OuttakeState.AUTO_EJECT) {
-                    intakeMotor.set(ControlMode.PercentOutput, Constants.INTAKE_EJECTION_SPEED);
+                    setIntakeMotor(Constants.INTAKE_EJECTION_SPEED);
                 } else {
-                    intakeMotor.set(ControlMode.PercentOutput, Constants.INTAKE_SPEED);
+                    setIntakeMotor(Constants.INTAKE_SPEED);
                 }
                 break;
 
             case EJECT:
-                intakeMotor.set(ControlMode.PercentOutput, -Constants.INTAKE_SPEED);
+                setIntakeMotor(-Constants.INTAKE_SPEED);
                 break;
 
             case OFF:
-                intakeMotor.set(ControlMode.PercentOutput, 0);
+                setIntakeMotor(0);
                 break;
         }
     }
