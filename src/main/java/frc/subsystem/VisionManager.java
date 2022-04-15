@@ -17,7 +17,6 @@ import frc.subsystem.Shooter.FeederWheelState;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
-import frc.utility.MathUtil;
 import frc.utility.Timer;
 import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
@@ -36,6 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.IS_PRACTICE;
+import static frc.utility.MathUtil.dist2;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
@@ -470,7 +470,7 @@ public final class VisionManager extends AbstractSubsystem {
             if (limelight.areCornersTouchingEdge()) {
                 logData("Using Vision Info", "Corners touching edge");
             } else {
-                if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
+                if (dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
                         robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
                     robotTracker.addVisionMeasurement(robotTranslation,
                             getLimelightTime());
@@ -583,7 +583,7 @@ public final class VisionManager extends AbstractSubsystem {
         double velX = robotVelocity.getX();
         double velY = robotVelocity.getY();
 
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 20; i++) {
             //System.out.println("Iteration: " + i + " Fake Goal Pos: " + fakeGoalPos);
             double tof = getTimeOfFlight(fakeGoalPos);
 

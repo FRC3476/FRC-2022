@@ -11,6 +11,7 @@ class VisionManagerTest {
 
     @Test
     void getVelocityAdjustedRelativeTranslation() {
+        int failures = 0;
 
         Random random = new Random(719479);
         for (int i = 0; i < 10000000; i++) {
@@ -22,8 +23,20 @@ class VisionManagerTest {
             Translation2d recalculatedActual = fakeGoal.minus(
                     robotVelocity.times(VisionManager.getInstance().getTimeOfFlight(fakeGoal)));
 
-            assertEquals(recalculatedActual.getX(), goalPos.getX(), 0.01);
-            assertEquals(recalculatedActual.getY(), goalPos.getY(), 0.01);
+            if (recalculatedActual.minus(goalPos).getNorm() > 0.1) {
+                failures++;
+                System.out.println("FAILURE: " + i + " " +
+                        "goalPos: " + goalPos.toString() + " " +
+                        "robotVelocity: " + robotVelocity.toString() + " " +
+                        "fakeGoal: " + fakeGoal.toString() + " " +
+                        "recalculatedActual: " + recalculatedActual.toString() + " " +
+                        "difference: " + recalculatedActual.minus(goalPos).toString());
+            }
+
+            if (failures > 20) {
+                break;
+            }
         }
+        assertEquals(0, failures);
     }
 }
