@@ -79,7 +79,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
-    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.1,
+    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.2,
             SmartDashboard.getEntry("Vision Position Weight Percentage"));
 
 

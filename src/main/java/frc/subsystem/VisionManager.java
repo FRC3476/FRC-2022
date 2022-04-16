@@ -51,7 +51,7 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     private VisionManager() {
-        super(Constants.VISION_MANAGER_PERIOD, 4);
+        super(Constants.VISION_MANAGER_PERIOD, 1);
         logData("IS VISION GOOD", true);
     }
 
