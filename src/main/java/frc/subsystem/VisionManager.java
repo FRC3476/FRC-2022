@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.IS_PRACTICE;
@@ -510,12 +511,11 @@ public final class VisionManager extends AbstractSubsystem {
      * For auto use only
      */
     @SuppressWarnings({"unused", "BusyWait"})
-    public void shootBalls(double numBalls) throws InterruptedException {
+    public void shootBalls(double numBalls, Function<VisionManager, Boolean> additionalWait) throws InterruptedException {
         final @NotNull Drive drive = Drive.getInstance();
         final @NotNull Shooter shooter = Shooter.getInstance();
 
         forceVisionOn(this);
-
 
         do {
             if (drive.driveState == DriveState.RAMSETE) {
@@ -524,7 +524,7 @@ public final class VisionManager extends AbstractSubsystem {
                 autoTurnAndShoot(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             Thread.sleep(10); // Will exit if interrupted
-        } while (shooter.getFeederWheelState() != FeederWheelState.FORWARD);
+        } while (shooter.getFeederWheelState() != FeederWheelState.FORWARD || !additionalWait.apply(this));
 
         double shootTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
         double lastTime = Timer.getFPGATimestamp();
@@ -547,6 +547,20 @@ public final class VisionManager extends AbstractSubsystem {
         shooter.setFiring(false);
         shooter.setSpeed(0);
         drive.setAutoAiming(false);
+    }
+
+    public void shootBalls(double numOfBalls) throws InterruptedException {
+        shootBalls(numOfBalls, (visionManager -> true));
+    }
+
+    private boolean hasBeamBreakBroken = false;
+
+    public void shootBallsUntilBeamBreakHasBroken(double numOfBalls) throws InterruptedException {
+        hasBeamBreakBroken = false;
+        shootBalls(numOfBalls, (visionManager -> {
+            if (Hopper.getInstance().isBeamBroken()) hasBeamBreakBroken = true;
+            return hasBeamBreakBroken;
+        }));
     }
 
 

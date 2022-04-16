@@ -247,7 +247,7 @@ public final class Hopper extends AbstractSubsystem {
     /**
      * @return True if the beam break is broken. (ie a ball is in the way)
      */
-    private boolean isBeamBroken() {
+    public boolean isBeamBroken() {
         if (IS_PRACTICE) return false;
         return !beamBreak.get();
     }
