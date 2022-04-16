@@ -162,7 +162,7 @@ public final class Limelight extends AbstractSubsystem {
 
         cameraRotation = new LiveEditableValue<>(
                 new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
-                        Math.toRadians(IS_PRACTICE ? -37.5 : -38), 0, 0),
+                        Math.toRadians(IS_PRACTICE ? -37.5 : -33), 0, 0),
                 limelightGuiTable.getEntry("angle"),
                 (value) ->
                         new Rotation(
@@ -171,8 +171,8 @@ public final class Limelight extends AbstractSubsystem {
                 (value) ->
                         Math.toDegrees(value.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0])
         );
-        hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 38.0, limelightGuiTable.getEntry("hOffset"));
-        depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 44.0, limelightGuiTable.getEntry("depthOffset"));
+        hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 50.5, limelightGuiTable.getEntry("hOffset"));
+        depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 34, limelightGuiTable.getEntry("depthOffset"));
         centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 6.9),
                 limelightGuiTable.getEntry("centerOffset"),
                 (value) -> new Vector3D(0, 0, (Double) value),

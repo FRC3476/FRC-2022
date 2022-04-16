@@ -11,8 +11,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.Timer;
+import frc.utility.net.editing.LiveEditableValue;
 import frc.utility.tracking.TimestampedPose;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -77,6 +79,9 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
+    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.1,
+            SmartDashboard.getEntry("Vision Position Weight Percentage"));
+
 
     private RobotTracker() {
         super(Constants.ROBOT_TRACKER_PERIOD, 5);
@@ -136,12 +141,13 @@ public final class RobotTracker extends AbstractSubsystem {
                             positionOffset);
 
                     Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
-                    if (dist2(diff) > 2 * 2) {
+                    if (dist2(diff) > 2.5 * 2.5) {
                         positionOffset =
                                 visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
                     } else {
                         positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(0.1).plus(positionOffset);
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get()).plus(
+                                        positionOffset);
                     }
                 } else {
                     double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
@@ -158,7 +164,8 @@ public final class RobotTracker extends AbstractSubsystem {
                                 visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
                     } else {
                         positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(0.1).plus(positionOffset);
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get()).plus(
+                                        positionOffset);
                     }
                 }
             }
