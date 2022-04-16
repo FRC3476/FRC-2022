@@ -546,8 +546,7 @@ public class Robot extends TimedRobot {
 
 
         // Will terminate climb auto thread if any stick movement happens
-        if (autoThread != null && autoThread.isAlive() &&
-                !getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+        if (!getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
@@ -958,7 +957,6 @@ public class Robot extends TimedRobot {
     }
 
     public void killAuto() {
-        System.out.println("Killing Auto");
         final Drive drive = Drive.getInstance();
 
         if (selectedAuto != null) {
@@ -980,8 +978,6 @@ public class Robot extends TimedRobot {
             }
             drive.stopMovement();
             drive.setTeleop();
-        } else {
-            System.out.println("Auto is null");
         }
     }
 
