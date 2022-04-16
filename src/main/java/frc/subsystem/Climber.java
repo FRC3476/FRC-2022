@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static frc.robot.Constants.CLIMBER_ENCODER_TICKS_PER_INCH;
+import static frc.robot.Constants.DO_BACK_HOOK_CLIMB;
 import static frc.utility.Pneumatics.getPneumaticsHub;
 
 class ClimbStep {
@@ -261,7 +262,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (cl.timesRun == 1) {
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
                                 // Use back hooks
                                 return true;
                             } else {
@@ -292,7 +293,7 @@ public final class Climber extends AbstractSubsystem {
         UNPIVOT_PIVOT_ARM(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun == 1) {
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
                                 cl.setPivotState(PivotState.PIVOTED);
                                 cl.data = Timer.getFPGATimestamp() + Constants.ARM_PIVOT_DURATION;
                             } else {
@@ -315,7 +316,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> cl.data = Double.MAX_VALUE,
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (cl.timesRun == 1) return gyro.getRoll() > 41; //TODO: Change gyro angle
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) return gyro.getRoll() > 41; //TODO: Change gyro angle
                             return gyro.getRoll() < 41;
                         },
                         (cl) -> {},
@@ -329,7 +330,7 @@ public final class Climber extends AbstractSubsystem {
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun == 1) {
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
                                 cl.climberMotor.set(ControlMode.MotionMagic,
                                         Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK);
                             } else {
@@ -381,7 +382,9 @@ public final class Climber extends AbstractSubsystem {
                             cl.data = Timer.getFPGATimestamp();
                         },
                         (cl) -> {
-                            if (cl.timesRun != 1) return true; //We've already unpivoted, so we don't need to wait
+                            if (cl.timesRun != 1 || !DO_BACK_HOOK_CLIMB) {
+                                return true; //We've already unpivoted, so we don't need to wait
+                            }
                             return Timer.getFPGATimestamp() - cl.data > Constants.ARM_UNPIVOT_DURATION;
                         },
                         (cl) -> {},

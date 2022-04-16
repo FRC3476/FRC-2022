@@ -446,6 +446,8 @@ public final class Constants {
 
     public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
+    public static final boolean DO_BACK_HOOK_CLIMB = false;
+
     /**
      * The height to go to once the drivers request the climber to deploy
      */
