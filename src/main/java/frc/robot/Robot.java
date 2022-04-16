@@ -862,9 +862,7 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-
-
-        drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
+        
         if (!Constants.GRAPPLE_CLIMB) {
             Climber climber = Climber.getInstance();
 
