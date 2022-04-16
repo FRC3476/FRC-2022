@@ -13,7 +13,7 @@ public final class GeometryUtils {
      * Uses atan2 to compute the angle of a translation.
      *
      * @param translation The translation2d to compute the angle of.
-     * @return The angle of the translation.
+     * @return The angle of the translation. (in radians)
      */
     @Contract(value = "_ -> new", pure = true)
     public static @NotNull Rotation2d angleOf(@NotNull Translation2d translation) {

@@ -112,6 +112,7 @@ public final class VisionManager extends AbstractSubsystem {
 
         logData("Vision Robot Velocity X", robotVelocity.getX());
         logData("Vision Robot Velocity Y", robotVelocity.getY());
+        logData("Time Shooting", 0);
 
         double timeFromLastShoot = Timer.getFPGATimestamp() - shooter.getLastShotTime();
         double shooterLookAheadTime = 0.15 - timeFromLastShoot;
@@ -440,6 +441,12 @@ public final class VisionManager extends AbstractSubsystem {
 
         double angleToTarget = Math.atan2(relativeGoalPos.getY(), relativeGoalPos.getX());
 
+        if (limelight.isConnected()) {
+            logData("Limelight Connected", true);
+        } else {
+            logData("Limelight Connected", false);
+        }
+
         if (!limelight.isTargetVisible()) {
             blinkinLED.setStatus(limelightNotConnectedStatus);
         }
@@ -530,7 +537,7 @@ public final class VisionManager extends AbstractSubsystem {
                 autoTurnAndShoot(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             double time = Timer.getFPGATimestamp();
-            if (shooter.getFeederWheelState() != FeederWheelState.FORWARD) {
+            if (shooter.getFeederWheelState() == FeederWheelState.FORWARD) {
                 timeShooting += time - lastTime;
             }
             lastTime = time;
