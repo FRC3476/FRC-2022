@@ -3,6 +3,7 @@
 package frc.utility;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.utility.geometry.MutableTranslation2d;
 import org.jetbrains.annotations.NotNull;
 
@@ -286,5 +287,12 @@ public final class OrangeUtility {
 
     public static MutableTranslation2d getTranslation2d(ChassisSpeeds speeds) {
         return new MutableTranslation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+    }
+
+
+    public static void waitTillTeleopStart() throws InterruptedException {
+        while (DriverStation.getMatchTime() < 16) {
+            Thread.sleep(10);
+        }
     }
 }
