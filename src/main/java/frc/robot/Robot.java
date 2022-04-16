@@ -546,8 +546,8 @@ public class Robot extends TimedRobot {
 
 
         // Will terminate climb auto thread if any stick movement happens
-        if (autoThread != null && autoThread.isAlive() && !getControllerDriveInputs().equals(
-                NO_MOTION_CONTROLLER_INPUTS)) {
+        if (autoThread != null && autoThread.isAlive() &&
+                !getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
@@ -824,12 +824,16 @@ public class Robot extends TimedRobot {
         }
     }
 
+    private double disabledTime = 0;
+    private boolean hasKilledAuto = false;
+
     /**
      * This function is called once when the robot is disabled.
      */
     @Override
     public void disabledInit() {
-        killAuto();
+        disabledTime = Timer.getFPGATimestamp();
+        hasKilledAuto = false;
         Drive.getInstance().configCoast();
         enabled.setBoolean(false);
     }
@@ -839,6 +843,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void disabledPeriodic() {
+        if (Timer.getFPGATimestamp() - disabledTime > 2.5 && !hasKilledAuto) {
+            killAuto();
+            hasKilledAuto = true;
+        }
     }
 
     /**
