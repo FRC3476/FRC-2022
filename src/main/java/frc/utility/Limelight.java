@@ -244,8 +244,8 @@ public final class Limelight extends AbstractSubsystem {
      * @return The timeStamp of the last processed frame
      */
     public double getTimestamp() {
-        return Timer.getFPGATimestamp();
-        //return lastUpdate - ((0) / 1000);
+        //return Timer.getFPGATimestamp();
+        return lastUpdate - ((getLatency() + 11) / 1000);
     }
 
     /**
@@ -392,7 +392,7 @@ public final class Limelight extends AbstractSubsystem {
     public boolean areCornersTouchingEdge() {
         Vector2d[] corners = getCorners();
         for (Vector2d corner : corners) {
-            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 15 || corner.y > 240) {
+            if (corner.x < 30 || corner.x > 960 - 30 || corner.y < 30 || corner.y > 720) {
 
                 return true;
             }

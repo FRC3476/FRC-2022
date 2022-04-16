@@ -41,7 +41,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 35.3203; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 1000 / 90; //90Hz
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
     public static final double SHOOT_TIME_PER_BALL = 0.2; // For Auto
 
     /**
@@ -180,7 +180,7 @@ public final class Constants {
 
     public enum AccelerationLimits {
         NORMAL_DRIVING(24),
-        SHOOT_AND_MOVE(6),
+        SHOOT_AND_MOVE(4),
         STOP_AND_SHOOT(12);
 
         public double acceleration;

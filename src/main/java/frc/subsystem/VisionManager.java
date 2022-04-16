@@ -384,7 +384,7 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private double getLimelightTime() {
-        double limelightTime = limelight.getTimestamp();
+        double limelightTime = Limelight.getInstance().getTimestamp();
         logData("Limelight Latency", Timer.getFPGATimestamp() - limelightTime);
         return limelightTime;
     }
@@ -611,9 +611,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 113) {
-            timeOfFlightFrames = ((0.02 / 30) * (distance - 113)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.03 / 30) * (distance - 113)) + (21.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.071 / 30) * (distance - 113)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.041 / 30) * (distance - 113)) + (21.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
