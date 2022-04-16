@@ -726,6 +726,10 @@ public class Robot extends TimedRobot {
             }
         }
 
+        if (stick.getRisingEdge(8)) {
+            hopper.setBeamBreakEnabled(!hopper.isBeamBreakEnabled());
+        }
+
         //TODO: Debug why this does not work
 //        if (buttonPanel.getRisingEdge(9)) {
 //            limelightTakeSnapshots = !limelightTakeSnapshots;

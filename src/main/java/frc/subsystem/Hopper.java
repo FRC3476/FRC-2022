@@ -29,6 +29,7 @@ public final class Hopper extends AbstractSubsystem {
     private double lastDetectionTime;
     private boolean disableEject = false;
     private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
+    private boolean isBeamBreakEnabled = true;
 
     private final DigitalInput beamBreak;
     private double lastBeamBreakOpenTime = 0;
@@ -248,8 +249,17 @@ public final class Hopper extends AbstractSubsystem {
      * @return True if the beam break is broken. (ie a ball is in the way)
      */
     public boolean isBeamBroken() {
-        if (IS_PRACTICE) return false;
+        if (IS_PRACTICE || !isBeamBreakEnabled) return false;
         return !beamBreak.get();
+    }
+
+
+    public boolean isBeamBreakEnabled() {
+        return isBeamBreakEnabled;
+    }
+
+    public void setBeamBreakEnabled(boolean isBeamBreakEnabled) {
+        this.isBeamBreakEnabled = isBeamBreakEnabled;
     }
 
     public void setHopperState(HopperState hopperState) {
