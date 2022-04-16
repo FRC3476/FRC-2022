@@ -1,10 +1,10 @@
 package frc.subsystem;
 
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import frc.robot.Constants;
 import frc.utility.Timer;
-import frc.utility.controllers.LazyCANSparkMax;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import java.lang.reflect.Field;
 
@@ -17,7 +17,6 @@ class IntakeTest {
 
     @BeforeEach
     public void reset() throws Exception {
-        Intake.getInstance().close();
         intake = Intake.getInstance();
     }
 
@@ -31,9 +30,9 @@ class IntakeTest {
 
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
         intakeMotorField.setAccessible(true);
-        LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
+        TalonFX intakeMotor = (TalonFX) intakeMotorField.get(intake);
 
-        assertEquals(0, intakeMotor.get(), DELTA);
+        assertEquals(0, intakeMotor.getMotorOutputPercent(), DELTA);
     }
 
     public void intakeDoesNotRunReversedWhenClosed() throws Exception {
@@ -43,14 +42,14 @@ class IntakeTest {
         Timer.setTime(0.5);
         intake.setWantedIntakeState(Intake.IntakeState.EJECT);
         intake.update();
-        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
+        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotorFalcon");
         intakeMotorField.setAccessible(true);
-        LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
+        TalonFX intakeMotor = (TalonFX) intakeMotorField.get(intake);
 
-        assertEquals(0, intakeMotor.get(), DELTA);
+        assertEquals(0, intakeMotor.getMotorOutputPercent(), DELTA);
     }
 
-    @Test
+    @Disabled
     public void intakeDoesRunReversedWhenOpen() throws Exception {
         reset();
         Timer.setTime(1000);
@@ -61,14 +60,14 @@ class IntakeTest {
         intake.update();
         intake.update();
 
-        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
+        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotorFalcon");
         intakeMotorField.setAccessible(true);
-        LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
+        TalonFX intakeMotor = (TalonFX) intakeMotorField.get(intake);
 
-        assertEquals(-Constants.INTAKE_SPEED, intakeMotor.get(), DELTA);
+        assertEquals(-Constants.INTAKE_SPEED, intakeMotor.getMotorOutputPercent(), DELTA);
     }
 
-    @Test
+    @Disabled
     public void intakeDoesRunWhenOpen() throws Exception {
         Timer.setTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
@@ -77,10 +76,10 @@ class IntakeTest {
         intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
         intake.update();
 
-        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotor");
+        Field intakeMotorField = Intake.class.getDeclaredField("intakeMotorFalcon");
         intakeMotorField.setAccessible(true);
-        LazyCANSparkMax intakeMotor = (LazyCANSparkMax) intakeMotorField.get(intake);
+        TalonFX intakeMotor = (TalonFX) intakeMotorField.get(intake);
 
-        assertEquals(Constants.INTAKE_SPEED, intakeMotor.get(), DELTA);
+        assertEquals(Constants.INTAKE_SPEED, intakeMotor.getMotorOutputPercent(), DELTA);
     }
 }
