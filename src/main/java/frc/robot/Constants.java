@@ -41,7 +41,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 35.3203; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 1000 / 90; //90Hz
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
     public static final double SHOOT_TIME_PER_BALL = 0.2; // For Auto
 
     /**
@@ -180,7 +180,7 @@ public final class Constants {
 
     public enum AccelerationLimits {
         NORMAL_DRIVING(24),
-        SHOOT_AND_MOVE(6),
+        SHOOT_AND_MOVE(4),
         STOP_AND_SHOOT(12);
 
         public double acceleration;
@@ -194,6 +194,16 @@ public final class Constants {
      * Units are in Radians per Second Squared
      */
     public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 22);
+
+    /**
+     * Angular offset of the intake limelight (degrees)
+     */
+    public static final double INTAKE_LIMELIGHT_ANGLE_OFFSET = 50;
+    /**
+     * Height offset of the intake limelight from the ground (inches)
+     */
+    public static final double INTAKE_LIMELIGHT_HEIGHT_OFFSET = 0.75;
+    public static final double MAX_CENTERING_SPEED = 0.5;
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
@@ -446,6 +456,8 @@ public final class Constants {
 
     public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
+    public static final boolean DO_BACK_HOOK_CLIMB = true;
+
     /**
      * The height to go to once the drivers request the climber to deploy
      */
@@ -467,7 +479,7 @@ public final class Constants {
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
      */
-    public static final double ARM_PIVOT_DURATION = 1;
+    public static final double ARM_PIVOT_DURATION = 0.5;
 
     /**
      * How long it takes for the pivot pneumatic to close (become inline) (in seconds)
@@ -500,9 +512,14 @@ public final class Constants {
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     * Length to grab on high and traversal bars
+     * Length to grab on with front hooks
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_FRONT_HOOK = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    /**
+     * Length to grab with back hooks
+     */
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK = (27.2 - 3) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause

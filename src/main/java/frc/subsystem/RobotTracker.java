@@ -79,7 +79,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
-    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.1,
+    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.2,
             SmartDashboard.getEntry("Vision Position Weight Percentage"));
 
 
@@ -154,8 +154,7 @@ public final class RobotTracker extends AbstractSubsystem {
                             (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
 
                     Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.interpolate(
-                                    timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset)
-                            .plus(positionOffset);
+                            timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset);
 
                     Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
 
@@ -164,8 +163,8 @@ public final class RobotTracker extends AbstractSubsystem {
                                 visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
                     } else {
                         positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get()).plus(
-                                        positionOffset);
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get())
+                                        .plus(positionOffset);
                     }
                 }
             }

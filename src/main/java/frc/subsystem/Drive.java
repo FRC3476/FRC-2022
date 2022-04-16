@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
+import frc.utility.Limelight;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
@@ -76,7 +77,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public enum DriveState {
-        TELEOP, TURN, HOLD, DONE, RAMSETE, STOP
+        TELEOP, TURN, HOLD, DONE, RAMSETE, SEARCH_FOR_BALL, STOP
     }
 
     public boolean useRelativeEncoderPosition = false;
@@ -678,6 +679,67 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
+    PIDController centerOntoBallPID = new PIDController(1, 0, 0, 0.02);
+
+    public void centerOntoBall(ControllerDriveInputs inputs, boolean fieldRelativeEnabled) {
+        Limelight limelight = Limelight.getInstance("limelight-intake");
+        if (limelight.isTargetVisible()) {
+
+            /* Top Down View
+            [] - ball
+                        X
+                    []------
+                     \     |
+                      \    |
+                       \   | Y
+                        \  |
+                         \ |
+                          \|
+              |---|----|----|----|----| Intake
+             */
+
+            double distY = Math.tan(Math.toRadians(limelight.getVerticalOffset() + INTAKE_LIMELIGHT_ANGLE_OFFSET))
+                    * INTAKE_LIMELIGHT_HEIGHT_OFFSET;
+
+            double distX = Math.tan(limelight.getHorizontalOffset()) * distY;
+
+
+            double allowedError = DriverStation.isAutonomous() ? 0 : (distY * 0.2) + 20;
+
+            double pidError;
+            if (Math.abs(distX) < allowedError) {
+                pidError = 0;
+            } else {
+                pidError = distX - (Math.signum(distX) * allowedError);
+            }
+
+            double strafeCommand = centerOntoBallPID.calculate(pidError, 0);
+            strafeCommand = Math.signum(strafeCommand) * Math.min(Math.abs(strafeCommand), MAX_CENTERING_SPEED);
+            // Ensure that the driver can always override the PID
+
+            Translation2d correction = new Translation2d(0, strafeCommand);
+
+            ChassisSpeeds chassisSpeeds;
+            if (useFieldRelative && fieldRelativeEnabled) {
+                correction = correction.rotateBy(RobotTracker.getInstance().getGyroAngle()); //Make it perpendicular to the robot
+                chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                        DRIVE_HIGH_SPEED_M * inputs.getX() + correction.getX(),
+                        DRIVE_HIGH_SPEED_M * inputs.getY() + correction.getY(),
+                        inputs.getRotation() * 7,
+                        RobotTracker.getInstance().getGyroAngle());
+            } else {
+                chassisSpeeds = new ChassisSpeeds(
+                        DRIVE_HIGH_SPEED_M * inputs.getX() + correction.getX(),
+                        DRIVE_HIGH_SPEED_M * inputs.getY() + correction.getY(),
+                        inputs.getRotation() * 7);
+            }
+
+            swerveDrive(chassisSpeeds);
+        } else {
+            swerveDriveFieldRelative(inputs);
+        }
+    }
+
     private double getTurnPidDeltaSpeed(@NotNull TrapezoidProfile.State autoAimingRotationGoal) {
         turnPID.setSetpoint(autoAimingRotationGoal.position);
 
@@ -725,6 +787,20 @@ public final class Drive extends AbstractSubsystem {
                 break;
             case STOP:
                 swerveDrive(new ChassisSpeeds(0, 0, 0));
+                break;
+            case SEARCH_FOR_BALL:
+                searchForBall();
+                break;
+        }
+    }
+
+    private void searchForBall() {
+        Limelight intakeLimelight = Limelight.getInstance("limelight-intake");
+        if (intakeLimelight.isTargetVisible()) {
+            Translation2d movement = new Translation2d(0.25, 0);
+            centerOntoBall(new ControllerDriveInputs(movement.getX(), movement.getY(), 0), false);
+        } else {
+            swerveDrive(new ChassisSpeeds(0, 0, 0));
         }
     }
 
@@ -859,6 +935,15 @@ public final class Drive extends AbstractSubsystem {
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
         }
         logData("Drive State", driveState.toString());
+
+        Limelight limelight = Limelight.getInstance("limelight-intake");
+        if (limelight.isTargetVisible()) {
+            double distY = Math.tan(Math.toRadians(limelight.getVerticalOffset() + INTAKE_LIMELIGHT_ANGLE_OFFSET))
+                    * INTAKE_LIMELIGHT_HEIGHT_OFFSET;
+            double distX = Math.tan(limelight.getHorizontalOffset()) * distY;
+            logData("Limelight Distance X", distX);
+            logData("Limelight Distance Y", distY);
+        }
     }
 
 
@@ -945,5 +1030,9 @@ public final class Drive extends AbstractSubsystem {
         while (!isTurningDone()) {
             Thread.sleep(20);
         }
+    }
+
+    public synchronized void setSearchForBall() {
+        setDriveState(DriveState.SEARCH_FOR_BALL);
     }
 }

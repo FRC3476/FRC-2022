@@ -7,7 +7,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.drive.Vector2d;
 import frc.robot.Constants;
 import frc.subsystem.BlinkinLED.BlinkinLedMode;
 import frc.subsystem.BlinkinLED.LedStatus;
@@ -51,7 +50,7 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     private VisionManager() {
-        super(Constants.VISION_MANAGER_PERIOD, 4);
+        super(Constants.VISION_MANAGER_PERIOD, 1);
         logData("IS VISION GOOD", true);
     }
 
@@ -86,16 +85,7 @@ public final class VisionManager extends AbstractSubsystem {
 
         logData("Distance to Target", Units.metersToInches(getDistanceToTarget()));
         logData("Rotation Target", getAngleToTarget().getDegrees());
-
-        Vector3D correctVector = limelight.getCorrectTargetVector();
-        logData("New Distance", Math.hypot(correctVector.getX(), correctVector.getZ()));
-
         logData("Old Distance ", limelight.getDistance() + Constants.GOAL_RADIUS_IN + 23);
-
-        Vector2d targetPx = limelight.getTargetPosInCameraPixels();
-
-        logData("py", targetPx.y);
-        logData("px", targetPx.x);
 
 //        Vector2d newRelGoalPos = limelight.getCorrectGoalPos();
 //        logData("New Z", newRelGoalPos.x);
@@ -384,7 +374,7 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private double getLimelightTime() {
-        double limelightTime = limelight.getTimestamp();
+        double limelightTime = Limelight.getInstance().getTimestamp();
         logData("Limelight Latency", Timer.getFPGATimestamp() - limelightTime);
         return limelightTime;
     }
@@ -611,9 +601,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 113) {
-            timeOfFlightFrames = ((0.02 / 30) * (distance - 113)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.03 / 30) * (distance - 113)) + (21.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.071 / 30) * (distance - 113)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.041 / 30) * (distance - 113)) + (21.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;

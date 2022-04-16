@@ -20,7 +20,9 @@ import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.subsystem.Hopper.HopperState;
+import frc.subsystem.Intake.IntakeSolState;
 import frc.utility.*;
+import frc.utility.Controller.XboxAxes;
 import frc.utility.Controller.XboxButtons;
 import frc.utility.Limelight.LedMode;
 import frc.utility.Limelight.StreamingMode;
@@ -525,7 +527,6 @@ public class Robot extends TimedRobot {
     }
 
     private final Object driverForcingVisionOn = new Object();
-    private final Object buttonPanelForcingVisionOn = new Object();
     private final Object resettingPoseVisionOn = new Object();
 
     /*
@@ -546,8 +547,7 @@ public class Robot extends TimedRobot {
 
 
         // Will terminate climb auto thread if any stick movement happens
-        if (autoThread != null && autoThread.isAlive() &&
-                !getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+        if (autoThread != null && autoThread.isAlive() && !getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
             killAuto();
         }
 
@@ -607,12 +607,18 @@ public class Robot extends TimedRobot {
             }
 
             visionManager.unForceVisionOn(driverForcingVisionOn);
+
+
             if (GRAPPLE_CLIMB || Climber.getInstance().getClimbState() == ClimbState.IDLE || Climber.getInstance().isPaused()) {
                 // If we're climbing don't allow the robot to be driven
                 if (usingDPad) {
                     drive.updateTurn(getControllerDriveInputs(), Constants.CLIMB_LINEUP_ANGLE, useFieldRelative, 0);
                 } else {
-                    doNormalDriving();
+                    if (xbox.getRawAxis(XboxAxes.LEFT_TRIGGER) > 0.1 && intake.getIntakeSolState() == IntakeSolState.OPEN) {
+                        drive.centerOntoBall(getControllerDriveInputs(), useFieldRelative);
+                    } else {
+                        doNormalDriving();
+                    }
                 }
             } else {
                 // Stop the robot from moving if we're not issuing other commands to the drivebase
@@ -870,7 +876,7 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
-        
+
         if (!Constants.GRAPPLE_CLIMB) {
             Climber climber = Climber.getInstance();
 
