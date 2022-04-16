@@ -223,7 +223,7 @@ public final class Climber extends AbstractSubsystem {
         MOVE_WEIGHT_TO_PIVOT_ARM(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun == 1) {
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
                                 cl.data = Constants.MAX_CLIMBER_EXTENSION;
                                 cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION);
                             } else {
@@ -333,13 +333,16 @@ public final class Climber extends AbstractSubsystem {
                             if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
                                 cl.climberMotor.set(ControlMode.MotionMagic,
                                         Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK);
+                                cl.data = Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK;
                             } else {
                                 cl.climberMotor.set(ControlMode.MotionMagic,
                                         Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_FRONT_HOOK);
+                                cl.data = Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_FRONT_HOOK;
                             }
                             Drive.getInstance().setSwerveModuleStates(Constants.SWERVE_MODULE_STATE_FORWARD, true);
                         },
-                        (cl) -> Math.abs(cl.climberMotor.getClosedLoopError()) < (0.3 * CLIMBER_ENCODER_TICKS_PER_INCH),
+                        (cl) -> Math.abs(cl.climberMotor.getSelectedSensorPosition() - cl.data)
+                                < (0.3 * CLIMBER_ENCODER_TICKS_PER_INCH),
                         (cl) -> {
                             cl.stopClimberMotor();
                             cl.setBrakeState(BrakeState.BRAKING);
