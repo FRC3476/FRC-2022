@@ -147,10 +147,10 @@ public final class Constants {
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
-    public static final double DRIVE_LOW_SPEED_MOD = 0.5;
+    public static final double DRIVE_LOW_SPEED_MOD = 0.65;
 
     public static final double SWERVE_ACCELERATION =
-            ((360 * 15 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
+            ((360 * 10 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
 
     public static final double SWERVE_CRUISE_VELOCITY =
             ((360 * 7 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
@@ -174,11 +174,9 @@ public final class Constants {
     public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 12.0;
-    public static final double DEFAULT_TURN_I = 15.0;
+    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
+    public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
-    public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
-    public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
     public enum AccelerationLimits {
         NORMAL_DRIVING(24),
@@ -428,7 +426,7 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
     public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1;
 
-    public static final int CLIMBER_CURRENT_LIMIT = 22;
+    public static final int CLIMBER_CURRENT_LIMIT = 37;
 
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 1;
@@ -444,7 +442,7 @@ public final class Constants {
     public static final int BRAKE_SOLENOID_ID = 2;
 
 
-    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
+    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (32.0 / 24.0)) / (12 * (3.0 / 8.0));
 
     public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
