@@ -16,7 +16,6 @@ import frc.subsystem.Shooter.FeederWheelState;
 import frc.utility.ControllerDriveInputs;
 import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
-import frc.utility.MathUtil;
 import frc.utility.Timer;
 import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
@@ -35,6 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.IS_PRACTICE;
+import static frc.utility.MathUtil.dist2;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
@@ -50,7 +50,7 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     private VisionManager() {
-        super(Constants.VISION_MANAGER_PERIOD, 4);
+        super(Constants.VISION_MANAGER_PERIOD, 1);
         logData("IS VISION GOOD", true);
     }
 
@@ -102,6 +102,7 @@ public final class VisionManager extends AbstractSubsystem {
 
         logData("Vision Robot Velocity X", robotVelocity.getX());
         logData("Vision Robot Velocity Y", robotVelocity.getY());
+        logData("Time Shooting", 0);
 
         double timeFromLastShoot = Timer.getFPGATimestamp() - shooter.getLastShotTime();
         double shooterLookAheadTime = 0.15 - timeFromLastShoot;
@@ -373,7 +374,7 @@ public final class VisionManager extends AbstractSubsystem {
      */
     @Contract(pure = true)
     private double getLimelightTime() {
-        double limelightTime = limelight.getTimestamp();
+        double limelightTime = Limelight.getInstance().getTimestamp();
         logData("Limelight Latency", Timer.getFPGATimestamp() - limelightTime);
         return limelightTime;
     }
@@ -430,6 +431,12 @@ public final class VisionManager extends AbstractSubsystem {
 
         double angleToTarget = Math.atan2(relativeGoalPos.getY(), relativeGoalPos.getX());
 
+        if (limelight.isConnected()) {
+            logData("Limelight Connected", true);
+        } else {
+            logData("Limelight Connected", false);
+        }
+
         if (!limelight.isTargetVisible()) {
             blinkinLED.setStatus(limelightNotConnectedStatus);
         }
@@ -460,7 +467,7 @@ public final class VisionManager extends AbstractSubsystem {
             if (limelight.areCornersTouchingEdge()) {
                 logData("Using Vision Info", "Corners touching edge");
             } else {
-                if (MathUtil.dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
+                if (dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
                         robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
                     robotTracker.addVisionMeasurement(robotTranslation,
                             getLimelightTime());
@@ -520,7 +527,7 @@ public final class VisionManager extends AbstractSubsystem {
                 autoTurnAndShoot(CONTROLLER_DRIVE_NO_MOVEMENT, true);
             }
             double time = Timer.getFPGATimestamp();
-            if (shooter.getFeederWheelState() != FeederWheelState.FORWARD) {
+            if (shooter.getFeederWheelState() == FeederWheelState.FORWARD) {
                 timeShooting += time - lastTime;
             }
             lastTime = time;
@@ -573,7 +580,7 @@ public final class VisionManager extends AbstractSubsystem {
         double velX = robotVelocity.getX();
         double velY = robotVelocity.getY();
 
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 20; i++) {
             //System.out.println("Iteration: " + i + " Fake Goal Pos: " + fakeGoalPos);
             double tof = getTimeOfFlight(fakeGoalPos);
 
@@ -594,9 +601,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 113) {
-            timeOfFlightFrames = ((0.02 / 30) * (distance - 113)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.03 / 30) * (distance - 113)) + (21.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.071 / 30) * (distance - 113)) + (22.0 / 30);
+            timeOfFlightFrames = ((0.041 / 30) * (distance - 113)) + (21.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;

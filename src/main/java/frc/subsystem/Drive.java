@@ -10,7 +10,6 @@ import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -32,6 +31,7 @@ import frc.utility.Limelight;
 import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
+import frc.utility.wpimodified.PIDController;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,8 +67,8 @@ public final class Drive extends AbstractSubsystem {
             autoTurnPIDController.setTolerance(Math.toRadians(10));
 
             swerveAutoController = new HolonomicDriveController(
-                    new PIDController(3, 0, 0),
-                    new PIDController(3, 0, 0),
+                    new edu.wpi.first.math.controller.PIDController(3, 0, 0),
+                    new edu.wpi.first.math.controller.PIDController(3, 0, 0),
                     autoTurnPIDController);
             swerveAutoController.setTolerance(new Pose2d(0.5, 0.5, Rotation2d.fromDegrees(10))); //TODO: Tune
         } finally {
@@ -211,7 +211,6 @@ public final class Drive extends AbstractSubsystem {
         turnP.setDouble(Constants.DEFAULT_TURN_P);
         turnI.setDouble(Constants.DEFAULT_TURN_I);
         turnD.setDouble(Constants.DEFAULT_TURN_D);
-        turnMaxVelocity.setDouble(DEFAULT_TURN_MAX_VELOCITY);
         //turnMaxAcceleration.setDouble(DEFAULT_TURN_MAX_ACCELERATION);
 
         turnP.addListener(event -> turnPID.setP(event.getEntry().getDouble(Constants.DEFAULT_TURN_P)),
@@ -580,8 +579,7 @@ public final class Drive extends AbstractSubsystem {
      * @param angle The angle to set the robot to
      */
     public void setAutoRotation(double angle) {
-        System.out.println("setting angle " + angle);
-        autoTargetHeading = Rotation2d.fromDegrees(angle);
+        setAutoRotation(Rotation2d.fromDegrees(angle));
     }
 
     /**
@@ -747,11 +745,11 @@ public final class Drive extends AbstractSubsystem {
 
         if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
             turnPID.reset();
+        } else if (turnPID.getPositionError() > Math.toRadians(7)) {
+            turnPID.resetI();
         }
         lastTurnUpdate = Timer.getFPGATimestamp();
-        double pidDeltaSpeed = turnPID.calculate(
-                RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
-        return pidDeltaSpeed;
+        return turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
     }
 
     public void setAutoRotation(@NotNull Rotation2d rotation) {
@@ -907,6 +905,9 @@ public final class Drive extends AbstractSubsystem {
         logData("Turn Position Error", Math.toDegrees(turnPID.getPositionError()));
         logData("Turn Actual Speed", curSpeed);
         logData("Turn PID Command", pidDeltaSpeed);
+        logData("Turn PID Setpoint Position", goal.position);
+        logData("Turn PID Setpoint Velocity", goal.velocity);
+        logData("Turn PID Measurement", RobotTracker.getInstance().getGyroAngle().getRadians());
     }
 
     public void stopMovement() {

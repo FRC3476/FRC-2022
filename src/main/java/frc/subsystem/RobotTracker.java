@@ -11,8 +11,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.Timer;
+import frc.utility.net.editing.LiveEditableValue;
 import frc.utility.tracking.TimestampedPose;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
+import static frc.utility.MathUtil.dist2;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class RobotTracker extends AbstractSubsystem {
@@ -76,6 +79,9 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
+    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.2,
+            SmartDashboard.getEntry("Vision Position Weight Percentage"));
+
 
     private RobotTracker() {
         super(Constants.ROBOT_TRACKER_PERIOD, 5);
@@ -101,6 +107,8 @@ public final class RobotTracker extends AbstractSubsystem {
         //swerveDriveOdometry = new SwerveDriveOdometry(drive.getSwerveDriveKinematics(), gyroSensor.getRotation2d());
     }
 
+    private static final Pose2d ZERO_POSE = new Pose2d();
+
     /**
      * Add a vision measurement to the Unscented Kalman Filter. This will correct the odometry pose estimate while still
      * accounting for measurement noise.
@@ -108,18 +116,18 @@ public final class RobotTracker extends AbstractSubsystem {
      * <p>This method can be called as infrequently as you want, as long as you are calling {@link
      * SwerveDrivePoseEstimator#update} every loop.
      *
-     * @param visionRobotPoseMeters The pose of the robot as measured by the vision camera.
-     * @param timestampSeconds      The timestamp of the vision measurement in seconds. Note that if you don't use your own time
-     *                              source by calling {@link SwerveDrivePoseEstimator#updateWithTime} then you must use a
-     *                              timestamp with an epoch since FPGA startup (i.e. the epoch of this timestamp is the same epoch
-     *                              as Timer.getFPGATimestamp.) This means that you should use Timer.getFPGATimestamp as your time
-     *                              source or sync the epochs.
+     * @param visionRobotTranslationMeters The pose of the robot as measured by the vision camera.
+     * @param timestampSeconds             The timestamp of the vision measurement in seconds. Note that if you don't use your own
+     *                                     time source by calling {@link SwerveDrivePoseEstimator#updateWithTime} then you must
+     *                                     use a timestamp with an epoch since FPGA startup (i.e. the epoch of this timestamp is
+     *                                     the same epoch as Timer.getFPGATimestamp.) This means that you should use
+     *                                     Timer.getFPGATimestamp as your time source or sync the epochs.
      */
-    public void addVisionMeasurement(Translation2d visionRobotPoseMeters, double timestampSeconds) {
+    public void addVisionMeasurement(Translation2d visionRobotTranslationMeters, double timestampSeconds) {
         lock.writeLock().lock();
         try {
             List<TimestampedPose> timestampedPoses = poseHistory.stream().collect(Collectors.toUnmodifiableList());
-            int index = Collections.binarySearch(timestampedPoses, new TimestampedPose(timestampSeconds, new Pose2d()));
+            int index = Collections.binarySearch(timestampedPoses, new TimestampedPose(timestampSeconds, ZERO_POSE));
 
             if (index < 0) { //Convert the binary search index into an actual index
                 index = -(index + 1);
@@ -129,20 +137,42 @@ public final class RobotTracker extends AbstractSubsystem {
                 if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
                     return;
                 } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
-                    positionOffset = visionRobotPoseMeters.minus(timestampedPoses.get(index - 1).pose.getTranslation());
+                    Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.getTranslation().plus(
+                            positionOffset);
+
+                    Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
+                    if (dist2(diff) > 2.5 * 2.5) {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
+                    } else {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get()).plus(
+                                        positionOffset);
+                    }
                 } else {
                     double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
                             (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
-                    positionOffset =
-                            visionRobotPoseMeters.minus(timestampedPoses.get(index - 1).pose.interpolate(
-                                    timestampedPoses.get(index).pose, percentIn).getTranslation());
+
+                    Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.interpolate(
+                            timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset);
+
+                    Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
+
+                    if (dist2(diff) > 2 * 2) {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
+                    } else {
+                        positionOffset =
+                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get())
+                                        .plus(positionOffset);
+                    }
                 }
             }
         } finally {
             lock.writeLock().unlock();
         }
 //        try {
-//            swerveDriveOdometry.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds); //Crashes the robot
+//            swerveDriveOdometry.addVisionMeasurement(visionRobotTranslationMeters, timestampSeconds); //Crashes the robot
 //        } catch (RuntimeException e) {
 //            kalmanFilterFailed();
 //        }

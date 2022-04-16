@@ -162,7 +162,7 @@ public final class Limelight extends AbstractSubsystem {
 
         cameraRotation = new LiveEditableValue<>(
                 new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
-                        Math.toRadians(IS_PRACTICE ? -37.5 : -38), 0, 0),
+                        Math.toRadians(IS_PRACTICE ? -37.5 : -34.5), 0, 0),
                 limelightGuiTable.getEntry("angle"),
                 (value) ->
                         new Rotation(
@@ -171,9 +171,9 @@ public final class Limelight extends AbstractSubsystem {
                 (value) ->
                         Math.toDegrees(value.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0])
         );
-        hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 38.0, limelightGuiTable.getEntry("hOffset"));
-        depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 44.0, limelightGuiTable.getEntry("depthOffset"));
-        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 6.9),
+        hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 59.75, limelightGuiTable.getEntry("hOffset"));
+        depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 14, limelightGuiTable.getEntry("depthOffset"));
+        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 18),
                 limelightGuiTable.getEntry("centerOffset"),
                 (value) -> new Vector3D(0, 0, (Double) value),
                 Vector3D::getZ);
@@ -244,8 +244,8 @@ public final class Limelight extends AbstractSubsystem {
      * @return The timeStamp of the last processed frame
      */
     public double getTimestamp() {
-        return Timer.getFPGATimestamp();
-        //return lastUpdate - ((0) / 1000);
+        //return Timer.getFPGATimestamp();
+        return lastUpdate - ((getLatency()) / 1000);
     }
 
     /**
@@ -393,7 +393,7 @@ public final class Limelight extends AbstractSubsystem {
     public boolean areCornersTouchingEdge() {
         Vector2d[] corners = getCorners();
         for (Vector2d corner : corners) {
-            if (corner.x < 15 || corner.x > 320 - 15 || corner.y < 15 || corner.y > 240) {
+            if (corner.x < 30 || corner.x > 960 - 30 || corner.y < 30 || corner.y > 720) {
 
                 return true;
             }

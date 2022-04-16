@@ -41,7 +41,7 @@ public final class Constants {
     public static final double CAMERA_Y_ANGLE = 35.3203; //TODO: CHANGE
 
     // Vision Manager
-    public static final int VISION_MANAGER_PERIOD = 1000 / 90; //90Hz
+    public static final int VISION_MANAGER_PERIOD = 1000 / 22; //22Hz
     public static final double SHOOT_TIME_PER_BALL = 0.2; // For Auto
 
     /**
@@ -147,10 +147,10 @@ public final class Constants {
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
-    public static final double DRIVE_LOW_SPEED_MOD = 0.5;
+    public static final double DRIVE_LOW_SPEED_MOD = 0.65;
 
     public static final double SWERVE_ACCELERATION =
-            ((360 * 15 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
+            ((360 * 10 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
 
     public static final double SWERVE_CRUISE_VELOCITY =
             ((360 * 7 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
@@ -174,15 +174,13 @@ public final class Constants {
     public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 12.0;
-    public static final double DEFAULT_TURN_I = 15.0;
+    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
+    public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
-    public static final double DEFAULT_TURN_MAX_VELOCITY = 10.0;
-    public static final double DEFAULT_TURN_MAX_ACCELERATION = 10.0;
 
     public enum AccelerationLimits {
         NORMAL_DRIVING(24),
-        SHOOT_AND_MOVE(6),
+        SHOOT_AND_MOVE(4),
         STOP_AND_SHOOT(12);
 
         public double acceleration;
@@ -223,25 +221,6 @@ public final class Constants {
      * Squared
      */
     public static final double MAX_SHOOT_SPEED_SQUARED = Math.pow(MAX_SHOOT_SPEED, 2);
-
-    /**
-     * This GOAL RADIUS is used to calculate the turn error
-     */
-    public static final double GOAL_RADIUS_TURN_ERROR_M = GOAL_RADIUS * 3;
-
-    public static final double GRAVITY = 9.80665;
-
-    /**
-     * Goal height in meters.
-     */
-    public static final double GOAL_HEIGHT = 2.64;
-    /**
-     * The height of the center of the Ejection point in meters.
-     */
-    public static final double SHOOTER_HEIGHT = 0.5; //TODO: Config
-
-    public static final double MAX_SHOOTER_RPM = 5500;
-    public static final double MAX_PREFER_SHOOTER_RPM = 4500;
 
 
     //Hopper Constants
@@ -457,7 +436,7 @@ public final class Constants {
     public static final double CLIMBER_MOTOR_MAX_IACCUMULATOR = 0.1;
     public static final double CLIMBER_MOTOR_MAX_OUTPUT = 1;
 
-    public static final int CLIMBER_CURRENT_LIMIT = 22;
+    public static final int CLIMBER_CURRENT_LIMIT = 37;
 
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_A_DIO_CHANNEL = 0;
     public static final int ELEVATOR_ARM_CONTACT_SWITCH_B_DIO_CHANNEL = 1;
@@ -473,9 +452,11 @@ public final class Constants {
     public static final int BRAKE_SOLENOID_ID = 2;
 
 
-    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (36.0 / 20.0)) / (12 * (3.0 / 8.0));
+    public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (32.0 / 24.0)) / (12 * (3.0 / 8.0));
 
     public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    public static final boolean DO_BACK_HOOK_CLIMB = true;
 
     /**
      * The height to go to once the drivers request the climber to deploy
@@ -498,7 +479,7 @@ public final class Constants {
     /**
      * How long it takes for the pivot pneumatic to pivot open (become pivoted) (in seconds)
      */
-    public static final double ARM_PIVOT_DURATION = 1;
+    public static final double ARM_PIVOT_DURATION = 0.5;
 
     /**
      * How long it takes for the pivot pneumatic to close (become inline) (in seconds)
@@ -531,9 +512,14 @@ public final class Constants {
     public static final double CLIMBER_GRAB_ON_FIRST_BAR_EXTENSION = 0 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
-     * Length to grab on high and traversal bars
+     * Length to grab on with front hooks
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_FRONT_HOOK = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+
+    /**
+     * Length to grab with back hooks
+     */
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK = (27.2 - 3) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause

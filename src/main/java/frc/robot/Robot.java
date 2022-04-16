@@ -562,10 +562,14 @@ public class Robot extends TimedRobot {
         // Shooting / Moving control block
         if (xbox.getRawButton(XboxButtons.LEFT_BUMPER)) {
             // If trying to shoot with left bumper (stop and shoot)
-            drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
-            shooter.setFeederChecksDisabled(false);
-            hopper.setHopperState(Hopper.HopperState.ON);
-            visionManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+            if (isTryingToRunShooterFromButtonPanel()) {
+                doManualShot(drive, hopper, shooter, visionManager);
+            } else {
+                drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
+                shooter.setFeederChecksDisabled(false);
+                hopper.setHopperState(Hopper.HopperState.ON);
+                visionManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+            }
         } else if (buttonPanel.getRawButton(6)) {
             // If trying to Hood Eject
             drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
@@ -576,14 +580,7 @@ public class Robot extends TimedRobot {
             shooter.setFeederChecksDisabled(false);
             if (isTryingToRunShooterFromButtonPanel()) {
                 //If shooting from button (no vision)
-                drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
-                shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
-                shooter.setSpeed(shooterPreset.getFlywheelSpeed());
-                shooter.setFiring(true);
-                hopper.setHopperState(Hopper.HopperState.ON);
-                doNormalDriving();
-                drive.doHold();
-                visionManager.unForceVisionOn(driverForcingVisionOn);
+                doManualShot(drive, hopper, shooter, visionManager);
             } else {
                 // Do Shooting while moving (using vision)
                 drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
@@ -750,6 +747,17 @@ public class Robot extends TimedRobot {
         }
     }
 
+    private void doManualShot(Drive drive, Hopper hopper, Shooter shooter, VisionManager visionManager) {
+        drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
+        shooter.setHoodPosition(shooterPreset.getHoodEjectAngle());
+        shooter.setSpeed(shooterPreset.getFlywheelSpeed());
+        shooter.setFiring(true);
+        hopper.setHopperState(HopperState.ON);
+        doNormalDriving();
+        drive.doHold();
+        visionManager.unForceVisionOn(driverForcingVisionOn);
+    }
+
     // Utility methods
 
     private void doShooterEject() {
@@ -810,7 +818,7 @@ public class Robot extends TimedRobot {
             return new ControllerDriveInputs(-xbox.getRawAxis(1), -xbox.getRawAxis(0), -xbox.getRawAxis(4))
                     .applyDeadZone(0.2, 0.2, 0.2, 0.2).squareInputs();
         } else if (xbox.getPOV() != -1) {
-            double povRads = Math.toRadians(xbox.getPOV());
+            double povRads = Math.toRadians(xbox.getPOV() + 180);
             usingDPad = true;
             return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads), -xbox.getRawAxis(0))
                     .applyDeadZone(0, 0, 0.2, 0)
@@ -822,12 +830,16 @@ public class Robot extends TimedRobot {
         }
     }
 
+    private double disabledTime = 0;
+    private boolean hasKilledAuto = false;
+
     /**
      * This function is called once when the robot is disabled.
      */
     @Override
     public void disabledInit() {
-        killAuto();
+        disabledTime = Timer.getFPGATimestamp();
+        hasKilledAuto = false;
         Drive.getInstance().configCoast();
         enabled.setBoolean(false);
     }
@@ -837,6 +849,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void disabledPeriodic() {
+        if (Timer.getFPGATimestamp() - disabledTime > 2.5 && !hasKilledAuto) {
+            killAuto();
+            hasKilledAuto = true;
+        }
     }
 
     /**
