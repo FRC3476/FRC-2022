@@ -294,10 +294,10 @@ public final class Climber extends AbstractSubsystem {
                 new ClimbStep(
                         (cl) -> {
                             if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
-                                cl.setPivotState(PivotState.PIVOTED);
-                                cl.data = Timer.getFPGATimestamp() + Constants.ARM_PIVOT_DURATION;
-                            } else {
                                 // Don't unpivot if we're using back hooks
+                                cl.setPivotState(PivotState.PIVOTED);
+                                cl.data = Timer.getFPGATimestamp();
+                            } else {
                                 cl.setPivotState(PivotState.INLINE);
                                 cl.data = Timer.getFPGATimestamp() + Constants.ARM_UNPIVOT_DURATION;
                             }
@@ -316,7 +316,7 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> cl.data = Double.MAX_VALUE,
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) return gyro.getRoll() > 41; //TODO: Change gyro angle
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) return gyro.getRoll() > 30; //TODO: Change gyro angle
                             return gyro.getRoll() < 41;
                         },
                         (cl) -> {},

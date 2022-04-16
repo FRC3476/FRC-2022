@@ -446,7 +446,7 @@ public final class Constants {
 
     public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
-    public static final boolean DO_BACK_HOOK_CLIMB = false;
+    public static final boolean DO_BACK_HOOK_CLIMB = true;
 
     /**
      * The height to go to once the drivers request the climber to deploy
@@ -509,7 +509,7 @@ public final class Constants {
     /**
      * Length to grab with back hooks
      */
-    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK = (27.2 - 3.5) * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK = (27.2 - 3) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * How long only one of the sensor switches can be closed for before the climb will pause
