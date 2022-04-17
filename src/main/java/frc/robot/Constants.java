@@ -232,7 +232,7 @@ public final class Constants {
     /**
      * Outtake's speed when automatically ejecting balls
      */
-    public static final double OUTTAKE_AUTO_EJECTION_SPEED = 0.5;
+    public static final double OUTTAKE_AUTO_EJECTION_SPEED = 0.2;
 
     /**
      * Outtake's speed when manually ejecting balls
@@ -444,7 +444,7 @@ public final class Constants {
 
     public static final double CLIMBER_ENCODER_TICKS_PER_INCH = 2048 * ((68.0 / 9.0) * (32.0 / 24.0)) / (12 * (3.0 / 8.0));
 
-    public static final double CLIMBER_MOTOR_MAX_ERROR = 0.05 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_MOTOR_MAX_ERROR = 0.07 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     public static final boolean DO_BACK_HOOK_CLIMB = true;
 
@@ -489,7 +489,7 @@ public final class Constants {
     /**
      * The max safe height for the elevator arm during the swinging part of the climb
      */
-    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 19.45 * CLIMBER_ENCODER_TICKS_PER_INCH;
+    public static final double CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT = 15 * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
      * The height the elevator arm should be at when the climber is doing the final extension to hit the bar
@@ -533,7 +533,7 @@ public final class Constants {
     /**
      * Intake speed when ejecting balls
      */
-    public static final double INTAKE_EJECTION_SPEED = -.5;
+    public static final double INTAKE_EJECTION_SPEED = -0.2;
 
     public static final int WEB_DASHBOARD_PORT = 5802;
 
