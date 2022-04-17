@@ -480,9 +480,11 @@ public final class VisionManager extends AbstractSubsystem {
             } else {
                 if (dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
                         robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
-                    robotTracker.addVisionMeasurement(robotTranslation,
-                            getLimelightTime());
-
+                    if (DriverStation.isTeleopEnabled()) {
+                        robotTracker.addVisionMeasurement(robotTranslation,
+                                getLimelightTime());
+                    }
+                    
                     robotPositionOffset = new Translation2d();
                     logData("Using Vision Info", "Using Vision Info");
                     loopsWithBadVision.set(0);
