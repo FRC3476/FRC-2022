@@ -141,7 +141,7 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public BrakeState getBrakeState() {
-        return brakeSolenoid.get() ? BrakeState.BRAKING : BrakeState.FREE;
+        return brakeSolenoid.get() ? BrakeState.FREE : BrakeState.BRAKING;
     }
 
     public ClawState getClawState() {
@@ -174,7 +174,7 @@ public final class Climber extends AbstractSubsystem {
                             if (Math.abs(gyro.getRoll()) < 15 && Math.abs(RobotTracker.getInstance().getGyroRollVelocity()) < 5) {
                                 return true;
                             } else {
-                                return gyro.getRoll() > 20 && gyro.getRoll() < 40 &&
+                                return gyro.getRoll() > 30 && gyro.getRoll() < 50 &&
                                         RobotTracker.getInstance().getGyroRollVelocity() > 0;
                             }
                         },
@@ -280,8 +280,15 @@ public final class Climber extends AbstractSubsystem {
          */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
                 new ClimbStep(
-                        (cl) -> cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION),
-                        (cl) -> cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                        (cl) -> {
+                            if (cl.timesRun != 1) {
+                                cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION);
+                            }
+                        },
+                        (cl) -> {
+                            if (cl.timesRun == 1) return true;
+                            return cl.climberMotor.getSelectedSensorPosition() > Constants.MAX_CLIMBER_EXTENSION - Constants.CLIMBER_MOTOR_MAX_ERROR;
+                        },
                         (cl) -> {},
                         true
                 )
@@ -316,7 +323,8 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> cl.data = Double.MAX_VALUE,
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) return gyro.getRoll() > 30; //TODO: Change gyro angle
+                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) return gyro.getRoll() > 30 && gyro.getRoll() < 33.5;
+                            //TODO: Change gyro angle
                             return gyro.getRoll() < 41;
                         },
                         (cl) -> {},
@@ -354,7 +362,13 @@ public final class Climber extends AbstractSubsystem {
         WAIT_FOR_BRAKE_TIME(
                 new ClimbStep(
                         (cl) -> cl.data = Timer.getFPGATimestamp(),
-                        (cl) -> Timer.getFPGATimestamp() - cl.data > 0.25,
+                        (cl) -> {
+                            if (Timer.getFPGATimestamp() - cl.data > 0.25) {
+                                cl.climberMotor.set(ControlMode.PercentOutput, 0);
+                                return cl.timesRun != 1;
+                            }
+                            return false;
+                        },
                         (cl) -> cl.climberMotor.set(ControlMode.PercentOutput, 0),
                         true
                 )
@@ -618,6 +632,11 @@ public final class Climber extends AbstractSubsystem {
     public synchronized void update() {
         ClimbStep currentClimbStep = climbState.climbStep;
 
+        if (Timer.getFPGATimestamp() > resetZeroAtTime) {
+            climberMotor.setSelectedSensorPosition(0);
+            resetZeroAtTime = Double.MAX_VALUE;
+        }
+
         if (!isPaused) {
 //            if (climberMotor.getSelectedSensorPosition() < Constants.MIN_CLIMBER_ELEVATOR_HEIGHT
 //                    && climberMotor.getSelectedSensorVelocity() < 0) {
@@ -662,8 +681,9 @@ public final class Climber extends AbstractSubsystem {
         climberMotor.set(ControlMode.PercentOutput, percentOutput);
     }
 
-    boolean hasStalledIntoBottom = false;
+    private boolean hasStalledIntoBottom = false;
     private double minRunTime = -1;
+    private double resetZeroAtTime = Double.MAX_VALUE;
 
     /**
      * moves the climber down until it stall at the bottom. Press reset button to run again.
@@ -679,6 +699,7 @@ public final class Climber extends AbstractSubsystem {
         if (Math.abs(climberMotor.getStatorCurrent()) > 12 && Timer.getFPGATimestamp() > minRunTime) {
             hasStalledIntoBottom = true;
             climberMotor.setSelectedSensorPosition(0);
+            resetZeroAtTime = Timer.getFPGATimestamp() + 1;
             setClimberMotor(0);
         }
     }
