@@ -484,7 +484,7 @@ public final class VisionManager extends AbstractSubsystem {
                         robotTracker.addVisionMeasurement(robotTranslation,
                                 getLimelightTime());
                     }
-                    
+
                     robotPositionOffset = new Translation2d();
                     logData("Using Vision Info", "Using Vision Info");
                     loopsWithBadVision.set(0);
@@ -627,9 +627,9 @@ public final class VisionManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 113) {
-            timeOfFlightFrames = ((0.03 / 30) * (distance - 113)) + (21.0 / 30);
+            timeOfFlightFrames = ((0.03 / 30) * (distance - 113)) + (23.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.041 / 30) * (distance - 113)) + (21.0 / 30);
+            timeOfFlightFrames = ((0.041 / 30) * (distance - 113)) + (23.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;

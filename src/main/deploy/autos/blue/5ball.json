@@ -2640,12 +2640,12 @@
     "rotations" : [ {
       "time" : 0.0,
       "rotation" : {
-        "radians" : 0.004009559070082093
+        "radians" : 0.3490658503988659
       }
     }, {
       "time" : 1.9799999557435513,
       "rotation" : {
-        "radians" : 0.009345634108977457
+        "radians" : 0.36106144972360144
       }
     } ],
     "reversed" : false,
