@@ -2,6 +2,7 @@ package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.ControlFrame;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMaxLowLevel;
@@ -49,6 +50,8 @@ public final class Intake extends AbstractSubsystem {
             intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_3_General, 23);
             intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_4_Advanced, 29);
             intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 547);
+            intakeMotorFalcon.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(false, 40, 70, 0), 1000);
+            intakeMotorFalcon.configOpenloopRamp(0.2, 1000);
         }
     }
 
