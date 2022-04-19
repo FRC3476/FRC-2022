@@ -149,6 +149,10 @@ public class Robot extends TimedRobot {
     @NotNull
     private HangerCargoRed hangerCargoRed;
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
+    @NotNull
+    private OneBall oneBall;
+
     @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
     @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
     @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
@@ -162,6 +166,7 @@ public class Robot extends TimedRobot {
     @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
     @NotNull private static final String HIDE_CARGO = "Hide Cargo";
     @NotNull private static final String BUDDY_AUTO_LEFT_HIDE = "Buddy Auto Left Hide";
+    @NotNull private static final String ONE_BALL = "One Ball";
     @NotNull private static final String HANGER_CARGO = "Hanger Cargo";
 
     private static final String RESET_POSE = "Reset Pose";
@@ -281,6 +286,7 @@ public class Robot extends TimedRobot {
         CompletableFuture.runAsync(() -> buddyAutoLeftHideRed = new BuddyAutoLeftHideRed()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> hangerCargoBlue = new HangerCargoBlue()).thenRun(this::incrementLoadedAutos);
         CompletableFuture.runAsync(() -> hangerCargoRed = new HangerCargoRed()).thenRun(this::incrementLoadedAutos);
+        CompletableFuture.runAsync(() -> oneBall = new OneBall()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
         autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
@@ -296,6 +302,7 @@ public class Robot extends TimedRobot {
         autoChooser.addOption(HIDE_CARGO, HIDE_CARGO);
         autoChooser.addOption(HANGER_CARGO, HANGER_CARGO);
         autoChooser.addOption(BUDDY_AUTO_LEFT_HIDE, BUDDY_AUTO_LEFT_HIDE);
+        autoChooser.addOption(ONE_BALL, ONE_BALL);
 
         sideChooser.setDefaultOption(BLUE, BLUE);
         sideChooser.addOption(RED, RED);
@@ -336,7 +343,7 @@ public class Robot extends TimedRobot {
     volatile boolean loadingAutos = true;
 
     public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 16) {
+        if (loadedAutos.incrementAndGet() == 17) {
             loadingAutos = false;
         }
     }
@@ -425,6 +432,9 @@ public class Robot extends TimedRobot {
                         case HANGER_CARGO:
                             selectedAuto = hangerCargoBlue;
                             break;
+                        case ONE_BALL:
+                            selectedAuto = oneBall;
+                            break;
                         default:
                             selectedAuto = shootAndMoveRight;
                             break;
@@ -469,6 +479,9 @@ public class Robot extends TimedRobot {
                             break;
                         case HANGER_CARGO:
                             selectedAuto = hangerCargoRed;
+                            break;
+                        case ONE_BALL:
+                            selectedAuto = oneBall;
                             break;
                         default:
                             selectedAuto = shootAndMoveRight;
