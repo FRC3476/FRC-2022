@@ -173,7 +173,7 @@ public final class Limelight extends AbstractSubsystem {
         );
         hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 59.75, limelightGuiTable.getEntry("hOffset"));
         depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 14, limelightGuiTable.getEntry("depthOffset"));
-        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 18),
+        centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 20),
                 limelightGuiTable.getEntry("centerOffset"),
                 (value) -> new Vector3D(0, 0, (Double) value),
                 Vector3D::getZ);
