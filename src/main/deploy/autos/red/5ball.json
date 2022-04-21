@@ -693,7 +693,7 @@
     } ]
   }, {
     "type" : "script",
-    "script" : "# Shoot the first 3 balls\nVisionManager.shootBalls 16",
+    "script" : "# Shoot the first 3 balls\nVisionManager.shootBalls 10\nsleep 300\nVisionManager.shootBalls 5",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -701,7 +701,17 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "16" ],
+        "args" : [ "10" ],
+        "argTypes" : [ "double" ],
+        "reflection" : true
+      }, {
+        "methodName" : "sleep",
+        "args" : [ "300" ],
+        "argTypes" : [ "long" ],
+        "reflection" : false
+      }, {
+        "methodName" : "frc.subsystem.VisionManager.shootBalls",
+        "args" : [ "5" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
@@ -2053,7 +2063,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "#VisionManager.shootBallsUntilBeamBreakHasBroken 4\nVisionManager.shootBalls 14\nIntake.setWantedIntakeState OFF\nHopper.setHopperState OFF\nIntake.setIntakeSolState CLOSE",
+    "script" : "#VisionManager.shootBallsUntilBeamBreakHasBroken 4\nVisionManager.shootBalls 8\nsleep 300\nVisionManager.shootBalls 3\nIntake.setWantedIntakeState OFF\nHopper.setHopperState OFF\nIntake.setIntakeSolState CLOSE",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -2061,7 +2071,17 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "14" ],
+        "args" : [ "8" ],
+        "argTypes" : [ "double" ],
+        "reflection" : true
+      }, {
+        "methodName" : "sleep",
+        "args" : [ "300" ],
+        "argTypes" : [ "long" ],
+        "reflection" : false
+      }, {
+        "methodName" : "frc.subsystem.VisionManager.shootBalls",
+        "args" : [ "3" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       }, {
