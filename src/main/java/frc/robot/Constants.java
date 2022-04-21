@@ -242,7 +242,7 @@ public final class Constants {
     /**
      * Outtake's speed when intaking balls
      */
-    public static final double OUTTAKE_SPEED = -0.5;
+    public static final double OUTTAKE_SPEED = -1;
 
     /**
      * Outtake will run for this time (Sec) after color sensor trigger
@@ -533,7 +533,7 @@ public final class Constants {
     /**
      * Intake speed when ejecting balls
      */
-    public static final double INTAKE_EJECTION_SPEED = -0.2;
+    public static final double INTAKE_EJECTION_SPEED = -0.5;
 
     public static final int WEB_DASHBOARD_PORT = 5802;
 
