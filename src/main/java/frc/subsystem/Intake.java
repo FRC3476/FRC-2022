@@ -113,7 +113,7 @@ public final class Intake extends AbstractSubsystem {
     }
 
     public enum IntakeState {
-        INTAKE, EJECT, OFF
+        INTAKE, EJECT, SLOW_EJECT, OFF
     }
 
     private IntakeState wantedIntakeState = IntakeState.OFF;
@@ -142,6 +142,9 @@ public final class Intake extends AbstractSubsystem {
 
             case EJECT:
                 setIntakeMotor(-Constants.INTAKE_SPEED);
+                break;
+            case SLOW_EJECT:
+                setIntakeMotor(-Constants.INTAKE_SPEED / 2.5);
                 break;
 
             case OFF:
