@@ -693,7 +693,7 @@
     } ]
   }, {
     "type" : "script",
-    "script" : "# Shoot the first 3 balls\nVisionManager.shootBalls 12",
+    "script" : "# Shoot the first 3 balls\nVisionManager.shootBalls 16",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -701,7 +701,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "12" ],
+        "args" : [ "16" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
@@ -2053,7 +2053,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "#VisionManager.shootBallsUntilBeamBreakHasBroken 4\nVisionManager.shootBalls 8\nIntake.setWantedIntakeState OFF\nHopper.setHopperState OFF\nIntake.setIntakeSolState CLOSE",
+    "script" : "#VisionManager.shootBallsUntilBeamBreakHasBroken 4\nVisionManager.shootBalls 14\nIntake.setWantedIntakeState OFF\nHopper.setHopperState OFF\nIntake.setIntakeSolState CLOSE",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -2061,7 +2061,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "8" ],
+        "args" : [ "14" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       }, {
