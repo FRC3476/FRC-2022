@@ -830,7 +830,7 @@ public class Robot extends TimedRobot {
         } else if (xbox.getPOV() != -1) {
             double povRads = Math.toRadians(xbox.getPOV() + 180);
             usingDPad = true;
-            return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads), -xbox.getRawAxis(0))
+            return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads) * 0.5, -xbox.getRawAxis(0))
                     .applyDeadZone(0, 0, 0.2, 0)
                     .squareInputs().scaleInputs(DRIVE_LOW_SPEED_MOD);
         } else {
