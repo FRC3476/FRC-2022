@@ -139,6 +139,8 @@ public final class VisionManager extends AbstractSubsystem {
         shootAndMove(controllerDriveInputs, useFieldRelative, true);
     }
 
+    private final static Rotation2d rotationOffset = Rotation2d.fromDegrees(1);
+
     /**
      * @param controllerDriveInputs The controller drive inputs to use
      * @param useFieldRelative      Whether to use field relative
@@ -158,11 +160,11 @@ public final class VisionManager extends AbstractSubsystem {
         double turnDelay = 0.0;
 
         Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
-        double targetAngle = angleOf(aimToPosition).getRadians();
+        double targetAngle = angleOf(aimToPosition).plus(rotationOffset).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
         Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + 0.1);
-        double futureTargetAngle = angleOf(futureAimToPosition).getRadians();
+        double futureTargetAngle = angleOf(futureAimToPosition).plus(rotationOffset).getRadians();
 
         State turnGoal = new State(targetAngle, (futureTargetAngle - targetAngle) * 10);
         if (sendDriveCommand) {
@@ -191,7 +193,8 @@ public final class VisionManager extends AbstractSubsystem {
         } else {
             relativeGoalPos = getRelativeGoalTranslation();
         }
-        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos), fieldRelative, getAllowedTurnError());
+        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos).plus(rotationOffset), fieldRelative,
+                getAllowedTurnError());
         updateShooterState(relativeGoalPos.getNorm());
         tryToShoot(relativeGoalPos, 0, true);
     }
@@ -217,12 +220,12 @@ public final class VisionManager extends AbstractSubsystem {
                         < Math.toRadians(8));
 
         logData("Is Robot Allowed Shoot Aiming",
-                Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians())
+                Math.abs((angleOf(aimToPosition).plus(rotationOffset).minus(robotTracker.getGyroAngle())).getRadians())
                         < getAllowedTurnError(aimToPosition.getNorm()));
         logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < 7.4);
 
         //@formatter:off
-        if (Math.abs((angleOf(aimToPosition).minus(robotTracker.getGyroAngle())).getRadians())
+        if (Math.abs((angleOf(aimToPosition).plus(rotationOffset).minus(robotTracker.getGyroAngle())).getRadians())
                     < getAllowedTurnError(aimToPosition.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
@@ -340,7 +343,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return the angle the robot needs to face to point towards the target
      */
     public Rotation2d getAngleToTarget() {
-        return angleOf(getRelativeGoalTranslation());
+        return angleOf(getRelativeGoalTranslation()).plus(rotationOffset);
     }
 
     /**
