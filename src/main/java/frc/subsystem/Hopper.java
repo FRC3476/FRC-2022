@@ -220,7 +220,8 @@ public final class Hopper extends AbstractSubsystem {
         // Hopper Motor Control
         switch (wantedHopperState) {
             case ON:
-                if (outtakeState == OuttakeState.AUTO_EJECT) {
+                if (outtakeState == OuttakeState.AUTO_EJECT
+                        && Shooter.getInstance().getFeederWheelState() != FeederWheelState.FORWARD) {
                     hopperMotor.set(0.3);
                 } else {
                     hopperMotor.set(HOPPER_SPEED);
