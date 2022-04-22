@@ -781,10 +781,13 @@ public class Robot extends TimedRobot {
     private void runShooter() {
         VisionManager visionManager = VisionManager.getInstance();
         if (buttonPanel.getRisingEdge(1)) {
+            //driver station shot
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
         } else if (buttonPanel.getRisingEdge(2)) {
+            // Wall shot (closer wall)
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
+            // Fender shot
             shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
         }
     }
