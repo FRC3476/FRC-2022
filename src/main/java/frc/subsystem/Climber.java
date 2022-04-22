@@ -350,7 +350,7 @@ public final class Climber extends AbstractSubsystem {
                                     if (cl.data > Timer.getFPGATimestamp() + 0.1) {
                                         cl.data = Timer.getFPGATimestamp() + 0.1;
                                     }
-                                    return Timer.getFPGATimestamp() > cl.data;
+                                    return false;
                                 } else {
                                     cl.data = Double.MAX_VALUE;
                                     return false;
