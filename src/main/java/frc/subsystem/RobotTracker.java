@@ -121,9 +121,8 @@ public final class RobotTracker extends AbstractSubsystem {
      *                                     time source by calling {@link SwerveDrivePoseEstimator#updateWithTime} then you must
      *                                     use a timestamp with an epoch since FPGA startup (i.e. the epoch of this timestamp is
      *                                     the same epoch as Timer.getFPGATimestamp.) This means that you should use
-     *                                     Timer.getFPGATimestamp as your time source or sync the epochs.
      */
-    public void addVisionMeasurement(Translation2d visionRobotTranslationMeters, double timestampSeconds) {
+    public void addVisionMeasurement(Translation2d visionRobotTranslationMeters, double timestampSeconds, boolean force) {
         lock.writeLock().lock();
         try {
             List<TimestampedPose> timestampedPoses = poseHistory.stream().collect(Collectors.toUnmodifiableList());
@@ -146,8 +145,9 @@ public final class RobotTracker extends AbstractSubsystem {
                                 visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
                     } else {
                         positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get()).plus(
-                                        positionOffset);
+                                visionRobotTranslationMeters.minus(robotTrackerPosition)
+                                        .times((force ? 1 : visionUsagePercent.get()))
+                                        .plus(positionOffset);
                     }
                 } else {
                     double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
@@ -163,7 +163,8 @@ public final class RobotTracker extends AbstractSubsystem {
                                 visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
                     } else {
                         positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).times(visionUsagePercent.get())
+                                visionRobotTranslationMeters.minus(robotTrackerPosition)
+                                        .times((force ? 1 : visionUsagePercent.get()))
                                         .plus(positionOffset);
                     }
                 }
