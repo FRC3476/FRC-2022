@@ -1,5 +1,7 @@
 package frc.subsystem;
 
+import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotPositionSender;
+import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -473,6 +475,15 @@ public final class VisionManager extends AbstractSubsystem {
             logData("Vision Pose Y", visionPose.getY());
             logData("Vision Pose Angle", visionPose.getRotation().getRadians());
             logData("Vision Pose Time", getLimelightTime());
+
+            RobotPositionSender.addRobotPosition(new RobotState(
+                    visionPose.getX(),
+                    visionPose.getY(),
+                    visionPose.getRotation().getRadians(),
+                    getLimelightTime(),
+                    "Vision Pose"
+            ));
+
 
             Translation2d trackerTranslation = robotTracker.getLatencyCompedPoseMeters().getTranslation();
 

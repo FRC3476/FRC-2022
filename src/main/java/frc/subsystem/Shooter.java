@@ -5,6 +5,7 @@ import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
+import com.dacubeking.AutoBuilder.robot.sender.hud.HudElement;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.utility.OrangeUtility;
@@ -24,6 +26,8 @@ import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import org.jetbrains.annotations.NotNull;
+
+import java.text.DecimalFormat;
 
 import static frc.robot.Constants.*;
 
@@ -74,6 +78,22 @@ public final class Shooter extends AbstractSubsystem {
     private boolean feederChecksDisabled = false;
 
     public volatile boolean runFeederWheelReversed;
+
+    private static final Color8Bit RED = new Color8Bit(237, 28, 36);
+    private static final Color8Bit GREEN = new Color8Bit(34, 177, 76);
+    private static final Color8Bit BLUE = new Color8Bit(0, 162, 232);
+
+    private final HudElement rpmHudElement = new HudElement(SmartDashboard.getEntry("Shooter Flywheel Speed"),
+            "RPM", RED, 160, new DecimalFormat("#"));
+
+    private final HudElement hoodAngleHudElement = new HudElement(SmartDashboard.getEntry("Hood Angle"),
+            "RPM", RED, 160, new DecimalFormat("#.##"));
+
+    private final HudElement desiredRPMHudElement = new HudElement(SmartDashboard.getEntry("Desired Shooter Speed"),
+            "RPM", BLUE, 160, new DecimalFormat("#.##"));
+
+    private final HudElement desiredHoodAngleHudElement = new HudElement(SmartDashboard.getEntry("Desired Hood Angle"),
+            "RPM", BLUE, 160, new DecimalFormat("#.##"));
 
     /**
      * @return true when the shooter will be firing.
@@ -248,6 +268,11 @@ public final class Shooter extends AbstractSubsystem {
         shooterIZone.addListener(
                 event -> shooterWheelMaster.config_IntegralZone(0, event.getEntry().getDouble(Constants.DEFAULT_SHOOTER_IZONE)),
                 EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+
+        desiredHoodAngleHudElement.push();
+        desiredRPMHudElement.push();
+        hoodAngleHudElement.push();
+        rpmHudElement.push();
     }
 
     private void configPID() {
@@ -797,6 +822,18 @@ public final class Shooter extends AbstractSubsystem {
         logData("Shooter Flywheel Slave Current", shooterWheelSlave.getSupplyCurrent());
         logData("Feeder Wheel Current", feederWheel.getSupplyCurrent());
         logData("Hood Motor Current", hoodMotor.getOutputCurrent());
+
+        if (isShooterAtTargetSpeed()) {
+            rpmHudElement.setColor(GREEN).push();
+        } else {
+            rpmHudElement.setColor(RED).push();
+        }
+
+        if (isHoodAtTargetAngle()) {
+            hoodAngleHudElement.setColor(GREEN).push();
+        } else {
+            hoodAngleHudElement.setColor(RED).push();
+        }
     }
 
     /** Closing of Shooter motors is not supported. */

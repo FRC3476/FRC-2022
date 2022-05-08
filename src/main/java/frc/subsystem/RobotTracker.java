@@ -1,5 +1,7 @@
 package frc.subsystem;
 
+import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotPositionSender;
+import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotState;
 import com.google.common.collect.EvictingQueue;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -593,6 +595,13 @@ public final class RobotTracker extends AbstractSubsystem {
             logData("Acceleration", acceleration.getNorm());
             logData("Acceleration X", acceleration.getX());
             logData("Acceleration Y", acceleration.getY());
+
+            RobotPositionSender.addRobotPosition(new RobotState(
+                    getLastEstimatedPoseMeters(),
+                    getLastChassisSpeeds().vxMetersPerSecond,
+                    getLastChassisSpeeds().vyMetersPerSecond,
+                    getLastChassisSpeeds().omegaRadiansPerSecond,
+                    currentOdometryTime));
 
 
 //        SmartDashboard.putNumber("Latency Comped Robot Pose X", getLatencyCompedPoseMeters().getX());
