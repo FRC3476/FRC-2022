@@ -1,8 +1,8 @@
 package frc.utility.shooter.visionlookup;
 
+import com.dacubeking.AutoBuilder.robot.serialization.Serializer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.utility.Serializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

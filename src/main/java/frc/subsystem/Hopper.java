@@ -102,7 +102,7 @@ public final class Hopper extends AbstractSubsystem {
      * Uses Sendable Chooser to decide Alliance Color
      */
     private void updateAllianceColor() {
-        if (Robot.sideChooser.getSelected().equals(Robot.BLUE)) {
+        if (Robot.sideChooser.getSelected().equals("blue")) {
             opposingAllianceColor = BallColor.RED;
             friendlyAllianceColor = BallColor.BLUE;
 

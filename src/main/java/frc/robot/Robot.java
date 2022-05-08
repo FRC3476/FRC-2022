@@ -4,6 +4,10 @@
 
 package frc.robot;
 
+import com.dacubeking.AutoBuilder.robot.reflection.ClassInformationSender;
+import com.dacubeking.AutoBuilder.robot.robotinterface.AutonomousContainer;
+import com.dacubeking.AutoBuilder.robot.robotinterface.CommandTranslator;
+import com.dacubeking.AutoBuilder.robot.serialization.Serializer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -13,10 +17,6 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.auton.*;
-import frc.auton.guiauto.NetworkAuto;
-import frc.auton.guiauto.serialization.OsUtil;
-import frc.auton.guiauto.serialization.reflection.ClassInformationSender;
 import frc.subsystem.*;
 import frc.subsystem.Climber.ClimbState;
 import frc.subsystem.Hopper.HopperState;
@@ -28,18 +28,11 @@ import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.Thread.State;
 import java.util.Collections;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static frc.robot.Constants.*;
@@ -60,121 +53,17 @@ public class Robot extends TimedRobot {
     final @NotNull NetworkTable autoDataTable = instance.getTable("autodata");
     final @NotNull NetworkTableEntry autoPath = autoDataTable.getEntry("autoPath");
     final @NotNull NetworkTableEntry enabled = autoDataTable.getEntry("enabled");
-    final @NotNull NetworkTableEntry pathProcessingStatusEntry = autoDataTable.getEntry("processing");
-    final @NotNull NetworkTableEntry pathProcessingStatusIdEntry = autoDataTable.getEntry("processingid");
 
     final @NotNull NetworkTableEntry shooterConfigEntry = instance.getTable("limelightgui").getEntry("shooterconfig");
     final @NotNull NetworkTableEntry shooterConfigStatusEntry = instance.getTable("limelightgui").getEntry("shooterconfigStatus");
     final @NotNull NetworkTableEntry shooterConfigStatusIdEntry = instance.getTable("limelightgui").getEntry(
             "shooterconfigStatusId");
 
-    final @NotNull NetworkTableEntry selectedAutoFeedback = SmartDashboard.getEntry("Selected Auto Feedback");
 
-
-    private final @NotNull Lock networkAutoLock = new ReentrantLock();
-    NetworkAuto networkAuto = null;
 
     final @NotNull ExecutorService deserializerExecutor = Executors.newSingleThreadExecutor();
 
-    //Auto
-    @Nullable TemplateAuto selectedAuto;
-    @Nullable Thread autoThread;
-
-    //We block the robot from starting until these are initialized
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private ShootAndMoveLeft shootAndMoveLeft;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private ShootAndMoveMid shootAndMoveMid;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private ShootAndMoveRight shootAndMoveRight;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private FourBallBlue fourBallBlue;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private FiveBallBlue fiveBallBlue;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private SixBallBlue sixBallBlue;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private FourBallRed fourBallRed;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private FiveBallRed fiveBallRed;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private SixBallRed sixBallRed;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private BuddyAutoLeft buddyAutoLeft;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private BuddyAutoRight buddyAutoRight;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private HideCargoBlue hideCargoBlue;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private HideCargoRed hideCargoRed;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private BuddyAutoLeftHideBlue buddyAutoLeftHideBlue;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private BuddyAutoLeftHideRed buddyAutoLeftHideRed;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private HangerCargoBlue hangerCargoBlue;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private HangerCargoRed hangerCargoRed;
-
-    @SuppressWarnings("NotNullFieldNotInitialized")
-    @NotNull
-    private OneBall oneBall;
-
-    @NotNull private static final String SHOOT_AND_MOVE_LEFT = "Shoot and Move Left";
-    @NotNull private static final String SHOOT_AND_MOVE_MID = "Shoot and Move Mid";
-    @NotNull private static final String SHOOT_AND_MOVE_RIGHT = "Shoot and Move Right";
-    @NotNull private static final String FOUR_BALL = "Four Ball";
-    @NotNull private static final String FIVE_BALL = "Five Ball";
-    @NotNull private static final String SIX_BALL = "Six Ball";
-    @NotNull private static final String BUDDY_AUTO_LEFT = "Buddy Auto Left";
-    @NotNull private static final String BUDDY_AUTO_RIGHT = "Buddy Auto Right";
-    @NotNull private static final String SHOOT_ONLY_RIGHT = "Shoot Only Right";
-    @NotNull private static final String SHOOT_ONLY_MID = "Shoot Only Mid";
-    @NotNull private static final String SHOOT_ONLY_LEFT = "Shoot Only Left";
-    @NotNull private static final String HIDE_CARGO = "Hide Cargo";
-    @NotNull private static final String BUDDY_AUTO_LEFT_HIDE = "Buddy Auto Left Hide";
-    @NotNull private static final String ONE_BALL = "One Ball";
-    @NotNull private static final String HANGER_CARGO = "Hanger Cargo";
-
-    private static final String RESET_POSE = "Reset Pose";
-
     private final SendableChooser<String> autoChooser = new SendableChooser<>();
-
-    @NotNull public static final String RED = "RED";
-    @NotNull public static final String BLUE = "BLUE";
 
     public static final SendableChooser<String> sideChooser = new SendableChooser<>();
 
@@ -196,27 +85,6 @@ public class Robot extends TimedRobot {
     private double firstPressTime = 0;
     private double lastPressTime = 0;
 
-
-    Consumer<EntryNotification> autoPathListener = (event ->
-            deserializerExecutor.execute(() -> { //Start deserializing on another thread
-                        System.out.println("starting to parse autonomous");
-                        //Set networktable entries for the gui notifications
-                        pathProcessingStatusEntry.setDouble(1);
-                        pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-                        networkAutoLock.lock();
-                        try {
-                            networkAuto = new NetworkAuto(); //Create the auto object which will start deserializing the json and the auto
-                        } finally {
-                            networkAutoLock.unlock();
-                        }
-
-                        // ready to be run
-                        System.out.println("done parsing autonomous");
-                        //Set networktable entries for the gui notifications
-                        pathProcessingStatusEntry.setDouble(2);
-                        pathProcessingStatusIdEntry.setDouble(pathProcessingStatusIdEntry.getDouble(0) + 1);
-                    }
-            ));
 
     Consumer<EntryNotification> shooterGuiListener = event ->
             deserializerExecutor.execute(() -> {
@@ -252,78 +120,49 @@ public class Robot extends TimedRobot {
         final RobotTracker robotTracker = RobotTracker.getInstance();
         final Limelight limelight = Limelight.getInstance();
         final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
-
-
-        if (autoPath.getString(null) != null) {
-            autoPathListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
-        }
+        final Drive drive = Drive.getInstance();
 
         if (shooterConfigEntry.getString(null) != null) {
             shooterGuiListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
         }
-
-        autoPath.addListener(autoPathListener, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
-
         shooterConfigEntry.addListener(shooterGuiListener, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
-        // Initialize the autonomous asynchronously so that we can have both threads of the roborio being used to deserialize
-        // the autos
-        System.out.println("Loading autos");
-        long startDeserializeTime = System.currentTimeMillis();
-        CompletableFuture.runAsync(() -> shootAndMoveLeft = new ShootAndMoveLeft()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> shootAndMoveMid = new ShootAndMoveMid()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> shootAndMoveRight = new ShootAndMoveRight()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fourBallBlue = new FourBallBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fiveBallBlue = new FiveBallBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> sixBallBlue = new SixBallBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fourBallRed = new FourBallRed()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> fiveBallRed = new FiveBallRed()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> sixBallRed = new SixBallRed()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> buddyAutoLeft = new BuddyAutoLeft()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> hideCargoBlue = new HideCargoBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> hideCargoRed = new HideCargoRed()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> buddyAutoLeftHideBlue = new BuddyAutoLeftHideBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> buddyAutoLeftHideRed = new BuddyAutoLeftHideRed()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> hangerCargoBlue = new HangerCargoBlue()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> hangerCargoRed = new HangerCargoRed()).thenRun(this::incrementLoadedAutos);
-        CompletableFuture.runAsync(() -> oneBall = new OneBall()).thenRun(this::incrementLoadedAutos);
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
-        autoChooser.setDefaultOption(SHOOT_AND_MOVE_LEFT, SHOOT_AND_MOVE_LEFT);
-        autoChooser.addOption(SHOOT_AND_MOVE_MID, SHOOT_AND_MOVE_MID);
-        autoChooser.addOption(SHOOT_AND_MOVE_RIGHT, SHOOT_AND_MOVE_RIGHT);
-        autoChooser.addOption(FIVE_BALL, FIVE_BALL);
-        autoChooser.addOption(SIX_BALL, SIX_BALL);
-        autoChooser.addOption(RESET_POSE, RESET_POSE);
-        autoChooser.addOption(BUDDY_AUTO_LEFT, BUDDY_AUTO_LEFT);
-        autoChooser.addOption(SHOOT_ONLY_LEFT, SHOOT_ONLY_LEFT);
-        autoChooser.addOption(SHOOT_ONLY_MID, SHOOT_ONLY_MID);
-        autoChooser.addOption(SHOOT_ONLY_RIGHT, SHOOT_ONLY_RIGHT);
-        autoChooser.addOption(HIDE_CARGO, HIDE_CARGO);
-        autoChooser.addOption(HANGER_CARGO, HANGER_CARGO);
-        autoChooser.addOption(BUDDY_AUTO_LEFT_HIDE, BUDDY_AUTO_LEFT_HIDE);
-        autoChooser.addOption(ONE_BALL, ONE_BALL);
-
-        sideChooser.setDefaultOption(BLUE, BLUE);
-        sideChooser.addOption(RED, RED);
-
-        SmartDashboard.putData("Auto choices", autoChooser);
-        SmartDashboard.putData("Red or Blue", sideChooser);
 
         robotTracker.resetGyro();
         OrangeUtility.sleep(50);
         robotTracker.resetPosition(new Pose2d());
 
-        while (loadingAutos) {
-            Thread.onSpinWait();
-        }
+        startSubsystems();
 
-        System.out.println(
-                "Finished loading autos in " + ((double) (System.currentTimeMillis() - startDeserializeTime)) / 1000.0);
+        AutonomousContainer.getInstance().initialize(
+                true,
+                new CommandTranslator(
+                        drive::setAutoPath,
+                        drive::stopMovement,
+                        drive::setAutoRotation,
+                        drive::isFinished,
+                        drive::getAutoElapsedTime,
+                        robotTracker::resetPosition,
+                        false
+
+                ),
+                false,
+                null
+        );
+
+        AutonomousContainer.getInstance().getAutonomousNames().forEach(name -> autoChooser.addOption(name, name));
+
+        sideChooser.setDefaultOption("Blue", "blue");
+        sideChooser.addOption("Red", "red");
+
+        SmartDashboard.putData("Auto choices", autoChooser);
+        SmartDashboard.putData("Red or Blue", sideChooser);
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
         Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
-        startSubsystems();
+
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
 
@@ -336,16 +175,6 @@ public class Robot extends TimedRobot {
         limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
-    }
-
-
-    private final AtomicInteger loadedAutos = new AtomicInteger(0);
-    volatile boolean loadingAutos = true;
-
-    public void incrementLoadedAutos() {
-        if (loadedAutos.incrementAndGet() == 17) {
-            loadingAutos = false;
-        }
     }
 
     /**
@@ -386,123 +215,11 @@ public class Robot extends TimedRobot {
         enabled.setBoolean(true);
         drive.configBrake();
 
-        networkAutoLock.lock();
-        try {
-            if (networkAuto == null) {
-                System.out.println("Using normal autos: " + sideChooser.getSelected());
-                String auto = autoChooser.getSelected();
-                if (sideChooser.getSelected().equals(BLUE)) {
-                    switch (auto) {
-                        case SHOOT_AND_MOVE_LEFT:
-                            selectedAuto = shootAndMoveLeft;
-                            break;
-                        case SHOOT_AND_MOVE_MID:
-                            selectedAuto = shootAndMoveMid;
-                            break;
-                        case FOUR_BALL:
-                            selectedAuto = fourBallBlue;
-                            break;
-                        case FIVE_BALL:
-                            selectedAuto = fiveBallBlue;
-                            break;
-                        case SIX_BALL:
-                            selectedAuto = sixBallBlue;
-                            break;
-                        case RESET_POSE:
-                            selectedAuto = new SetPositionCenter();
-                            break;
-                        case SHOOT_ONLY_LEFT:
-                            selectedAuto = new ShootOnlyLeft();
-                            break;
-                        case SHOOT_ONLY_MID:
-                            selectedAuto = new ShootOnlyMid();
-                            break;
-                        case SHOOT_ONLY_RIGHT:
-                            selectedAuto = new ShootOnlyRight();
-                            break;
-                        case BUDDY_AUTO_LEFT:
-                            selectedAuto = buddyAutoLeft;
-                            break;
-                        case HIDE_CARGO:
-                            selectedAuto = hideCargoBlue;
-                            break;
-                        case BUDDY_AUTO_LEFT_HIDE:
-                            selectedAuto = buddyAutoLeftHideBlue;
-                            break;
-                        case HANGER_CARGO:
-                            selectedAuto = hangerCargoBlue;
-                            break;
-                        case ONE_BALL:
-                            selectedAuto = oneBall;
-                            break;
-                        default:
-                            selectedAuto = shootAndMoveRight;
-                            break;
-                    }
-                } else {
-                    switch (auto) {
-                        case SHOOT_AND_MOVE_LEFT:
-                            selectedAuto = shootAndMoveLeft;
-                            break;
-                        case SHOOT_AND_MOVE_MID:
-                            selectedAuto = shootAndMoveMid;
-                            break;
-                        case FOUR_BALL:
-                            selectedAuto = fourBallRed;
-                            break;
-                        case FIVE_BALL:
-                            selectedAuto = fiveBallRed;
-                            break;
-                        case SIX_BALL:
-                            selectedAuto = sixBallRed;
-                            break;
-                        case RESET_POSE:
-                            selectedAuto = new SetPositionCenter();
-                            break;
-                        case SHOOT_ONLY_LEFT:
-                            selectedAuto = new ShootOnlyLeft();
-                            break;
-                        case SHOOT_ONLY_MID:
-                            selectedAuto = new ShootOnlyMid();
-                            break;
-                        case SHOOT_ONLY_RIGHT:
-                            selectedAuto = new ShootOnlyRight();
-                            break;
-                        case BUDDY_AUTO_LEFT:
-                            selectedAuto = buddyAutoLeft;
-                            break;
-                        case HIDE_CARGO:
-                            selectedAuto = hideCargoRed;
-                            break;
-                        case BUDDY_AUTO_LEFT_HIDE:
-                            selectedAuto = buddyAutoLeftHideRed;
-                            break;
-                        case HANGER_CARGO:
-                            selectedAuto = hangerCargoRed;
-                            break;
-                        case ONE_BALL:
-                            selectedAuto = oneBall;
-                            break;
-                        default:
-                            selectedAuto = shootAndMoveRight;
-                            break;
-                    }
-                }
-            } else {
-                System.out.println("Using autos from network tables");
-                selectedAuto = networkAuto;
-            }
-        } finally {
-            networkAutoLock.unlock();
+        String autoName = autoChooser.getSelected();
+        if (autoName == null) {
+            autoName = "1ball"; //Default auto if none is selected
         }
-
-        assert selectedAuto != null;
-        //Since autonomous objects can be reused they need to be reset them before we can reuse them again 
-        selectedAuto.reset();
-
-        //We then create a new thread to run the auto and run it
-        autoThread = new Thread(selectedAuto);
-        autoThread.start();
+        AutonomousContainer.getInstance().runAutonomous(autoName, sideChooser.getSelected(), true);
     }
 
     /**
@@ -802,25 +519,22 @@ public class Robot extends TimedRobot {
     private boolean usingDPad = false;
 
     private void doNormalDriving() {
+        final Drive drive = Drive.getInstance();
 
-        if (autoThread == null || !autoThread.isAlive()) {
-            final Drive drive = Drive.getInstance();
+        ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
 
-            ControllerDriveInputs controllerDriveInputs = getControllerDriveInputs();
-
-            if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
-                    && drive.getSpeedSquared() < 0.1) {
-                if (xbox.getRawButton(XboxButtons.Y)) {
-                    drive.doHold();
-                } else {
-                    drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
-                }
+        if (controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0 && controllerDriveInputs.getRotation() == 0
+                && drive.getSpeedSquared() < 0.1) {
+            if (xbox.getRawButton(XboxButtons.Y)) {
+                drive.doHold();
             } else {
-                if (useFieldRelative) {
-                    drive.swerveDriveFieldRelative(controllerDriveInputs);
-                } else {
-                    drive.swerveDrive(controllerDriveInputs);
-                }
+                drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
+            }
+        } else {
+            if (useFieldRelative) {
+                drive.swerveDriveFieldRelative(controllerDriveInputs);
+            } else {
+                drive.swerveDrive(controllerDriveInputs);
             }
         }
     }
@@ -977,34 +691,14 @@ public class Robot extends TimedRobot {
     }
 
     public void killAuto() {
-        final Drive drive = Drive.getInstance();
-
-        if (selectedAuto != null) {
-            assert autoThread != null;
-            autoThread.interrupt();
-            double nextStackTracePrint = Timer.getFPGATimestamp() + 1;
-            while (!(selectedAuto.isFinished() || autoThread.getState() == State.TERMINATED)) {
-                if (Timer.getFPGATimestamp() > nextStackTracePrint) {
-                    Exception throwable = new Exception(
-                            "Waiting for auto to die. selectedAuto.isFinished() = " + selectedAuto.isFinished() +
-                                    " autoThread.getState() = " + autoThread.getState());
-                    throwable.setStackTrace(autoThread.getStackTrace());
-                    throwable.printStackTrace();
-                    nextStackTracePrint = Timer.getFPGATimestamp() + 5;
-                }
-
-
-                OrangeUtility.sleep(10);
-            }
-            drive.stopMovement();
-            drive.setTeleop();
-        }
+        AutonomousContainer.getInstance().killAuto();
     }
 
     @Override
     public void simulationInit() {
-        ClassInformationSender.updateReflectionInformation(
-                new File(OsUtil.getUserConfigDirectory("AutoBuilder") + "/robotCodeData.json"));
+        ClassInformationSender.updateReflectionInformation("frc");
+//        ClassInformationSender.updateReflectionInformation(
+//                new File(OsUtil.getUserConfigDirectory("AutoBuilder") + "/robotCodeData.json"));
         VisionLookUpTable.getInstance().printShooterConfig();
     }
 }
