@@ -1,5 +1,7 @@
 package frc.subsystem;
 
+import com.dacubeking.AutoBuilder.robot.drawable.Circle;
+import com.dacubeking.AutoBuilder.robot.drawable.Renderer;
 import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotPositionSender;
 import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotState;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -10,6 +12,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.drive.Vector2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.Constants;
 import frc.subsystem.BlinkinLED.BlinkinLedMode;
 import frc.subsystem.BlinkinLED.LedStatus;
@@ -42,6 +45,7 @@ import static frc.utility.MathUtil.dist2;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
+    private static final Color8Bit LIGHT_BLUE = new Color8Bit(36, 191, 212);
     private static final ReentrantReadWriteLock VISION_MANGER_INSTANCE_LOCK = new ReentrantReadWriteLock();
     private static @Nullable VisionManager instance = null;
 
@@ -132,6 +136,8 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Calculated Target X", fieldCentricCords.getX());
         logData("Calculated Target Y", fieldCentricCords.getY());
 
+        Renderer.render(new Circle((float) fieldCentricCords.getX(), (float) fieldCentricCords.getY(), 0.3f, LIGHT_BLUE));
+
         double allowedTurnError = getAllowedTurnError(aimToPosition.getNorm());
 
         logData("Allowed Turn Error", allowedTurnError);
@@ -141,7 +147,7 @@ public final class VisionManager extends AbstractSubsystem {
         shootAndMove(controllerDriveInputs, useFieldRelative, true);
     }
 
-    private final static Rotation2d rotationOffset = Rotation2d.fromDegrees(1);
+    private final static Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1);
 
     /**
      * @param controllerDriveInputs The controller drive inputs to use
@@ -162,11 +168,11 @@ public final class VisionManager extends AbstractSubsystem {
         double turnDelay = 0.0;
 
         Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
-        double targetAngle = angleOf(aimToPosition).plus(rotationOffset).getRadians();
+        double targetAngle = angleOf(aimToPosition).plus(ROTATION_OFFSET).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
         Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + 0.1);
-        double futureTargetAngle = angleOf(futureAimToPosition).plus(rotationOffset).getRadians();
+        double futureTargetAngle = angleOf(futureAimToPosition).plus(ROTATION_OFFSET).getRadians();
 
         State turnGoal = new State(targetAngle, (futureTargetAngle - targetAngle) * 10);
         if (sendDriveCommand) {
@@ -195,7 +201,7 @@ public final class VisionManager extends AbstractSubsystem {
         } else {
             relativeGoalPos = getRelativeGoalTranslation();
         }
-        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos).plus(rotationOffset), fieldRelative,
+        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos).plus(ROTATION_OFFSET), fieldRelative,
                 getAllowedTurnError());
         updateShooterState(relativeGoalPos.getNorm());
         tryToShoot(relativeGoalPos, 0, true);
@@ -222,12 +228,12 @@ public final class VisionManager extends AbstractSubsystem {
                         < Math.toRadians(8));
 
         logData("Is Robot Allowed Shoot Aiming",
-                Math.abs((angleOf(aimToPosition).plus(rotationOffset).minus(robotTracker.getGyroAngle())).getRadians())
+                Math.abs((angleOf(aimToPosition).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle())).getRadians())
                         < getAllowedTurnError(aimToPosition.getNorm()));
         logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < 7.4);
 
         //@formatter:off
-        if (Math.abs((angleOf(aimToPosition).plus(rotationOffset).minus(robotTracker.getGyroAngle())).getRadians())
+        if (Math.abs((angleOf(aimToPosition).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle())).getRadians())
                     < getAllowedTurnError(aimToPosition.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
@@ -345,7 +351,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return the angle the robot needs to face to point towards the target
      */
     public Rotation2d getAngleToTarget() {
-        return angleOf(getRelativeGoalTranslation()).plus(rotationOffset);
+        return angleOf(getRelativeGoalTranslation()).plus(ROTATION_OFFSET);
     }
 
     /**
