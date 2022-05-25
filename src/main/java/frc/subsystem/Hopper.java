@@ -20,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 import static frc.robot.Constants.*;
 
+import java.util.Objects;
+
 public final class Hopper extends AbstractSubsystem {
 
     private static @NotNull Hopper INSTANCE = new Hopper();
@@ -102,7 +104,7 @@ public final class Hopper extends AbstractSubsystem {
      * Uses Sendable Chooser to decide Alliance Color
      */
     private void updateAllianceColor() {
-        if (Robot.sideChooser.getSelected().equals("blue")) {
+        if (Objects.equals(Robot.sideChooser.getSelected(), "blue")) {
             opposingAllianceColor = BallColor.RED;
             friendlyAllianceColor = BallColor.BLUE;
 
