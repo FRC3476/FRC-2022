@@ -135,7 +135,6 @@ public class Robot extends TimedRobot {
         robotTracker.resetPosition(new Pose2d());
 
         startSubsystems();
-
         AutonomousContainer.getInstance().initialize(
                 true,
                 new CommandTranslator(
@@ -151,7 +150,6 @@ public class Robot extends TimedRobot {
                 false,
                 null
         );
-
         AutonomousContainer.getInstance().getAutonomousNames().forEach(name -> autoChooser.addOption(name, name));
 
         sideChooser.setDefaultOption("Blue", "blue");
@@ -696,9 +694,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void simulationInit() {
+        System.out.println("Simulation Init");
         ClassInformationSender.updateReflectionInformation("frc");
-//        ClassInformationSender.updateReflectionInformation(
-//                new File(OsUtil.getUserConfigDirectory("AutoBuilder") + "/robotCodeData.json"));
         VisionLookUpTable.getInstance().printShooterConfig();
     }
 }

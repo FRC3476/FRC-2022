@@ -1,0 +1,171 @@
+{
+  "autonomousSteps" : [ {
+    "type" : "trajectory",
+    "states" : [ {
+      "time" : 0.0,
+      "velocity" : 0.0,
+      "acceleration" : 3.9999999999999996,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -2.30257248878479
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.24959663703996504,
+      "velocity" : 0.99838654815986,
+      "acceleration" : 4.000000000000001,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -2.42716945122811
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.3517107789940351,
+      "velocity" : 1.4068431159761403,
+      "acceleration" : 3.9999999999999982,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -2.549973432905972
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.42900473655492355,
+      "velocity" : 1.7160189462196942,
+      "acceleration" : 3.9999999999999942,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -2.670662616757909
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.4936831320378524,
+      "velocity" : 1.9747325281514092,
+      "acceleration" : -3.9999999999999925,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -2.7900185585021973
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.5583615275207813,
+      "velocity" : 1.7160189462196944,
+      "acceleration" : -4.0,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -2.9093745002464857
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.6356554850816698,
+      "velocity" : 1.4068431159761403,
+      "acceleration" : -4.000000000000001,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -3.0300636840984225
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.7377696270357399,
+      "velocity" : 0.99838654815986,
+      "acceleration" : -3.9999999999999996,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -3.1528676657762844
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    }, {
+      "time" : 0.9873662640757049,
+      "velocity" : 0.0,
+      "acceleration" : -3.9999999999999996,
+      "pose" : {
+        "translation" : {
+          "x" : 7.64,
+          "y" : -3.2774646282196045
+        },
+        "rotation" : {
+          "radians" : -1.5707963267948966
+        }
+      },
+      "curvature" : 0.0
+    } ],
+    "pointList" : [ {
+      "x" : [ 7.64, -0.0, 0.0 ],
+      "y" : [ -2.30257248878479, -1.0, 0.0 ]
+    }, {
+      "x" : [ 7.64, -0.0, 0.0 ],
+      "y" : [ -3.2774646282196045, -1.0, 0.0 ]
+    } ],
+    "rotations" : [ {
+      "time" : 0.0,
+      "rotation" : {
+        "radians" : -1.5414502596212107
+      }
+    }, {
+      "time" : 0.8999999798834324,
+      "rotation" : {
+        "radians" : -1.5707963267948966
+      }
+    } ],
+    "reversed" : false,
+    "color" : 210.82352,
+    "closed" : false,
+    "velocityStart" : 0.0,
+    "velocityEnd" : 0.0,
+    "constraints" : [ ]
+  }, {
+    "type" : "script",
+    "script" : "VisionManager.shootBalls 5",
+    "closed" : false,
+    "valid" : true,
+    "sendableScript" : {
+      "delayType" : "NONE",
+      "delay" : 0.0,
+      "commands" : [ {
+        "methodName" : "frc.subsystem.VisionManager.shootBalls",
+        "args" : [ "5" ],
+        "argTypes" : [ "double" ],
+        "reflection" : true
+      } ]
+    }
+  } ]
+}
