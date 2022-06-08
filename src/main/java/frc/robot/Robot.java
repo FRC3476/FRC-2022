@@ -122,10 +122,8 @@ public class Robot extends TimedRobot {
         final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
         final Drive drive = Drive.getInstance();
 
-        if (shooterConfigEntry.getString(null) != null) {
-            shooterGuiListener.accept(new EntryNotification(NetworkTableInstance.getDefault(), 1, 1, "", null, 12));
-        }
-        shooterConfigEntry.addListener(shooterGuiListener, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
+        shooterConfigEntry.addListener(shooterGuiListener,
+                EntryListenerFlags.kNew | EntryListenerFlags.kUpdate | EntryListenerFlags.kImmediate);
 
 
         SmartDashboard.putBoolean("Field Relative Enabled", useFieldRelative);
@@ -159,10 +157,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Red or Blue", sideChooser);
 
         NetworkTableInstance.getDefault().setUpdateRate(0.05);
-        Limelight.getInstance().setStreamingMode(StreamingMode.PIP_SECONDARY);
-
+        startSubsystems();
         limelight.setLedMode(LedMode.OFF);
         intakeLimelight.setLedMode(LedMode.OFF);
+        limelight.setStreamingMode(StreamingMode.STANDARD);
 
         if (IS_PRACTICE) {
             for (int i = 0; i < 10; i++) {
@@ -170,7 +168,6 @@ public class Robot extends TimedRobot {
             }
         }
 
-        limelight.setStreamingMode(StreamingMode.STANDARD);
 //        shooter.homeHood();
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
     }
@@ -682,7 +679,7 @@ public class Robot extends TimedRobot {
         DashboardHandler.getInstance().start();
 
         if (Constants.GRAPPLE_CLIMB) {
-            GrappleClimber.getInstance().start();
+            GrappleClimber.getInstance();
         } else {
             Climber.getInstance().start();
         }
