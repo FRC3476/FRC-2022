@@ -67,7 +67,7 @@ dependencies {
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'com.google.guava:guava:31.1-jre'
 
-    implementation "com.dacubeking:autobuilder-robot:1.0.0-pre5"
+    implementation "com.dacubeking:autobuilder-robot:1.0.0-pre10"
 
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
