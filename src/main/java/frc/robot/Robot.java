@@ -476,7 +476,7 @@ public class Robot extends TimedRobot {
         shooter.setFiring(true);
         hopper.setHopperState(HopperState.ON);
         doNormalDriving();
-        drive.doHold();
+
         visionManager.unForceVisionOn(driverForcingVisionOn);
     }
 
