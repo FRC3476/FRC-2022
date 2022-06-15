@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
-import static frc.robot.Constants.GOAL_POSITION;
 import static frc.robot.Constants.IS_PRACTICE;
 import static frc.utility.MathUtil.dist2;
 import static frc.utility.geometry.GeometryUtils.angleOf;
@@ -167,12 +166,12 @@ public final class VisionManager extends AbstractSubsystem {
 
         double turnDelay = 0.0;
 
-        Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay);
-        double targetAngle = angleOf(aimToPosition).plus(ROTATION_OFFSET).getRadians();
+        Translation2d aimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay).times(-1);
+        double targetAngle = aimPointToDriveRotation(aimToPosition).plus(ROTATION_OFFSET).getRadians();
 
         // Get the angle that will be used in the future to calculate the end velocity of the turn
-        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + 0.1);
-        double futureTargetAngle = angleOf(futureAimToPosition).plus(ROTATION_OFFSET).getRadians();
+        Translation2d futureAimToPosition = getAdjustedTranslation(shooterLookAheadTime + turnDelay + 0.1).times(-1);
+        double futureTargetAngle = aimPointToDriveRotation(futureAimToPosition).plus(ROTATION_OFFSET).getRadians();
 
         State turnGoal = new State(targetAngle, (futureTargetAngle - targetAngle) * 10);
         if (sendDriveCommand) {
@@ -183,7 +182,7 @@ public final class VisionManager extends AbstractSubsystem {
         }
 
 
-        Translation2d aimChecksPosition = getAdjustedTranslation(shooterLookAheadTime);
+        Translation2d aimChecksPosition = getAdjustedTranslation(shooterLookAheadTime).times(-1);
         updateShooterState(aimChecksPosition.getNorm());
 
         tryToShoot(aimChecksPosition, (futureTargetAngle - targetAngle) * 10, false);
@@ -193,32 +192,25 @@ public final class VisionManager extends AbstractSubsystem {
 
     public void autoTurnAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
-
-        Optional<Translation2d> visionTranslation = getVisionTranslation();
-        Translation2d relativeGoalPos;
-        if (visionTranslation.isPresent()) {
-            relativeGoalPos = visionTranslation.get().minus(GOAL_POSITION);
-        } else {
-            relativeGoalPos = getRelativeGoalTranslation();
-        }
-        drive.updateTurn(controllerDriveInputs, angleOf(relativeGoalPos).plus(ROTATION_OFFSET), fieldRelative,
+        Translation2d aimPoint = getRelativeGoalTranslation().times(-1);
+        drive.updateTurn(controllerDriveInputs, aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET), fieldRelative,
                 getAllowedTurnError());
-        updateShooterState(relativeGoalPos.getNorm());
-        tryToShoot(relativeGoalPos, 0, true);
+        updateShooterState(aimPoint.getNorm());
+        tryToShoot(aimPoint, 0, true);
     }
 
     public void stopAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
-        Translation2d predictedTranslation = predictFutureTranslation(
+        Translation2d aimPoint = predictFutureTranslation(
                 getRobotVel().getNorm() / drive.accelerationLimit.acceleration,
-                getRelativeGoalTranslation(), getRobotVel(), getAccel());
+                getRelativeGoalTranslation(), getRobotVel(), getAccel()).times(-1);
 
-        drive.updateTurn(controllerDriveInputs, angleOf(predictedTranslation), fieldRelative, getAllowedTurnError());
-        updateShooterState(predictedTranslation.getNorm());
-        tryToShoot(predictedTranslation, 0, true);
+        drive.updateTurn(controllerDriveInputs, aimPointToDriveRotation(aimPoint), fieldRelative, getAllowedTurnError());
+        updateShooterState(aimPoint.getNorm());
+        tryToShoot(aimPoint, 0, true);
     }
 
-    private void tryToShoot(Translation2d aimToPosition, double targetAngularSpeed, boolean doSpeedCheck) {
+    private void tryToShoot(Translation2d aimPoint, double targetAngularSpeed, boolean doSpeedCheck) {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         final @NotNull Drive drive = Drive.getInstance();
         final @NotNull Shooter shooter = Shooter.getInstance();
@@ -228,13 +220,14 @@ public final class VisionManager extends AbstractSubsystem {
                         < Math.toRadians(8));
 
         logData("Is Robot Allowed Shoot Aiming",
-                Math.abs((angleOf(aimToPosition).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle())).getRadians())
-                        < getAllowedTurnError(aimToPosition.getNorm()));
+                Math.abs(aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET)
+                        .minus(robotTracker.getGyroAngle()).getRadians())
+                        < getAllowedTurnError(aimPoint.getNorm()));
         logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < 7.4);
 
         //@formatter:off
-        if (Math.abs((angleOf(aimToPosition).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle())).getRadians())
-                    < getAllowedTurnError(aimToPosition.getNorm())
+        if (Math.abs(aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle()).getRadians())
+                    < getAllowedTurnError(aimPoint.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
                 && getAccel().getNorm() < 7.4
@@ -249,7 +242,7 @@ public final class VisionManager extends AbstractSubsystem {
                     checksPassedLastTime = true;
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " Distance:  "
-                                    + Units.metersToInches(aimToPosition.getNorm()) + " "
+                                    + Units.metersToInches(aimPoint.getNorm()) + " "
                                     + "Accel: " + getAccel().getNorm());
                 }
             } else {
@@ -319,7 +312,7 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     /**
-     * @return current relative translation of the robot based on the robot tracker
+     * @return field relative translation with the origin at the goal
      */
     private Translation2d getRelativeGoalTranslation() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
@@ -351,7 +344,7 @@ public final class VisionManager extends AbstractSubsystem {
      * @return the angle the robot needs to face to point towards the target
      */
     public Rotation2d getAngleToTarget() {
-        return angleOf(getRelativeGoalTranslation()).plus(ROTATION_OFFSET);
+        return aimPointToDriveRotation(getRelativeGoalTranslation().times(-1)).plus(ROTATION_OFFSET);
     }
 
     /**
@@ -670,6 +663,7 @@ public final class VisionManager extends AbstractSubsystem {
         );
     }
 
+
     private static final Translation2d ZERO = new Translation2d();
 
     private Translation2d getAccel() {
@@ -677,5 +671,21 @@ public final class VisionManager extends AbstractSubsystem {
         return Drive.getInstance().lastAcceleration;
         //return robotTracker.getAcceleration();
         //return ZERO;
+    }
+
+    private static final Rotation2d ROTATION_180 = new Rotation2d(Math.PI);
+
+    /**
+     * The front of our robot is the intake side, and we shoot backwards. Because of this we need to rotate our target angle by
+     * 180 degrees.
+     *
+     * @return a rotation 180 degrees
+     */
+    private @NotNull Rotation2d shootToDriveRotation(@NotNull Rotation2d shootRotation) {
+        return shootRotation.rotateBy(ROTATION_180);
+    }
+
+    public @NotNull Rotation2d aimPointToDriveRotation(@NotNull Translation2d translation2d) {
+        return shootToDriveRotation(angleOf(translation2d));
     }
 }
