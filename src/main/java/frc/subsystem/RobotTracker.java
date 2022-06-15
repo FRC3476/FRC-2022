@@ -28,7 +28,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
-import static frc.utility.MathUtil.dist2;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class RobotTracker extends AbstractSubsystem {
@@ -76,7 +75,7 @@ public final class RobotTracker extends AbstractSubsystem {
     private Translation2d acceleration = new Translation2d();
 
     private final @NotNull EvictingQueue<TimestampedPose> poseHistory = EvictingQueue.create(50);
-    private final @NotNull EvictingQueue<ChassisSpeeds> chassisSpeedsHistory = EvictingQueue.create(50);
+    private final @NotNull EvictingQueue<ChassisSpeeds> chassisSpeedsHistory = EvictingQueue.create(12);
 
 
     private @NotNull Translation2d positionOffset = new Translation2d();
@@ -136,39 +135,30 @@ public final class RobotTracker extends AbstractSubsystem {
 
             if (!timestampedPoses.isEmpty()) {
                 if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
+                    // If the vision data is older than our oldest pose in our history, we have to throw out the vision data
                     return;
                 } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
+                    // The vision data is newer than our newest pose. Assume that they happen at the same time
                     Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.getTranslation().plus(
                             positionOffset);
 
-                    Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
-                    if (dist2(diff) > 2.5 * 2.5) {
-                        positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
-                    } else {
-                        positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition)
-                                        .times((force ? 1 : visionUsagePercent.get()))
-                                        .plus(positionOffset);
-                    }
+                    positionOffset =
+                            visionRobotTranslationMeters.minus(robotTrackerPosition)
+                                    .times((force ? 1 : visionUsagePercent.get()))
+                                    .plus(positionOffset);
                 } else {
+                    // The vision data is somewhere in between poses in history. Interpolate between values to get the pose
+                    // that lines up with vision
                     double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
                             (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
 
                     Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.interpolate(
                             timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset);
 
-                    Translation2d diff = visionRobotTranslationMeters.minus(robotTrackerPosition);
-
-                    if (dist2(diff) > 2 * 2) {
-                        positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition).plus(positionOffset);
-                    } else {
-                        positionOffset =
-                                visionRobotTranslationMeters.minus(robotTrackerPosition)
-                                        .times((force ? 1 : visionUsagePercent.get()))
-                                        .plus(positionOffset);
-                    }
+                    positionOffset =
+                            visionRobotTranslationMeters.minus(robotTrackerPosition)
+                                    .times((force ? 1 : visionUsagePercent.get()))
+                                    .plus(positionOffset);
                 }
             }
         } finally {
@@ -252,7 +242,6 @@ public final class RobotTracker extends AbstractSubsystem {
                 latestChassisSpeeds =
                         rotateChassisToFieldRelativeSpeeds(swerveDriveKinematics.toChassisSpeeds(swerveModuleStates),
                                 getGyroAngle());
-                chassisSpeedsHistory.add(latestChassisSpeeds);
 
                 latencyCompensatedChassisSpeeds = latestChassisSpeeds;
 
@@ -265,16 +254,18 @@ public final class RobotTracker extends AbstractSubsystem {
                 lastGyroRoll = RobotTracker.getInstance().getGyro().getRoll();
 
 
-                if (chassisSpeedsHistory.size() > 12) {
-                    ChassisSpeeds prevChassisSpeeds =
-                            (ChassisSpeeds) chassisSpeedsHistory.toArray()[chassisSpeedsHistory.size() - 11];
+                ChassisSpeeds prevChassisSpeeds = chassisSpeedsHistory.peek();
+                if (prevChassisSpeeds != null) {
                     acceleration = new Translation2d(
                             prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vxMetersPerSecond,
                             prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond)
-                            .times(1 / (0.02 * 10)); // currentOdometryTime is the last loop time
+                            .times(1.0 / (ROBOT_TRACKER_PERIOD * 2 * (chassisSpeedsHistory.size()))); // currentOdometryTime is the
+                    // last loop time
                 } else {
                     acceleration = new Translation2d();
                 }
+
+                chassisSpeedsHistory.add(latestChassisSpeeds);
 
 
                 if (maxGyroRoll < lastGyroRoll) {
@@ -285,7 +276,7 @@ public final class RobotTracker extends AbstractSubsystem {
                     minGyroRoll = lastGyroRoll;
                 }
 
-                currentOdometryTime = Timer.getFPGATimestamp();
+                currentOdometryTime = time;
             } finally {
                 lock.writeLock().unlock();
             }
