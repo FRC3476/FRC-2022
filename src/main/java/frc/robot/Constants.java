@@ -179,8 +179,18 @@ public final class Constants {
     public static final double DEFAULT_TURN_D = 0.4;
 
     public enum AccelerationLimits {
+        /**
+         * Normal acceleration limit while driving. This ensures that the driver can't tip the robot.
+         */
         NORMAL_DRIVING(24),
+        /**
+         * Acceleration limit when we're trying to shoot and move. This is very low to prevent the driver from making sudden
+         * movements that would mess up the shot
+         */
         SHOOT_AND_MOVE(4),
+        /**
+         * Slower acceleration limit to allow the robot to aim while slowing
+         */
         STOP_AND_SHOOT(12);
 
         public double acceleration;
