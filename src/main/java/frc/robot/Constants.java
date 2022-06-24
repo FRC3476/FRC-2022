@@ -215,6 +215,7 @@ public final class Constants {
      */
     public static final double GOAL_RADIUS = Units.inchesToMeters(GOAL_RADIUS_IN);
 
+    public static final double MAX_ACCELERATION_WHILE_SHOOTING = 7.4;
 
     /**
      * Maximum speed of the robot when shooting the ball. (Only applies when doing the static shot) Units are in Meters per Second
@@ -281,6 +282,8 @@ public final class Constants {
     public static final double SHOOTER_CURRENT_LIMIT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_CURRENT = 40;
     public static final double SHOOTER_TRIGGER_THRESHOLD_TIME = 0;
+
+    public static final double FEEDER_WHEEL_REVERSE_WITH_HOPPER = -0.3;
 
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed

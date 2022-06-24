@@ -613,7 +613,6 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-                Robot.setRumble(RumbleType.kLeftRumble, 0);
                 shooterWheelMaster.set(ControlMode.PercentOutput, 0);
                 setHoodPosition(Constants.HOOD_MAX_ANGLE); // Sets hood to the lowest possible position
 
@@ -622,10 +621,10 @@ public final class Shooter extends AbstractSubsystem {
                 }
 
                 if (feederWheelState == FeederWheelState.REVERSE) {
-                    feederWheel.set(ControlMode.PercentOutput, -Constants.FEEDER_WHEEL_SPEED);
+                    feederWheel.set(ControlMode.PercentOutput, -FEEDER_WHEEL_SPEED);
                 } else {
                     if (runFeederWheelReversed) {
-                        feederWheel.set(ControlMode.PercentOutput, -0.3);
+                        feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
                     } else {
                         feederWheel.set(ControlMode.PercentOutput, 0);
                     }
@@ -664,7 +663,7 @@ public final class Shooter extends AbstractSubsystem {
                 } else {
                     if (Timer.getFPGATimestamp() > lastShotTime + FEEDER_CHANGE_STATE_DELAY_SEC) {
                         if (runFeederWheelReversed) {
-                            feederWheel.set(ControlMode.PercentOutput, -0.3);
+                            feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
                         } else {
                             feederWheel.set(ControlMode.PercentOutput, 0);
                         }

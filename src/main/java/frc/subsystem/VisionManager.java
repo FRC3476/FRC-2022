@@ -40,12 +40,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import static frc.robot.Constants.IS_PRACTICE;
+import static frc.robot.Constants.MAX_ACCELERATION_WHILE_SHOOTING;
 import static frc.utility.MathUtil.dist2;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class VisionManager extends AbstractSubsystem {
     private static final Color8Bit LIGHT_BLUE = new Color8Bit(36, 191, 212);
     private static final ReentrantReadWriteLock VISION_MANGER_INSTANCE_LOCK = new ReentrantReadWriteLock();
+
     private static @Nullable VisionManager instance = null;
 
     private final @NotNull Limelight limelight = Limelight.getInstance();
@@ -223,22 +225,23 @@ public final class VisionManager extends AbstractSubsystem {
                 Math.abs(aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET)
                         .minus(robotTracker.getGyroAngle()).getRadians())
                         < getAllowedTurnError(aimPoint.getNorm()));
-        logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < 7.4);
+        logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING);
 
         //@formatter:off
         if (Math.abs(aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle()).getRadians())
                     < getAllowedTurnError(aimPoint.getNorm())
                 && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
                     < Math.toRadians(8)
-                && getAccel().getNorm() < 7.4
+                && getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING
                 && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
                 && ((Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE)
                 && loopsWithBadVision.get() < Constants.MAX_BAD_VISION_ITERATIONS) {
             //@formatter:on
             shooter.setFiring(true);
             if (shooter.isFiring()) {
-                if (!checksPassedLastTime && lastPrintTime + 1 < Timer.getFPGATimestamp()) {
-                    lastPrintTime = Timer.getFPGATimestamp();
+                double time = Timer.getFPGATimestamp();
+                if (!checksPassedLastTime && lastPrintTime + 1 < time) {
+                    lastPrintTime = time;
                     checksPassedLastTime = true;
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " Distance:  "
