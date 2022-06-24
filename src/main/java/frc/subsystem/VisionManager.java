@@ -39,8 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
-import static frc.robot.Constants.IS_PRACTICE;
-import static frc.robot.Constants.MAX_ACCELERATION_WHILE_SHOOTING;
+import static frc.robot.Constants.*;
 import static frc.utility.MathUtil.dist2;
 import static frc.utility.geometry.GeometryUtils.angleOf;
 
@@ -194,7 +193,16 @@ public final class VisionManager extends AbstractSubsystem {
 
     public void autoTurnAndShoot(ControllerDriveInputs controllerDriveInputs, boolean fieldRelative) {
         final @NotNull Drive drive = Drive.getInstance();
-        Translation2d aimPoint = getRelativeGoalTranslation().times(-1);
+
+        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        Translation2d aimPoint;
+        if (visionTranslation.isPresent()) {
+            // Use vision measurement directly cause vision doesn't update the robot tracker in auto.
+            aimPoint = visionTranslation.get().minus(GOAL_POSITION).times(-1);
+        } else {
+            aimPoint = getRelativeGoalTranslation().times(-1);
+        }
+
         drive.updateTurn(controllerDriveInputs, aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET), fieldRelative,
                 getAllowedTurnError());
         updateShooterState(aimPoint.getNorm());
@@ -311,7 +319,7 @@ public final class VisionManager extends AbstractSubsystem {
         double angleToTarget = currentGyroAngle.getRadians() - angleOffset;
         return Optional.of(new Translation2d(distanceToTarget * Math.cos(angleToTarget),
                 distanceToTarget * Math.sin(angleToTarget))
-                .plus(Constants.GOAL_POSITION));
+                .plus(GOAL_POSITION));
     }
 
     /**
@@ -321,7 +329,7 @@ public final class VisionManager extends AbstractSubsystem {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         return robotTracker.getLatencyCompedPoseMeters().getTranslation()
                 .plus(robotPositionOffset)
-                .minus(Constants.GOAL_POSITION);
+                .minus(GOAL_POSITION);
     }
 
     /**
@@ -497,8 +505,7 @@ public final class VisionManager extends AbstractSubsystem {
                 if (dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
                         robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
                     if (DriverStation.isTeleopEnabled()) {
-                        robotTracker.addVisionMeasurement(robotTranslation,
-                                getLimelightTime(), false);
+                        robotTracker.addVisionMeasurement(robotTranslation, getLimelightTime(), false);
                     }
 
                     robotPositionOffset = new Translation2d();
