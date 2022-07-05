@@ -229,6 +229,9 @@ public final class Constants {
     public static final double HOPPER_SPEED = 1.0;
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
+    public static final double HOPPER_SLOW_SPEED = HOPPER_SPEED / 2;
+    public static final double HOPPER_OUTAKING_SPEED = 0.3;
+
     public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
     public static final int BEAM_BREAK_DIO_ID = 7;

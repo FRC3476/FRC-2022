@@ -18,9 +18,9 @@ import frc.utility.controllers.LazyCANSparkMax;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import static frc.robot.Constants.*;
-
 import java.util.Objects;
+
+import static frc.robot.Constants.*;
 
 public final class Hopper extends AbstractSubsystem {
 
@@ -224,7 +224,7 @@ public final class Hopper extends AbstractSubsystem {
             case ON:
                 if (outtakeState == OuttakeState.AUTO_EJECT
                         && Shooter.getInstance().getFeederWheelState() != FeederWheelState.FORWARD) {
-                    hopperMotor.set(0.3);
+                    hopperMotor.set(HOPPER_OUTAKING_SPEED);
                 } else {
                     hopperMotor.set(HOPPER_SPEED);
                 }
@@ -246,7 +246,7 @@ public final class Hopper extends AbstractSubsystem {
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
             case SLOW:
-                hopperMotor.set(HOPPER_SPEED / 2);
+                hopperMotor.set(HOPPER_SLOW_SPEED);
                 Shooter.getInstance().runFeederWheelReversed = false;
                 break;
         }
