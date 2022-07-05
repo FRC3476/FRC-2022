@@ -344,7 +344,7 @@ public class Robot extends TimedRobot {
             }
         }
 
-        runShooter();
+        updateShooterButtonPanels();
 
         // Intake solenoid control
         if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
@@ -490,7 +490,7 @@ public class Robot extends TimedRobot {
         shooter.setFiring(true);
     }
 
-    private void runShooter() {
+    private void updateShooterButtonPanels() {
         VisionManager visionManager = VisionManager.getInstance();
         if (buttonPanel.getRisingEdge(1)) {
             //driver station shot
