@@ -153,6 +153,9 @@ public final class Climber extends AbstractSubsystem {
     }
 
     public enum ClimbState {
+        /**
+         * The climb state when we're not climbing.
+         */
         IDLE(
                 new ClimbStep(
                         (cl) -> {},
@@ -163,18 +166,22 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Will immediately transition to the next state to start the climb sequence.
+         * Waits till the conditions are right to start the climb. Note: we run the same climb sequence twice. The first time it
+         * runs we end up at the high bar and the second time we run we end up at the traversal bar.
          */
         START_CLIMB(
                 new ClimbStep(
                         (cl) -> {},
                         (cl) -> {
+                            // If this is the first time we're running the climb sequence, we want to immediately start the
+                            // climb. (This is after the robot has deployed the climber elevator and the robot is still on the
+                            // ground)
                             if (cl.startingClimb) return true;
+
+                            //Check that we're in the right part of our swing to continue the climb.
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            return (gyro.getRoll() > 10 && gyro.getRoll() < 30 &&
-                                    RobotTracker.getInstance().getGyroRollVelocity() > 0 && false) ||
-                                    (gyro.getRoll() < 10 && gyro.getRoll() > -10 &&
-                                            RobotTracker.getInstance().getGyroRollVelocity() < 0);
+                            return (gyro.getRoll() < 10 && gyro.getRoll() > -10 &&
+                                    RobotTracker.getInstance().getGyroRollVelocity() < 0);
                         },
                         (cl) -> {},
                         false
@@ -201,28 +208,38 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Extends the solenoid to latch the pivoting arm onto the bar. Waits until the latch switch is pressed.
+         * Extends the solenoid to latch the pivoting arm (one with the pneumatic claws) onto the bar. Waits until the latch
+         * switch is pressed.
          */
         LATCH_PIVOT_ARM(
                 new ClimbStep(
                         (cl) -> {
                             cl.setClawState(ClawState.LATCHED);
-                            cl.data = Timer.getFPGATimestamp() + 0.0;
                         },
-                        (cl) -> Timer.getFPGATimestamp() > cl.data && cl.isPivotingArmLatched(),
+                        Climber::isPivotingArmLatched,
                         (cl) -> {},
                         true
                 )
         ),
 
         /**
-         * Moves the elevator arm up to the maximum safe height. Will continue to the next state once the elevator is no longer
-         * supporting the robot.
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Moves the elevator arm up to the maximum safe height. This is the height at which the elevator arm won't contact
+         *     the next bar. Will continue to the next state once the elevator is no longer supporting the robot. (Only the
+         *     pivoting arms are supporting the entire robot)
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Moves the elevator arm up to the maximum height. At this height the arm will contact the next bar when the robot
+         *     unpivots. Will continue to the next state once the elevator arm is at it's Max Extension
+         *     ({@link Constants#MAX_CLIMBER_EXTENSION}). At this point the robot is only supporting the pivoting arm.
+         * </ul>
          */
         MOVE_WEIGHT_TO_PIVOT_ARM(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
+                            if (cl.shouldDoBackHookStep()) {
                                 cl.data = Constants.MAX_CLIMBER_EXTENSION;
                                 cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION);
                             } else {
@@ -237,38 +254,26 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * We need to make sure we're swinging up when un-pivoting when using the backhooks.
-         */
-        WAIT_TILL_PIVOT_SAFE(
-                new ClimbStep(
-                        (cl) -> {},
-                        (cl) -> {
-                            return true;
-//                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
-//                                return RobotTracker.getInstance().getGyroRollVelocity() < 0;
-//                            } else {
-//                                return true;
-//                            }
-                        },
-                        (cl) -> {},
-                        false
-                )
-        ),
-
-        /**
-         * Extends the solenoid to pivot the robot and cause it to start swinging. Waits a minimum time and until the climber
-         * motor has fully extended to it's maximum safe position.
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Extends the solenoid to pivot the robot and cause it to start swinging. Waits a minimum time and until the climber
+         *     motor has fully extended to it's maximum safe position.
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Do Nothing
+         * </ul>
          */
         PIVOT_PIVOT_ARM(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun != 1 || !DO_BACK_HOOK_CLIMB) {
+                            if (!cl.shouldDoBackHookStep()) {
                                 cl.setPivotState(PivotState.PIVOTED);
                             }
                             cl.data = Timer.getFPGATimestamp();
                         },
                         (cl) -> {
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) return true; //We didn't pivot, continue
+                            if (cl.shouldDoBackHookStep()) return true; // We didn't pivot, continue
                             return Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION;
                         },
                         (cl) -> {},
@@ -277,15 +282,23 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Uses the gyro to wait until the robot is swinging towards the field
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Uses the gyro to wait until the robot is swinging towards the field and it's safe to extend the elevator arm. At
+         *     this point we know that the elevator arm won't touch the next bar when it extends.
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Do Nothing. The timing with the swing works out so that we'll be at correct angle to swing into the bar if we
+         *     just immediately continue and pivot the robot.
+         * </ul>
          */
         WAIT_TILL_EXTENSION_IS_SAFE(
                 new ClimbStep(
                         (cl) -> {},
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
-                                // Use back hooks
+                            if (cl.shouldDoBackHookStep()) {
                                 return true;
                             } else {
                                 return RobotTracker.getInstance().getGyroRollVelocity() > 0 && gyro.getRoll() > 42.5;
@@ -297,13 +310,20 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Extends the elevator arm past the safe height. At this point the arm will contact the bar when the robot swings back
-         * towards the bars.
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Extends the elevator arm past the safe height. At this point the arm will contact the bar when the robot swings
+         *     back towards the bars.
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Skip this step. The arm has already been commanded to extend past the safe height.
+         * </ul>
          */
         EXTEND_ELEVATOR_ARM_PAST_SAFE_LENGTH(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun != 1 || !DO_BACK_HOOK_CLIMB) {
+                            if (!cl.shouldDoBackHookStep()) {
                                 cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION);
                             }
                         },
@@ -317,12 +337,22 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Unpivot the elevator arm so elevator arm is pulled onto the next bar
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Unpivot the elevator arm so elevator arm is pulled onto the next bar. Waits
+         *     {@link Constants#ARM_UNPIVOT_DURATION} for the arm to unpivot.
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Pivot the arm towards the next bar. Once the arm contacts the next bar, the robot will have latched onto the
+         *     next bar. The timing works out so that the robot will be at the correct part of the swing to latch onto the next
+         *     bar.
+         * </ul>
          */
-        UNPIVOT_PIVOT_ARM(
+        CONTACT_NEXT_BAR(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
+                            if (cl.shouldDoBackHookStep()) {
                                 // Don't unpivot if we're using back hooks
                                 cl.setPivotState(PivotState.PIVOTED);
                                 cl.data = Timer.getFPGATimestamp();
@@ -338,25 +368,23 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Waits for the gyro to report that the robot has reached the bar
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Waits for the gyro to report that the robot has reached the bar.
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Stop the climb from continuing. Wait for the operator to force advance the climb to unlatch the robot from the bar.
+         * </ul>
          */
         WAIT_FOR_SWING_STOP(
                 new ClimbStep(
                         (cl) -> cl.data = Double.MAX_VALUE,
                         (cl) -> {
                             AHRS gyro = RobotTracker.getInstance().getGyro();
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
-                                if (gyro.getRoll() > 30) {
-                                    if (cl.data > Timer.getFPGATimestamp() + 0.1) {
-                                        cl.data = Timer.getFPGATimestamp() + 0.1;
-                                    }
-                                    return false;
-                                } else {
-                                    cl.data = Double.MAX_VALUE;
-                                    return false;
-                                }
+                            if (cl.shouldDoBackHookStep()) {
+                                return false;
                             }
-                            //TODO: Change gyro angle
                             return gyro.getRoll() < 41;
                         },
                         (cl) -> {},
@@ -365,12 +393,20 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Retracts the elevator arm to until it contacts the bar.
+         * On the first run or when the back hook climb is disabled:
+         * <ul>
+         *     Retracts the elevator arm so that it contacts the next bar (and squeezes it a bit). This ensures that the robot
+         *     will remain on the next bar after unlatching from the previous bar.
+         * </ul>
+         * When doing the back hook climb:
+         * <ul>
+         *     Bring the elevator arm down a bit to ensure that the robot doesn't drop much after unlatching from the previous bar.
+         * </ul>
          */
         CONTACT_ELEVATOR_ARM_WITH_NEXT_BAR(
                 new ClimbStep(
                         (cl) -> {
-                            if (cl.timesRun == 1 && DO_BACK_HOOK_CLIMB) {
+                            if (cl.shouldDoBackHookStep()) {
                                 cl.climberMotor.set(ControlMode.MotionMagic,
                                         Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK);
                                 cl.data = Constants.CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK;
@@ -391,13 +427,16 @@ public final class Climber extends AbstractSubsystem {
                 )
         ),
 
+        /**
+         * Wait a short amount of time to ensure that the break is engaged.
+         */
         WAIT_FOR_BRAKE_TIME(
                 new ClimbStep(
                         (cl) -> cl.data = Timer.getFPGATimestamp(),
                         (cl) -> {
                             if (Timer.getFPGATimestamp() - cl.data > 0.25) {
                                 cl.climberMotor.set(ControlMode.PercentOutput, 0);
-                                return true; //cl.timesRun != 1 || !DO_BACK_HOOK_CLIMB;
+                                return true;
                             }
                             return false;
                         },
@@ -407,7 +446,7 @@ public final class Climber extends AbstractSubsystem {
         ),
 
         /**
-         * Unlatches the pivot arm so that the robot is supported by the elevator arm.
+         * Unlatches the pivot arm so that the robot is supported by the elevator arm and is on the next bar.
          */
         UNLATCH_PIVOT_ARM(
                 new ClimbStep(
@@ -441,6 +480,9 @@ public final class Climber extends AbstractSubsystem {
                 )
         );
 
+        // At this point the climb will either stop or go back to the START_CLIMB step (depending on how many loops
+        // we've already done).
+
         /**
          * @param climbStep The climb step to use when doing a manual climb, step by step
          */
@@ -452,6 +494,10 @@ public final class Climber extends AbstractSubsystem {
          * The climb step to use when doing a manual climb, step by step
          */
         final ClimbStep climbStep;
+    }
+
+    private boolean shouldDoBackHookStep() {
+        return this.timesRun == 1 && DO_BACK_HOOK_CLIMB;
     }
 
     double otherPivotingArmMustContactByTime = Double.MAX_VALUE;
