@@ -23,7 +23,7 @@ class VisionManagerTest {
             Translation2d recalculatedActual = fakeGoal.minus(
                     robotVelocity.times(VisionManager.getInstance().getTimeOfFlight(fakeGoal)));
 
-            if (recalculatedActual.minus(goalPos).getNorm() > 0.1) {
+            if (recalculatedActual.minus(goalPos).getNorm() > 0.01) {
                 failures++;
                 System.out.println("FAILURE: " + i + " " +
                         "goalPos: " + goalPos.toString() + " " +

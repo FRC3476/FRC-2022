@@ -225,25 +225,33 @@ public final class VisionManager extends AbstractSubsystem {
         final @NotNull Drive drive = Drive.getInstance();
         final @NotNull Shooter shooter = Shooter.getInstance();
 
-        logData("Is allowed Shoot Turn Speed",
-                Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
-                        < Math.toRadians(8));
+        final boolean isAimed = Math.abs(aimPointToDriveRotation(aimPoint)
+                .plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle()).getRadians()) < getAllowedTurnError(aimPoint.getNorm());
 
-        logData("Is Robot Allowed Shoot Aiming",
-                Math.abs(aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET)
-                        .minus(robotTracker.getGyroAngle()).getRadians())
-                        < getAllowedTurnError(aimPoint.getNorm()));
-        logData("Is Robot Allowed Shoot Acceleration", getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING);
+        final boolean isTurningSpeedCorrect =
+                Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
+                        < Math.toRadians(8);
+
+        final boolean isUnderAccelLimit = getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING;
+        final boolean isStopped = (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck);
+        final boolean isFlatOnGround = (Math.abs(robotTracker.getGyro().getRoll()) < 3 &&
+                Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE; //The roborio on the practice bot is tilted a
+        // bit and cause this check to fail
+
+        logData("Is allowed Shoot Turn Speed", isTurningSpeedCorrect);
+        logData("Is Robot Allowed Shoot Aiming", isAimed);
+        logData("Is Robot Allowed Shoot Acceleration", isUnderAccelLimit);
+
+        final boolean hasBadVision = loopsWithBadVision.get() < Constants.MAX_BAD_VISION_ITERATIONS;
+
 
         //@formatter:off
-        if (Math.abs(aimPointToDriveRotation(aimPoint).plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle()).getRadians())
-                    < getAllowedTurnError(aimPoint.getNorm())
-                && Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
-                    < Math.toRadians(8)
-                && getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING
-                && (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck)
-                && ((Math.abs(robotTracker.getGyro().getRoll()) < 3 && Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE)
-                && loopsWithBadVision.get() < Constants.MAX_BAD_VISION_ITERATIONS) {
+        if (isAimed
+                && isTurningSpeedCorrect
+                && isUnderAccelLimit
+                && isStopped
+                && isFlatOnGround
+                && hasBadVision) {
             //@formatter:on
             shooter.setFiring(true);
             if (shooter.isFiring()) {
