@@ -75,7 +75,7 @@ public final class Hopper extends AbstractSubsystem {
         super(Constants.HOPPER_PERIOD, 5);
         hopperMotor = new LazyCANSparkMax(Constants.HOPPER_MOTOR_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
         hopperMotor.setSmartCurrentLimit(HOPPER_CURRENT_LIMIT);
-        
+
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         hopperMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
@@ -224,31 +224,39 @@ public final class Hopper extends AbstractSubsystem {
             case ON:
                 if (outtakeState == OuttakeState.AUTO_EJECT
                         && Shooter.getInstance().getFeederWheelState() != FeederWheelState.FORWARD) {
-                    hopperMotor.set(HOPPER_OUTAKING_SPEED);
+                    setHopperSpeed(HOPPER_OUTTAKING_SPEED);
                 } else {
-                    hopperMotor.set(HOPPER_SPEED);
+                    setHopperSpeed(HOPPER_SPEED);
                 }
-                Shooter.getInstance().runFeederWheelReversed = true;
                 break;
             case OFF:
                 if (isBeamBroken() &&
                         !(Shooter.getInstance().getFeederWheelState() == FeederWheelState.FORWARD &&
                                 Shooter.getInstance().getShooterState() == ShooterState.ON)) {
-                    hopperMotor.set(HOPPER_SPEED);
-                    Shooter.getInstance().runFeederWheelReversed = true;
+                    //If a ball is blocking the beam break sensor we want to run the hopper to move the ball up to unblock it.
+                    setHopperSpeed(HOPPER_SPEED);
                 } else {
-                    hopperMotor.set(0);
-                    Shooter.getInstance().runFeederWheelReversed = false;
+                    setHopperSpeed(0);
                 }
                 break;
             case REVERSE:
-                hopperMotor.set(-HOPPER_SPEED);
-                Shooter.getInstance().runFeederWheelReversed = false;
+                setHopperSpeed(-HOPPER_SPEED);
                 break;
             case SLOW:
-                hopperMotor.set(HOPPER_SLOW_SPEED);
-                Shooter.getInstance().runFeederWheelReversed = false;
+                setHopperSpeed(HOPPER_SLOW_SPEED);
                 break;
+        }
+    }
+
+    private void setHopperSpeed(double speed) {
+        synchronized (hopperMotor) {
+            hopperMotor.set(speed);
+        }
+    }
+
+    public boolean isHopperMotorRunning() {
+        synchronized (hopperMotor) {
+            return hopperMotor.get() != 0;
         }
     }
 

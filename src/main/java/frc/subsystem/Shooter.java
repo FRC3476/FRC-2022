@@ -77,8 +77,6 @@ public final class Shooter extends AbstractSubsystem {
     // Makes it so feeder can run when not at proper hood and or flywheel speed
     private boolean feederChecksDisabled = false;
 
-    public volatile boolean runFeederWheelReversed;
-
     private static final Color8Bit RED = new Color8Bit(237, 28, 36);
     private static final Color8Bit GREEN = new Color8Bit(34, 177, 76);
     private static final Color8Bit BLUE = new Color8Bit(0, 162, 232);
@@ -623,7 +621,7 @@ public final class Shooter extends AbstractSubsystem {
                 if (feederWheelState == FeederWheelState.REVERSE) {
                     feederWheel.set(ControlMode.PercentOutput, -FEEDER_WHEEL_SPEED);
                 } else {
-                    if (runFeederWheelReversed) {
+                    if (Hopper.getInstance().isHopperMotorRunning()) {
                         feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
                     } else {
                         feederWheel.set(ControlMode.PercentOutput, 0);
@@ -662,7 +660,7 @@ public final class Shooter extends AbstractSubsystem {
                     Robot.setRumble(RumbleType.kLeftRumble, 0);
                 } else {
                     if (Timer.getFPGATimestamp() > lastShotTime + FEEDER_CHANGE_STATE_DELAY_SEC) {
-                        if (runFeederWheelReversed) {
+                        if (Hopper.getInstance().isHopperMotorRunning()) {
                             feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
                         } else {
                             feederWheel.set(ControlMode.PercentOutput, 0);

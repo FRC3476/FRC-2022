@@ -230,7 +230,11 @@ public final class Constants {
     public static final int HOPPER_MOTOR_ID = 30;
     public static final int HOPPER_CURRENT_LIMIT = 35;
     public static final double HOPPER_SLOW_SPEED = HOPPER_SPEED / 2;
-    public static final double HOPPER_OUTAKING_SPEED = 0.3;
+    /**
+     * Slower speed for the hopper when outtaking to prevent the cargo from exiting the hopper way to fast (and getting launched
+     * out of the arena)
+     */
+    public static final double HOPPER_OUTTAKING_SPEED = 0.3;
 
     public static final String INTAKE_LIMELIGHT_NAME = "limelight-intake";
 
