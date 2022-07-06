@@ -532,6 +532,17 @@ public final class Constants {
     public static final double CLIMBER_GRAB_ON_NEXT_BAR_EXTENSION_BACK_HOOK = (27.2 - 3) * CLIMBER_ENCODER_TICKS_PER_INCH;
 
     /**
+     * Roll angle at which the elevator arm won't contact the next bar when extending past the {@link
+     * #CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT} (in degrees)
+     */
+    public static final double ELEVATOR_ARM_SAFE_ANGLE = 42.5;
+
+    /**
+     * Roll angle at which the elevator arm is contacting the next bar when extended (in degrees)
+     */
+    public static final double ON_NEXT_BAR_ANGLE = 41.0;
+
+    /**
      * How long only one of the sensor switches can be closed for before the climb will pause
      */
     public static final double MAX_ALLOW_ONLY_ONE_SWITCH_CONTACT_TIME = 0.1;

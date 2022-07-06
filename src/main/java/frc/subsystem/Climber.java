@@ -178,7 +178,9 @@ public final class Climber extends AbstractSubsystem {
                             // ground)
                             if (cl.startingClimb) return true;
 
-                            //Check that we're in the right part of our swing to continue the climb.
+                            // Check that we're in the right part of our swing to continue the climb. We should be in the middle
+                            // of the swing and be moving towards the field. Climbing at this point gives the robot the least
+                            // amount of rotational energy.
                             AHRS gyro = RobotTracker.getInstance().getGyro();
                             return (gyro.getRoll() < 10 && gyro.getRoll() > -10 &&
                                     RobotTracker.getInstance().getGyroRollVelocity() < 0);
@@ -213,9 +215,7 @@ public final class Climber extends AbstractSubsystem {
          */
         LATCH_PIVOT_ARM(
                 new ClimbStep(
-                        (cl) -> {
-                            cl.setClawState(ClawState.LATCHED);
-                        },
+                        (cl) -> cl.setClawState(ClawState.LATCHED),
                         Climber::isPivotingArmLatched,
                         (cl) -> {},
                         true
@@ -274,7 +274,7 @@ public final class Climber extends AbstractSubsystem {
                         },
                         (cl) -> {
                             if (cl.shouldDoBackHookStep()) return true; // We didn't pivot, continue
-                            return Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION;
+                            return Timer.getFPGATimestamp() - cl.data > Constants.ARM_PIVOT_DURATION; // true if we ARM_PIVOT_DURATION time has elapsed
                         },
                         (cl) -> {},
                         true
@@ -301,7 +301,8 @@ public final class Climber extends AbstractSubsystem {
                             if (cl.shouldDoBackHookStep()) {
                                 return true;
                             } else {
-                                return RobotTracker.getInstance().getGyroRollVelocity() > 0 && gyro.getRoll() > 42.5;
+                                return RobotTracker.getInstance().getGyroRollVelocity() > 0
+                                        && gyro.getRoll() > Constants.ELEVATOR_ARM_SAFE_ANGLE;
                             }
                         },
                         (cl) -> {},
@@ -385,7 +386,7 @@ public final class Climber extends AbstractSubsystem {
                             if (cl.shouldDoBackHookStep()) {
                                 return false;
                             }
-                            return gyro.getRoll() < 41;
+                            return gyro.getRoll() < Constants.ON_NEXT_BAR_ANGLE;
                         },
                         (cl) -> {},
                         false
