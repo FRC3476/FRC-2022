@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -36,6 +37,7 @@ public final class Hopper extends AbstractSubsystem {
     private final DigitalInput beamBreak;
     private double lastBeamBreakOpenTime = 0;
 
+    @AutoBuilderAccessible
     public static Hopper getInstance() {
         return INSTANCE;
     }

@@ -1,6 +1,7 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.*;
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -64,6 +65,7 @@ public final class Climber extends AbstractSubsystem {
     private static final ReentrantReadWriteLock CLIMBER_INSTANCE_LOCK = new ReentrantReadWriteLock();
 
     // Safe Lazy Initialization. Initializes itself when first called
+    @AutoBuilderAccessible
     public static @NotNull Climber getInstance() {
 
         CLIMBER_INSTANCE_LOCK.readLock().lock();
@@ -233,7 +235,7 @@ public final class Climber extends AbstractSubsystem {
          * <ul>
          *     Moves the elevator arm up to the maximum height. At this height the arm will contact the next bar when the robot
          *     unpivots. Will continue to the next state once the elevator arm is at it's Max Extension
-         *     ({@link Constants#MAX_CLIMBER_EXTENSION}). At this point the robot is only supporting the pivoting arm.
+         *     ({@link Constants#MAX_CLIMBER_EXTENSION}). At this point the robot is only supported by the pivoting arm.
          * </ul>
          */
         MOVE_WEIGHT_TO_PIVOT_ARM(
@@ -241,13 +243,16 @@ public final class Climber extends AbstractSubsystem {
                         (cl) -> {
                             if (cl.shouldDoBackHookStep()) {
                                 cl.data = Constants.MAX_CLIMBER_EXTENSION;
-                                cl.climberMotor.set(ControlMode.MotionMagic, Constants.MAX_CLIMBER_EXTENSION);
+                                cl.climberMotor.set(ControlMode.MotionMagic,
+                                        Constants.MAX_CLIMBER_EXTENSION);
                             } else {
                                 cl.data = Constants.CLIMBER_ELEVATOR_UNLATCH_AMOUNT;
-                                cl.climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
+                                cl.climberMotor.set(ControlMode.MotionMagic,
+                                        Constants.CLIMBER_ELEVATOR_MAX_SAFE_HEIGHT);
                             }
                         },
-                        (cl) -> cl.climberMotor.getSelectedSensorPosition() > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
+                        (cl) -> cl.climberMotor.getSelectedSensorPosition()
+                                > cl.data - Constants.CLIMBER_MOTOR_MAX_ERROR,
                         (cl) -> {},
                         true
                 )

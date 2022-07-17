@@ -5,6 +5,7 @@ import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import com.dacubeking.AutoBuilder.robot.sender.hud.HudElement;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
@@ -213,6 +214,7 @@ public final class Shooter extends AbstractSubsystem {
     /**
      * returns the singleton instance of Shooter.
      */
+    @AutoBuilderAccessible
     public static Shooter getInstance() {
         return instance;
     }

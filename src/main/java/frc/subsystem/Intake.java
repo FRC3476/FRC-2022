@@ -5,6 +5,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -27,6 +28,7 @@ public final class Intake extends AbstractSubsystem {
 
     private double allowIntakeRunTime = Double.MAX_VALUE;
 
+    @AutoBuilderAccessible
     public static Intake getInstance() {
         return instance;
     }

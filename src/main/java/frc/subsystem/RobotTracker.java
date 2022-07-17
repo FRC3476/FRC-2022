@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotPositionSender;
 import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotState;
 import com.google.common.collect.EvictingQueue;
@@ -36,6 +37,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private static @NotNull RobotTracker instance = new RobotTracker();
 
+    @AutoBuilderAccessible
     public static @NotNull RobotTracker getInstance() {
         return RobotTracker.instance;
     }

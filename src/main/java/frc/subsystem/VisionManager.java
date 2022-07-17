@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import com.dacubeking.AutoBuilder.robot.drawable.Circle;
 import com.dacubeking.AutoBuilder.robot.drawable.Renderer;
 import com.dacubeking.AutoBuilder.robot.sender.pathpreview.RobotPositionSender;
@@ -62,6 +63,7 @@ public final class VisionManager extends AbstractSubsystem {
         logData("IS VISION GOOD", true);
     }
 
+    @AutoBuilderAccessible
     public static @NotNull VisionManager getInstance() {
         VISION_MANGER_INSTANCE_LOCK.readLock().lock();
         try {

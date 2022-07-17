@@ -10,6 +10,7 @@ import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
+import com.dacubeking.AutoBuilder.robot.annotations.AutoBuilderAccessible;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -83,6 +84,7 @@ public final class Drive extends AbstractSubsystem {
 
     private static final @NotNull Drive INSTANCE = new Drive();
 
+    @AutoBuilderAccessible
     public static @NotNull Drive getInstance() {
         return INSTANCE;
     }
