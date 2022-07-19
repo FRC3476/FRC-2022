@@ -58,4 +58,33 @@ public final class MathUtil {
         double y = translation2d.getY();
         return x * x + y * y;
     }
+
+    /**
+     * Returns the output of the modulo operation, but always with a positive result.
+     *
+     * @param x The number to modulo.
+     * @param y The modulus.
+     * @return The output of the modulo operation.
+     */
+    public static double mod(double x, double y) {
+        double result = x % y;
+        if (result < 0) {
+            result += y;
+        }
+        return result;
+    }
+
+    /**
+     * Returns the minimum of the supplied values.
+     *
+     * @param values The values to compare.
+     * @return The minimum of the values.
+     */
+    public static double min(double... values) {
+        double min = Double.MAX_VALUE;
+        for (double value : values) {
+            min = Math.min(min, value);
+        }
+        return min;
+    }
 }
