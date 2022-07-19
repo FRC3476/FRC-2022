@@ -361,14 +361,14 @@ public final class Drive extends AbstractSubsystem {
         // Also ensures that don't use move voltage decelerating.
         // TODO: Compensate for the fact that we'll be adding the voltage of our current velocity
         double maxDeceleration = min(accelerationLimit.turningTranslationDeceleration,
-                currentTranslationalVelocity.getNorm() * (DRIVE_PERIOD / 1000.0),
+                currentTranslationalVelocity.getNorm() / (DRIVE_PERIOD / 1000.0),
                 (currentTranslationalVelocity.getNorm() * DRIVE_FEEDFORWARD.kv) / DRIVE_FEEDFORWARD.ka);
         MutableTranslation2d lowRobotAcceleration = new MutableTranslation2d(currentTranslationalVelocity).
                 normalize().times(maxDeceleration).unaryMinus();
 
         // Acceleration to reach the target velocity as quickly as possible
         double maxAcceleration = min(accelerationLimit.acceleration,
-                neededVelocityChange.minus(targetRobotRelativeSpeed).getNorm() * (DRIVE_PERIOD / 1000.0),
+                neededVelocityChange.getNorm() / (DRIVE_PERIOD / 1000.0),
                 maxDesiredAcceleration,
                 (currentTranslationalVelocity.minus(targetRobotRelativeSpeed).getNorm() * DRIVE_FEEDFORWARD.kv)
                         / DRIVE_FEEDFORWARD.ka);
@@ -380,7 +380,7 @@ public final class Drive extends AbstractSubsystem {
         double currentAngleSpeed = currentSpeeds.omegaRadiansPerSecond;
         double neededAngleChange = targetAngularSpeed - currentAngleSpeed;
         double highAngularAcceleration = Math.copySign(min(accelerationLimit.angularAcceleration,
-                Math.abs(targetAngularSpeed - currentAngleSpeed) * (DRIVE_PERIOD / 1000.0)), neededAngleChange);
+                Math.abs(targetAngularSpeed - currentAngleSpeed) / (DRIVE_PERIOD / 1000.0)), neededAngleChange);
         double lowAngularAcceleration = Math.copySign(min(
                         accelerationLimit.angularAcceleration,
                         (Math.abs(currentAngleSpeed) * DRIVE_FEEDFORWARD.kv) / DRIVE_ROTATIONAL_KA),
