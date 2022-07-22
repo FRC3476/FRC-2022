@@ -22,7 +22,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -41,18 +40,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static frc.robot.Constants.*;
 import static frc.utility.MathUtil.*;
+import static frc.utility.geometry.GeometryUtils.angleOf;
 
 
 public final class Drive extends AbstractSubsystem {
-
-    /**
-     * Last requested field relative acceleration
-     */
-    public @NotNull volatile Translation2d lastAcceleration = new Translation2d();
-
-    // PID TUNING
-    final @NotNull NetworkTableInstance networkTableInstance = NetworkTableInstance.getDefault();
-
     final @NotNull NetworkTableEntry turnP = SmartDashboard.getEntry("TurnPIDP");
     final @NotNull NetworkTableEntry turnI = SmartDashboard.getEntry("TurnPIDI");
     final @NotNull NetworkTableEntry turnD = SmartDashboard.getEntry("TurnPIDD");
@@ -193,9 +184,9 @@ public final class Drive extends AbstractSubsystem {
             swerveDriveMotors[i].configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true,
                     Constants.SWERVE_DRIVE_MOTOR_CURRENT_LIMIT, Constants.SWERVE_DRIVE_MOTOR_CURRENT_LIMIT, 0));
 
-            swerveDriveMotors[i].configVoltageCompSaturation(Constants.SWERVE_DRIVE_VOLTAGE_LIMIT);
+            swerveDriveMotors[i].configVoltageCompSaturation(Constants.SWERVE_DRIVE_VOLTAGE_LIMIT, 100);
 
-            // This makes motors brake when no RPM is set
+
             swerveDriveMotors[i].setNeutralMode(NeutralMode.Coast);
             swerveMotors[i].setNeutralMode(NeutralMode.Coast);
             swerveMotors[i].setInverted(true);
@@ -327,55 +318,77 @@ public final class Drive extends AbstractSubsystem {
         setSwerveModuleStates(Constants.HOLD_MODULE_STATES, true);
     }
 
-    public void swerveDrive(@NotNull ControllerDriveInputs inputs) {
-
-        setDriveState(DriveState.TELEOP);
-
-
-        ChassisSpeeds chassisSpeeds = new ChassisSpeeds(DRIVE_HIGH_SPEED_M * inputs.getX(),
-                DRIVE_HIGH_SPEED_M * inputs.getY(),
-                inputs.getRotation() * 7);
-        swerveDrive(chassisSpeeds);
+    public void swerveDrive(@NotNull ControllerDriveInputs inputs, boolean useFieldRelative) {
+        Translation2d targetVelocity = new Translation2d(inputs.getX(), inputs.getY()).times(DRIVE_HIGH_SPEED_M);
+        double targetRotationSpeed = inputs.getRotation() * MAX_DRIVE_TURN_SPEED;
+        if (this.useFieldRelative && useFieldRelative) {
+            swerveDriveFieldRelative(targetVelocity, targetRotationSpeed, null);
+        } else {
+            swerveDrive(targetVelocity, targetRotationSpeed, null);
+        }
     }
 
+    public void swerveDriveFieldRelative(@Nullable Translation2d targetFieldRelativeSpeed,
+                                         double targetAngularSpeed,
+                                         @Nullable Translation2d additionalFieldRelativeAcceleration) {
+        Rotation2d gyroAngle = RobotTracker.getInstance().getGyroAngle().unaryMinus();
+        Translation2d targetRobotRelativeSpeed = null;
+        if (targetFieldRelativeSpeed != null) {
+            targetRobotRelativeSpeed = targetFieldRelativeSpeed.rotateBy(gyroAngle);
+        }
+
+        Translation2d additionalRobotRelativeAcceleration = null;
+        if (additionalFieldRelativeAcceleration != null) {
+            additionalRobotRelativeAcceleration = additionalFieldRelativeAcceleration.rotateBy(gyroAngle);
+        }
+
+        swerveDrive(targetRobotRelativeSpeed, targetAngularSpeed, additionalRobotRelativeAcceleration);
+    }
+
+    private @NotNull Translation2d expectedAcceleration = new Translation2d(0, 0);
+
     /**
-     * @param targetRobotRelativeSpeed The target speed of the robot in meters per second
+     * @param targetRobotRelativeSpeed The target speed of the robot in meters per second. If null, the robot will assume that you
+     *                                 only want to control the robot via the acceleration.
      * @param targetAngularSpeed       The target angular speed of the robot in radians per second
-     * @param maxDesiredAcceleration   The maximum wanted acceleration of the robot in meters per second squared
      */
-    public void swerveDrive(@NotNull Translation2d targetRobotRelativeSpeed,
+    @Contract(mutates = "this")
+    public void swerveDrive(@Nullable Translation2d targetRobotRelativeSpeed,
                             double targetAngularSpeed,
-                            double maxDesiredAcceleration) {
+                            @Nullable Translation2d additionalRobotRelativeAcceleration) {
         final ChassisSpeeds currentSpeeds = SWERVE_DRIVE_KINEMATICS.toChassisSpeeds(getSwerveModuleStates());
 
         final Translation2d currentTranslationalVelocity =
                 new Translation2d(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
 
-        final Translation2d neededVelocityChange = targetRobotRelativeSpeed.minus(currentTranslationalVelocity);
+        final Translation2d neededVelocityChange = targetRobotRelativeSpeed != null ?
+                targetRobotRelativeSpeed.minus(currentTranslationalVelocity) : new Translation2d(0, 0);
+
 
         // Create two different accelerations with:
         //     lowRobotAcceleration = translational acceleration which will result in the least voltage used for translating
         //     highRobotAcceleration = translational acceleration which will result in the most voltage used for translating
 
         // This acceleration will slow down the robot as quickly as possible, but don't overshoot a velocity of 0.
-        // Also ensures that don't use move voltage decelerating.
-        // TODO: Compensate for the fact that we'll be adding the voltage of our current velocity
+        // Also ensures that don't use extra voltage to decelerate.
+        final double currentTranslationalVelocityNorm = currentTranslationalVelocity.getNorm();
         double maxDeceleration = min(accelerationLimit.turningTranslationDeceleration,
-                currentTranslationalVelocity.getNorm() / (DRIVE_PERIOD / 1000.0),
-                (currentTranslationalVelocity.getNorm() * DRIVE_FEEDFORWARD.kv) / DRIVE_FEEDFORWARD.ka);
+                currentTranslationalVelocityNorm / (DRIVE_PERIOD / 1000.0),
+                getMaxAccelerationToAvoidTipping(angleOf(currentTranslationalVelocity)),
+                (currentTranslationalVelocityNorm * DRIVE_FEEDFORWARD.kv) / DRIVE_FEEDFORWARD.ka);
         MutableTranslation2d lowRobotAcceleration = new MutableTranslation2d(currentTranslationalVelocity).
                 normalize().times(maxDeceleration).unaryMinus();
 
         // Acceleration to reach the target velocity as quickly as possible
         double maxAcceleration = min(accelerationLimit.acceleration,
-                neededVelocityChange.getNorm() / (DRIVE_PERIOD / 1000.0),
-                maxDesiredAcceleration,
-                (currentTranslationalVelocity.minus(targetRobotRelativeSpeed).getNorm() * DRIVE_FEEDFORWARD.kv)
-                        / DRIVE_FEEDFORWARD.ka);
-        // Do we need to limit the acceleration, so we don't go over the max voltage here? (Do we need the above line?)
-        // or will the binary search below do that for us?
+                neededVelocityChange.getNorm() / (DRIVE_PERIOD / 1000.0));
         MutableTranslation2d highRobotAcceleration = new MutableTranslation2d(neededVelocityChange).
                 normalize().times(maxAcceleration);
+
+        if (additionalRobotRelativeAcceleration != null) {
+            highRobotAcceleration.plus(additionalRobotRelativeAcceleration);
+        }
+
 
         double currentAngleSpeed = currentSpeeds.omegaRadiansPerSecond;
         double neededAngleChange = targetAngularSpeed - currentAngleSpeed;
@@ -391,12 +404,12 @@ public final class Drive extends AbstractSubsystem {
         if (isUnderMaxVoltage(getChassisSpeedsFromAcceleration(highRobotAcceleration, highAngularAcceleration, currentSpeeds),
                 maxUsableVoltage)) {
             // Everything is using their highest possible voltage, so we can't go any higher.
-            swerveDrive(getChassisSpeedsFromAcceleration(highRobotAcceleration, highAngularAcceleration, currentSpeeds));
+            setCommandedVoltages(getChassisSpeedsFromAcceleration(highRobotAcceleration, highAngularAcceleration, currentSpeeds));
         } else if (isUnderMaxVoltage(
                 getChassisSpeedsFromAcceleration(lowRobotAcceleration, lowAngularAcceleration, currentSpeeds),
                 maxUsableVoltage)) {
             // Everything is using their lowest possible voltage, so we can't go any lower.
-            swerveDrive(getChassisSpeedsFromAcceleration(lowRobotAcceleration, highAngularAcceleration, currentSpeeds));
+            setCommandedVoltages(getChassisSpeedsFromAcceleration(lowRobotAcceleration, highAngularAcceleration, currentSpeeds));
         } else {
             // Binary search for the angular acceleration that will result in the robot being under the max voltage.
             // Angular speed has priority over translational speed, so we'll assume that we're using the lowest translational
@@ -435,10 +448,17 @@ public final class Drive extends AbstractSubsystem {
                     } // else, low has already been updated to be the correct value.
                 }
 
+                // Should we be doing the anti-tip acceleration here?
+                double maxAccel = getMaxAccelerationToAvoidTipping(angleOf(low));
+                if (low.getNorm() > maxAccel) {
+                    low.normalize().times(maxAccel);
+                }
+
                 translationalAcceleration = low.getTranslation2d();
             }
+            expectedAcceleration = translationalAcceleration;
 
-            swerveDrive(getChassisSpeedsFromAcceleration(translationalAcceleration, angularAcceleration, currentSpeeds));
+            setCommandedVoltages(getChassisSpeedsFromAcceleration(translationalAcceleration, angularAcceleration, currentSpeeds));
         }
     }
 
@@ -479,18 +499,61 @@ public final class Drive extends AbstractSubsystem {
     }
 
 
-    public void swerveDrive(ChassisSpeeds chassisSpeeds) {
-        SmartDashboard.putNumber("Drive Command X Force", chassisSpeeds.vxMetersPerSecond);
-        SmartDashboard.putNumber("Drive Command Y Force", chassisSpeeds.vyMetersPerSecond);
-        SmartDashboard.putNumber("Drive Command Rotational Force", chassisSpeeds.omegaRadiansPerSecond);
+    private static final double RIGHT_BACK_ANGLE_RADIANS;
+    private static final double RIGHT_FRONT_ANGLE_RADIANS;
+    private static final double LEFT_FRONT_ANGLE_RADIANS;
+    private static final double LEFT_BACK_LEFT_ANGLE_RADIANS;
 
-        SwerveModuleState[] moduleStates = SWERVE_DRIVE_KINEMATICS.toSwerveModuleStates(chassisSpeeds);
+    static {
+        RIGHT_FRONT_ANGLE_RADIANS = angleOf(SWERVE_RIGHT_FRONT_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+        LEFT_FRONT_ANGLE_RADIANS = angleOf(SWERVE_LEFT_FRONT_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+        LEFT_BACK_LEFT_ANGLE_RADIANS = angleOf(SWERVE_LEFT_BACK_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+        RIGHT_BACK_ANGLE_RADIANS = angleOf(SWERVE_RIGHT_BACK_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+    }
 
-        boolean rotate = chassisSpeeds.vxMetersPerSecond != 0 ||
-                chassisSpeeds.vyMetersPerSecond != 0 ||
-                chassisSpeeds.omegaRadiansPerSecond != 0;
+    /**
+     * This method assumes that the robot is a square.
+     *
+     * @param accelerationAngle The angle of the acceleration vector in radians.
+     * @return The maximum translational acceleration in that direction.
+     */
+    @Contract(mutates = "", pure = true)
+    public double getMaxAccelerationToAvoidTipping(Rotation2d accelerationAngle) {
+        double accelerationAngleRadians = mod(accelerationAngle.getRadians() + Math.PI, Math.PI * 2) - Math.PI;
 
-        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, getMaxUsableVoltage());
+        double distanceCgToFrame;
+
+        if (accelerationAngleRadians > RIGHT_BACK_ANGLE_RADIANS && accelerationAngleRadians <= LEFT_FRONT_ANGLE_RADIANS) {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians) *
+                    (SWERVE_RIGHT_FRONT_LOCATION.getX() - ROBOT_CENTER_OF_GRAVITY.getX());
+        } else if (accelerationAngleRadians > LEFT_FRONT_ANGLE_RADIANS && accelerationAngleRadians <= LEFT_BACK_LEFT_ANGLE_RADIANS) {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians - (Math.PI / 4)) *
+                    (SWERVE_LEFT_FRONT_LOCATION.getY() - ROBOT_CENTER_OF_GRAVITY.getY());
+        } else if (accelerationAngleRadians > LEFT_BACK_LEFT_ANGLE_RADIANS && accelerationAngleRadians <= RIGHT_FRONT_ANGLE_RADIANS) {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians - (Math.PI / 2)) *
+                    (SWERVE_LEFT_BACK_LOCATION.getX() - ROBOT_CENTER_OF_GRAVITY.getX());
+        } else {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians - (3 * (Math.PI / 4))) *
+                    (SWERVE_RIGHT_BACK_LOCATION.getY() - ROBOT_CENTER_OF_GRAVITY.getY());
+        }
+
+        return distanceCgToFrame * 10; // TODO: Tune this
+    }
+
+
+    public void setCommandedVoltages(ChassisSpeeds commandVoltage) {
+        SmartDashboard.putNumber("Drive Command X Voltage", commandVoltage.vxMetersPerSecond);
+        SmartDashboard.putNumber("Drive Command Y Voltage", commandVoltage.vyMetersPerSecond);
+        SmartDashboard.putNumber("Drive Command Rotational Voltage", commandVoltage.omegaRadiansPerSecond);
+
+        SwerveModuleState[] moduleStates = SWERVE_DRIVE_KINEMATICS.toSwerveModuleStates(commandVoltage);
+
+        boolean rotate = commandVoltage.vxMetersPerSecond != 0 ||
+                commandVoltage.vyMetersPerSecond != 0 ||
+                commandVoltage.omegaRadiansPerSecond != 0;
+
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, getMaxUsableVoltage()); // In some rare cases, we can still
+        // command above the max voltage. Ex: if the available voltage drops faster than we can decelerate.
         setSwerveModuleStates(moduleStates, rotate);
     }
 
@@ -676,7 +739,10 @@ public final class Drive extends AbstractSubsystem {
                     adjustedSpeeds.omegaRadiansPerSecond = getTurnPidDeltaSpeed(autoAimingRotationGoal);
                 }
 
-                swerveDrive(adjustedSpeeds);
+                swerveDrive(new Translation2d(adjustedSpeeds.vxMetersPerSecond, adjustedSpeeds.vyMetersPerSecond),
+                        adjustedSpeeds.omegaRadiansPerSecond,
+                        new Translation2d(goal.accelerationMetersPerSecondSq, 0)
+                                .rotateBy(new Rotation2d(goal.curvatureRadPerMeter))); // Is this correct?
                 if (swerveAutoController.atReference() && (Timer.getFPGATimestamp() - autoStartTime) >= currentAutoTrajectory.getTotalTimeSeconds()) {
                     setDriveState(DriveState.DONE);
                     stopMovement();
@@ -692,16 +758,23 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
+    /**
+     * @param autoAimingRotationGoal The goal to aim at (in radians)
+     * @return The speed to turn at (in radians/s)
+     */
     private double getTurnPidDeltaSpeed(@NotNull TrapezoidProfile.State autoAimingRotationGoal) {
         turnPID.setSetpoint(autoAimingRotationGoal.position);
 
-        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
+        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
             turnPID.reset();
         } else if (turnPID.getPositionError() > Math.toRadians(7)) {
+            // This is basically an I-Zone
             turnPID.resetI();
         }
         lastTurnUpdate = Timer.getFPGATimestamp();
-        return turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
+        return Math.max(
+                turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity,
+                Constants.TURN_SPEED_LIMIT_WHILE_AIMING);
     }
 
     public void setAutoRotation(@NotNull Rotation2d rotation) {
@@ -738,7 +811,7 @@ public final class Drive extends AbstractSubsystem {
                 updateRamsete();
                 break;
             case STOP:
-                swerveDrive(new ChassisSpeeds(0, 0, 0));
+                swerveDrive(new Translation2d(0, 0), 0, null);
         }
     }
 
@@ -809,22 +882,14 @@ public final class Drive extends AbstractSubsystem {
 
 
         double pidDeltaSpeed = getTurnPidDeltaSpeed(goal);
-
-//        System.out.println(
-//                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
         double curSpeed = RobotTracker.getInstance().getLatencyCompedChassisSpeeds().omegaRadiansPerSecond;
 
+        Translation2d targetVelocity = new Translation2d(controllerDriveInputs.getX(), controllerDriveInputs.getY())
+                .times(DRIVE_HIGH_SPEED_M);
         if (useFieldRelative) {
-            swerveDrive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
-                    pidDeltaSpeed,
-                    RobotTracker.getInstance().getGyroAngle()));
+            swerveDriveFieldRelative(targetVelocity, pidDeltaSpeed, null);
         } else {
-            swerveDrive(new ChassisSpeeds(
-                    controllerDriveInputs.getX() * DRIVE_HIGH_SPEED_M * 0.45,
-                    controllerDriveInputs.getY() * DRIVE_HIGH_SPEED_M * 0.45,
-                    pidDeltaSpeed));
+            swerveDrive(targetVelocity, pidDeltaSpeed, null);
         }
 
         if (Math.abs(goal.position - RobotTracker.getInstance().getGyroAngle().getRadians()) < turnErrorRadians) {
@@ -918,6 +983,10 @@ public final class Drive extends AbstractSubsystem {
             speeds[i] = (getSwerveDriveVelocity(i) / 60.0d) * Constants.SWERVE_METER_PER_ROTATION;
         }
         return speeds;
+    }
+
+    public Translation2d getExpectedAcceleration() {
+        return expectedAcceleration;
     }
 
     /**

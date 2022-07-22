@@ -86,14 +86,6 @@ public final class Constants {
 
     /**
      * Feed forward constants for the drivetrain.
-     * <p>
-     * 0 -> Left Front
-     * <p>
-     * 1 -> Left Back
-     * <p>
-     * 2 -> Right Front
-     * <p>
-     * 3 -> Right Back
      */
     public static final SimpleMotorFeedforward DRIVE_FEEDFORWARD = new SimpleMotorFeedforward(0.17763, 2.7731, 0.5);
     public static final double DRIVE_ROTATIONAL_KA = 0.4;
@@ -141,6 +133,7 @@ public final class Constants {
     public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.307975, -0.307975);
     public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(-0.307975, -0.307975);
 
+    public static final Translation2d ROBOT_CENTER_OF_GRAVITY = new Translation2d(0, 0.1);
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
@@ -154,24 +147,23 @@ public final class Constants {
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_TURN_ERROR = 30;
-
-    public static final double TURN_SPEED_LIMIT_TO_SHOOT = 3;
+    public static final double MAX_TURN_ERROR = 10;
 
     /**
-     * Allowed Turn Error in degrees.
+     * Maximum turn speed while aiming in radians per second.
      */
-    public static final double MAX_PID_STOP_SPEED = 100;
+    public static final double TURN_SPEED_LIMIT_WHILE_AIMING = 4.0;
 
+    public static final double MAX_DRIVE_TURN_SPEED = 4.0;
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
-    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
+    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
     public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
+    public static final double DEFAULT_TURN_P = 10.0;
     public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
 
