@@ -291,7 +291,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "# We set it to shoot 10 so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 7",
+    "script" : "VisionManager.shootBalls 1.4",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -299,7 +299,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "7" ],
+        "args" : [ "1.4" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
@@ -3166,7 +3166,7 @@
       }
     } ],
     "reversed" : false,
-    "color" : 74.117645,
+    "color" : 74.11766,
     "closed" : false,
     "velocityStart" : 0.0,
     "velocityEnd" : 0.0,

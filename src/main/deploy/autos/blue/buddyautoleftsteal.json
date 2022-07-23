@@ -296,7 +296,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "VisionManager.shootBalls 13",
+    "script" : "VisionManager.shootBalls 2.6",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -304,7 +304,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "13" ],
+        "args" : [ "2.6" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
@@ -534,7 +534,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "VisionManager.shootBalls 8\nDrive.turnToAngle 40",
+    "script" : "VisionManager.shootBalls 1.6\nDrive.turnToAngle 40",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -542,7 +542,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "8" ],
+        "args" : [ "1.6" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       }, {

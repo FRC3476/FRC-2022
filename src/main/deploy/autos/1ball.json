@@ -1,7 +1,7 @@
 {
   "autonomousSteps" : [ {
     "type" : "script",
-    "script" : "VisionManager.shootBalls 40",
+    "script" : "VisionManager.shootBalls 8",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -9,7 +9,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "40" ],
+        "args" : [ "8" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]

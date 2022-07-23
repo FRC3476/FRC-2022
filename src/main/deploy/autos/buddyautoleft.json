@@ -327,7 +327,7 @@
     } ]
   }, {
     "type" : "script",
-    "script" : "VisionManager.shootBalls 13",
+    "script" : "VisionManager.shootBalls 2.6",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -335,7 +335,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "13" ],
+        "args" : [ "2.6" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
@@ -551,7 +551,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "VisionManager.shootBalls 20",
+    "script" : "VisionManager.shootBalls 4",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -559,7 +559,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "20" ],
+        "args" : [ "4" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]

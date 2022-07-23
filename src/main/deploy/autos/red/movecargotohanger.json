@@ -348,7 +348,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "# We set it to shoot 10 so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 10",
+    "script" : "# We set it to shoot 2s so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 2",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -356,7 +356,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "10" ],
+        "args" : [ "2" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
