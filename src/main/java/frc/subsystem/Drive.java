@@ -346,6 +346,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private @NotNull Translation2d expectedAcceleration = new Translation2d(0, 0);
+    private double expectedAngularAcceleration = 0;
 
     /**
      * @param targetRobotRelativeSpeed The target speed of the robot in meters per second. If null, the robot will assume that you
@@ -401,21 +402,25 @@ public final class Drive extends AbstractSubsystem {
 
         double maxUsableVoltage = getMaxUsableVoltage();
 
+        MutableTranslation2d wantedRobotAcceleration;
+        double wantedAngularAcceleration;
+
         if (isUnderMaxVoltage(getChassisSpeedsFromAcceleration(highRobotAcceleration, highAngularAcceleration, currentSpeeds),
                 maxUsableVoltage)) {
             // Everything is using their highest possible voltage, so we can't go any higher.
-            setCommandedVoltages(getChassisSpeedsFromAcceleration(highRobotAcceleration, highAngularAcceleration, currentSpeeds));
+            wantedRobotAcceleration = highRobotAcceleration;
+            wantedAngularAcceleration = highAngularAcceleration;
         } else if (isUnderMaxVoltage(
                 getChassisSpeedsFromAcceleration(lowRobotAcceleration, lowAngularAcceleration, currentSpeeds),
                 maxUsableVoltage)) {
             // Everything is using their lowest possible voltage, so we can't go any lower.
-            setCommandedVoltages(getChassisSpeedsFromAcceleration(lowRobotAcceleration, highAngularAcceleration, currentSpeeds));
+            wantedRobotAcceleration = lowRobotAcceleration;
+            wantedAngularAcceleration = lowAngularAcceleration;
         } else {
             // Binary search for the angular acceleration that will result in the robot being under the max voltage.
             // Angular speed has priority over translational speed, so we'll assume that we're using the lowest translational
             // acceleration and try to find the highest angular acceleration that will result in the robot being under the max
             // voltage.
-            double angularAcceleration;
             {
                 double low = lowAngularAcceleration;
                 double high = highAngularAcceleration;
@@ -428,20 +433,19 @@ public final class Drive extends AbstractSubsystem {
                         high = mid;
                     }
                 }
-                angularAcceleration = low;
+                wantedAngularAcceleration = low;
             }
 
             // Binary search for the highest translational acceleration that will result in the robot being under the max voltage.
             // We'll use the highest angular acceleration we found above, and try to maximize the translational acceleration
             // within the allowed voltage budget.
-            Translation2d translationalAcceleration;
             {
                 final MutableTranslation2d low = lowRobotAcceleration;
                 final MutableTranslation2d high = highRobotAcceleration;
                 while (dist2(high.minus(low)) > Constants.DRIVE_TRANSLATIONAL_BINARY_SEARCH_TOLERANCE) {
                     // This is technically changing the direction of the vector. Would this cause issues?
                     low.plus(high).times(0.5);
-                    ChassisSpeeds chassisSpeeds = getChassisSpeedsFromAcceleration(low, angularAcceleration, currentSpeeds);
+                    ChassisSpeeds chassisSpeeds = getChassisSpeedsFromAcceleration(low, wantedAngularAcceleration, currentSpeeds);
                     if (!isUnderMaxVoltage(chassisSpeeds, maxUsableVoltage)) {
                         low.times(2).minus(high); // Undo changes to low
                         high.plus(low).times(0.5); // Set high to what low was
@@ -449,17 +453,17 @@ public final class Drive extends AbstractSubsystem {
                 }
 
                 // Should we be doing the anti-tip acceleration here?
-                double maxAccel = getMaxAccelerationToAvoidTipping(angleOf(low));
-                if (low.getNorm() > maxAccel) {
-                    low.normalize().times(maxAccel);
-                }
-
-                translationalAcceleration = low.getTranslation2d();
+                wantedRobotAcceleration = low;
             }
-            expectedAcceleration = translationalAcceleration;
-
-            setCommandedVoltages(getChassisSpeedsFromAcceleration(translationalAcceleration, angularAcceleration, currentSpeeds));
         }
+
+        double maxAccel = getMaxAccelerationToAvoidTipping(angleOf(wantedRobotAcceleration));
+        if (wantedRobotAcceleration.getNorm() > maxAccel) {
+            wantedRobotAcceleration.normalize().times(maxAccel);
+        }
+
+        setCommandedVoltages(getChassisSpeedsFromAcceleration(wantedRobotAcceleration.getTranslation2d(),
+                wantedAngularAcceleration, currentSpeeds));
     }
 
     @Contract(pure = true)
