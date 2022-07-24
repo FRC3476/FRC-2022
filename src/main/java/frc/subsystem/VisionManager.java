@@ -544,7 +544,7 @@ public final class VisionManager extends AbstractSubsystem {
      * For auto use only
      */
     @SuppressWarnings({"unused", "BusyWait"})
-    public void shootBalls(double numBalls, Function<VisionManager, Boolean> additionalWait) throws InterruptedException {
+    public void shootBalls(double shootTime, Function<VisionManager, Boolean> additionalWait) throws InterruptedException {
         final @NotNull Drive drive = Drive.getInstance();
         final @NotNull Shooter shooter = Shooter.getInstance();
 
@@ -559,7 +559,6 @@ public final class VisionManager extends AbstractSubsystem {
             Thread.sleep(10); // Will exit if interrupted
         } while (shooter.getFeederWheelState() != FeederWheelState.FORWARD || !additionalWait.apply(this));
 
-        double shootTime = numBalls * Constants.SHOOT_TIME_PER_BALL;
         double lastTime = Timer.getFPGATimestamp();
         double timeShooting = 0;
 
@@ -582,15 +581,15 @@ public final class VisionManager extends AbstractSubsystem {
         drive.setAutoAiming(false);
     }
 
-    public void shootBalls(double numOfBalls) throws InterruptedException {
-        shootBalls(numOfBalls, (visionManager -> true));
+    public void shootBalls(double shootTime) throws InterruptedException {
+        shootBalls(shootTime, (visionManager -> true));
     }
 
     private boolean hasBeamBreakBroken = false;
 
-    public void shootBallsUntilBeamBreakHasBroken(double numOfBalls) throws InterruptedException {
+    public void shootBallsUntilBeamBreakHasBroken(double shootTime) throws InterruptedException {
         hasBeamBreakBroken = false;
-        shootBalls(numOfBalls, (visionManager -> {
+        shootBalls(shootTime, (visionManager -> {
             if (Hopper.getInstance().isBeamBroken()) hasBeamBreakBroken = true;
             return hasBeamBreakBroken;
         }));

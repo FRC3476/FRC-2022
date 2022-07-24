@@ -44,7 +44,7 @@
     "states" : [ {
       "time" : 0.0,
       "velocity" : 0.0,
-      "acceleration" : 2.0000000000000004,
+      "acceleration" : 4.0,
       "pose" : {
         "translation" : {
           "x" : 6.655389308929443,
@@ -56,9 +56,9 @@
       },
       "curvature" : 0.0
     }, {
-      "time" : 0.26195673918455165,
-      "velocity" : 0.5239134783691034,
-      "acceleration" : 2.0,
+      "time" : 0.1852313866549123,
+      "velocity" : 0.7409255466196492,
+      "acceleration" : 0.19079544343189958,
       "pose" : {
         "translation" : {
           "x" : 6.6236438472337795,
@@ -70,9 +70,9 @@
       },
       "curvature" : -1.2908559499883017
     }, {
-      "time" : 0.3226087575382479,
-      "velocity" : 0.6452175150764959,
-      "acceleration" : 1.988292500180773,
+      "time" : 0.23279255068024596,
+      "velocity" : 0.75,
+      "acceleration" : 0.0,
       "pose" : {
         "translation" : {
           "x" : 6.6054738852138115,
@@ -84,7 +84,7 @@
       },
       "curvature" : -1.6072890666995798
     }, {
-      "time" : 0.3753084910603416,
+      "time" : 0.2818109448468386,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -98,7 +98,7 @@
       },
       "curvature" : -1.7229503090467322
     }, {
-      "time" : 0.4265685911632387,
+      "time" : 0.3330710449497357,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -112,7 +112,7 @@
       },
       "curvature" : -1.6881248343906825
     }, {
-      "time" : 0.48049926254150516,
+      "time" : 0.3870017163280022,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -126,7 +126,7 @@
       },
       "curvature" : -1.5602919454920083
     }, {
-      "time" : 0.537432270789886,
+      "time" : 0.44393472457638306,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -140,7 +140,7 @@
       },
       "curvature" : -1.389179927720737
     }, {
-      "time" : 0.5975802076351652,
+      "time" : 0.5040826614216622,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -154,7 +154,7 @@
       },
       "curvature" : -1.2097459654511313
     }, {
-      "time" : 0.6610252769006628,
+      "time" : 0.5675277306871599,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -168,7 +168,7 @@
       },
       "curvature" : -1.0422871791768926
     }, {
-      "time" : 0.7277182979091884,
+      "time" : 0.6342207516956855,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -182,7 +182,7 @@
       },
       "curvature" : -0.8961205136496491
     }, {
-      "time" : 0.8700097645983937,
+      "time" : 0.7765122183848908,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -196,7 +196,7 @@
       },
       "curvature" : -0.6742136975380209
     }, {
-      "time" : 1.0218407446996955,
+      "time" : 0.9283431984861926,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -210,7 +210,7 @@
       },
       "curvature" : -0.5332253319589811
     }, {
-      "time" : 1.179260181620318,
+      "time" : 1.0857626354068153,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -224,7 +224,7 @@
       },
       "curvature" : -0.45244247639539625
     }, {
-      "time" : 1.3375734324162358,
+      "time" : 1.244075886202733,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -238,7 +238,7 @@
       },
       "curvature" : -0.4172363509515903
     }, {
-      "time" : 1.491900881135542,
+      "time" : 1.3984033349220393,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -252,7 +252,7 @@
       },
       "curvature" : -0.42108359880492097
     }, {
-      "time" : 1.6377282876890602,
+      "time" : 1.5442307414755574,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -266,7 +266,7 @@
       },
       "curvature" : -0.46425084111349835
     }, {
-      "time" : 1.7714458109440876,
+      "time" : 1.6779482647305848,
       "velocity" : 0.75,
       "acceleration" : 0.0,
       "pose" : {
@@ -280,9 +280,9 @@
       },
       "curvature" : -0.5497925189084905
     }, {
-      "time" : 1.8908717441392278,
+      "time" : 1.797374197925725,
       "velocity" : 0.75,
-      "acceleration" : -0.19613111495269947,
+      "acceleration" : 0.0,
       "pose" : {
         "translation" : {
           "x" : 5.576425376092175,
@@ -294,9 +294,9 @@
       },
       "curvature" : -0.6687802604534521
     }, {
-      "time" : 1.9972261189435494,
-      "velocity" : 0.7291405978895311,
-      "acceleration" : -1.9999999999999996,
+      "time" : 1.9022495802832127,
+      "velocity" : 0.75,
+      "acceleration" : -0.38772869782798147,
       "pose" : {
         "translation" : {
           "x" : 5.498163716387353,
@@ -308,9 +308,9 @@
       },
       "curvature" : -0.7543829717758592
     }, {
-      "time" : 2.109619218847951,
-      "velocity" : 0.5043543980807285,
-      "acceleration" : -2.0000000000000004,
+      "time" : 1.9969941018971706,
+      "velocity" : 0.713264830008285,
+      "acceleration" : -4.0,
       "pose" : {
         "translation" : {
           "x" : 5.428918329154385,
@@ -322,9 +322,9 @@
       },
       "curvature" : -0.6069099599671453
     }, {
-      "time" : 2.361796417888315,
+      "time" : 2.175310309399242,
       "velocity" : 0.0,
-      "acceleration" : -2.0000000000000004,
+      "acceleration" : -4.0,
       "pose" : {
         "translation" : {
           "x" : 5.365326881408691,
@@ -349,7 +349,7 @@
         "radians" : -2.3267127443126046
       }
     }, {
-      "time" : 2.229999950155616,
+      "time" : 2.0899999532848597,
       "rotation" : {
         "radians" : -2.54481993024278
       }
@@ -365,7 +365,7 @@
     } ]
   }, {
     "type" : "script",
-    "script" : "Intake.setWantedIntakeState OFF\n# We set it to shoot 20 so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 20",
+    "script" : "Intake.setWantedIntakeState OFF\n# We set it to shoot for 4s so that even in the case of a small jam we still shoot\nVisionManager.shootBalls 4",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -378,7 +378,7 @@
         "reflection" : true
       }, {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "20" ],
+        "args" : [ "4" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
