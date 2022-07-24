@@ -942,6 +942,9 @@ public final class Drive extends AbstractSubsystem {
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
         }
         logData("Drive State", driveState.toString());
+        logData("Expected Acceleration X", expectedAcceleration.getX());
+        logData("Expected Acceleration Y", expectedAcceleration.getY());
+        logData("Expected Acceleration Theta", expectedAngularAcceleration);
     }
 
 
