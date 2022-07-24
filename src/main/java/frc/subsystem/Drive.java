@@ -318,6 +318,22 @@ public final class Drive extends AbstractSubsystem {
         setSwerveModuleStates(Constants.HOLD_MODULE_STATES, true);
     }
 
+    /**
+     * Debug method to check if the drive constants are correct
+     *
+     * @param inputs           the inputs to the drive
+     * @param useFieldRelative whether or not to use field relative directions
+     */
+    public void swerveDriveAcceleration(@NotNull ControllerDriveInputs inputs, boolean useFieldRelative) {
+        Translation2d targetAcceleration = new Translation2d(inputs.getX(), inputs.getY()).times(4.0);
+        double targetRotationSpeed = inputs.getRotation() * MAX_DRIVE_TURN_SPEED;
+        if (this.useFieldRelative && useFieldRelative) {
+            swerveDriveFieldRelative(null, targetRotationSpeed, targetAcceleration);
+        } else {
+            swerveDrive(null, targetRotationSpeed, targetAcceleration);
+        }
+    }
+
     public void swerveDrive(@NotNull ControllerDriveInputs inputs, boolean useFieldRelative) {
         Translation2d targetVelocity = new Translation2d(inputs.getX(), inputs.getY()).times(DRIVE_HIGH_SPEED_M);
         double targetRotationSpeed = inputs.getRotation() * MAX_DRIVE_TURN_SPEED;
