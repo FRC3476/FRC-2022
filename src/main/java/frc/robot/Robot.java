@@ -10,7 +10,7 @@ import com.dacubeking.AutoBuilder.robot.robotinterface.CommandTranslator;
 import com.dacubeking.AutoBuilder.robot.serialization.Serializer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -340,7 +340,7 @@ public class Robot extends TimedRobot {
                 }
             } else {
                 // Stop the robot from moving if we're not issuing other commands to the drivebase
-                drive.swerveDrive(new ChassisSpeeds(0, 0, 0));
+                drive.swerveDrive(new Translation2d(0, 0), 0, null);
             }
         }
 
@@ -523,14 +523,10 @@ public class Robot extends TimedRobot {
             if (xbox.getRawButton(XboxButtons.Y)) {
                 drive.doHold();
             } else {
-                drive.swerveDrive(NO_MOTION_CONTROLLER_INPUTS);
+                drive.swerveDrive(new Translation2d(), 0, null);
             }
         } else {
-            if (useFieldRelative) {
-                drive.swerveDriveFieldRelative(controllerDriveInputs);
-            } else {
-                drive.swerveDrive(controllerDriveInputs);
-            }
+            drive.swerveDrive(controllerDriveInputs, useFieldRelative);
         }
     }
 

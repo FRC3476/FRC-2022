@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import org.jetbrains.annotations.Contract;
 
 import java.util.Objects;
 
@@ -75,6 +76,7 @@ public class MutableTranslation2d extends Translation2d {
      * @param x The x component of the translation.
      * @param y The y component of the translation.
      */
+    @Contract(mutates = "this")
     public MutableTranslation2d set(double x, double y) {
         m_x = x;
         m_y = y;
@@ -93,6 +95,12 @@ public class MutableTranslation2d extends Translation2d {
         m_x = distance * angle.getCos();
         m_y = distance * angle.getSin();
         return this;
+    }
+
+    @Contract(mutates = "this")
+    public void set(MutableTranslation2d other) {
+        m_x = other.getX();
+        m_y = other.getY();
     }
 
     /**
@@ -154,6 +162,7 @@ public class MutableTranslation2d extends Translation2d {
      * @return The rotated translation.
      */
     @Override
+    @Contract(mutates = "this")
     public MutableTranslation2d rotateBy(Rotation2d other) {
         return set(m_x * other.getCos() - m_y * other.getSin(), m_x * other.getSin() + m_y * other.getCos());
     }
@@ -167,6 +176,7 @@ public class MutableTranslation2d extends Translation2d {
      * @return The sum of the translations.
      */
     @Override
+    @Contract(mutates = "this")
     public MutableTranslation2d plus(edu.wpi.first.math.geometry.Translation2d other) {
         return set(m_x + other.getX(), m_y + other.getY());
     }
@@ -179,6 +189,7 @@ public class MutableTranslation2d extends Translation2d {
      * @param other The translation to add.
      * @return The sum of the translations.
      */
+    @Contract(mutates = "this")
     public MutableTranslation2d plus(MutableTranslation2d other) {
         return set(m_x + other.getX(), m_y + other.getY());
     }
@@ -192,6 +203,7 @@ public class MutableTranslation2d extends Translation2d {
      * @return The difference between the two translations.
      */
     @Override
+    @Contract(mutates = "this")
     public MutableTranslation2d minus(edu.wpi.first.math.geometry.Translation2d other) {
         return set(m_x - other.getX(), m_y - other.getY());
     }
@@ -203,8 +215,9 @@ public class MutableTranslation2d extends Translation2d {
      * @return The inverse of the current translation.
      */
     @Override
-    public edu.wpi.first.math.geometry.Translation2d unaryMinus() {
-        return new edu.wpi.first.math.geometry.Translation2d(-m_x, -m_y);
+    @Contract(mutates = "this")
+    public MutableTranslation2d unaryMinus() {
+        return set(-m_x, -m_y);
     }
 
     /**
@@ -216,6 +229,7 @@ public class MutableTranslation2d extends Translation2d {
      * @return The scaled translation.
      */
     @Override
+    @Contract(mutates = "this")
     public MutableTranslation2d times(double scalar) {
         return set(m_x * scalar, m_y * scalar);
     }
@@ -229,6 +243,7 @@ public class MutableTranslation2d extends Translation2d {
      * @return This mutated object.
      */
     @Override
+    @Contract(mutates = "this")
     public MutableTranslation2d div(double scalar) {
         return set(m_x / scalar, m_y / scalar);
     }
@@ -236,6 +251,16 @@ public class MutableTranslation2d extends Translation2d {
     @Override
     public String toString() {
         return String.format("MutableTranslation2d(X: %.2f, Y: %.2f)", m_x, m_y);
+    }
+
+    /**
+     * Normalizes the translation to a unit vector.
+     *
+     * @return This mutated object.
+     */
+    @Contract(mutates = "this")
+    public MutableTranslation2d normalize() {
+        return this.div(this.getNorm());
     }
 
     /**
@@ -261,7 +286,7 @@ public class MutableTranslation2d extends Translation2d {
         return Objects.hash(m_x, m_y);
     }
 
-    
+
     public MutableTranslation2d interpolate(MutableTranslation2d endValue, double t) {
         return set(MathUtil.interpolate(this.getX(), endValue.getX(), t),
                 MathUtil.interpolate(this.getY(), endValue.getY(), t));

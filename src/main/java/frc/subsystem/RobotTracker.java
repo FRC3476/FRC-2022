@@ -72,7 +72,9 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    private Translation2d acceleration = new Translation2d();
+    private @NotNull Translation2d acceleration = new Translation2d();
+
+    private double angularAcceleration = 0;
 
     private final @NotNull EvictingQueue<TimestampedPose> poseHistory = EvictingQueue.create(50);
     private final @NotNull EvictingQueue<ChassisSpeeds> chassisSpeedsHistory = EvictingQueue.create(12);
@@ -259,8 +261,9 @@ public final class RobotTracker extends AbstractSubsystem {
                     acceleration = new Translation2d(
                             prevChassisSpeeds.vxMetersPerSecond - latestChassisSpeeds.vxMetersPerSecond,
                             prevChassisSpeeds.vyMetersPerSecond - latestChassisSpeeds.vyMetersPerSecond)
-                            .times(1.0 / (ROBOT_TRACKER_PERIOD * 2 * (chassisSpeedsHistory.size()))); // currentOdometryTime is the
-                    // last loop time
+                            .times(1.0 / (ROBOT_TRACKER_PERIOD * 2 * (chassisSpeedsHistory.size())));
+                    angularAcceleration = (latestChassisSpeeds.omegaRadiansPerSecond - prevChassisSpeeds.omegaRadiansPerSecond)
+                            * (1.0 / (ROBOT_TRACKER_PERIOD * 2 * (chassisSpeedsHistory.size())));
                 } else {
                     acceleration = new Translation2d();
                 }
@@ -586,6 +589,7 @@ public final class RobotTracker extends AbstractSubsystem {
             logData("Acceleration", acceleration.getNorm());
             logData("Acceleration X", acceleration.getX());
             logData("Acceleration Y", acceleration.getY());
+            logData("Acceleration Theta", angularAcceleration);
 
             RobotPositionSender.addRobotPosition(new RobotState(
                     getLastEstimatedPoseMeters(),
@@ -662,6 +666,15 @@ public final class RobotTracker extends AbstractSubsystem {
         lock.readLock().lock();
         try {
             return acceleration;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public double getAngularAcceleration() {
+        lock.readLock().lock();
+        try {
+            return angularAcceleration;
         } finally {
             lock.readLock().unlock();
         }
