@@ -90,6 +90,8 @@ public final class Constants {
     public static final SimpleMotorFeedforward DRIVE_FEEDFORWARD = new SimpleMotorFeedforward(0.17763, 2.7731, 0.5);
     public static final double DRIVE_ROTATIONAL_KA = 0.4;
 
+    public static final double VOLTAGE_OVERHEAD = 0.2;
+
 
     /**
      * What the module states should be in hold mode. The wheels will be put in an X pattern to prevent the robot from moving.
@@ -157,7 +159,7 @@ public final class Constants {
     public static final double MAX_DRIVE_TURN_SPEED = 4.0;
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
-    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 10;
+    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 14;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
     public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);

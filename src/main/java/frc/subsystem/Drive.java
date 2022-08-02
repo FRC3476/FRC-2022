@@ -23,6 +23,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
@@ -494,7 +495,7 @@ public final class Drive extends AbstractSubsystem {
     }
 
     private double getMaxUsableVoltage() {
-        return 10 - DRIVE_FEEDFORWARD.ks;
+        return RobotController.getBatteryVoltage() - DRIVE_FEEDFORWARD.ks - VOLTAGE_OVERHEAD;
     }
 
 
