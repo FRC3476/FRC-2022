@@ -389,12 +389,12 @@ public final class VisionManager extends AbstractSubsystem {
     }
 
     /**
-     * {@code Math.tan(Constants.GOAL_RADIUS / getDistanceToTarget())}
+     * {@code Math.abs(Math.atan2((Constants.GOAL_RADIUS * 0.5), distance));}
      *
      * @return The allowed turn error in radians
      */
     private double getAllowedTurnError(double distance) {
-        return Math.tan((Constants.GOAL_RADIUS * 0.5) / distance);
+        return Math.abs(Math.atan2((Constants.GOAL_RADIUS * 0.5), distance));
     }
 
     @Contract(pure = true)
