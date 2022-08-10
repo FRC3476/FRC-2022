@@ -86,20 +86,11 @@ public final class Constants {
 
     /**
      * Feed forward constants for the drivetrain.
-     * <p>
-     * 0 -> Left Front
-     * <p>
-     * 1 -> Left Back
-     * <p>
-     * 2 -> Right Front
-     * <p>
-     * 3 -> Right Back
      */
-    public static final SimpleMotorFeedforward[] DRIVE_FEEDFORWARD = {
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5),
-            new SimpleMotorFeedforward(0.17763, 2.7731, 0.5)};
+    public static final SimpleMotorFeedforward DRIVE_FEEDFORWARD = new SimpleMotorFeedforward(0.17763, 2.7731, 0.5);
+    public static final double DRIVE_ROTATIONAL_KA = 0.4;
+
+    public static final double VOLTAGE_OVERHEAD = 0.2;
 
 
     /**
@@ -144,37 +135,37 @@ public final class Constants {
     public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.307975, -0.307975);
     public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(-0.307975, -0.307975);
 
+    public static final Translation2d ROBOT_CENTER_OF_GRAVITY = new Translation2d(0, 0.1);
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
     public static final double DRIVE_LOW_SPEED_MOD = 0.65;
 
     public static final double SWERVE_ACCELERATION =
-            ((360 * 10 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //5 rot/s^2
+            ((360 * 10 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //10 rot/s^2
 
     public static final double SWERVE_CRUISE_VELOCITY =
-            ((360 * 7 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //6.5 rot/s
+            ((360 * 7 * FALCON_ENCODER_TICKS_PER_ROTATIONS) / SWERVE_MOTOR_POSITION_CONVERSION_FACTOR) / 360; //7 rot/s
     /**
      * Allowed Turn Error in degrees.
      */
-    public static final double MAX_TURN_ERROR = 30;
-
-    public static final double TURN_SPEED_LIMIT_TO_SHOOT = 3;
+    public static final double MAX_TURN_ERROR = 10;
 
     /**
-     * Allowed Turn Error in degrees.
+     * Maximum turn speed while aiming in radians per second.
      */
-    public static final double MAX_PID_STOP_SPEED = 100;
+    public static final double TURN_SPEED_LIMIT_WHILE_AIMING = 4.0;
 
+    public static final double MAX_DRIVE_TURN_SPEED = 4.0;
     public static final int SWERVE_MOTOR_CURRENT_LIMIT = 15;
     public static final int SWERVE_DRIVE_MOTOR_CURRENT_LIMIT = 15;
-    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 12;
+    public static final int SWERVE_DRIVE_VOLTAGE_LIMIT = 14;
 
     public static final double SWERVE_DRIVE_MOTOR_REDUCTION = 1 / 8.14;
     public static final Rotation2d CLIMB_LINEUP_ANGLE = Rotation2d.fromDegrees(180);
     // TurnPID
 
-    public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
+    public static final double DEFAULT_TURN_P = 10.0;
     public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
 
@@ -182,28 +173,35 @@ public final class Constants {
         /**
          * Normal acceleration limit while driving. This ensures that the driver can't tip the robot.
          */
-        NORMAL_DRIVING(24),
+        NORMAL_DRIVING(24, Math.toRadians(360 * 22)),
         /**
          * Acceleration limit when we're trying to shoot and move. This is very low to prevent the driver from making sudden
          * movements that would mess up the shot
          */
-        SHOOT_AND_MOVE(4),
+        SHOOT_AND_MOVE(4, Math.toRadians(360 * 22)),
         /**
          * Slower acceleration limit to allow the robot to aim while slowing
          */
-        STOP_AND_SHOOT(12);
+        STOP_AND_SHOOT(12, Math.toRadians(360 * 22));
 
-        public double acceleration;
+        public final double acceleration;
+        public final double turningTranslationDeceleration;
+        public final double angularAcceleration;
 
-        AccelerationLimits(double acceleration) {
+        AccelerationLimits(double acceleration, double angularAcceleration) {
+            this(acceleration, acceleration, angularAcceleration);
+        }
+
+        AccelerationLimits(double acceleration, double turningTranslationDeceleration, double angularAcceleration) {
             this.acceleration = acceleration;
+            this.turningTranslationDeceleration = turningTranslationDeceleration;
+            this.angularAcceleration = angularAcceleration;
         }
     }
 
-    /**
-     * Units are in Radians per Second Squared
-     */
-    public static final double MAX_ANGULAR_ACCELERATION = Math.toRadians(360 * 22);
+    public static final double DRIVE_ANGULAR_BINARY_SEARCH_TOLERANCE = 0.01;
+    public static final double DRIVE_TRANSLATIONAL_BINARY_SEARCH_TOLERANCE = 0.01;
+
 
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);

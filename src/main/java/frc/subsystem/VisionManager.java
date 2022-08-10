@@ -685,7 +685,7 @@ public final class VisionManager extends AbstractSubsystem {
 
     private Translation2d getAccel() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        return Drive.getInstance().lastAcceleration;
+        return Drive.getInstance().getExpectedAcceleration();
         //return robotTracker.getAcceleration();
         //return ZERO;
     }
