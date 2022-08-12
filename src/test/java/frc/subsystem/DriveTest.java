@@ -2,8 +2,8 @@ package frc.subsystem;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.util.WPIUtilJNI;
 import frc.robot.Constants;
-import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +48,14 @@ public class DriveTest {
         lastRequestedRotation.setAccessible(true);
         lastRequestedRotation.set(drive, 0.0);
 
-        Timer.setTime(55);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime((long) (55.0d * 1.0e+9));
         drive.swerveDrive(new ChassisSpeeds(1, 1, 0.0));
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
-        Timer.setTime(55.14);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime((long) (55.14d * 1.0e+9));
 
         drive.stopMovement();
 
@@ -77,15 +79,16 @@ public class DriveTest {
         lastRequestedRotation.setAccessible(true);
         lastRequestedRotation.set(drive, 0.0);
 
-        Timer.setTime(54.9);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime((long) (54.9d * 1.0e+9));
         drive.swerveDrive(new ChassisSpeeds(10, 10, 0.0));
 
-        Timer.setTime(55);
+        WPIUtilJNI.setMockTime((long) (55.0d * 1.0e+9));
         drive.swerveDrive(new ChassisSpeeds(10, 10, 0.0));
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
-        Timer.setTime(55.01);
+        WPIUtilJNI.setMockTime((long) (55.01d * 1.0e+9));
 
         drive.stopMovement();
 
@@ -109,15 +112,16 @@ public class DriveTest {
         lastRequestedRotation.setAccessible(true);
         lastRequestedRotation.set(drive, 0.0);
 
-        Timer.setTime(54.9);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime((long) (54.9d * 1.0e+9));
         drive.swerveDrive(new ChassisSpeeds(0.2, 0.2, 0.0));
 
-        Timer.setTime(55);
+        WPIUtilJNI.setMockTime((long) (55.0d * 1.0e+9));
         drive.swerveDrive(new ChassisSpeeds(0.2, 0.2, 0.0));
         for (LazyTalonFX swerveDriveMotor : drive.swerveDriveMotors) {
             assertNotEquals(0.0, swerveDriveMotor.getSetpoint(), DELTA);
         }
-        Timer.setTime(55.1);
+        WPIUtilJNI.setMockTime((long) (55.1d * 1.0e+9));
 
         drive.stopMovement();
 

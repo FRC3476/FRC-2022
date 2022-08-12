@@ -16,12 +16,12 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.utility.OrangeUtility;
-import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.shooter.visionlookup.ShooterPreset;
@@ -85,13 +85,13 @@ public final class Shooter extends AbstractSubsystem {
             "RPM", RED, 160, new DecimalFormat("#"));
 
     private final HudElement hoodAngleHudElement = new HudElement(SmartDashboard.getEntry("Hood Angle"),
-            "RPM", RED, 160, new DecimalFormat("#.##"));
+            "Hood Angle", RED, 160, new DecimalFormat("#.##"));
 
     private final HudElement desiredRPMHudElement = new HudElement(SmartDashboard.getEntry("Desired Shooter Speed"),
-            "RPM", BLUE, 160, new DecimalFormat("#.##"));
+            "Desired RPM", BLUE, 160, new DecimalFormat("#"));
 
     private final HudElement desiredHoodAngleHudElement = new HudElement(SmartDashboard.getEntry("Desired Hood Angle"),
-            "RPM", BLUE, 160, new DecimalFormat("#.##"));
+            "Desired Hood Angle", BLUE, 160, new DecimalFormat("#.##"));
 
     /**
      * @return true when the shooter will be firing.

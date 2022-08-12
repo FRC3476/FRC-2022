@@ -8,11 +8,11 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.subsystem.Hopper.OuttakeState;
 import frc.utility.OrangeUtility;
-import frc.utility.Timer;
 import frc.utility.controllers.LazyCANSparkMax;
 
 import static frc.utility.Pneumatics.getPneumaticsHub;

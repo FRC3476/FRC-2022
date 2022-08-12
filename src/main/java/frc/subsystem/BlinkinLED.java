@@ -1,7 +1,7 @@
 package frc.subsystem;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
-import frc.utility.Timer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;

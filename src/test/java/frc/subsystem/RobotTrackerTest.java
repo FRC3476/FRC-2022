@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.utility.Timer;
+import edu.wpi.first.util.WPIUtilJNI;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +41,7 @@ public class RobotTrackerTest {
     @Test
     void robotTrackerTest() throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException { //TODO: Figure out why messing with rotation
         // breaks things
+        WPIUtilJNI.enableMockTime();
         double time = 0;
         for (int j = 0; j < 100; j++) {
             double x = random.nextDouble() * 5 - 2.5;
@@ -48,7 +49,7 @@ public class RobotTrackerTest {
             double theta = 0; //random.nextDouble() * 2 * Math.PI;
             double period = 0.05;
 
-            Timer.setTime(0);
+            WPIUtilJNI.setMockTime(0);
             robotTracker.resetPosition(new Pose2d(x, y, new Rotation2d(theta)), new Rotation2d(0));
 
             double largeRandomX = random.nextDouble() * 10 - 5;
@@ -60,7 +61,7 @@ public class RobotTrackerTest {
 
                 ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(randomX, randomY, randomRotation,
                         Rotation2d.fromDegrees(0));
-                drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds);
+                Drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds);
 
                 double dt = period + random.nextDouble() * 0.008 - 0.004;
                 theta += randomRotation * dt;
@@ -72,9 +73,9 @@ public class RobotTrackerTest {
                 Method updateOdomotry = RobotTracker.class.getDeclaredMethod("updateOdometry", double.class, Rotation2d.class,
                         SwerveModuleState[].class);
                 updateOdomotry.setAccessible(true);
-                
+
                 updateOdomotry.invoke(RobotTracker.getInstance(), time, new Rotation2d(theta),
-                        drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
+                        Drive.getSwerveDriveKinematics().toSwerveModuleStates(chassisSpeeds));
             }
 
             Field swerveDriveOdometry = RobotTracker.class.getDeclaredField("swerveDriveOdometry");

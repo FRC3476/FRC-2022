@@ -1,9 +1,9 @@
 package frc.subsystem;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
-import frc.utility.Timer;
 import frc.utility.net.DashboardConnection;
 import frc.utility.net.PacketHandler;
 import org.jetbrains.annotations.NotNull;

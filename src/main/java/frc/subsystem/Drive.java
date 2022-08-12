@@ -24,10 +24,10 @@ import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.ControllerDriveInputs;
-import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.wpimodified.HolonomicDriveController;
 import frc.utility.wpimodified.PIDController;
@@ -380,18 +380,10 @@ public final class Drive extends AbstractSubsystem {
     }
 
     public void setSwerveModuleStates(SwerveModuleState[] moduleStates, boolean rotate, Translation2d acceleration) {
-        acceleration = toRobotRelative(acceleration);
-        double accelNorm = acceleration.getNorm();
         for (int i = 0; i < 4; i++) {
             SwerveModuleState targetState = SwerveModuleState.optimize(moduleStates[i],
                     Rotation2d.fromDegrees(getWheelRotation(i)));
-            double rotatedAccel = accelNorm;
-            if (!(Math.abs(targetState.angle.minus(moduleStates[i].angle).getDegrees()) < 5)) {
-                rotatedAccel = -rotatedAccel;
-            }
 
-            //SwerveModuleState targetState = moduleStates[i];
-            // TODO: flip the acceleration if we flip the module
             double targetAngle = targetState.angle.getDegrees() % 360;
             if (targetAngle < 0) { // Make sure the angle is positive
                 targetAngle += 360;
@@ -406,7 +398,7 @@ public final class Drive extends AbstractSubsystem {
 
             double speedModifier = 1; //= 1 - (OrangeUtility.coercedNormalize(Math.abs(angleDiff), 5, 180, 0, 180) / 180);
 
-            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, rotatedAccel);
+            setMotorSpeed(i, targetState.speedMetersPerSecond * speedModifier, 0);
 
             SmartDashboard.putNumber("Swerve Motor " + i + " Speed Modifier", speedModifier);
             SmartDashboard.putNumber("Swerve Motor " + i + " Target Position", getRelativeSwervePosition(i) + angleDiff);

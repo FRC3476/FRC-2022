@@ -1,8 +1,8 @@
 package frc.subsystem;
 
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import edu.wpi.first.util.WPIUtilJNI;
 import frc.robot.Constants;
-import frc.utility.Timer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 
@@ -21,10 +21,11 @@ class IntakeTest {
     }
 
     public void intakeDoesNotRunWhenClosed() throws Exception {
-        Timer.setTime(0);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
         intake.update();
-        Timer.setTime(0.5);
+        WPIUtilJNI.setMockTime((long) (0.5d * 1.0e+9));
         intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
         intake.update();
 
@@ -36,10 +37,11 @@ class IntakeTest {
     }
 
     public void intakeDoesNotRunReversedWhenClosed() throws Exception {
-        Timer.setTime(0);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.CLOSE);
         intake.update();
-        Timer.setTime(0.5);
+        WPIUtilJNI.setMockTime((long) (0.5d * 1.0e+9));
         intake.setWantedIntakeState(Intake.IntakeState.EJECT);
         intake.update();
         Field intakeMotorField = Intake.class.getDeclaredField("intakeMotorFalcon");
@@ -52,10 +54,11 @@ class IntakeTest {
     @Disabled
     public void intakeDoesRunReversedWhenOpen() throws Exception {
         reset();
-        Timer.setTime(1000);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime((long) (1000.0d * 1.0e+9));
         intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
         intake.update();
-        Timer.setTime(1001);
+        WPIUtilJNI.setMockTime((long) (1001.0d * 1.0e+9));
         intake.setWantedIntakeState(Intake.IntakeState.EJECT);
         intake.update();
         intake.update();
@@ -69,10 +72,11 @@ class IntakeTest {
 
     @Disabled
     public void intakeDoesRunWhenOpen() throws Exception {
-        Timer.setTime(0);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime(0);
         intake.setIntakeSolState(Intake.IntakeSolState.OPEN);
         intake.update();
-        Timer.setTime(0.5);
+        WPIUtilJNI.setMockTime((long) (0.5d * 1.0e+9));
         intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
         intake.update();
 

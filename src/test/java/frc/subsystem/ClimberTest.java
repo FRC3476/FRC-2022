@@ -1,5 +1,6 @@
 package frc.subsystem;
 
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.Timer;
 import org.junit.jupiter.api.Disabled;
 
@@ -25,7 +26,8 @@ public class ClimberTest {
 
     @Disabled
     void waitConditionLogTest() {
-        frc.utility.Timer.setTime(1000);
+        WPIUtilJNI.enableMockTime();
+        WPIUtilJNI.setMockTime((long) (1000.0d * 1.0e+9));
         System.out.println("test\n");
         System.out.println(Climber.getInstance().getClimbState());
         System.out.println(Climber.getInstance().getClimbState().climbStep.waitCondition.apply(Climber.getInstance()));

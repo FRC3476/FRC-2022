@@ -4,8 +4,8 @@ import com.ctre.phoenix.motorcontrol.*;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
-import frc.utility.Timer;
 import frc.utility.controllers.LazyTalonSRX;
 import org.jetbrains.annotations.NotNull;
 
