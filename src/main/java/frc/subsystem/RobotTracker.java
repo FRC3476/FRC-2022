@@ -126,41 +126,10 @@ public final class RobotTracker extends AbstractSubsystem {
     public void addVisionMeasurement(Translation2d visionRobotTranslationMeters, double timestampSeconds, boolean force) {
         lock.writeLock().lock();
         try {
-            List<TimestampedPose> timestampedPoses = poseHistory.stream().collect(Collectors.toUnmodifiableList());
-            int index = Collections.binarySearch(timestampedPoses, new TimestampedPose(timestampSeconds, ZERO_POSE));
-
-            if (index < 0) { //Convert the binary search index into an actual index
-                index = -(index + 1);
-            }
-
-            if (!timestampedPoses.isEmpty()) {
-                if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
-                    // If the vision data is older than our oldest pose in our history, we have to throw out the vision data
-                    return;
-                } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
-                    // The vision data is newer than our newest pose. Assume that they happen at the same time
-                    Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.getTranslation().plus(
-                            positionOffset);
-
-                    positionOffset =
-                            visionRobotTranslationMeters.minus(robotTrackerPosition)
-                                    .times((force ? 1 : visionUsagePercent.get()))
-                                    .plus(positionOffset);
-                } else {
-                    // The vision data is somewhere in between poses in history. Interpolate between values to get the pose
-                    // that lines up with vision
-                    double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
-                            (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
-
-                    Translation2d robotTrackerPosition = timestampedPoses.get(index - 1).pose.interpolate(
-                            timestampedPoses.get(index).pose, percentIn).getTranslation().plus(positionOffset);
-
-                    positionOffset =
-                            visionRobotTranslationMeters.minus(robotTrackerPosition)
-                                    .times((force ? 1 : visionUsagePercent.get()))
-                                    .plus(positionOffset);
-                }
-            }
+            getPoseAtTime(timestampSeconds).ifPresent(pose2d ->
+                    positionOffset = visionRobotTranslationMeters.minus(pose2d.getTranslation())
+                            .times((force ? 1 : visionUsagePercent.get()))
+                            .plus(positionOffset));
         } finally {
             lock.writeLock().unlock();
         }
@@ -664,6 +633,44 @@ public final class RobotTracker extends AbstractSubsystem {
             return acceleration;
         } finally {
             lock.readLock().unlock();
+        }
+    }
+
+    public Optional<Pose2d> getPoseAtTime(double timestampSeconds) {
+        lock.writeLock().lock();
+        try {
+            List<TimestampedPose> timestampedPoses = poseHistory.stream().collect(Collectors.toUnmodifiableList());
+            int index = Collections.binarySearch(timestampedPoses, new TimestampedPose(timestampSeconds, ZERO_POSE));
+
+            if (index < 0) { //Convert the binary search index into an actual index
+                index = -(index + 1);
+            }
+
+            if (timestampedPoses.isEmpty()) {
+                return Optional.empty();
+            }
+
+            if (timestampedPoses.get(0).timestamp >= timestampSeconds) {
+                // If the vision data is older than our oldest pose in our history, we have to throw out the vision data
+                return Optional.empty();
+            } else if (timestampedPoses.get(timestampedPoses.size() - 1).timestamp < timestampSeconds) {
+                // The vision data is newer than our newest pose. Assume that they happen at the same time
+                Pose2d rawPose = timestampedPoses.get(index - 1).pose;
+                Translation2d adjustedTranslation = rawPose.getTranslation().plus(positionOffset);
+                return Optional.of(new Pose2d(adjustedTranslation, rawPose.getRotation()));
+            } else {
+                // The vision data is somewhere in between poses in history. Interpolate between values to get the pose
+                // that lines up with vision
+                double percentIn = (timestampSeconds - timestampedPoses.get(index - 1).timestamp) /
+                        (timestampedPoses.get(index).timestamp - timestampedPoses.get(index - 1).timestamp);
+
+                Pose2d rawPose = timestampedPoses.get(index - 1).pose
+                        .interpolate(timestampedPoses.get(index).pose, percentIn);
+                Translation2d adjustedTranslation = rawPose.getTranslation().plus(positionOffset);
+                return Optional.of(new Pose2d(adjustedTranslation, rawPose.getRotation()));
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 }
