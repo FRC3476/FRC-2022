@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import org.joml.AxisAngle4d;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -177,6 +178,7 @@ public final class Constants {
     public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
     public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
+
 
     public enum AccelerationLimits {
         /**
@@ -585,4 +587,9 @@ public final class Constants {
     public static final double BEAM_BREAK_EJECT_TIME = 0.75;
     public static final double MIN_AUTO_EJECT_TIME = 0.5;
     public static final int MAX_BAD_VISION_ITERATIONS = 100 / (VISION_MANAGER_PERIOD);
+
+    public static final double REALSENSE_NETWORK_LATENCY = 0.05;
+    public static final int MAX_NO_VISIBILITY_TIME_S = 12;
+    public static final int MAX_NO_VISIBILITY_FRAMES_WHEN_SHOULD_BE_VISIBLE = 3;
+    public static final AxisAngle4d INTAKE_CAMERA_ROTATION = new AxisAngle4d(0, 0, 0, 1);
 }
