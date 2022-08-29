@@ -592,4 +592,6 @@ public final class Constants {
     public static final int MAX_NO_VISIBILITY_TIME_S = 12;
     public static final int MAX_NO_VISIBILITY_FRAMES_WHEN_SHOULD_BE_VISIBLE = 3;
     public static final AxisAngle4d INTAKE_CAMERA_ROTATION = new AxisAngle4d(0, 0, 0, 1);
+
+    public static final double MAX_CARGO_Y = Units.inchesToMeters(5);
 }

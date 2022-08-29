@@ -11,6 +11,7 @@ import frc.utility.cargotracking.CargoPosition;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.joml.AxisAngle4d;
+import org.joml.Vector2d;
 import org.joml.Vector3d;
 
 import java.util.*;
@@ -48,13 +49,32 @@ public class CargoTracker extends AbstractSubsystem {
         latencyTable.addListener(event -> updateCargoPositions(), EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
     }
 
-    ArrayList<CargoPosition> blueCargoPositions = new ArrayList<>(20);
-
+    ArrayList<CargoPosition> blueCargoPositions = new ArrayList<>(30);
+    ArrayList<CargoPosition> redCargoPositions = new ArrayList<>(30);
     private static final double[] NO_DETECTION = {0};
     private static final Vector3d CAMERA_RELATIVE_POSITION = new Vector3d(0, 0, 0);
     public static final double CARGO_RADIUS = 5;
 
     private static final double CARGO_RADIUS_SQUARED = CARGO_RADIUS * CARGO_RADIUS;
+
+    private static final Vector2d[] CENTER_FIELD_GEOMETRY = {
+            new Vector2d(6.9270, -0.3846),
+            new Vector2d(7.2446, -0.2393),
+            new Vector2d(7.6512, 0.84890),
+            new Vector2d(7.5067, 1.18470),
+            new Vector2d(7.8602, 1.33040),
+            new Vector2d(8.0020, 1.00600),
+            new Vector2d(9.1144, 0.59000),
+            new Vector2d(9.4292, 0.72970),
+            new Vector2d(9.5957, 0.39600),
+            new Vector2d(9.2665, 0.25170),
+            new Vector2d(8.8336, -0.8476),
+            new Vector2d(8.9712, -1.1572),
+            new Vector2d(8.6237, -1.3166),
+            new Vector2d(8.4980, -1.0302),
+            new Vector2d(7.3787, -0.5838)
+    };
+
 
     private void updateCargoPositions() {
         double timestamp = Timer.getFPGATimestamp() - (latencyTable.getDouble(0) / 1000) - Constants.REALSENSE_NETWORK_LATENCY;
@@ -77,29 +97,32 @@ public class CargoTracker extends AbstractSubsystem {
         // Make the cargo positions relative to the field
 
         updateCargoPositions(timestamp, detectedBlueCargoPositions, robotRotation, cameraPosition, blueCargoPositions);
+        updateCargoPositions(timestamp, detectedRedCargoPositions, robotRotation, cameraPosition, redCargoPositions);
         lastTimestamp = timestamp;
     }
 
     private void updateCargoPositions(double timestamp, @NotNull Vector3d @NotNull [] detectedCargoPositions,
                                       @NotNull AxisAngle4d robotRotation, @NotNull Vector3d cameraPosition,
                                       @NotNull ArrayList<CargoPosition> cargoPositions) {
-        for (int i = 0; i < detectedCargoPositions.length; i++) {
-            detectedCargoPositions[i] =
-                    INTAKE_CAMERA_ROTATION.transform(robotRotation.transform(detectedCargoPositions[i])).add(cameraPosition);
+        for (Vector3d detectedCargoPosition : detectedCargoPositions) {
+            INTAKE_CAMERA_ROTATION.transform(robotRotation.transform(detectedCargoPosition)).add(cameraPosition);
         }
+
 
         ArrayList<CargoPairing> cargoPairings = new ArrayList<>(detectedCargoPositions.length * cargoPositions.size());
 
         ArrayList<Vector3d> unpairedCargoPositions = new ArrayList<>(detectedCargoPositions.length);
         // Update the cargo positions
-        for (Vector3d detectedCargoPos : detectedCargoPositions) {
-            for (CargoPosition cargoPosition : cargoPositions) {
-                if (cargoPosition.position.distanceSquared(detectedCargoPos) < CARGO_RADIUS_SQUARED) {
-                    cargoPairings.add(new CargoPairing(cargoPosition, detectedCargoPos));
+        for (Vector3d detectedCargoPosition : detectedCargoPositions) {
+            if (detectedCargoPosition.y < MAX_CARGO_Y) {
+                for (CargoPosition cargoPosition : cargoPositions) {
+                    if (cargoPosition.position.distanceSquared(detectedCargoPosition) < CARGO_RADIUS_SQUARED) {
+                        cargoPairings.add(new CargoPairing(cargoPosition, detectedCargoPosition));
+                    }
                 }
-            }
 
-            unpairedCargoPositions.add(detectedCargoPos);
+                unpairedCargoPositions.add(detectedCargoPosition);
+            }
         }
         Collections.sort(cargoPairings);
 
