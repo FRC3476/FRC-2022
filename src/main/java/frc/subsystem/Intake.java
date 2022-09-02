@@ -93,7 +93,11 @@ public final class Intake extends AbstractSubsystem {
     // Intake States
 
     public enum IntakeSolState {
-        OPEN, CLOSE
+        OPEN, CLOSE;
+
+        public IntakeSolState invert() {
+            return this == OPEN ? CLOSE : OPEN;
+        }
     }
 
 
