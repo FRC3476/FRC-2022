@@ -82,7 +82,13 @@ public final class VisionManager extends AbstractSubsystem {
 
     @Override
     public void logData() {
+        Vector3D targetPosition = getPositionOfTargetRelativeToRobot();
+        logData("New Distance", Math.hypot(targetPosition.getX(), targetPosition.getZ()));
 
+        Vector2d targetPx = limelight.getTargetPosInCameraPixels();
+
+        logData("py", targetPx.y);
+        logData("px", targetPx.x);
     }
 
     /**
