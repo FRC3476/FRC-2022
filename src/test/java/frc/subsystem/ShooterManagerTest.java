@@ -7,7 +7,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class VisionManagerTest {
+class ShooterManagerTest {
 
     @Test
     void getVelocityAdjustedRelativeTranslation() {
@@ -17,11 +17,11 @@ class VisionManagerTest {
         for (int i = 0; i < 100000; i++) {
             Translation2d goalPos = new Translation2d((random.nextDouble() * 20) - 10, (random.nextDouble() * 20) - 10);
             Translation2d robotVelocity = new Translation2d((random.nextDouble() * 10) - 5, (random.nextDouble() * 10) - 5);
-            Translation2d fakeGoal = VisionManager.getInstance().getVelocityAdjustedRelativeTranslation(goalPos, robotVelocity);
+            Translation2d fakeGoal = ShooterManager.getInstance().getVelocityAdjustedRelativeTranslation(goalPos, robotVelocity);
 
 
             Translation2d recalculatedActual = fakeGoal.minus(
-                    robotVelocity.times(VisionManager.getInstance().getTimeOfFlight(fakeGoal)));
+                    robotVelocity.times(ShooterManager.getInstance().getTimeOfFlight(fakeGoal)));
 
             if (recalculatedActual.minus(goalPos).getNorm() > 0.01) {
                 failures++;

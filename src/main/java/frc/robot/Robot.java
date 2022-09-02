@@ -83,7 +83,7 @@ public class Robot extends TimedRobot {
 
     //Control loop states
     boolean limelightTakeSnapshots = false;
-    private ShooterPreset shooterPreset = VisionManager.getInstance().visionLookUpTable.getShooterPreset(0);
+    private ShooterPreset shooterPreset = ShooterManager.getInstance().visionLookUpTable.getShooterPreset(0);
 
     // Input Control
     private double firstPressTime = 0;
@@ -105,7 +105,7 @@ public class Robot extends TimedRobot {
                                 return;
                             }
                             Collections.sort(shooterConfig.getShooterConfigs());
-                            VisionManager.getInstance().setShooterConfig(shooterConfig);
+                            ShooterManager.getInstance().setShooterConfig(shooterConfig);
                         } catch (IOException e) {
                             //Should never happen. The gui should never upload invalid data.
                             DriverStation.reportError("Failed to deserialize shooter config from networktables", e.getStackTrace());
@@ -267,8 +267,9 @@ public class Robot extends TimedRobot {
         final Hopper hopper = Hopper.getInstance();
         final Intake intake = Intake.getInstance();
         final Shooter shooter = Shooter.getInstance();
+        final ShooterManager shooterManager = ShooterManager.getInstance();
+        final VisionManager visionManager = VisionManager.getInstance();
 
-        VisionManager visionManager = VisionManager.getInstance();
         xbox.update();
         stick.update();
         buttonPanel.update();
@@ -296,7 +297,7 @@ public class Robot extends TimedRobot {
                 drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
                 shooter.setFeederChecksDisabled(false);
                 hopper.setHopperState(Hopper.HopperState.ON);
-                visionManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
+                shooterManager.stopAndShoot(NO_MOTION_CONTROLLER_INPUTS, useFieldRelative);
             }
         } else if (buttonPanel.getRawButton(6)) {
             // If trying to Hood Eject
@@ -313,7 +314,7 @@ public class Robot extends TimedRobot {
                 // Do Shooting while moving (using vision)
                 drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
                 visionManager.forceVisionOn(driverForcingVisionOn);
-                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+                shooterManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
             }
         } else {
             drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
@@ -399,9 +400,9 @@ public class Robot extends TimedRobot {
         }
 
 //        if (xbox.getRisingEdge(XboxButtons.LEFT_BUMPER)) {
-//            visionManager.adjustShooterHoodBias(-0.5);
+//            shooterManager.adjustShooterHoodBias(-0.5);
 //        } else if (xbox.getRisingEdge(XboxButtons.RIGHT_BUMPER)) {
-//            visionManager.adjustShooterHoodBias(0.5);
+//            shooterManager.adjustShooterHoodBias(0.5);
 //        }
 
 
@@ -495,16 +496,16 @@ public class Robot extends TimedRobot {
     }
 
     private void updateShooterButtonPanels() {
-        VisionManager visionManager = VisionManager.getInstance();
+        ShooterManager shooterManager = ShooterManager.getInstance();
         if (buttonPanel.getRisingEdge(1)) {
             //driver station shot
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(299);
+            shooterPreset = shooterManager.visionLookUpTable.getShooterPreset(299);
         } else if (buttonPanel.getRisingEdge(2)) {
             // Wall shot (closer wall)
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(139);
+            shooterPreset = shooterManager.visionLookUpTable.getShooterPreset(139);
         } else if (buttonPanel.getRisingEdge(3)) {
             // Fender shot
-            shooterPreset = visionManager.visionLookUpTable.getShooterPreset(40);
+            shooterPreset = shooterManager.visionLookUpTable.getShooterPreset(40);
         }
     }
 
