@@ -2,6 +2,8 @@ package frc.subsystem;
 
 import com.dacubeking.AutoBuilder.robot.drawable.Circle;
 import com.dacubeking.AutoBuilder.robot.drawable.Renderer;
+import com.dacubeking.AutoBuilder.robot.utility.Vector2;
+import com.google.common.collect.EvictingQueue;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -32,13 +35,19 @@ import static frc.utility.geometry.GeometryUtils.angleOf;
 
 public final class ShooterManager extends AbstractSubsystem {
 
+    public static final Circle[] EMPTY_CIRCLES_ARRAY = new Circle[0];
     public final @NotNull VisionLookUpTable visionLookUpTable = VisionLookUpTable.getInstance();
+    @SuppressWarnings("UnstableApiUsage")
+    private final @NotNull EvictingQueue<Circle> drawableShotPredictedLandingLocation = EvictingQueue.create(10);
+
 
     public void setShooterConfig(ShooterConfig shooterConfig) {
         visionLookUpTable.setShooterConfig(shooterConfig);
     }
 
     private static final Color8Bit LIGHT_BLUE = new Color8Bit(36, 191, 212);
+    private static final Color8Bit RED = new Color8Bit(255, 0, 0);
+    private static final Color8Bit GREEN = new Color8Bit(0, 255, 0);
 
     private ShooterManager() {
         super(Constants.SHOOTER_MANAGER_PERIOD, 1);
@@ -70,7 +79,10 @@ public final class ShooterManager extends AbstractSubsystem {
 
     }
 
+    double lastShotTime = 0;
+
     @Override
+    @SuppressWarnings("UnstableApiUsage")
     public void logData() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
         final @NotNull Drive drive = Drive.getInstance();
@@ -106,8 +118,36 @@ public final class ShooterManager extends AbstractSubsystem {
         logData("Calculated Target X", fieldCentricCords.getX());
         logData("Calculated Target Y", fieldCentricCords.getY());
 
-        Renderer.render(new Circle((float) fieldCentricCords.getX(), (float) fieldCentricCords.getY(),
-                (float) GOAL_RADIUS, LIGHT_BLUE));
+        Circle shootPosition = new Circle((float) fieldCentricCords.getX(), (float) fieldCentricCords.getY(),
+                (float) GOAL_RADIUS * 0.5f, LIGHT_BLUE);
+
+        double tof = getTimeOfFlight(aimToPosition);
+
+        Translation2d currentBallLandingPosition =
+                new MutableTranslation2d(aimToPosition.getNorm(),
+                        RobotTracker.getInstance().getGyroAngle().minus(ROTATION_OFFSET))
+                        .plus(getRobotVel().getX() * tof, getRobotVel().getY() * tof);
+
+        Circle currentDrawableShotPredictedLandingLocation = new Circle(
+                new Vector2((float) currentBallLandingPosition.getX(), (float) currentBallLandingPosition.getY()),
+                0.1f, GREEN
+        );
+
+        if (lastShotTime < shooter.getLastShotTime()) {
+            lastShotTime = shooter.getLastShotTime();
+            drawableShotPredictedLandingLocation.add(new Circle(
+                    new Vector2((float) currentBallLandingPosition.getX(), (float) currentBallLandingPosition.getY()),
+                    0.1f, RED
+            ));
+        }
+
+        // This feels awful, is there a better way to do this?
+        ArrayList<Circle> circles = new ArrayList<>();
+        circles.add(shootPosition);
+        circles.add(currentDrawableShotPredictedLandingLocation);
+        circles.addAll(drawableShotPredictedLandingLocation);
+        Renderer.render(circles.toArray(EMPTY_CIRCLES_ARRAY));
+
 
         double allowedTurnError = getAllowedTurnError(aimToPosition.getNorm());
 
@@ -152,7 +192,6 @@ public final class ShooterManager extends AbstractSubsystem {
                     useFieldRelative,
                     0);
         }
-
 
         Translation2d aimChecksPosition = getAdjustedTranslation(shooterLookAheadTime).times(-1);
         updateShooterState(aimChecksPosition.getNorm());
