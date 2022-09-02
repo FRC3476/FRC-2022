@@ -257,6 +257,9 @@ public class Robot extends TimedRobot {
     private final Object buttonPanelForcingVisionOn = new Object();
     private final Object resettingPoseVisionOn = new Object();
 
+    private double lastDriverToggleIntakeTime = 0;
+    private double lastOperatorToggleIntakeTime = 0;
+
     /*
      * This function is called periodically during operator control.
      */
@@ -352,9 +355,16 @@ public class Robot extends TimedRobot {
         updateShooterButtonPanels();
 
         // Intake solenoid control
-        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
-            intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
-                    Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
+        if (xbox.getRisingEdge(XboxButtons.B)
+                && Timer.getFPGATimestamp() - lastOperatorToggleIntakeTime > Constants.INTAKE_TOGGLE_DEBOUNCE_TIME) {
+            intake.setIntakeSolState(intake.getIntakeSolState().invert());
+            lastDriverToggleIntakeTime = Timer.getFPGATimestamp();
+        }
+
+        if (buttonPanel.getRisingEdge(4)
+                && Timer.getFPGATimestamp() - lastDriverToggleIntakeTime > Constants.INTAKE_TOGGLE_DEBOUNCE_TIME) {
+            intake.setIntakeSolState(intake.getIntakeSolState().invert());
+            lastOperatorToggleIntakeTime = Timer.getFPGATimestamp();
         }
 
         // Intake and hopper motor control
