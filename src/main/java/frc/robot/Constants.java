@@ -177,6 +177,8 @@ public final class Constants {
     public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
     public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
+    public static final double TURN_SPEED_LIMIT_WHILE_AIMING = 4.0;
+
     public enum AccelerationLimits {
         /**
          * Normal acceleration limit while driving. This ensures that the driver can't tip the robot.

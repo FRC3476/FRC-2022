@@ -353,7 +353,7 @@ public class PIDController implements Sendable, AutoCloseable {
    * Resets the integral term.
    */
   public void resetI() {
-    m_prevError = 0;
+    m_totalError = 0;
   }
 
   @Override

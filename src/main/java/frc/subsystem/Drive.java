@@ -670,17 +670,25 @@ public final class Drive extends AbstractSubsystem {
         }
     }
 
+    /**
+     * @param autoAimingRotationGoal The goal to aim at (in radians)
+     * @return The speed to turn at (in radians/s)
+     */
     private double getTurnPidDeltaSpeed(@NotNull TrapezoidProfile.State autoAimingRotationGoal) {
         turnPID.setSetpoint(autoAimingRotationGoal.position);
 
-        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate || turnPID.getPositionError() > Math.toRadians(7)) {
+        if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
             turnPID.reset();
         } else if (turnPID.getPositionError() > Math.toRadians(7)) {
+            // This is basically an I-Zone
             turnPID.resetI();
         }
         lastTurnUpdate = Timer.getFPGATimestamp();
-        return turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
+        return Math.max(
+                turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity,
+                Constants.TURN_SPEED_LIMIT_WHILE_AIMING);
     }
+
 
     public void setAutoRotation(@NotNull Rotation2d rotation) {
         currentAutoTrajectoryLock.lock();
