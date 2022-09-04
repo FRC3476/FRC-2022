@@ -314,9 +314,14 @@ public class Robot extends TimedRobot {
                 doManualShot(drive, hopper, shooter, visionManager);
             } else {
                 // Do Shooting while moving (using vision)
-                drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
                 visionManager.forceVisionOn(driverForcingVisionOn);
-                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+                if (getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+                    drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
+                    visionManager.stopAndShoot(getControllerDriveInputs(), useFieldRelative);
+                } else {
+                    drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
+                    visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+                }
             }
         } else {
             drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
