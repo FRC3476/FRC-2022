@@ -684,9 +684,9 @@ public final class Drive extends AbstractSubsystem {
             turnPID.resetI();
         }
         lastTurnUpdate = Timer.getFPGATimestamp();
-        return Math.max(
-                turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity,
-                Constants.TURN_SPEED_LIMIT_WHILE_AIMING);
+        double pidSpeed =
+                turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
+        return Math.copySign(Math.min(Math.abs(pidSpeed), Constants.TURN_SPEED_LIMIT_WHILE_AIMING), pidSpeed);
     }
 
 
