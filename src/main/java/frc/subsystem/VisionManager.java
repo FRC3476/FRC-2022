@@ -304,7 +304,9 @@ public final class VisionManager extends AbstractSubsystem {
                 logData("Using Vision Info", "Corners touching edge");
             } else {
                 if (dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
-                        robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED) {
+                        robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED
+                        && limelight.getCorners().length % 4 == 0
+                        && limelight.getCorners().length >= 8) {
                     if (DriverStation.isTeleopEnabled()) {
                         robotTracker.addVisionMeasurement(robotTranslation, getLimelightTime(), false);
                     }
