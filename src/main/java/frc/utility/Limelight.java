@@ -288,8 +288,8 @@ public final class Limelight extends AbstractSubsystem {
     @Contract(" -> new")
     public @NotNull Vector2d getTargetPosInCameraPixels() {
         return new Vector2d(
-                (getHorizontalOffset() / 29.8) * (cameraResolution.width / 2.0) + (cameraResolution.width / 2.0),
-                (getVerticalOffset() / 24.85) * (cameraResolution.height / 2.0) + (cameraResolution.height / 2.0)
+                (getHorizontalOffset() / 29.8) * (320 / 2.0) + (320 / 2.0),
+                (getVerticalOffset() / 24.85) * (240 / 2.0) + (240 / 2.0)
         );
     }
 
