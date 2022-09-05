@@ -312,6 +312,8 @@ public final class Hopper extends AbstractSubsystem {
         logData("Hopper State", wantedHopperState);
         logData("Is Beam Broken", isBeamBroken());
         logData("Last Beam Break Open Time", getLastBeamBreakOpenTime());
+        logData("Eject Motor Temperature", outtakeWheels.getMotorTemperature());
+        logData("Hopper Motor Temperature", hopperMotor.getMotorTemperature());
     }
 
     @Override

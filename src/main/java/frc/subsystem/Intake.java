@@ -70,9 +70,11 @@ public final class Intake extends AbstractSubsystem {
         if (Constants.IS_PRACTICE) {
             SmartDashboard.putNumber("Intake Current", intakeMotorSpark.getOutputCurrent());
             SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotorSpark.get());
+            logData("Intake Motor Temperature", intakeMotorSpark.getMotorTemperature());
         } else {
             SmartDashboard.putNumber("Intake Current", intakeMotorFalcon.getStatorCurrent());
             SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotorFalcon.getMotorOutputPercent());
+            logData("Intake Motor Temperature", intakeMotorFalcon.getTemperature());
         }
         SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
         logData("Wanted Intake State", wantedIntakeState);
