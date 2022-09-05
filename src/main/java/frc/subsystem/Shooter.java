@@ -819,6 +819,9 @@ public final class Shooter extends AbstractSubsystem {
         logData("Shooter Flywheel Slave Current", shooterWheelSlave.getSupplyCurrent());
         logData("Feeder Wheel Current", feederWheel.getSupplyCurrent());
         logData("Hood Motor Current", hoodMotor.getOutputCurrent());
+        logData("Hood Motor Temperature", hoodMotor.getMotorTemperature());
+        logData("Shooter Motor 1 Temperature", shooterWheelMaster.getTemperature());
+        logData("Shooter Motor 2 Temperature", shooterWheelSlave.getTemperature());
 
         if (isShooterAtTargetSpeed()) {
             rpmHudElement.setColor(GREEN).push();
