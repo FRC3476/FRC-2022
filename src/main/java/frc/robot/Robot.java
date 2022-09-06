@@ -193,7 +193,7 @@ public class Robot extends TimedRobot {
             buttonPanel.update();
         }
 
-        if (stick.getRawButton(4)) {
+        if (buttonPanel.getRawButton(8)) {
             visionManager.forceVisionOn(resettingPoseVisionOn);
             visionManager.forceUpdatePose();
         } else {
@@ -381,7 +381,7 @@ public class Robot extends TimedRobot {
             } else {
                 hopper.setHopperState(HopperState.OFF);
             }
-        } else if (buttonPanel.getRawButton(8) || xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
+        } else if (xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
             // Sets intake to eject without controlling hopper
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.OFF);

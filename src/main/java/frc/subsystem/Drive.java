@@ -857,6 +857,8 @@ public final class Drive extends AbstractSubsystem {
             logData("Drive Motor " + i + " Velocity", getSwerveDriveVelocity(i) / 60.0d);
             logData("Drive Motor " + i + " Current", swerveDriveMotors[i].getStatorCurrent());
             logData("Swerve Motor " + i + " Current", swerveMotors[i].getStatorCurrent());
+            logData("Swerve Motor " + i + " Temp", swerveMotors[i].getTemperature());
+            logData("Drive Motor " + i + " Temp", swerveDriveMotors[i].getTemperature());
         }
         logData("Drive State", driveState.toString());
     }

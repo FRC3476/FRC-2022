@@ -50,7 +50,7 @@ public final class Intake extends AbstractSubsystem {
             intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_3_General, 23);
             intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_4_Advanced, 29);
             intakeMotorFalcon.setControlFramePeriod(ControlFrame.Control_6_MotProfAddTrajPoint, 547);
-            intakeMotorFalcon.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(false, 40, 70, 0), 1000);
+            intakeMotorFalcon.configStatorCurrentLimit(new StatorCurrentLimitConfiguration(true, 80, 120, 0.01), 1000);
             intakeMotorFalcon.configOpenloopRamp(0.2, 1000);
         }
     }
@@ -70,9 +70,11 @@ public final class Intake extends AbstractSubsystem {
         if (Constants.IS_PRACTICE) {
             SmartDashboard.putNumber("Intake Current", intakeMotorSpark.getOutputCurrent());
             SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotorSpark.get());
+            logData("Intake Motor Temperature", intakeMotorSpark.getMotorTemperature());
         } else {
             SmartDashboard.putNumber("Intake Current", intakeMotorFalcon.getStatorCurrent());
             SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotorFalcon.getMotorOutputPercent());
+            logData("Intake Motor Temperature", intakeMotorFalcon.getTemperature());
         }
         SmartDashboard.putBoolean("Intake Solenoid State: ", intakeSol.get());
         logData("Wanted Intake State", wantedIntakeState);
