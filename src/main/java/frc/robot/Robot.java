@@ -466,7 +466,7 @@ public class Robot extends TimedRobot {
                 climber.setStepByStep(!climber.isStepByStep());
             }
 
-            if (stick.getRisingEdge(3) || stick.getRisingEdge(4)) {
+            if (stick.getRisingEdge(3)) {
                 climber.deployClimb();
             }
         }
