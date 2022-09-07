@@ -185,6 +185,14 @@ public class CargoTracker extends AbstractSubsystem {
     }
 
 
+    /**
+     * Gets the cargo positions from the network table array of floats.
+     *
+     * @param cargoPositions The array of floats from the network table. The first index should be either 0 or 1, where 0 means
+     *                       that there is no cargo detected and 1 means that there is cargo detected. The rest of the array
+     *                       should be in groups of 3, where each group is the x, y, and z position of the cargo.
+     * @return The array of cargo positions as Vector3d objects. The array will be empty if there is no cargo detected.
+     */
     @Contract(pure = true)
     public static Vector3d @NotNull [] getCargoPositions(double @NotNull [] cargoPositions) {
         if (cargoPositions.length % 3 != 1) {
