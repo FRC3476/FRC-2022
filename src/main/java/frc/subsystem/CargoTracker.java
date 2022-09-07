@@ -52,7 +52,7 @@ public class CargoTracker extends AbstractSubsystem {
     ArrayList<CargoPosition> blueCargoPositions = new ArrayList<>(30);
     ArrayList<CargoPosition> redCargoPositions = new ArrayList<>(30);
     private static final double[] NO_DETECTION = {0};
-    private static final Vector3d CAMERA_RELATIVE_POSITION = new Vector3d(0, 0, 0);
+    private static final Vector3d CAMERA_RELATIVE_POSITION = new Vector3d(0.2, 0.5, 0);
     public static final double CARGO_RADIUS = 5;
 
     private static final double CARGO_RADIUS_SQUARED = CARGO_RADIUS * CARGO_RADIUS;
@@ -87,14 +87,12 @@ public class CargoTracker extends AbstractSubsystem {
         final @NotNull Vector3d[] detectedBlueCargoPositions = getCargoPositions(blueCargoTable.getDoubleArray(NO_DETECTION));
         final @NotNull Vector3d[] detectedRedCargoPositions = getCargoPositions(redCargoTable.getDoubleArray(NO_DETECTION));
         Pose2d robotPose2d = optionalRobotPose.get();
-        Vector3d robotPose = new Vector3d(robotPose2d.getTranslation().getX(), 0, robotPose2d.getTranslation().getY());
+        Vector3d robotTranslation = new Vector3d(robotPose2d.getTranslation().getX(), 0, robotPose2d.getTranslation().getY());
 
         AxisAngle4d robotRotation = new AxisAngle4d(robotPose2d.getRotation().getRadians(), 0, 1, 0);
-        Vector3d cameraPosition = new Vector3d(CAMERA_RELATIVE_POSITION);
-        robotRotation.transform(cameraPosition);
-        cameraPosition.add(robotPose);
-
-        // Make the cargo positions relative to the field
+        Vector3d cameraPosition = new Vector3d(CAMERA_RELATIVE_POSITION); // copy
+        robotRotation.transform(cameraPosition); // rotate
+        cameraPosition.add(robotTranslation); // make relative to the field
 
         updateCargoPositions(timestamp, detectedBlueCargoPositions, robotRotation, cameraPosition, blueCargoPositions);
         updateCargoPositions(timestamp, detectedRedCargoPositions, robotRotation, cameraPosition, redCargoPositions);
@@ -102,13 +100,15 @@ public class CargoTracker extends AbstractSubsystem {
     }
 
     private void updateCargoPositions(double timestamp, @NotNull Vector3d @NotNull [] detectedCargoPositions,
-                                      @NotNull AxisAngle4d robotRotation, @NotNull Vector3d cameraPosition,
+                                      @NotNull AxisAngle4d robotRotation, @NotNull Vector3d cameraPositionRelativeToField,
                                       @NotNull ArrayList<CargoPosition> cargoPositions) {
+        // Make the cargo positions relative to the field
         for (Vector3d detectedCargoPosition : detectedCargoPositions) {
-            INTAKE_CAMERA_ROTATION.transform(robotRotation.transform(detectedCargoPosition)).add(cameraPosition);
+            robotRotation.transform(INTAKE_CAMERA_ROTATION_INVERSE.transform(detectedCargoPosition))
+                    .add(cameraPositionRelativeToField);
         }
 
-
+        // Initial size to avoid resizing
         ArrayList<CargoPairing> cargoPairings = new ArrayList<>(detectedCargoPositions.length * cargoPositions.size());
 
         ArrayList<Vector3d> unpairedCargoPositions = new ArrayList<>(detectedCargoPositions.length);
