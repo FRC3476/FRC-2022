@@ -37,8 +37,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static frc.robot.Constants.GOAL_POSITION;
-import static frc.robot.Constants.IS_PRACTICE;
+import static frc.robot.Constants.*;
 import static frc.utility.MathUtil.dist2;
 
 public final class VisionManager extends AbstractSubsystem {
@@ -303,10 +302,11 @@ public final class VisionManager extends AbstractSubsystem {
             if (limelight.areCornersTouchingEdge()) {
                 logData("Using Vision Info", "Corners touching edge");
             } else {
-                if (dist2(robotTracker.getLatencyCompedPoseMeters().getTranslation(),
-                        robotTranslation) < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED
-                        && limelight.getCorners().length % 4 == 0
-                        && limelight.getCorners().length >= 8) {
+                double positionError =
+                        dist2(robotTracker.getPoseAtTime(limelight.getTimestamp()).orElseGet(Pose2d::new).getTranslation(),
+                                robotTranslation);
+                if ((limelight.getCorners().length % 4 == 0 || positionError < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED)
+                        && limelight.getCorners().length >= MIN_CORNERS && limelight.getCorners().length <= MAX_CORNERS) {
                     if (DriverStation.isTeleopEnabled()) {
                         robotTracker.addVisionMeasurement(robotTranslation, getLimelightTime(), false);
                     }

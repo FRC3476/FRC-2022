@@ -53,7 +53,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(15, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(2, 2); //TODO: CHANGE
     // This is in inches
     public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
@@ -210,6 +210,9 @@ public final class Constants {
     //field/Vision Manager constants
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
     public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
+
+    public static final int MIN_CORNERS = 8;
+    public static final int MAX_CORNERS = 20;
 
     public static final double GOAL_RADIUS_IN = 24.0;
     /**
