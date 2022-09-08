@@ -193,7 +193,7 @@ public class Robot extends TimedRobot {
             buttonPanel.update();
         }
 
-        if (stick.getRawButton(4)) {
+        if (buttonPanel.getRawButton(8)) {
             visionManager.forceVisionOn(resettingPoseVisionOn);
             visionManager.forceUpdatePose();
         } else {
@@ -257,6 +257,9 @@ public class Robot extends TimedRobot {
     private final Object buttonPanelForcingVisionOn = new Object();
     private final Object resettingPoseVisionOn = new Object();
 
+    private double lastDriverToggleIntakeTime = 0;
+    private double lastOperatorToggleIntakeTime = 0;
+
     /*
      * This function is called periodically during operator control.
      */
@@ -311,9 +314,14 @@ public class Robot extends TimedRobot {
                 doManualShot(drive, hopper, shooter, visionManager);
             } else {
                 // Do Shooting while moving (using vision)
-                drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
                 visionManager.forceVisionOn(driverForcingVisionOn);
-                visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+                if (getControllerDriveInputs().equals(NO_MOTION_CONTROLLER_INPUTS)) {
+                    drive.accelerationLimit = AccelerationLimits.SHOOT_AND_MOVE;
+                    visionManager.stopAndShoot(getControllerDriveInputs(), useFieldRelative);
+                } else {
+                    drive.accelerationLimit = AccelerationLimits.STOP_AND_SHOOT;
+                    visionManager.shootAndMove(getControllerDriveInputs(), useFieldRelative);
+                }
             }
         } else {
             drive.accelerationLimit = AccelerationLimits.NORMAL_DRIVING;
@@ -351,9 +359,16 @@ public class Robot extends TimedRobot {
         updateShooterButtonPanels();
 
         // Intake solenoid control
-        if (xbox.getRisingEdge(Controller.XboxButtons.B) || buttonPanel.getRisingEdge(4)) {
-            intake.setIntakeSolState(intake.getIntakeSolState() == Intake.IntakeSolState.OPEN ?
-                    Intake.IntakeSolState.CLOSE : Intake.IntakeSolState.OPEN);
+        if (xbox.getRisingEdge(XboxButtons.B)
+                && Timer.getFPGATimestamp() - lastOperatorToggleIntakeTime > Constants.INTAKE_TOGGLE_DEBOUNCE_TIME) {
+            intake.setIntakeSolState(intake.getIntakeSolState().invert());
+            lastDriverToggleIntakeTime = Timer.getFPGATimestamp();
+        }
+
+        if (buttonPanel.getRisingEdge(4)
+                && Timer.getFPGATimestamp() - lastDriverToggleIntakeTime > Constants.INTAKE_TOGGLE_DEBOUNCE_TIME) {
+            intake.setIntakeSolState(intake.getIntakeSolState().invert());
+            lastOperatorToggleIntakeTime = Timer.getFPGATimestamp();
         }
 
         // Intake and hopper motor control
@@ -365,7 +380,7 @@ public class Robot extends TimedRobot {
             } else {
                 hopper.setHopperState(HopperState.OFF);
             }
-        } else if (buttonPanel.getRawButton(8) || xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
+        } else if (xbox.getRawButton(XboxButtons.RIGHT_BUMPER)) {
             // Sets intake to eject without controlling hopper
             intake.setWantedIntakeState(Intake.IntakeState.EJECT);
             hopper.setHopperState(Hopper.HopperState.OFF);

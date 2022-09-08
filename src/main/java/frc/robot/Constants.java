@@ -53,7 +53,7 @@ public final class Constants {
      * Relative position of the limelight from the center of the robot.
      */
     public static final Translation2d LIMELIGHT_CENTER_OFFSET = new Translation2d(-0.684, 0); //TODO: CHANGE
-    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(2, 2); //TODO: CHANGE
+    public static final double VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED = Math.pow(15, 2); //TODO: CHANGE
     // This is in inches
     public static final double VISION_DISTANCE_BEFORE_ERROR_TIGHTENING = 200;
 
@@ -178,6 +178,7 @@ public final class Constants {
     public static final double DEFAULT_TURN_P = IS_PRACTICE ? 10.0 : 10.0;
     public static final double DEFAULT_TURN_I = 0;
     public static final double DEFAULT_TURN_D = 0.4;
+    public static final double TURN_SPEED_LIMIT_WHILE_AIMING = 4.0;
 
 
     public enum AccelerationLimits {
@@ -567,6 +568,11 @@ public final class Constants {
      * Intake speed when ejecting balls
      */
     public static final double INTAKE_EJECTION_SPEED = -0.5;
+
+    /**
+     * Time in seconds that a toggle command from the other person will be ignored.
+     */
+    public static final double INTAKE_TOGGLE_DEBOUNCE_TIME = 0.3;
 
     public static final int WEB_DASHBOARD_PORT = 5802;
 
