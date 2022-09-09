@@ -396,8 +396,7 @@ public final class VisionManager extends AbstractSubsystem {
     private double lastTranslationsTimestamp;
     private List<Translation2d> lastTranslations;
 
-    public static final double VISION_TARGET_HEIGHT_LOWER =
-            Units.inchesToMeters(8.0 * 12.0 + 5.625); // Bottom of tape
+    public static final double VISION_TARGET_HEIGHT_LOWER = Units.inchesToMeters(8.0 * 12.0 + 5.625); // Bottom of tape
     public static final double VISION_TARGET_HEIGHT_UPPER = VISION_TARGET_HEIGHT_LOWER + Units.inchesToMeters(2.0); // Top of tape
     public static final double VISION_TARGET_DIAMETER = Units.inchesToMeters(4.0 * 12.0 + 5.375);
     private static final double CIRCLE_FIT_PRECISION = 0.01;
@@ -426,8 +425,9 @@ public final class VisionManager extends AbstractSubsystem {
         Limelight.getInstance().getTimestamp();
         lastCaptureTimestamp = Limelight.getInstance().getTimestamp();
 
-        CameraPosition cameraPosition = new CameraPosition(hOffset.get(), cameraRotation2d.get(),
-                centerOffsetTranslation2d.get());
+        CameraPosition cameraPosition =
+                new CameraPosition(((VISION_TARGET_HEIGHT_LOWER + VISION_TARGET_HEIGHT_UPPER) / 2) - hOffset.get(),
+                        cameraRotation2d.get(), centerOffsetTranslation2d.get());
         Vector2d[] cornersRaw = Limelight.getInstance().getCorners();
 
         int targetCount = cornersRaw.length / 4;
@@ -470,8 +470,7 @@ public final class VisionManager extends AbstractSubsystem {
 
                 // Calculate field to robot translation
                 Rotation2d robotRotation = RobotTracker.getInstance().getGyroRotation(lastCaptureTimestamp);
-                Rotation2d cameraRotation = robotRotation
-                        .rotateBy(cameraPosition.vehicleToCamera.getRotation());
+                Rotation2d cameraRotation = robotRotation.rotateBy(cameraPosition.vehicleToCamera.getRotation());
                 Transform2d fieldToTargetRotated =
                         new Transform2d(HUB_CENTER, cameraRotation);
                 Transform2d fieldToCamera = fieldToTargetRotated.plus(
