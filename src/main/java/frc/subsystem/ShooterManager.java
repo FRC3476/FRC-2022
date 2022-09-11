@@ -126,7 +126,7 @@ public final class ShooterManager extends AbstractSubsystem {
         Translation2d currentBallLandingPosition =
                 new MutableTranslation2d(aimToPosition.getNorm(),
                         RobotTracker.getInstance().getGyroAngle().minus(ROTATION_OFFSET))
-                        .plus(getRobotVel().getX() * tof, getRobotVel().getY() * tof);
+                        .minus(getRobotVel().getX() * tof, getRobotVel().getY() * tof);
 
         Circle currentDrawableShotPredictedLandingLocation = new Circle(
                 new Vector2((float) currentBallLandingPosition.getX(), (float) currentBallLandingPosition.getY()),
