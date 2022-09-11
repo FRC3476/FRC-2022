@@ -417,12 +417,14 @@ public final class VisionManager extends AbstractSubsystem {
      */
     private Optional<Pose2d> processFrame() {
         // noinspection FloatingPointEquality
-        if (Limelight.getInstance().getTimestamp() == lastCaptureTimestamp) {
-            // Exit if no new frame
-            return Optional.empty();
-        }
+//        if (Limelight.getInstance().getTimestamp() == lastCaptureTimestamp) {
+//            // Exit if no new frame
+//             logData("Circle Fitting Status", "NO NEW FRAME");
+//            return Optional.empty();
+//        }
 
         Limelight.getInstance().getTimestamp();
+        logData("Circle Fitting Time", getLimelightTime());
         lastCaptureTimestamp = Limelight.getInstance().getTimestamp();
 
         CameraPosition cameraPosition =
@@ -431,8 +433,9 @@ public final class VisionManager extends AbstractSubsystem {
         Vector2d[] cornersRaw = Limelight.getInstance().getCorners();
 
         int targetCount = cornersRaw.length / 4;
+        logData("Corners Count", cornersRaw);
         // Calculate camera to target translation
-        if (targetCount >= MIN_TARGET_COUNT && cornersRaw.length % 4 == 0) {
+        if (targetCount >= MIN_TARGET_COUNT) {
             // Calculate individual corner translations
             List<Translation2d> cameraToTargetTranslations = new ArrayList<>();
             for (int targetIndex = 0; targetIndex < targetCount; targetIndex++) {
@@ -465,14 +468,12 @@ public final class VisionManager extends AbstractSubsystem {
             // Combine corner translations to full target translation
             if (cameraToTargetTranslations.size() >= MIN_TARGET_COUNT * 4) {
                 Translation2d cameraToTargetTranslation =
-                        CircleFitter.fit(VISION_TARGET_DIAMETER / 2.0,
-                                cameraToTargetTranslations, CIRCLE_FIT_PRECISION);
+                        CircleFitter.fit(VISION_TARGET_DIAMETER / 2.0, cameraToTargetTranslations, CIRCLE_FIT_PRECISION);
 
                 // Calculate field to robot translation
                 Rotation2d robotRotation = RobotTracker.getInstance().getGyroRotation(lastCaptureTimestamp);
                 Rotation2d cameraRotation = robotRotation.rotateBy(cameraPosition.vehicleToCamera.getRotation());
-                Transform2d fieldToTargetRotated =
-                        new Transform2d(HUB_CENTER, cameraRotation);
+                Transform2d fieldToTargetRotated = new Transform2d(HUB_CENTER, cameraRotation);
                 Transform2d fieldToCamera = fieldToTargetRotated.plus(
                         GeometryUtils.transformFromTranslation(cameraToTargetTranslation.unaryMinus()));
                 Pose2d fieldToVehicle =
@@ -482,10 +483,17 @@ public final class VisionManager extends AbstractSubsystem {
                         || fieldToVehicle.getX() < 0.0
                         || fieldToVehicle.getY() > FIELD_WIDTH
                         || fieldToVehicle.getY() < 0.0) {
-                    return Optional.empty();
+                    logData("Circle Fitting Status", "Position Out of the field");
+                    return Optional.of(fieldToVehicle);
                 }
+                logData("Circle Fitting Status", "WORKING");
                 return Optional.of(fieldToVehicle);
+            } else {
+                logData("Circle Fitting Status",
+                        "not enough cameraToTargetTranslations; n = " + cameraToTargetTranslations.size());
             }
+        } else {
+            logData("Circle Fitting Status", "CORNERS ARE BAD; targetCount = " + targetCount);
         }
         return Optional.empty();
     }
