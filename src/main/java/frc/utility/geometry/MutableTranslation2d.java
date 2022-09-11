@@ -200,6 +200,10 @@ public class MutableTranslation2d extends Translation2d {
         return set(m_x - other.getX(), m_y - other.getY());
     }
 
+    public MutableTranslation2d minus(double x, double y) {
+        return set(m_x - x, m_y - y);
+    }
+
     /**
      * Returns the inverse of the current translation. This is equivalent to rotating by 180 degrees, flipping the point over both
      * axes, or simply negating both components of the translation.
