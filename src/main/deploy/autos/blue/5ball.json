@@ -212,7 +212,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "Hopper.setHopperState ON\nIntake.setWantedIntakeState INTAKE",
+    "script" : "Hopper.setHopperState ON\nIntake.setWantedIntakeState INTAKE\n# Shoot the 2 we start with + 1 we gather\nVisionManager.shootBalls 2",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -227,6 +227,11 @@
         "methodName" : "frc.subsystem.Intake.setWantedIntakeState",
         "args" : [ "INTAKE" ],
         "argTypes" : [ "frc.subsystem.Intake$IntakeState" ],
+        "reflection" : true
+      }, {
+        "methodName" : "frc.subsystem.VisionManager.shootBalls",
+        "args" : [ "2" ],
+        "argTypes" : [ "double" ],
         "reflection" : true
       } ]
     }
@@ -693,7 +698,7 @@
     } ]
   }, {
     "type" : "script",
-    "script" : "# Shoot the first 3 balls\nVisionManager.shootBalls 2\nsleep 300\nVisionManager.shootBalls 1",
+    "script" : "# Shoot the 1 ball we have\nVisionManager.shootBalls 1.2",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -701,17 +706,7 @@
       "delay" : 0.0,
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "2" ],
-        "argTypes" : [ "double" ],
-        "reflection" : true
-      }, {
-        "methodName" : "sleep",
-        "args" : [ "300" ],
-        "argTypes" : [ "long" ],
-        "reflection" : false
-      }, {
-        "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "1" ],
+        "args" : [ "1.2" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       } ]
@@ -2063,7 +2058,7 @@
     "constraints" : [ ]
   }, {
     "type" : "script",
-    "script" : "#VisionManager.shootBallsUntilBeamBreakHasBroken 4\nVisionManager.shootBalls 1.6\nsleep 300\nVisionManager.shootBalls 0.6\nIntake.setWantedIntakeState OFF\nHopper.setHopperState OFF\nIntake.setIntakeSolState CLOSE",
+    "script" : "#VisionManager.shootBallsUntilBeamBreakHasBroken 4\nVisionManager.shootBalls 1.6\nIntake.setWantedIntakeState OFF\nHopper.setHopperState OFF\nIntake.setIntakeSolState CLOSE",
     "closed" : false,
     "valid" : true,
     "sendableScript" : {
@@ -2072,16 +2067,6 @@
       "commands" : [ {
         "methodName" : "frc.subsystem.VisionManager.shootBalls",
         "args" : [ "1.6" ],
-        "argTypes" : [ "double" ],
-        "reflection" : true
-      }, {
-        "methodName" : "sleep",
-        "args" : [ "300" ],
-        "argTypes" : [ "long" ],
-        "reflection" : false
-      }, {
-        "methodName" : "frc.subsystem.VisionManager.shootBalls",
-        "args" : [ "0.6" ],
         "argTypes" : [ "double" ],
         "reflection" : true
       }, {
