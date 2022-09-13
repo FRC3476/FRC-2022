@@ -183,6 +183,10 @@ public class MutableTranslation2d extends Translation2d {
         return set(m_x + other.getX(), m_y + other.getY());
     }
 
+    public MutableTranslation2d plus(double x, double y) {
+        return set(m_x + x, m_y + y);
+    }
+
     /**
      * Subtracts the other translation from the other translation and returns the difference.
      *
@@ -194,6 +198,10 @@ public class MutableTranslation2d extends Translation2d {
     @Override
     public MutableTranslation2d minus(edu.wpi.first.math.geometry.Translation2d other) {
         return set(m_x - other.getX(), m_y - other.getY());
+    }
+
+    public MutableTranslation2d minus(double x, double y) {
+        return set(m_x - x, m_y - y);
     }
 
     /**
