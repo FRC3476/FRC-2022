@@ -13,6 +13,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.Vector2d;
@@ -123,6 +124,7 @@ public final class VisionManager extends AbstractSubsystem {
     private final LiveEditableValue<Rotation> cameraRotation;
     private final LiveEditableValue<Rotation2d> cameraRotation2d;
     private final LiveEditableValue<Double> hOffset;
+    private final LiveEditableValue<Double> hOffsetCircleFitting;
     private final LiveEditableValue<Double> depthOffset;
     private final LiveEditableValue<Vector3D> centerOffset;
     private final LiveEditableValue<Transform2d> centerOffsetTranslation2d;
@@ -130,6 +132,7 @@ public final class VisionManager extends AbstractSubsystem {
     {
         NetworkTable guiTable = limelight.limelightGuiTable;
         hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 59.75, guiTable.getEntry("hOffset"));
+        hOffsetCircleFitting = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 59.75, guiTable.getEntry("hOffsetCircleFitting"));
         depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 14, guiTable.getEntry("depthOffset"));
         centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 18),
                 guiTable.getEntry("centerOffset"),
@@ -398,7 +401,9 @@ public final class VisionManager extends AbstractSubsystem {
 
     public static final double VISION_TARGET_HEIGHT_LOWER = Units.inchesToMeters(8.0 * 12.0 + 5.625); // Bottom of tape
     public static final double VISION_TARGET_HEIGHT_UPPER = VISION_TARGET_HEIGHT_LOWER + Units.inchesToMeters(2.0); // Top of tape
-    public static final double VISION_TARGET_DIAMETER = Units.inchesToMeters(4.0 * 12.0 + 5.375);
+    public static LiveEditableValue<Double> VISION_TARGET_DIAMETER =
+            new LiveEditableValue<>(Units.inchesToMeters(4.0 * 12.0 + 5.375),
+                    NetworkTableInstance.getDefault().getEntry("Vision Target Diameter"));
     private static final double CIRCLE_FIT_PRECISION = 0.01;
 
     public static final double FIELD_LENGTH = Units.inchesToMeters(54.0 * 12.0);
@@ -428,7 +433,9 @@ public final class VisionManager extends AbstractSubsystem {
         lastCaptureTimestamp = Limelight.getInstance().getTimestamp();
 
         CameraPosition cameraPosition =
-                new CameraPosition(((VISION_TARGET_HEIGHT_LOWER + VISION_TARGET_HEIGHT_UPPER) / 2) - hOffset.get(),
+                new CameraPosition(
+                        ((VISION_TARGET_HEIGHT_LOWER + VISION_TARGET_HEIGHT_UPPER) / 2) - Units.inchesToMeters(
+                                hOffsetCircleFitting.get()),
                         cameraRotation2d.get(), centerOffsetTranslation2d.get());
         Vector2d[] cornersRaw = Limelight.getInstance().getCorners();
 
@@ -468,7 +475,7 @@ public final class VisionManager extends AbstractSubsystem {
             // Combine corner translations to full target translation
             if (cameraToTargetTranslations.size() >= MIN_TARGET_COUNT * 4) {
                 Translation2d cameraToTargetTranslation =
-                        CircleFitter.fit(VISION_TARGET_DIAMETER / 2.0, cameraToTargetTranslations, CIRCLE_FIT_PRECISION);
+                        CircleFitter.fit(VISION_TARGET_DIAMETER.get() / 2.0, cameraToTargetTranslations, CIRCLE_FIT_PRECISION);
 
                 // Calculate field to robot translation
                 Rotation2d robotRotation = RobotTracker.getInstance().getGyroRotation(lastCaptureTimestamp);
