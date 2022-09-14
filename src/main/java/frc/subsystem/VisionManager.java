@@ -197,12 +197,12 @@ public final class VisionManager extends AbstractSubsystem {
      */
     public void forceUpdatePose() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        Optional<Pose2d> visionTranslation = processFrame();
         visionTranslation.ifPresent(
                 translation2d -> {
                     loopsWithBadVision.set(0);
                     robotTracker.addVisionMeasurement(
-                            translation2d,
+                            translation2d.getTranslation(),
                             getLimelightTime(), true);
                 }
         );
