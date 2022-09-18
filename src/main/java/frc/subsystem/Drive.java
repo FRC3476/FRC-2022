@@ -651,7 +651,7 @@ public final class Drive extends AbstractSubsystem {
                         targetHeading);
 
                 if (isAutoAiming) {
-                    adjustedSpeeds.omegaRadiansPerSecond = getTurnPidDeltaSpeed(autoAimingRotationGoal);
+                    adjustedSpeeds.omegaRadiansPerSecond = getTurnPidDeltaSpeed(autoAimingRotationGoal, true);
                 }
 
                 swerveDrive(adjustedSpeeds);
@@ -674,7 +674,7 @@ public final class Drive extends AbstractSubsystem {
      * @param autoAimingRotationGoal The goal to aim at (in radians)
      * @return The speed to turn at (in radians/s)
      */
-    private double getTurnPidDeltaSpeed(@NotNull TrapezoidProfile.State autoAimingRotationGoal) {
+    private double getTurnPidDeltaSpeed(@NotNull TrapezoidProfile.State autoAimingRotationGoal, boolean limitSpeed) {
         turnPID.setSetpoint(autoAimingRotationGoal.position);
 
         if (Timer.getFPGATimestamp() - 0.2 > lastTurnUpdate) {
@@ -686,7 +686,11 @@ public final class Drive extends AbstractSubsystem {
         lastTurnUpdate = Timer.getFPGATimestamp();
         double pidSpeed =
                 turnPID.calculate(RobotTracker.getInstance().getGyroAngle().getRadians()) + autoAimingRotationGoal.velocity;
-        return Math.copySign(Math.min(Math.abs(pidSpeed), Constants.TURN_SPEED_LIMIT_WHILE_AIMING), pidSpeed);
+
+        if (limitSpeed) {
+            pidSpeed = Math.copySign(Math.min(Math.abs(pidSpeed), Constants.TURN_SPEED_LIMIT_WHILE_AIMING), pidSpeed);
+        }
+        return pidSpeed;
     }
 
 
@@ -794,7 +798,7 @@ public final class Drive extends AbstractSubsystem {
         }
 
 
-        double pidDeltaSpeed = getTurnPidDeltaSpeed(goal);
+        double pidDeltaSpeed = getTurnPidDeltaSpeed(goal, !(controllerDriveInputs.getX() == 0 && controllerDriveInputs.getY() == 0));
 
 //        System.out.println(
 //                "turn error: " + Math.toDegrees(turnPID.getPositionError()) + " delta speed: " + Math.toDegrees(pidDeltaSpeed));
