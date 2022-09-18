@@ -373,7 +373,7 @@ public class Robot extends TimedRobot {
         }
 
         // Intake and hopper motor control
-        if (xbox.getRawAxis(3) > 0.1) {
+        if (xbox.getRawAxis(3) > 0.02) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
             if (Timer.getFPGATimestamp() > hoodEjectUntilTime) {
@@ -392,7 +392,7 @@ public class Robot extends TimedRobot {
             shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!((xbox.getRawAxis(2) > 0.1) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
+            if (!((xbox.getRawAxis(2) > 0.02) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
                 // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
