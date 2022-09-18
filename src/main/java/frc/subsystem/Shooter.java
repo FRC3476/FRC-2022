@@ -282,7 +282,9 @@ public final class Shooter extends AbstractSubsystem {
         shooterWheelMaster.configPeakOutputForward(1);
         shooterWheelMaster.configPeakOutputReverse(0);
         shooterWheelMaster.configVoltageCompSaturation(9);
+        shooterWheelMaster.enableVoltageCompensation(true);
         shooterWheelSlave.configVoltageCompSaturation(9);
+        shooterWheelSlave.enableVoltageCompensation(true);
 
         shooterWheelMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.SHOOTER_CURRENT_LIMIT,
                 Constants.SHOOTER_TRIGGER_THRESHOLD_CURRENT, Constants.SHOOTER_TRIGGER_THRESHOLD_TIME));
@@ -589,6 +591,9 @@ public final class Shooter extends AbstractSubsystem {
 
     private volatile double lastShotTime = 0;
 
+
+    private double runReversedUntil = 0;
+
     /**
      * Update Method for Shooter.
      * <p>
@@ -622,6 +627,9 @@ public final class Shooter extends AbstractSubsystem {
                     feederWheel.set(ControlMode.PercentOutput, -FEEDER_WHEEL_SPEED);
                 } else {
                     if (Hopper.getInstance().isHopperMotorRunning()) {
+                        feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
+                        runReversedUntil = Timer.getFPGATimestamp() + 0.5;
+                    } else if (Timer.getFPGATimestamp() < runReversedUntil) {
                         feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
                     } else {
                         feederWheel.set(ControlMode.PercentOutput, 0);
