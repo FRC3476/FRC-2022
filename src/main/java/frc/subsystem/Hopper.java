@@ -29,7 +29,7 @@ public final class Hopper extends AbstractSubsystem {
     private final RelativeEncoder outtakeWheelsQuadrature;
     private final LazyCANSparkMax outtakeWheels;
     private double lastDetectionTime;
-    private boolean disableEject = false;
+    private boolean disableEject = true;
     private final Limelight intakeLimelight = Limelight.getInstance(Constants.INTAKE_LIMELIGHT_NAME);
     private boolean isBeamBreakEnabled = true;
 
