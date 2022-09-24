@@ -291,7 +291,7 @@ public final class OrangeUtility {
 
 
     public static void waitTillTeleopStart() throws InterruptedException {
-        while (DriverStation.getMatchTime() < 16) {
+        while (DriverStation.isAutonomous()) {
             Thread.sleep(10);
         }
     }
