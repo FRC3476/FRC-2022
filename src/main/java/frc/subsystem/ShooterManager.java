@@ -405,9 +405,9 @@ public final class ShooterManager extends AbstractSubsystem {
 
         double timeOfFlightFrames;
         if (distance < 113) {
-            timeOfFlightFrames = ((0.02 / 30) * (distance - 113)) + (24.1 / 30);
+            timeOfFlightFrames = ((0.03 / 30) * (distance - 113)) + (23.0 / 30);
         } else {
-            timeOfFlightFrames = ((0.044 / 30) * (distance - 113)) + (24.1 / 30);
+            timeOfFlightFrames = ((0.041 / 30) * (distance - 113)) + (23.0 / 30);
         }
 
         //timeOfFlightFrames = 0.000227991 * (distance * distance) - 0.0255545 * (distance) + 31.9542;
