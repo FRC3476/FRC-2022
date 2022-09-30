@@ -249,7 +249,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Field Relative Enabled", true);
         drive.useFieldRelative = true;
         SmartDashboard.putBoolean("Drive Field Relative Allowed", true);
-        hopper.setEjectOverride(false);
+        hopper.setEjectOverride(true);
         drive.configBrake();
     }
 
@@ -373,7 +373,7 @@ public class Robot extends TimedRobot {
         }
 
         // Intake and hopper motor control
-        if (xbox.getRawAxis(3) > 0.1) {
+        if (xbox.getRawAxis(3) > 0.02) {
             // Intake balls
             intake.setWantedIntakeState(Intake.IntakeState.INTAKE);
             if (Timer.getFPGATimestamp() > hoodEjectUntilTime) {
@@ -392,7 +392,7 @@ public class Robot extends TimedRobot {
             shooter.reverseShooterWheel();
         } else {
             intake.setWantedIntakeState(Intake.IntakeState.OFF);
-            if (!((xbox.getRawAxis(2) > 0.1) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
+            if (!((xbox.getRawAxis(2) > 0.02) || xbox.getRawButton(XboxButtons.LEFT_BUMPER))) {
                 // Only turn off the hopper if we're not shooting
                 hopper.setHopperState(Hopper.HopperState.OFF);
             }
@@ -562,7 +562,7 @@ public class Robot extends TimedRobot {
         } else if (xbox.getPOV() != -1) {
             double povRads = Math.toRadians(xbox.getPOV() + 180);
             usingDPad = true;
-            return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads) * 0.5, -xbox.getRawAxis(0))
+            return new ControllerDriveInputs(-Math.cos(povRads), Math.sin(povRads) * 0.8, -xbox.getRawAxis(0))
                     .applyDeadZone(0, 0, 0.2, 0)
                     .squareInputs().scaleInputs(DRIVE_LOW_SPEED_MOD);
         } else {

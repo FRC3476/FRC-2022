@@ -288,7 +288,7 @@ public final class Constants {
     public static final double DEFAULT_SHOOTER_P = IS_PRACTICE ? 0.034 : 0.035;
     public static final double DEFAULT_SHOOTER_I = 0.000;
     public static final double DEFAULT_SHOOTER_D = 0.000;
-    public static final double DEFAULT_SHOOTER_F = 0.069664;
+    public static final double DEFAULT_SHOOTER_F = 0.0737;
     public static final double DEFAULT_SHOOTER_IZONE = 500 / FALCON_ENCODER_TICKS_PER_100_MS_TO_RPM;
 
     public static final double SHOOTER_CURRENT_LIMIT = 40;
@@ -592,7 +592,7 @@ public final class Constants {
     public static final int GRAPPLE_ARM_SOL_ID = 1;
     public static final int BIG_CLIMBER_SOLENOID_ID = 2;
 
-    public static final double BEAM_BREAK_EJECT_TIME = 0.75;
+    public static final double BEAM_BREAK_EJECT_TIME = 100000;
     public static final double MIN_AUTO_EJECT_TIME = 0.5;
     public static final int MAX_BAD_VISION_ITERATIONS = 100 / (VISION_MANAGER_PERIOD);
 }
