@@ -321,6 +321,7 @@ public final class Shooter extends AbstractSubsystem {
         feederWheel.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, Constants.FEEDER_CURRENT_LIMIT,
                 Constants.FEEDER_TRIGGER_THRESHOLD_CURRENT, Constants.FEEDER_TRIGGER_THRESHOLD_TIME));
         feederWheel.configVoltageCompSaturation(9);
+        feederWheel.enableVoltageCompensation(true);
 
         feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 200); // Default is 10ms
         feederWheel.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 200); // Default is 10ms
