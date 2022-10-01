@@ -69,6 +69,7 @@ dependencies {
     implementation 'com.google.guava:guava:31.1-jre'
 
     implementation "com.dacubeking:autobuilder-robot:1.0.1"
+    implementation "io.github.Matthew-Kasper:OrangeLoggerLib:0.1.10"
 
     implementation 'org.joml:joml:1.10.4'
 
