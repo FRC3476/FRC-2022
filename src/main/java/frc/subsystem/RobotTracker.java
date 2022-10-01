@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 import frc.utility.net.editing.LiveEditableValue;
 import frc.utility.tracking.TimestampedPose;
+import orangeloggerlib.annotations.Logged;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,8 +61,12 @@ public final class RobotTracker extends AbstractSubsystem {
     private final SwerveDriveOdometry swerveDriveOdometry;
     private @NotNull Rotation2d gyroOffset = new Rotation2d();
 
+    @Logged
     private double gyroRollVelocity = 0;
+
+    @Logged
     private double gyroPitchVelocity = 0;
+    
     private double lastGyroPitch = 0;
     private double lastGyroRoll = 0;
 

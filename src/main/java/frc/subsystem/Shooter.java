@@ -25,6 +25,7 @@ import frc.utility.OrangeUtility;
 import frc.utility.controllers.LazyCANSparkMax;
 import frc.utility.controllers.LazyTalonFX;
 import frc.utility.shooter.visionlookup.ShooterPreset;
+import orangeloggerlib.annotations.Logged;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
@@ -53,6 +54,8 @@ public final class Shooter extends AbstractSubsystem {
     // Shooter Flywheel
     private final LazyTalonFX shooterWheelMaster;
     private final LazyTalonFX shooterWheelSlave;
+
+    @Logged
     private double desiredShooterSpeed;
 
     // Feeder
