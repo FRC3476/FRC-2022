@@ -32,6 +32,7 @@ import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.ShooterPreset;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
 import orangeloggerlib.OrangeLogger;
+import orangeloggerlib.annotations.Logged;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -50,7 +51,9 @@ import static frc.robot.Constants.*;
 @SuppressWarnings("ClassNamePrefixedWithPackageName")
 public class Robot extends TimedRobot {
 
+    @Logged
     public boolean useFieldRelative = false;
+    
     private double hoodEjectUntilTime = 0;
 
     //GUI
@@ -177,7 +180,7 @@ public class Robot extends TimedRobot {
 //        shooter.setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
 
         // Initialize OrangeLogger with following instances
-        OrangeLogger.getInstance().initialize(new Object[]{RobotTracker.getInstance(), Drive.getInstance(),
+        OrangeLogger.getInstance().initialize(new Object[]{this, RobotTracker.getInstance(), Drive.getInstance(),
                 Intake.getInstance(), Intake.getInstance(), Hopper.getInstance(), Shooter.getInstance(), VisionManager.getInstance(),
                 DashboardHandler.getInstance()});
     }
