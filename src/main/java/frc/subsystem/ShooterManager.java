@@ -265,7 +265,10 @@ public final class ShooterManager extends AbstractSubsystem {
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " Distance:  "
                                     + Units.metersToInches(aimPoint.getNorm()) + " "
-                                    + "Accel: " + getAccel().getNorm());
+                                    + "Accel: " + getAccel().getNorm() + "RT Angle To Target: " + RobotTracker.getInstance()
+                                    .getAngle().getDegrees()
+                                    + "LL Angle to " + "Target: " + VisionManager.getInstance()
+                                    .getLatencyCompedLimelightRotation().getDegrees());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
