@@ -17,6 +17,7 @@ import frc.subsystem.Drive.DriveState;
 import frc.subsystem.Hopper.HopperState;
 import frc.subsystem.Shooter.FeederWheelState;
 import frc.utility.ControllerDriveInputs;
+import frc.utility.Limelight;
 import frc.utility.geometry.MutableTranslation2d;
 import frc.utility.shooter.visionlookup.ShooterConfig;
 import frc.utility.shooter.visionlookup.VisionLookUpTable;
@@ -265,10 +266,9 @@ public final class ShooterManager extends AbstractSubsystem {
                     System.out.println(
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " Distance:  "
                                     + Units.metersToInches(aimPoint.getNorm()) + " "
-                                    + "Accel: " + getAccel().getNorm() + "RT Angle To Target: " + RobotTracker.getInstance()
-                                    .getAngle().getDegrees()
-                                    + "LL Angle to " + "Target: " + VisionManager.getInstance()
-                                    .getLatencyCompedLimelightRotation().getDegrees());
+                                    + "Accel: " + getAccel().getNorm() +
+                                    "RT Angle To Target: " + angleOf(getRelativeGoalTranslation()).getDegrees()
+                                    + "LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
