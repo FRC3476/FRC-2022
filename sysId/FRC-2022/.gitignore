@@ -161,17 +161,3 @@ bin/
 # Simulation GUI and other tools window save file
 *-window.json
 .idea/misc.xml
-.idea/vcs.xml
-.idea/vcs.xml
-sysId/FRC-2022/.gitattributes
-sysId/FRC-2022/build.gradle
-sysId/FRC-2022/gradlew.bat
-sysId/FRC-2022/README.md
-sysId/FRC-2022/simgui-ds.json
-sysId/FRC-2022/simgui.json
-sysId/FRC-2022/WPILib-License.md
-sysId/FRC-2022/settings.gradle
-sysId/FRC-2022/LICENSE
-sysId/FRC-2022/gradlew
-.idea/vcs.xml
-.idea/vcs.xml
