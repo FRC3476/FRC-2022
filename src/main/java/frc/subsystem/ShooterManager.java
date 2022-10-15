@@ -237,8 +237,10 @@ public final class ShooterManager extends AbstractSubsystem {
         final @NotNull Shooter shooter = Shooter.getInstance();
         final @NotNull VisionManager visionManager = VisionManager.getInstance();
 
-        final boolean isAimed = Math.abs(aimPointToDriveRotation(aimPoint)
-                .plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle()).getRadians()) < getAllowedTurnError(aimPoint.getNorm());
+
+        double turnError = aimPointToDriveRotation(aimPoint)
+                .plus(ROTATION_OFFSET).minus(robotTracker.getGyroAngle()).getRadians();
+        final boolean isAimed = Math.abs(turnError) < getAllowedTurnError(aimPoint.getNorm());
 
         final boolean isTurningSpeedCorrect =
                 Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
@@ -267,7 +269,7 @@ public final class ShooterManager extends AbstractSubsystem {
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " Distance:  "
                                     + Units.metersToInches(aimPoint.getNorm()) + " "
                                     + "Accel: " + getAccel().getNorm() +
-                                    "RT Angle To Target: " + angleOf(getRelativeGoalTranslation()).getDegrees()
+                                    "RT Angle To Target: " + turnError
                                     + "LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset());
                 }
             } else {
