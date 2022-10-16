@@ -37,16 +37,19 @@ public final class Limelight extends AbstractSubsystem {
             this.height = height;
         }
 
-        final int width;
-        final int height;
+        public final int width;
+        public final int height;
     }
 
-    public LimelightResolution cameraResolution = LimelightResolution.k320x240;
+    private LimelightResolution cameraResolution = LimelightResolution.k320x240;
 
     public void setCameraResolution(LimelightResolution resolution) {
         cameraResolution = resolution;
     }
 
+    public LimelightResolution getCameraResolution() {
+        return cameraResolution;
+    }
 
     public static @NotNull Limelight getInstance(String name) {
         LIMELIGHT_MAP_LOCK.readLock().lock();

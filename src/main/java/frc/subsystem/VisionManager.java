@@ -7,20 +7,24 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import frc.robot.Constants;
 import frc.subsystem.BlinkinLED.BlinkinLedMode;
 import frc.subsystem.BlinkinLED.LedStatus;
+import frc.utility.CircleFitter;
 import frc.utility.Limelight;
 import frc.utility.Limelight.LedMode;
 import frc.utility.Limelight.LimelightResolution;
+import frc.utility.geometry.GeometryUtils;
 import frc.utility.net.editing.LiveEditableValue;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
@@ -30,10 +34,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -121,19 +122,29 @@ public final class VisionManager extends AbstractSubsystem {
     private static final MatBuilder<N3, N1> THREE_BY_ONE_MAT_BUILDER = new MatBuilder<>(Nat.N3(), Nat.N1());
 
     private final LiveEditableValue<Rotation> cameraRotation;
-
+    private final LiveEditableValue<Rotation2d> cameraRotation2d;
     private final LiveEditableValue<Double> hOffset;
+    private final LiveEditableValue<Double> hOffsetCircleFitting;
     private final LiveEditableValue<Double> depthOffset;
     private final LiveEditableValue<Vector3D> centerOffset;
+    private final LiveEditableValue<Transform2d> centerOffsetTranslation2d;
 
     {
         NetworkTable guiTable = limelight.limelightGuiTable;
         hOffset = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 59.75, guiTable.getEntry("hOffset"));
+        hOffsetCircleFitting = new LiveEditableValue<>(IS_PRACTICE ? 57.05 : 59.75, guiTable.getEntry("hOffsetCircleFitting"));
         depthOffset = new LiveEditableValue<>(IS_PRACTICE ? 32.0 : 14, guiTable.getEntry("depthOffset"));
         centerOffset = new LiveEditableValue<>(new Vector3D(0, 0, IS_PRACTICE ? 6.9 : 18),
                 guiTable.getEntry("centerOffset"),
                 (value) -> new Vector3D(0, 0, (Double) value),
                 Vector3D::getZ);
+
+        centerOffsetTranslation2d = new LiveEditableValue<>(
+                new Transform2d(new Translation2d(IS_PRACTICE ? 6.9 : 18, 0), new Rotation2d()),
+                guiTable.getEntry("centerOffsetNew"),
+                (value) -> new Transform2d(new Translation2d((Double) value, 0), new Rotation2d()),
+                Transform2d::getX);
+
         cameraRotation = new LiveEditableValue<>(
                 new Rotation(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR,
                         Math.toRadians(IS_PRACTICE ? -37.5 : -34.5), 0, 0),
@@ -144,6 +155,13 @@ public final class VisionManager extends AbstractSubsystem {
                                 Math.toRadians((Double) value), 0, 0),
                 (value) ->
                         Math.toDegrees(value.getAngles(RotationOrder.XYZ, RotationConvention.VECTOR_OPERATOR)[0])
+        );
+
+        cameraRotation2d = new LiveEditableValue<>(
+                new Rotation2d(Math.toRadians(IS_PRACTICE ? -37.5 : -34.5)),
+                guiTable.getEntry("angle"),
+                (value) -> Rotation2d.fromDegrees((Double) value),
+                Rotation2d::getDegrees
         );
     }
 
@@ -179,12 +197,12 @@ public final class VisionManager extends AbstractSubsystem {
      */
     public void forceUpdatePose() {
         final @NotNull RobotTracker robotTracker = RobotTracker.getInstance();
-        Optional<Translation2d> visionTranslation = getVisionTranslation();
+        Optional<Pose2d> visionTranslation = processFrame();
         visionTranslation.ifPresent(
                 translation2d -> {
                     loopsWithBadVision.set(0);
                     robotTracker.addVisionMeasurement(
-                            translation2d,
+                            translation2d.getTranslation(),
                             getLimelightTime(), true);
                 }
         );
@@ -276,6 +294,28 @@ public final class VisionManager extends AbstractSubsystem {
         logData("Angle To Target", angleToTarget);
 
 
+        Optional<Pose2d> circleFitVisionPoseOptional = processFrame();
+
+        if (circleFitVisionPoseOptional.isPresent()) {
+            Pose2d circleFitVisionPose = circleFitVisionPoseOptional.get();
+
+            if (DriverStation.isTeleopEnabled()) {
+                robotTracker.addVisionMeasurement(circleFitVisionPose.getTranslation(), getLimelightTime(), false);
+            }
+            RobotPositionSender.addRobotPosition(new RobotState(
+                    circleFitVisionPose.getX(),
+                    circleFitVisionPose.getY(),
+                    circleFitVisionPose.getRotation().getRadians(),
+                    getLimelightTime(),
+                    "Circle Fit Vision Pose"
+            ));
+
+            logData("Circle Fit Vision Pose X", circleFitVisionPose.getX());
+            logData("Circle Fit Vision Pose Y", circleFitVisionPose.getY());
+            logData("Circle Fit Vision Pose Angle", circleFitVisionPose.getRotation().getRadians());
+            logData("Circle Fit Vision Pose Time", getLimelightTime());
+        }
+
         Optional<Translation2d> robotTranslationOptional = getVisionTranslation();
         if (robotTranslationOptional.isPresent()) {
             Translation2d robotTranslation = robotTranslationOptional.get();
@@ -308,7 +348,7 @@ public final class VisionManager extends AbstractSubsystem {
                 if ((limelight.getCorners().length % 4 == 0 || positionError < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED)
                         && limelight.getCorners().length >= MIN_CORNERS && limelight.getCorners().length <= MAX_CORNERS) {
                     if (DriverStation.isTeleopEnabled()) {
-                        robotTracker.addVisionMeasurement(robotTranslation, getLimelightTime(), false);
+                        // robotTracker.addVisionMeasurement(robotTranslation, getLimelightTime(), false);
                     }
 
                     logData("Using Vision Info", "Using Vision Info");
@@ -352,5 +392,260 @@ public final class VisionManager extends AbstractSubsystem {
     @Override
     public void close() throws Exception {
 
+    }
+
+    double lastCaptureTimestamp = 0;
+    private static final int MIN_TARGET_COUNT = 3; // For calculating odometry
+    private double lastTranslationsTimestamp;
+    private List<Translation2d> lastTranslations;
+
+    public static final double VISION_TARGET_HEIGHT_LOWER = Units.inchesToMeters(8.0 * 12.0 + 5.625); // Bottom of tape
+    public static final double VISION_TARGET_HEIGHT_UPPER = VISION_TARGET_HEIGHT_LOWER + Units.inchesToMeters(2.0); // Top of tape
+    public static LiveEditableValue<Double> VISION_TARGET_DIAMETER =
+            new LiveEditableValue<>(Units.inchesToMeters(4.0 * 12.0 + 5.375),
+                    NetworkTableInstance.getDefault().getEntry("Vision Target Diameter"));
+    private static final double CIRCLE_FIT_PRECISION = 0.01;
+
+    public static final double FIELD_LENGTH = Units.inchesToMeters(54.0 * 12.0);
+    public static final double FIELD_WIDTH = Units.inchesToMeters(27.0 * 12.0);
+    public static final Translation2d HUB_CENTER = new Translation2d(FIELD_LENGTH / 2.0, FIELD_WIDTH / 2.0);
+
+    /**
+     * Process the current vision data
+     *
+     * @return The robot's position relative to the field
+     * @author jonahb55
+     * @author Aum-P
+     * @author V-RA
+     * @author Ayushk2023
+     * @author Mechanical Advantage 6328
+     */
+    private Optional<Pose2d> processFrame() {
+        // noinspection FloatingPointEquality
+//        if (Limelight.getInstance().getTimestamp() == lastCaptureTimestamp) {
+//            // Exit if no new frame
+//             logData("Circle Fitting Status", "NO NEW FRAME");
+//            return Optional.empty();
+//        }
+
+        Limelight.getInstance().getTimestamp();
+        logData("Circle Fitting Time", getLimelightTime());
+        lastCaptureTimestamp = Limelight.getInstance().getTimestamp();
+
+        CameraPosition cameraPosition =
+                new CameraPosition(
+                        ((VISION_TARGET_HEIGHT_LOWER + VISION_TARGET_HEIGHT_UPPER) / 2) - Units.inchesToMeters(
+                                hOffsetCircleFitting.get()),
+                        cameraRotation2d.get(), centerOffsetTranslation2d.get());
+        Vector2d[] cornersRaw = Limelight.getInstance().getCorners();
+
+        int targetCount = cornersRaw.length / 4;
+        logData("Corners Count", cornersRaw);
+        // Calculate camera to target translation
+        if (targetCount >= MIN_TARGET_COUNT) {
+            // Calculate individual corner translations
+            List<Translation2d> cameraToTargetTranslations = new ArrayList<>();
+            for (int targetIndex = 0; targetIndex < targetCount; targetIndex++) {
+                List<VisionPoint> corners = new ArrayList<>();
+                double totalX = 0.0, totalY = 0.0;
+                for (int i = targetIndex * 4; i < (targetIndex * 4) + 4; i++) {
+                    if (i < cornersRaw.length) {
+                        corners.add(new VisionPoint(cornersRaw[i].x, cornersRaw[i].y));
+                        totalX += cornersRaw[i].x;
+                        totalY += cornersRaw[i].y;
+                    }
+                }
+
+                VisionPoint targetAvg = new VisionPoint(totalX / 4, totalY / 4);
+                corners = sortCorners(corners, targetAvg);
+
+                for (int i = 0; i < corners.size(); i++) {
+                    Translation2d translation = solveCameraToTargetTranslation(
+                            corners.get(i), i < 2 ? VISION_TARGET_HEIGHT_LOWER : VISION_TARGET_HEIGHT_UPPER, cameraPosition);
+                    if (translation != null) {
+                        cameraToTargetTranslations.add(translation);
+                    }
+                }
+            }
+
+            // Save individual translations
+            lastTranslationsTimestamp = Timer.getFPGATimestamp();
+            lastTranslations = cameraToTargetTranslations;
+
+            // Combine corner translations to full target translation
+            if (cameraToTargetTranslations.size() >= MIN_TARGET_COUNT * 4) {
+                Translation2d cameraToTargetTranslation =
+                        CircleFitter.fit(VISION_TARGET_DIAMETER.get() / 2.0, cameraToTargetTranslations, CIRCLE_FIT_PRECISION);
+
+                // Calculate field to robot translation
+                Rotation2d robotRotation = RobotTracker.getInstance().getGyroRotation(lastCaptureTimestamp);
+                Rotation2d cameraRotation = robotRotation.rotateBy(cameraPosition.vehicleToCamera.getRotation());
+                Transform2d fieldToTargetRotated = new Transform2d(HUB_CENTER, cameraRotation);
+                Transform2d fieldToCamera = fieldToTargetRotated.plus(
+                        GeometryUtils.transformFromTranslation(cameraToTargetTranslation.unaryMinus()));
+                Pose2d fieldToVehicle =
+                        GeometryUtils.transformToPose(fieldToCamera.plus(cameraPosition.vehicleToCamera.inverse()));
+
+                if (fieldToVehicle.getX() > FIELD_LENGTH
+                        || fieldToVehicle.getX() < 0.0
+                        || fieldToVehicle.getY() > FIELD_WIDTH
+                        || fieldToVehicle.getY() < 0.0) {
+                    logData("Circle Fitting Status", "Position Out of the field");
+                    return Optional.of(fieldToVehicle);
+                }
+                logData("Circle Fitting Status", "WORKING");
+                return Optional.of(fieldToVehicle);
+            } else {
+                logData("Circle Fitting Status",
+                        "not enough cameraToTargetTranslations; n = " + cameraToTargetTranslations.size());
+            }
+        } else {
+            logData("Circle Fitting Status", "CORNERS ARE BAD; targetCount = " + targetCount);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * @author jonahb55
+     * @author Aum-P
+     * @author V-RA
+     * @author Ayushk2023
+     * @author Mechanical Advantage 6328
+     */
+    private List<VisionPoint> sortCorners(List<VisionPoint> corners,
+                                          VisionPoint average) {
+
+        // Find top corners
+        Integer topLeftIndex = null;
+        Integer topRightIndex = null;
+        double minPosRads = Math.PI;
+        double minNegRads = Math.PI;
+        for (int i = 0; i < corners.size(); i++) {
+            VisionPoint corner = corners.get(i);
+            double angleRad =
+                    new Rotation2d(corner.x - average.x, average.y - corner.y)
+                            .minus(Rotation2d.fromDegrees(90)).getRadians();
+            if (angleRad > 0) {
+                if (angleRad < minPosRads) {
+                    minPosRads = angleRad;
+                    topLeftIndex = i;
+                }
+            } else {
+                if (Math.abs(angleRad) < minNegRads) {
+                    minNegRads = Math.abs(angleRad);
+                    topRightIndex = i;
+                }
+            }
+        }
+
+        // Find lower corners
+        Integer lowerIndex1 = null;
+        Integer lowerIndex2 = null;
+        for (int i = 0; i < corners.size(); i++) {
+            boolean alreadySaved = false;
+            if (topLeftIndex != null) {
+                if (topLeftIndex.equals(i)) {
+                    alreadySaved = true;
+                }
+            }
+            if (topRightIndex != null) {
+                if (topRightIndex.equals(i)) {
+                    alreadySaved = true;
+                }
+            }
+            if (!alreadySaved) {
+                if (lowerIndex1 == null) {
+                    lowerIndex1 = i;
+                } else {
+                    lowerIndex2 = i;
+                }
+            }
+        }
+
+        // Combine final list
+        List<VisionPoint> newCorners = new ArrayList<>();
+        if (topLeftIndex != null) {
+            newCorners.add(corners.get(topLeftIndex));
+        }
+        if (topRightIndex != null) {
+            newCorners.add(corners.get(topRightIndex));
+        }
+        if (lowerIndex1 != null) {
+            newCorners.add(corners.get(lowerIndex1));
+        }
+        if (lowerIndex2 != null) {
+            newCorners.add(corners.get(lowerIndex2));
+        }
+        return newCorners;
+    }
+
+    public static final Rotation2d FOV_HORIZONTAL = Rotation2d.fromDegrees(59.6);
+    public static final Rotation2d FOV_VERTICAL = Rotation2d.fromDegrees(49.7);
+
+    private static final double vpw = 2.0 * Math.tan(FOV_HORIZONTAL.getRadians() / 2.0);
+    private static final double vph = 2.0 * Math.tan(FOV_VERTICAL.getRadians() / 2.0);
+
+    /**
+     * Camera offsets in pixels?
+     */
+    public static final double CROSSHAIR_X = 0;
+    public static final double CROSSHAIR_Y = 0;
+
+    /**
+     * @author jonahb55
+     * @author Aum-P
+     * @author V-RA
+     * @author Ayushk2023
+     * @author Mechanical Advantage 6328
+     */
+    private Translation2d solveCameraToTargetTranslation(VisionPoint corner, double goalHeight, CameraPosition cameraPosition) {
+
+        double halfWidthPixels = limelight.getCameraResolution().width / 2.0;
+        double halfHeightPixels = limelight.getCameraResolution().height / 2.0;
+        double nY = -((corner.x - halfWidthPixels - CROSSHAIR_X) / halfWidthPixels);
+        double nZ = -((corner.y - halfHeightPixels - CROSSHAIR_Y) / halfHeightPixels);
+
+        Translation2d xzPlaneTranslation = new Translation2d(1.0, vph / 2.0 * nZ).rotateBy(cameraPosition.verticalRotation);
+        double x = xzPlaneTranslation.getX();
+        double y = vpw / 2.0 * nY;
+        double z = xzPlaneTranslation.getY();
+
+        double differentialHeight = cameraPosition.cameraHeight - goalHeight;
+        if ((z < 0.0) == (differentialHeight > 0.0)) {
+            double scaling = differentialHeight / -z;
+            double distance = Math.hypot(x, y) * scaling;
+            Rotation2d angle = new Rotation2d(x, y);
+            return new Translation2d(distance * angle.getCos(), distance * angle.getSin());
+        }
+        return null;
+    }
+
+    /**
+     * @author jonahb55
+     */
+    public static class VisionPoint {
+        public final double x;
+        public final double y;
+
+        public VisionPoint(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    /**
+     * @author jonahb55
+     */
+    public static final class CameraPosition {
+        public final double cameraHeight;
+        public final Rotation2d verticalRotation;
+        public final Transform2d vehicleToCamera;
+
+        public CameraPosition(double cameraHeight, Rotation2d verticalRotation,
+                              Transform2d vehicleToCamera) {
+            this.cameraHeight = cameraHeight;
+            this.verticalRotation = verticalRotation;
+            this.vehicleToCamera = vehicleToCamera;
+        }
     }
 }
