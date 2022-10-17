@@ -39,6 +39,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static frc.robot.Constants.*;
+import static frc.utility.MathUtil.mod;
+import static frc.utility.geometry.GeometryUtils.angleOf;
 
 
 public final class Drive extends AbstractSubsystem {
@@ -456,7 +458,6 @@ public final class Drive extends AbstractSubsystem {
         }
         lastLoopTime = Timer.getFPGATimestamp();
 
-        double maxVelocityChange = accelerationLimit.acceleration * dt;
         double maxAngularVelocityChange = Constants.MAX_ANGULAR_ACCELERATION * dt;
 
         //field relative
@@ -465,7 +466,11 @@ public final class Drive extends AbstractSubsystem {
                 ));
 
         Translation2d velocityChange = velocityCommand.minus(lastRequestedVelocity);
-        double velocityChangeAngle = Math.atan2(velocityChange.getY(), velocityChange.getX()); //Radians
+        double velocityChangeAngle = Math.atan2(velocityChange.getY(), velocityChange.getX()); // Radians
+        double maxVelocityChange = Math.max(
+                accelerationLimit.acceleration,
+                getMaxAccelerationToAvoidTipping(velocityChangeAngle + RobotTracker.getInstance().getAngle().getRadians())
+        ) * dt;
 
         Translation2d limitedVelocityVectorChange = velocityChange;
         Translation2d limitedVelocityVector = velocityCommand;
@@ -497,6 +502,47 @@ public final class Drive extends AbstractSubsystem {
         lastRequestedVelocity = limitedVelocityVector;//field
 
         return limitedVelocityVectorChange;//field
+    }
+
+    private static final double RIGHT_BACK_ANGLE_RADIANS;
+    private static final double RIGHT_FRONT_ANGLE_RADIANS;
+    private static final double LEFT_FRONT_ANGLE_RADIANS;
+    private static final double LEFT_BACK_LEFT_ANGLE_RADIANS;
+
+    static {
+        RIGHT_FRONT_ANGLE_RADIANS = angleOf(SWERVE_RIGHT_FRONT_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+        LEFT_FRONT_ANGLE_RADIANS = angleOf(SWERVE_LEFT_FRONT_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+        LEFT_BACK_LEFT_ANGLE_RADIANS = angleOf(SWERVE_LEFT_BACK_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+        RIGHT_BACK_ANGLE_RADIANS = angleOf(SWERVE_RIGHT_BACK_LOCATION.plus(ROBOT_CENTER_OF_GRAVITY)).getRadians();
+    }
+
+    /**
+     * This method assumes that the robot is a square.
+     *
+     * @param accelerationAngleRadians The angle of the acceleration vector in radians.
+     * @return The maximum translational acceleration in that direction.
+     */
+    @Contract(mutates = "", pure = true)
+    public double getMaxAccelerationToAvoidTipping(double accelerationAngleRadians) {
+        accelerationAngleRadians = mod(accelerationAngleRadians + Math.PI, Math.PI * 2) - Math.PI;
+
+        double distanceCgToFrame;
+
+        if (accelerationAngleRadians > RIGHT_BACK_ANGLE_RADIANS && accelerationAngleRadians <= LEFT_FRONT_ANGLE_RADIANS) {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians) *
+                    (SWERVE_RIGHT_FRONT_LOCATION.getX() - ROBOT_CENTER_OF_GRAVITY.getX());
+        } else if (accelerationAngleRadians > LEFT_FRONT_ANGLE_RADIANS && accelerationAngleRadians <= LEFT_BACK_LEFT_ANGLE_RADIANS) {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians - (Math.PI / 4)) *
+                    (SWERVE_LEFT_FRONT_LOCATION.getY() - ROBOT_CENTER_OF_GRAVITY.getY());
+        } else if (accelerationAngleRadians > LEFT_BACK_LEFT_ANGLE_RADIANS && accelerationAngleRadians <= RIGHT_FRONT_ANGLE_RADIANS) {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians - (Math.PI / 2)) *
+                    (SWERVE_LEFT_BACK_LOCATION.getX() - ROBOT_CENTER_OF_GRAVITY.getX());
+        } else {
+            distanceCgToFrame = Math.cos(accelerationAngleRadians - (3 * (Math.PI / 4))) *
+                    (SWERVE_RIGHT_BACK_LOCATION.getY() - ROBOT_CENTER_OF_GRAVITY.getY());
+        }
+
+        return distanceCgToFrame * 10; // TODO: Tune this
     }
 
     /**

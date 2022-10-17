@@ -145,6 +145,8 @@ public final class Constants {
     public static final Translation2d SWERVE_RIGHT_FRONT_LOCATION = new Translation2d(0.307975, -0.307975);
     public static final Translation2d SWERVE_RIGHT_BACK_LOCATION = new Translation2d(-0.307975, -0.307975);
 
+    public static final Translation2d ROBOT_CENTER_OF_GRAVITY = new Translation2d(0, 0.1);
+
 
     public static final double DRIVE_HIGH_SPEED_M = 4.2;
     @SuppressWarnings("unused") public static final double DRIVE_HIGH_SPEED_IN = Units.metersToInches(DRIVE_HIGH_SPEED_M);
