@@ -31,10 +31,11 @@ public final class Intake extends AbstractSubsystem {
         return instance;
     }
 
+    private static final boolean IS_SPARK = false;
     private Intake() {
         super(Constants.INTAKE_PERIOD, 4);
         intakeSol = getPneumaticsHub().makeSolenoid(Constants.INTAKE_SOLENOID_CHANNEL);
-        if (Constants.IS_PRACTICE) {
+        if (IS_SPARK) {
             intakeMotorSpark = new LazyCANSparkMax(Constants.INTAKE_MOTOR_DEVICE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
             intakeMotorSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
             intakeMotorSpark.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
@@ -67,7 +68,7 @@ public final class Intake extends AbstractSubsystem {
 
     @Override
     public void logData() {
-        if (Constants.IS_PRACTICE) {
+        if (IS_SPARK) {
             SmartDashboard.putNumber("Intake Current", intakeMotorSpark.getOutputCurrent());
             SmartDashboard.putNumber("Intake Motor Speed: ", intakeMotorSpark.get());
             logData("Intake Motor Temperature", intakeMotorSpark.getMotorTemperature());
@@ -129,7 +130,7 @@ public final class Intake extends AbstractSubsystem {
     }
 
     private void setIntakeMotor(double speed) {
-        if (Constants.IS_PRACTICE) {
+        if (IS_SPARK) {
             intakeMotorSpark.set(speed);
         } else {
             intakeMotorFalcon.set(ControlMode.PercentOutput, speed);
