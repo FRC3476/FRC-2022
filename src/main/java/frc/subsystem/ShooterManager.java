@@ -255,6 +255,8 @@ public final class ShooterManager extends AbstractSubsystem {
         logData("Is allowed Shoot Turn Speed", isTurningSpeedCorrect);
         logData("Is Robot Allowed Shoot Aiming", isAimed);
         logData("Is Robot Allowed Shoot Acceleration", isUnderAccelLimit);
+        logData("Is Robot Allowed Shoot Stopped",  isStopped);
+        logData("Is Robot Allowed Shoot On Flat Ground", isFlatOnGround);
 
         final boolean hasBadVision = visionManager.getLoopsWithBadVision() < Constants.MAX_BAD_VISION_ITERATIONS;
 
