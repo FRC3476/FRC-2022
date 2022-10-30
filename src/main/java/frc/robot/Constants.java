@@ -274,7 +274,7 @@ public final class Constants {
 
     // Shooter Constants
 
-    public static final int SHOOTER_PERIOD_MS = 50;
+    public static final int SHOOTER_PERIOD_MS = 15;
 
     public static final int SHOOTER_WHEEL_CAN_MASTER_ID = 50;
     public static final int SHOOTER_WHEEL_CAN_SLAVE_ID = 51;
@@ -340,14 +340,14 @@ public final class Constants {
      * inches
      */
     public static final double SLOW_SHOOT_DISTANCE_THRESHOLD = 40;
-    public static final double SECOND_BALL_SHOOT_DELAY = 0.25;
+    public static final double SECOND_BALL_SHOOT_DELAY = 0.3;
     public static final double SECOND_BALL_SHOOT_DELAY_SLOW = 0.4;
     public static final double RUMBLE_DELAY = 0.1666666667;
     public static final double RUMBLE_TIME = 0.25;
 
     public static final double HOOD_P = 0.03;
     public static final double HOOD_I = 0.0005;
-    public static final double HOOD_D = 0;
+    public static final double HOOD_D = 0.0035;
     public static final double HOOD_F = 0;
     public static final double HOOD_I_ZONE = 2.5;
 
@@ -378,7 +378,7 @@ public final class Constants {
     /**
      * Allowed error when comparing Hood angle to a desired angle Units are in degrees
      */
-    public static final double ALLOWED_HOOD_ANGLE_ERROR = 0.75;
+    public static final double ALLOWED_HOOD_ANGLE_ERROR = 0.5;
 
     /**
      * If _ speed is under this value, hood has stopped
