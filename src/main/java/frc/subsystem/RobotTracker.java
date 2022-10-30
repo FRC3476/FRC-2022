@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
+import frc.utility.MathUtil;
 import frc.utility.net.editing.LiveEditableValue;
 import frc.utility.tracking.TimestampedPose;
 import org.jetbrains.annotations.Contract;
@@ -80,7 +81,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
-    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.2,
+    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.4,
             SmartDashboard.getEntry("Vision Position Weight Percentage"));
 
 
@@ -128,7 +129,8 @@ public final class RobotTracker extends AbstractSubsystem {
         try {
             getPoseAtTime(timestampSeconds).ifPresent(pose2d ->
                     positionOffset = visionRobotTranslationMeters.minus(pose2d.getTranslation())
-                            .times((force ? 1 : visionUsagePercent.get()))
+                            // 0.1225 m ^ 2 = 30 cm
+                            .times((force || MathUtil.dist2(positionOffset) > 0.1225 ? 1 : visionUsagePercent.get()))
                             .plus(positionOffset));
         } finally {
             lock.writeLock().unlock();
