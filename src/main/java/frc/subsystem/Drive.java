@@ -484,7 +484,7 @@ public final class Drive extends AbstractSubsystem {
 
         // Checks if requested change in Angular Velocity is greater than allowed
         if (Math.abs(commandedVelocity.omegaRadiansPerSecond - lastRequestedRotation)
-                > maxAngularVelocityChange) {
+                > maxAngularVelocityChange && accelerationLimit != AccelerationLimits.SHOOT_AND_MOVE) {
             // Add the lastCommandVelocity and the maxAngularVelocityChange (changed to have the same sign as the actual change)
             commandedVelocity.omegaRadiansPerSecond = lastRequestedRotation +
                     Math.copySign(maxAngularVelocityChange,
