@@ -350,6 +350,8 @@ public final class Shooter extends AbstractSubsystem {
         hoodAbsoluteEncoder.setStatusFramePeriod(CANCoderStatusFrame.VbatAndFaults, 200);
         hoodAbsoluteEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 25);
         hoodAbsoluteEncoder.configSensorDirection(true);
+        setHoodPositionMode(HoodPositionMode.RELATIVE_TO_HOME);
+        homeHood();
 
         hoodMotor.burnFlash();
     }
@@ -617,25 +619,30 @@ public final class Shooter extends AbstractSubsystem {
         // Switch statement only allows certain code to be run for specific states of the robot
         switch (shooterState) {
             case OFF:
-                shooterWheelMaster.set(ControlMode.PercentOutput, 0);
-                setHoodPosition(Constants.HOOD_MAX_ANGLE); // Sets hood to the lowest possible position
 
-                if (!isHoodAtTargetAngle()) {
-                    moveHoodMotor();
-                }
+                if (Timer.getFPGATimestamp() > lastShotTime + FEEDER_CHANGE_STATE_DELAY_SEC) {
+                    shooterWheelMaster.set(ControlMode.PercentOutput, 0);
+                    setHoodPosition(Constants.HOOD_MAX_ANGLE); // Sets hood to the lowest possible position
 
-                if (feederWheelState == FeederWheelState.REVERSE) {
-                    feederWheel.set(ControlMode.PercentOutput, -FEEDER_WHEEL_SPEED);
-                } else {
-                    if (Hopper.getInstance().isHopperMotorRunning()) {
-                        feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
-                        runReversedUntil = Timer.getFPGATimestamp() + 0.5;
-                    } else if (Timer.getFPGATimestamp() < runReversedUntil) {
-                        feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
+                    if (!isHoodAtTargetAngle()) {
+                        moveHoodMotor();
+                    }
+
+                    if (feederWheelState == FeederWheelState.REVERSE) {
+                        feederWheel.set(ControlMode.PercentOutput, -FEEDER_WHEEL_SPEED);
                     } else {
-                        feederWheel.set(ControlMode.PercentOutput, 0);
+                        if (Hopper.getInstance().isHopperMotorRunning()) {
+                            feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
+                            runReversedUntil = Timer.getFPGATimestamp() + 0.5;
+                        } else if (Timer.getFPGATimestamp() < runReversedUntil) {
+                            feederWheel.set(ControlMode.PercentOutput, FEEDER_WHEEL_REVERSE_WITH_HOPPER);
+                        } else {
+                            feederWheel.set(ControlMode.PercentOutput, 0);
+                        }
                     }
                 }
+
+
 
                 Robot.setRumble(RumbleType.kLeftRumble, 0);
 
