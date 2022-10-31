@@ -300,7 +300,7 @@ public final class Constants {
     /**
      * Allowed Angular Speed error (in RPM) when comparing speed reported by encoder to an expected speed
      */
-    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 150;
+    public static final double ALLOWED_SHOOTER_SPEED_ERROR_RPM = 45;
 
     public static final int SHOOTER_EJECT_SPEED = 750;
     public static final double HOOD_EJECT_ANGLE = 53;
@@ -340,7 +340,7 @@ public final class Constants {
      * inches
      */
     public static final double SLOW_SHOOT_DISTANCE_THRESHOLD = 40;
-    public static final double SECOND_BALL_SHOOT_DELAY = 0.3;
+    public static final double SECOND_BALL_SHOOT_DELAY = 0.2;
     public static final double SECOND_BALL_SHOOT_DELAY_SLOW = 0.4;
     public static final double RUMBLE_DELAY = 0.1666666667;
     public static final double RUMBLE_TIME = 0.25;
