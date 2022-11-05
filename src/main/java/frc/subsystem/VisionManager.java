@@ -147,6 +147,19 @@ public final class VisionManager extends AbstractSubsystem {
         );
     }
 
+    /**
+     * Y points upwards perpendicular to the ground plane
+     *     x
+     * --------
+     * \      |
+     *  \     |
+     *   \    | z
+     *    \   |
+     *     \  |
+     *      \ |
+     *       \
+     * @return `    P
+     */
     private Vector3D getPositionOfTargetRelativeToRobot() {
 
         Vector2d targetPosInCameraPixels = limelight.getTargetPosInCameraPixels();
@@ -166,6 +179,7 @@ public final class VisionManager extends AbstractSubsystem {
         double angle = Math.atan2(goalDir.getX(), goalDir.getZ());
 
         double k = hOffset.get() / goalDir.getY();
+
 
         return goalDir.scalarMultiply(k)
                 .add(centerOffset.get()) //5.875
