@@ -129,8 +129,8 @@ public final class RobotTracker extends AbstractSubsystem {
         try {
             getPoseAtTime(timestampSeconds).ifPresent(pose2d ->
                     positionOffset = visionRobotTranslationMeters.minus(pose2d.getTranslation())
-                            // 0.25 m ^ 2 = 50 cm
-                            .times((force || MathUtil.dist2(positionOffset) > 0.25 ? 1 : visionUsagePercent.get()))
+                            // 1 m ^ 2 = 100 cm
+                            .times((force || MathUtil.dist2(positionOffset) > 1 ? 1 : visionUsagePercent.get()))
                             .plus(positionOffset));
         } finally {
             lock.writeLock().unlock();
