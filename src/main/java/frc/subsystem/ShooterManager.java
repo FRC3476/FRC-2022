@@ -159,7 +159,7 @@ public final class ShooterManager extends AbstractSubsystem {
         shootAndMove(controllerDriveInputs, useFieldRelative, true);
     }
 
-    private final static Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1);
+    private Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1.5);
 
     /**
      * @param controllerDriveInputs The controller drive inputs to use
@@ -260,6 +260,7 @@ public final class ShooterManager extends AbstractSubsystem {
 
         final boolean hasBadVision = visionManager.getLoopsWithBadVision() < Constants.MAX_BAD_VISION_ITERATIONS;
 
+        Translation2d robotPosition = RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation();
         if (isAimed && isTurningSpeedCorrect && isUnderAccelLimit && isStopped && isFlatOnGround && hasBadVision) {
             shooter.setFiring(true);
             if (shooter.isFiring()) {
@@ -273,7 +274,8 @@ public final class ShooterManager extends AbstractSubsystem {
                                     + "Accel: " + getAccel().getNorm() +
                                     " RT Angle To Target: " + turnError
                                     + " LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset()
-                                    + " Shooter Wheel Speed: " + shooter.getShooterRPM());
+                                    + " Shooter Wheel Speed: " + shooter.getShooterRPM()
+                                    + " Position: X: " + robotPosition.getX() + " Y: " + robotPosition.getY());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
@@ -516,6 +518,18 @@ public final class ShooterManager extends AbstractSubsystem {
             if (Hopper.getInstance().isBeamBroken()) hasBeamBreakBroken = true;
             return hasBeamBreakBroken;
         }));
+    }
+
+    public void update() {
+        Translation2d robotTranslation = RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation();
+
+        if (robotTranslation.getX() < 7.4 ) {
+            ROTATION_OFFSET = Rotation2d.fromDegrees(1.6);
+        } else if (robotTranslation.getY() > 0) {
+            ROTATION_OFFSET = Rotation2d.fromDegrees(0.75);
+        } else {
+            ROTATION_OFFSET = Rotation2d.fromDegrees(1.1);
+        }
     }
 
     @Override
