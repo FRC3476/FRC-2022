@@ -271,8 +271,8 @@ public final class ShooterManager extends AbstractSubsystem {
                             "Shooting at " + (150 - DriverStation.getMatchTime()) + " Distance:  "
                                     + Units.metersToInches(aimPoint.getNorm()) + " "
                                     + "Accel: " + getAccel().getNorm() +
-                                    "RT Angle To Target: " + turnError
-                                    + "LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset());
+                                    " RT Angle To Target: " + turnError
+                                    + " LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
