@@ -211,7 +211,7 @@ public final class Constants {
     public static final Translation2d GOAL_POSITION = new Translation2d(8.25, 0);
     public static final double VISION_PREDICT_AHEAD_TIME = 0.5;
 
-    public static final int MIN_CORNERS = 8;
+    public static final int MIN_CORNERS = 6;
     public static final int MAX_CORNERS = 20;
 
     public static final double GOAL_RADIUS_IN = 24.0;

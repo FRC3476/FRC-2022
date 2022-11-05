@@ -319,7 +319,7 @@ public final class VisionManager extends AbstractSubsystem {
                 double positionError =
                         dist2(robotTracker.getPoseAtTime(limelight.getTimestamp()).orElseGet(Pose2d::new).getTranslation(),
                                 robotTranslation);
-                if ((limelight.getCorners().length % 4 == 0 || positionError < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED)
+                if (((limelight.getCorners().length % 4 == 0 && limelight.getCorners().length >= MIN_CORNERS) || positionError < Constants.VISION_MANAGER_DISTANCE_THRESHOLD_SQUARED)
                         && limelight.getCorners().length >= MIN_CORNERS && limelight.getCorners().length <= MAX_CORNERS) {
                     if (DriverStation.isTeleopEnabled()) {
                         robotTracker.addVisionMeasurement(robotTranslation, getLimelightTime(), false);
