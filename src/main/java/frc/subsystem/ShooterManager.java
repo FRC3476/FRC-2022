@@ -159,7 +159,7 @@ public final class ShooterManager extends AbstractSubsystem {
         shootAndMove(controllerDriveInputs, useFieldRelative, true);
     }
 
-    private final static Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(0);
+    private final static Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1);
 
     /**
      * @param controllerDriveInputs The controller drive inputs to use
@@ -272,7 +272,8 @@ public final class ShooterManager extends AbstractSubsystem {
                                     + Units.metersToInches(aimPoint.getNorm()) + " "
                                     + "Accel: " + getAccel().getNorm() +
                                     " RT Angle To Target: " + turnError
-                                    + " LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset());
+                                    + " LL Angle to Target: " + Limelight.getInstance().getHorizontalOffset()
+                                    + " Shooter Wheel Speed: " + shooter.getShooterRPM());
                 }
             } else {
                 lastChecksFailedTime = Timer.getFPGATimestamp();
