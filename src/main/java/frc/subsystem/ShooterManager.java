@@ -244,7 +244,7 @@ public final class ShooterManager extends AbstractSubsystem {
 
         final boolean isTurningSpeedCorrect =
                 Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
-                        < Math.toRadians(8);
+                        < Math.toRadians(1);
 
         final boolean isUnderAccelLimit = getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING;
         final boolean isStopped = (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck);
