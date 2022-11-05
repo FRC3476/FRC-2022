@@ -122,8 +122,18 @@ public final class VisionManager extends AbstractSubsystem {
 
     private final LiveEditableValue<Rotation> cameraRotation;
 
+    /**
+     * Offset that can adjust the modeled height (y dimension) from the camera to goal
+     */
     private final LiveEditableValue<Double> hOffset;
+    /**
+     * Offset that can adjust the modeled depth (x and z dimensions) of the camera to the robot center
+     */
     private final LiveEditableValue<Double> depthOffset;
+    /**
+     * Offset that can adjust the modeled center of the goal, so we do not aim at the rim of the goal where the tape is. (x and z
+     * dimensions)
+     */
     private final LiveEditableValue<Vector3D> centerOffset;
 
     {
