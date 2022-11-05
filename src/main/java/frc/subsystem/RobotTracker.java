@@ -81,7 +81,7 @@ public final class RobotTracker extends AbstractSubsystem {
 
     private @NotNull Translation2d positionOffset = new Translation2d();
 
-    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.4,
+    private final LiveEditableValue<Double> visionUsagePercent = new LiveEditableValue<>(0.2,
             SmartDashboard.getEntry("Vision Position Weight Percentage"));
 
 
@@ -129,8 +129,8 @@ public final class RobotTracker extends AbstractSubsystem {
         try {
             getPoseAtTime(timestampSeconds).ifPresent(pose2d ->
                     positionOffset = visionRobotTranslationMeters.minus(pose2d.getTranslation())
-                            // 0.1225 m ^ 2 = 30 cm
-                            .times((force || MathUtil.dist2(positionOffset) > 0.1225 ? 1 : visionUsagePercent.get()))
+                            // 0.25 m ^ 2 = 50 cm
+                            .times((force || MathUtil.dist2(positionOffset) > 0.25 ? 1 : visionUsagePercent.get()))
                             .plus(positionOffset));
         } finally {
             lock.writeLock().unlock();
