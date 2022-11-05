@@ -248,8 +248,8 @@ public final class ShooterManager extends AbstractSubsystem {
 
         final boolean isUnderAccelLimit = getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING;
         final boolean isStopped = (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck);
-        final boolean isFlatOnGround = (Math.abs(robotTracker.getGyro().getRoll()) < 3 &&
-                Math.abs(robotTracker.getGyro().getPitch()) < 3) || IS_PRACTICE; //The roborio on the practice bot is tilted a
+        final boolean isFlatOnGround = (Math.abs(robotTracker.getGyro().getRoll()) < 6 &&
+                Math.abs(robotTracker.getGyro().getPitch()) < 6) || IS_PRACTICE; //The roborio on the practice bot is tilted a
         // bit and cause this check to fail
 
         logData("Is allowed Shoot Turn Speed", isTurningSpeedCorrect);
