@@ -3,6 +3,7 @@ package frc.subsystem;
 import com.ctre.phoenix.motorcontrol.*;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
@@ -613,6 +614,7 @@ public final class Climber extends AbstractSubsystem {
         isPaused = false;
         otherPivotingArmMustContactByTime = Double.MAX_VALUE;
         climbState = ClimbState.START_CLIMB;
+        System.out.println("Starting Climb");
         startingClimb = true;
         setBrakeState(BrakeState.FREE);
     }
@@ -622,6 +624,7 @@ public final class Climber extends AbstractSubsystem {
      */
     public synchronized void stopClimb() {
         climbState = ClimbState.IDLE;
+        System.out.println("Resetting Climb");
         climberMotor.set(ControlMode.PercentOutput, 0);
         setBrakeState(BrakeState.BRAKING);
         timesRun = 0;
@@ -645,6 +648,7 @@ public final class Climber extends AbstractSubsystem {
         pausedBrakeState = getBrakeState();
         climberMotor.set(ControlMode.PercentOutput, 0);
         setBrakeState(BrakeState.BRAKING);
+        System.out.println("Pausing Climb " + DriverStation.getMatchTime());
     }
 
     /**
@@ -664,6 +668,7 @@ public final class Climber extends AbstractSubsystem {
         otherPivotingArmMustContactByTime = Double.MAX_VALUE;
         setBrakeState(pausedBrakeState);
         climberMotor.set(pausedClimberMode, pausedClimberSetpoint);
+        System.out.println("Resuming Climb " + DriverStation.getMatchTime());
     }
 
     /**
@@ -675,7 +680,9 @@ public final class Climber extends AbstractSubsystem {
         setBrakeState(BrakeState.FREE);
         setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
+        stopClimb();
         startingClimb = true;
+        System.out.println("Deploying Climb Advancing " + DriverStation.getMatchTime());
     }
 
     /**
@@ -696,6 +703,7 @@ public final class Climber extends AbstractSubsystem {
      */
     public synchronized void forceAdvanceStep() {
         if (isPaused) resumeClimb();
+        System.out.println("Force Advancing " + DriverStation.getMatchTime());
         advanceStep = true;
         skipChecks = true;
     }
@@ -735,8 +743,10 @@ public final class Climber extends AbstractSubsystem {
                 if (!ranEndAction) currentClimbStep.endAction.accept(this);
                 do {
                     climbState = ClimbState.values()[(climbState.ordinal() + 1) % ClimbState.values().length];
+                    System.out.println("set climb state to: " + climbState + " " + DriverStation.getMatchTime());
                     if (climbState == ClimbState.IDLE && timesRun < 1) {
                         climbState = ClimbState.START_CLIMB;
+                        System.out.println("set climb state to: " + climbState + " " + DriverStation.getMatchTime());
                         timesRun++;
                     }
 
