@@ -159,7 +159,7 @@ public final class ShooterManager extends AbstractSubsystem {
         shootAndMove(controllerDriveInputs, useFieldRelative, true);
     }
 
-    private Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1.5);
+    private Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(0.9);
 
     /**
      * @param controllerDriveInputs The controller drive inputs to use
@@ -244,7 +244,7 @@ public final class ShooterManager extends AbstractSubsystem {
 
         final boolean isTurningSpeedCorrect =
                 Math.abs(robotTracker.getLatencyCompedChassisSpeeds().omegaRadiansPerSecond - targetAngularSpeed)
-                        < Math.toRadians(1);
+                        < Math.toRadians(8);
 
         final boolean isUnderAccelLimit = getAccel().getNorm() < MAX_ACCELERATION_WHILE_SHOOTING;
         final boolean isStopped = (drive.getSpeedSquared() < Constants.MAX_SHOOT_SPEED_SQUARED || !doSpeedCheck);
@@ -523,13 +523,13 @@ public final class ShooterManager extends AbstractSubsystem {
     public void update() {
         Translation2d robotTranslation = RobotTracker.getInstance().getLastEstimatedPoseMeters().getTranslation();
 
-        if (robotTranslation.getX() < 7.4 ) {
-            ROTATION_OFFSET = Rotation2d.fromDegrees(1.6);
-        } else if (robotTranslation.getY() > 0) {
-            ROTATION_OFFSET = Rotation2d.fromDegrees(0.75);
-        } else {
-            ROTATION_OFFSET = Rotation2d.fromDegrees(1.1);
-        }
+//        if (robotTranslation.getX() < 7.4 ) {
+//            ROTATION_OFFSET = Rotation2d.fromDegrees(1.5);
+//        } else if (robotTranslation.getY() > 0) {
+//            ROTATION_OFFSET = Rotation2d.fromDegrees(0.75);
+//        } else {
+//            ROTATION_OFFSET = Rotation2d.fromDegrees(1.1);
+//        }
     }
 
     @Override
