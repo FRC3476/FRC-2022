@@ -682,7 +682,7 @@ public final class Climber extends AbstractSubsystem {
         setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
         startingClimb = true;
-        System.out.println("Deploying Climb Advancing " + DriverStation.getMatchTime());
+        System.out.println("Deploying Climb" + DriverStation.getMatchTime());
     }
 
     /**
