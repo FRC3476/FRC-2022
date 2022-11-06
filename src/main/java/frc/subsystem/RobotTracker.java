@@ -33,6 +33,10 @@ import static frc.robot.Constants.ROBOT_TRACKER_PERIOD;
 @SuppressWarnings("UnstableApiUsage")
 public final class RobotTracker extends AbstractSubsystem {
 
+    /**
+     * 0.1225 m ^ 2 = 30 cm
+     */
+    public static final double NO_SMOOTH_VISION_ERROR_SQUARED = 0.1225;
     private final @NotNull AHRS gyroSensor;
 
     private static @NotNull RobotTracker instance = new RobotTracker();
@@ -129,8 +133,7 @@ public final class RobotTracker extends AbstractSubsystem {
         try {
             getPoseAtTime(timestampSeconds).ifPresent(pose2d ->
                     positionOffset = visionRobotTranslationMeters.minus(pose2d.getTranslation())
-                            // 1 m ^ 2 = 100 cm
-                            .times((force || MathUtil.dist2(positionOffset) > 0.16 ? 1 : visionUsagePercent.get()))
+                            .times((force || MathUtil.dist2(positionOffset) > NO_SMOOTH_VISION_ERROR_SQUARED ? 1 : visionUsagePercent.get()))
                             .plus(positionOffset));
         } finally {
             lock.writeLock().unlock();
