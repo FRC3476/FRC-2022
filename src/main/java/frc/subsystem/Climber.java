@@ -676,11 +676,11 @@ public final class Climber extends AbstractSubsystem {
      */
     public synchronized void deployClimb() {
         timesRun = 0;
+        stopClimb();
         climberMotor.set(ControlMode.MotionMagic, Constants.CLIMBER_DEPLOY_HEIGHT);
         setBrakeState(BrakeState.FREE);
         setClawState(ClawState.UNLATCHED);
         setPivotState(PivotState.INLINE);
-        stopClimb();
         startingClimb = true;
         System.out.println("Deploying Climb Advancing " + DriverStation.getMatchTime());
     }
