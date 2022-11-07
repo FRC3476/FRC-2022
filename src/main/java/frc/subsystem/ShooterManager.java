@@ -159,7 +159,7 @@ public final class ShooterManager extends AbstractSubsystem {
         shootAndMove(controllerDriveInputs, useFieldRelative, true);
     }
 
-    private Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1.7);
+    private Rotation2d ROTATION_OFFSET = Rotation2d.fromDegrees(1.6);
 
     /**
      * @param controllerDriveInputs The controller drive inputs to use
