@@ -30,7 +30,7 @@ public final class VisionLookUpTable {
         try {
             File shooterDataFile = new File(Filesystem.getDeployDirectory().getPath() +
                     (IS_PRACTICE ? "/shooter/shooterconfigpractice.json" : "/shooter/shooterconfig.json"));
-            shooterConfig = (ShooterConfig) Serializer.deserializeFromFile(shooterDataFile, ShooterConfig.class);
+            shooterConfig = (ShooterConfig) Serializer.deserializeFromFile(shooterDataFile, ShooterConfig.class, true);
             System.out.println("Successfully loaded shooter config from the file");
         } catch (IOException e) {
             DriverStation.reportError("Failed to load shooter config from " +

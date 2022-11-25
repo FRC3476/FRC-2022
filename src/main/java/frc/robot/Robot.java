@@ -98,7 +98,7 @@ public class Robot extends TimedRobot {
                         try {
                             ShooterConfig shooterConfig = (ShooterConfig) Serializer.deserialize(
                                     shooterConfigEntry.getString(null),
-                                    ShooterConfig.class);
+                                    ShooterConfig.class, true);
                             if (shooterConfig.getShooterConfigs().size() < 3) {
                                 System.out.println(
                                         "Shooter config was too small to load size=" + shooterConfig.getShooterConfigs().size());
