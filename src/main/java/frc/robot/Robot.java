@@ -137,6 +137,7 @@ public class Robot extends TimedRobot {
         robotTracker.resetPosition(new Pose2d());
 
         startSubsystems();
+        AutonomousContainer.getInstance().setDebugPrints(true);
         AutonomousContainer.getInstance().initialize(
                 true,
                 new CommandTranslator(
